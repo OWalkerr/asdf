@@ -159,7 +159,16 @@ export const buildHelmsDeep = (palette: Texture, params: ToonParams, def: MapDef
       const seg = P.deepingWallSegment(segLen + 0.02, wall.height, wall.thickness);
       for (let k = 0; k < n; k++) {
         const t = (k + 0.5) / n;
-        solid.add(seg, at(ax + (bx - ax) * t, az + (bz - az) * t, rot, 1, 0.4), true);
+        const x = ax + (bx - ax) * t;
+        const z = az + (bz - az) * t;
+        // Menfez boşluğu: kapı çerçevesi + kanatlar (GateRenderer) yerleşir.
+        if (
+          def.gates.some(
+            (g) => g.id === 'culvert' && Math.hypot(g.pos[0] - x, g.pos[1] - z) < g.width / 2 + 3,
+          )
+        )
+          continue;
+        solid.add(seg, at(x, z, rot, 1, 0.4), true);
       }
       // Sur üstü meşaleler: iç korkuluk boyunca, soket ve kulelerden kaçınarak.
       const post = P.torchPost();
@@ -182,6 +191,17 @@ export const buildHelmsDeep = (palette: Texture, params: ToonParams, def: MapDef
     }
   }
 
+  // Menfez çerçevesi (sur gövdesindeki boşlukta).
+  const culvert = def.gates.find((g) => g.id === 'culvert');
+  if (culvert) {
+    const s = Math.max(0.8, (culvert.width + 4) / 9);
+    solid.add(
+      P.gateFrame('helmStone'),
+      at(culvert.pos[0], culvert.pos[1], Math.PI / 2 - culvert.facing * DEG, s, 0.4),
+      true,
+    );
+  }
+
   // --- Hornburg: plato, sur halkası, kapı, kale --------------------------------
   const plateau = def.terrain.plateaus[0];
   const gate = def.gates[0];
@@ -199,14 +219,13 @@ export const buildHelmsDeep = (palette: Texture, params: ToonParams, def: MapDef
       solid.add(ringWall, at(cx + Math.cos(a) * R, cz + Math.sin(a) * R, -a + Math.PI / 2, 1, baseY), true);
     }
     const gateRot = Math.PI / 2 - gate.facing * DEG;
-    solid.add(P.gateHouse(), at(gate.pos[0], gate.pos[1], gateRot, 1, baseY), true);
-    // Arka kapı (vadiye bakan küçük kapı) — rampanın üst ucunda.
-    if (postern)
-      solid.add(
-        P.gateHouse(),
-        at(postern.pos[0], postern.pos[1], Math.PI / 2 - postern.facing * DEG, 0.75, baseY),
-        true,
-      );
+    // Kapı çerçeveleri (kanatlar GateRenderer'da: kırılınca enkaza döner).
+    const frame = P.gateFrame('helmStone');
+    for (const g of [gate, postern]) {
+      if (!g) continue;
+      const s = Math.max(0.8, (g.width + 4) / 9);
+      solid.add(frame, at(g.pos[0], g.pos[1], Math.PI / 2 - g.facing * DEG, s, baseY), true);
+    }
     // Ana kale (Hornburg kulesi) platonun arkasında, kapıya bakar.
     const keepPos: Vec2 = [cx - 6, cz - 7];
     solid.add(P.keep(), at(keepPos[0], keepPos[1], gateRot, 1, plateau.height - 0.2), true);

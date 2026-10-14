@@ -11,6 +11,7 @@ import {
   unpackStructSlot,
 } from '@bulwark/shared';
 import { type BufferGeometry, InstancedMesh, Matrix4, Quaternion, type Texture, Vector3 } from 'three/webgpu';
+import { catapultModel } from '../map/prefabs';
 import { createToonMaterial, type ToonParams } from '../materials/ToonMaterial';
 import { arrowTowerModel, barracksModel, forgeModel, scaffoldModel } from './buildingModels';
 
@@ -39,6 +40,7 @@ const MODELS: Record<string, { build: () => BufferGeometry; height: number; foot
   arrow_tower: { build: arrowTowerModel, height: 12.5, footprint: [2.2, 2.2] },
   barracks: { build: barracksModel, height: 8.2, footprint: [5.4, 4.2] },
   forge: { build: forgeModel, height: 7.5, footprint: [4.6, 3.6] },
+  catapult: { build: catapultModel, height: 5.5, footprint: [2.6, 2.6] },
 };
 
 /**

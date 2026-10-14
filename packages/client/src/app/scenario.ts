@@ -32,25 +32,14 @@ export class Scenario {
     );
   }
 
-  /** Başlangıç savunması (GDD §10.1): sur arkasında okçular + piyade, Hornburg'da garnizon. */
+  /** Başlangıç garnizonu (harita verisi; GDD §10): her giriş = konumda yan yana tabur(lar). */
   start(): void {
     if (!this.def) {
       this.spawn(UnitTypeId.GondorSoldier, 0, 40, 2);
       this.spawn(UnitTypeId.GondorArcher, 0, 52, 2);
       return;
     }
-    const wallZ = this.def.walls[0]?.points[0]?.[1] ?? 0;
-    // Okçular surun hemen arkasında (menfez önünü ve sur önünü menzilde tutar).
-    this.spawn(UnitTypeId.GondorArcher, 20, wallZ - 9, 2);
-    // Piyade ikinci hatta: menfezden çıkış (sortie) için hazır.
-    this.spawn(UnitTypeId.GondorSoldier, 2, wallZ - 22, 2);
-    this.spawn(UnitTypeId.TowerGuard, 46, wallZ - 22, 2);
-    const plateau = this.def.terrain.plateaus[0];
-    if (plateau) {
-      const [px, pz] = plateau.center;
-      this.spawn(UnitTypeId.GondorArcher, px + 6, pz + 6, 1);
-      this.spawn(UnitTypeId.GondorSoldier, px - 4, pz - 2, 2);
-    }
+    for (const g of this.def.garrison ?? []) this.spawn(g.unitType, g.pos[0], g.pos[1], g.count);
   }
 
   /** Seçili taburlara hareket emri. */

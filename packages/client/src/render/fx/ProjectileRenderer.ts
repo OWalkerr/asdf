@@ -3,6 +3,7 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import {
   BoxGeometry,
   ConeGeometry,
+  DodecahedronGeometry,
   DynamicDrawUsage,
   InstancedMesh,
   Matrix4,
@@ -21,6 +22,7 @@ const ARC = 0.16; // tepe yüksekliği / mesafe
 
 export class ProjectileRenderer {
   readonly mesh: InstancedMesh;
+  readonly stones: InstancedMesh;
   private readonly m = new Matrix4();
   private readonly q = new Quaternion();
   private readonly p = new Vector3();
@@ -43,6 +45,13 @@ export class ProjectileRenderer {
     this.mesh.instanceMatrix.setUsage(DynamicDrawUsage);
     this.mesh.frustumCulled = false;
     this.mesh.count = 0;
+    // Mancınık taşları: kaba taş, yüksek yay, dönerek uçar.
+    const stone = new DodecahedronGeometry(0.7, 0);
+    stone.deleteAttribute('uv');
+    this.stones = new InstancedMesh(stone, new MeshBasicNodeMaterial({ color: '#6b6560' }), 128);
+    this.stones.name = 'stones';
+    this.stones.frustumCulled = false;
+    this.stones.count = 0;
   }
 
   update(host: SimHost, now: number): void {
@@ -51,6 +60,8 @@ export class ProjectileRenderer {
     const pr = frame.projectiles;
     const cap = this.mesh.instanceMatrix.count;
     let n = 0;
+    let ns = 0;
+    const scap = this.stones.instanceMatrix.count;
     for (let i = 0; i < frame.projCount && n < cap; i++) {
       const o = i * SNAP_PROJ_INTS;
       const packed = pr[o + 5] as number;
@@ -61,11 +72,19 @@ export class ProjectileRenderer {
       const fz = (pr[o + 2] as number) * FX;
       const tx = (pr[o + 3] as number) * FX;
       const tz = (pr[o + 4] as number) * FX;
+      const kind = ((pr[o + 6] as number) >>> 16) & 0xff;
       const y0 = this.groundY(fx, fz) + ((pr[o + 6] as number) & 0xffff) / 100;
       const y1 = this.groundY(tx, tz) + 0.9;
       const dist = Math.hypot(tx - fx, tz - fz);
-      const h = dist * ARC;
+      const h = dist * (kind === 1 ? ARC * 2.2 : ARC);
       this.p.set(fx + (tx - fx) * t, y0 + (y1 - y0) * t + 4 * h * t * (1 - t), fz + (tz - fz) * t);
+      if (kind === 1) {
+        if (ns >= scap) continue;
+        this.q.setFromAxisAngle(this.fwd, t * 9 + i);
+        this.m.compose(this.p, this.q, this.one);
+        this.stones.setMatrixAt(ns++, this.m);
+        continue;
+      }
       // Yön = yayın türevi.
       this.dir.set(tx - fx, y1 - y0 + 4 * h * (1 - 2 * t), tz - fz).normalize();
       this.q.setFromUnitVectors(this.fwd, this.dir);
@@ -74,5 +93,7 @@ export class ProjectileRenderer {
     }
     this.mesh.count = n;
     if (n > 0) this.mesh.instanceMatrix.needsUpdate = true;
+    this.stones.count = ns;
+    if (ns > 0) this.stones.instanceMatrix.needsUpdate = true;
   }
 }

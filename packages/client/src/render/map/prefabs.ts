@@ -253,3 +253,154 @@ export const torchFlame = (rand: Rand): BufferGeometry =>
     paint(place(jitter(new OctahedronGeometry(0.28, 0), 0.08, rand), 0, 2.05, 0, 0, 1, 1.7, 1), 'fire'),
     paint(place(new OctahedronGeometry(0.14, 0), 0.04, 2.2, 0.03, 0.5, 1, 1.8, 1), 'ember'),
   ]);
+
+/** Kapı çerçevesi: iki payanda + üst kemer (kanatlar GateRenderer'da, kırılınca gizlenir). Genişlik 5 m'lik açıklık. */
+export const gateFrame = (swatch: 'helmStone' | 'gondorStone' = 'helmStone'): BufferGeometry =>
+  verticalShade(
+    merge([
+      paint(place(new BoxGeometry(3, 7, 4), -4, 3.5, 0), swatch),
+      paint(place(new BoxGeometry(3, 7, 4), 4, 3.5, 0), swatch),
+      paint(place(new BoxGeometry(5, 2, 4), 0, 6, 0), swatch),
+      ...[-5, -3, 3, 5].map((x) => paint(place(new BoxGeometry(0.9, 0.9, 0.5), x, 7.45, 1.6), swatch)),
+      ...[-5, -3, 3, 5].map((x) => paint(place(new BoxGeometry(0.9, 0.9, 0.5), x, 7.45, -1.6), swatch)),
+    ]),
+    0.72,
+    1.0,
+  );
+
+/** Kapı kanatları (iki ahşap kanat + demir kuşaklar); GateRenderer instance'ı. */
+export const gateDoors = (): BufferGeometry =>
+  merge([
+    paint(place(new BoxGeometry(2.45, 5, 0.6), -1.27, 2.5, 1.2), 'woodDark'),
+    paint(place(new BoxGeometry(2.45, 5, 0.6), 1.27, 2.5, 1.2), 'woodDark'),
+    paint(place(new BoxGeometry(5.2, 0.3, 0.7), 0, 3.6, 1.3), 'iron'),
+    paint(place(new BoxGeometry(5.2, 0.3, 0.7), 0, 1.4, 1.3), 'iron'),
+    paint(place(new BoxGeometry(0.4, 0.4, 0.75), -0.4, 2.5, 1.3), 'ironDark'),
+    paint(place(new BoxGeometry(0.4, 0.4, 0.75), 0.4, 2.5, 1.3), 'ironDark'),
+  ]);
+
+/** Kırık kapı enkazı: devrilmiş kanat parçaları ve taşlar. */
+export const gateRubble = (rand: Rand): BufferGeometry =>
+  merge([
+    paint(place(new BoxGeometry(2.4, 0.4, 4.6), -1.2, 0.2, 2.6, 0.3), 'woodDark'),
+    paint(place(new BoxGeometry(2.2, 0.4, 4.2), 1.4, 0.35, 3.0, -0.4), 'woodDark'),
+    ...[0, 1, 2, 3, 4].map((i) =>
+      paint(
+        place(jitter(new DodecahedronGeometry(0.5, 0), 0.2, rand), -2 + i, 0.3, 1 + (i % 2), rand() * 6),
+        'helmStone',
+      ),
+    ),
+  ]);
+
+/** Taş köprü güvertesi: uzunluk boyunca (yerel +Z) korkuluklu, kemerli ayaklar. */
+export const bridgeDeck = (length: number, width: number): BufferGeometry => {
+  const parts = [paint(place(new BoxGeometry(width + 1, 0.8, length), 0, 0.4, 0), 'helmStone')];
+  for (const s of [-1, 1])
+    parts.push(
+      paint(place(new BoxGeometry(0.6, 1.1, length), (s * (width + 0.4)) / 2, 1.2, 0), 'helmStoneDark'),
+    );
+  const piers = Math.max(2, Math.round(length / 9));
+  for (let i = 0; i < piers; i++) {
+    const z = -length / 2 + ((i + 0.5) * length) / piers;
+    parts.push(paint(place(new BoxGeometry(width + 1.6, 4, 2), 0, -1.8, z), 'helmStoneDark'));
+  }
+  return verticalShade(merge(parts), 0.7, 1.0);
+};
+
+/**
+ * Kale (Citadel) burcu — özgün FD haritalarının kalbi: kare taban, dört köşe kulesi, ortada
+ * yüksek baş kule ve kurşun-mavi sivri çatılar, ön yüzde (+Z) büyük kapı ve sancaklar.
+ * Taban ≈ 18 × 18 m, yükseklik ≈ 26 m.
+ */
+export const fortressKeep = (): BufferGeometry => {
+  const parts: BufferGeometry[] = [
+    paint(place(new BoxGeometry(19, 1.2, 19), 0, 0.6, 0), 'gondorStone'),
+    paint(place(new BoxGeometry(15, 10, 15), 0, 6, 0), 'gondorWhite'),
+    paint(place(new BoxGeometry(15.6, 0.8, 15.6), 0, 11.2, 0), 'gondorStone'),
+    paint(place(new BoxGeometry(8, 9, 8), 0, 15.6, 0), 'gondorWhite'),
+    paint(place(new ConeGeometry(6.4, 7, 4), 0, 23.6, 0, Math.PI / 4), 'gondorRoof'),
+    paint(place(new CylinderGeometry(0.1, 0.1, 4, 4), 0, 28.6, 0), 'wood'),
+    paint(place(new BoxGeometry(0.08, 1.6, 2.6), 0, 29.6, 1.3), 'team0'),
+    // Kapı + kemer
+    paint(place(new BoxGeometry(4.2, 5.2, 0.6), 0, 3.6, 7.6), 'woodDark'),
+    paint(place(new BoxGeometry(5.4, 1, 1), 0, 6.6, 7.7), 'gondorStone'),
+    paint(place(new BoxGeometry(4.4, 0.25, 0.7), 0, 4.4, 7.95), 'iron'),
+  ];
+  for (const [x, z] of [
+    [-7.5, -7.5],
+    [7.5, -7.5],
+    [-7.5, 7.5],
+    [7.5, 7.5],
+  ] as const) {
+    parts.push(paint(place(new CylinderGeometry(2.4, 2.8, 15, 8), x, 7.5, z), 'gondorWhite'));
+    parts.push(paint(place(new CylinderGeometry(3, 2.4, 0.8, 8), x, 15.4, z), 'gondorStone'));
+    parts.push(paint(place(new ConeGeometry(2.8, 4.6, 8), x, 18.1, z), 'gondorRoof'));
+  }
+  for (const x of [-6, 6]) parts.push(paint(place(new BoxGeometry(0.06, 3.4, 1.6), x, 8.2, 7.9), 'team0'));
+  // Ön yüz pencereleri
+  for (const x of [-4, 4]) parts.push(paint(place(new BoxGeometry(1, 2, 0.2), x, 8, 7.55), 'ironDark'));
+  parts.push(...merlonRing(5.4, 20.6, 8, 'gondorWhite'));
+  return verticalShade(merge(parts), 0.7, 1.0);
+};
+
+/** Mancınık (kule yuvası + kale yükseltmesi): ahşap şasi, karşı ağırlıklı kol, taş sepeti. */
+export const catapultModel = (): BufferGeometry =>
+  verticalShade(
+    merge([
+      paint(place(new CylinderGeometry(2.2, 2.6, 1.6, 8), 0, 0.8, 0), 'helmStone'),
+      paint(place(new BoxGeometry(3.6, 0.4, 2.4), 0, 1.8, 0), 'wood'),
+      ...[-1, 1].map((s) => paint(place(new BoxGeometry(0.3, 2.6, 0.3), 0, 3.1, s * 1.0), 'woodDark')),
+      paint(place(new BoxGeometry(0.3, 0.3, 2.4), 0, 4.3, 0), 'woodDark'),
+      paint(place(new BoxGeometry(5.2, 0.28, 0.28), 0.6, 4.6, 0, 0, 1, 1, 1).rotateZ(0), 'wood'),
+      paint(place(new BoxGeometry(1.1, 1.1, 1.1), -1.9, 3.9, 0), 'ironDark'), // karşı ağırlık
+      paint(place(new BoxGeometry(0.8, 0.35, 0.8), 3.0, 4.8, 0), 'leather'), // sepet
+      paint(place(new DodecahedronGeometry(0.35, 0), 3.0, 5.15, 0), 'rockLight'),
+    ]),
+    0.72,
+    1.0,
+  );
+
+/** Hazine yükseltmesi: altın kubbeli küçük taş hazine binası. */
+export const treasuryHouse = (): BufferGeometry =>
+  verticalShade(
+    merge([
+      paint(place(new BoxGeometry(5, 3.4, 4), 0, 1.7, 0), 'gondorStone'),
+      paint(place(new CylinderGeometry(2.4, 2.6, 0.6, 8), 0, 3.7, 0), 'gondorWhite'),
+      paint(place(new ConeGeometry(2.5, 2.4, 8), 0, 5.2, 0), 'gold'),
+      paint(place(new BoxGeometry(1.4, 2, 0.2), 0, 1.1, 2.05), 'ironDark'),
+    ]),
+    0.72,
+    1.05,
+  );
+
+/** Taş takviye: kale tabanını saran eğimli kalın etek (payandalar). */
+export const keepSkirt = (): BufferGeometry =>
+  verticalShade(
+    merge([
+      paint(place(new CylinderGeometry(12.2, 13.6, 3.2, 8), 0, 1.6, 0, Math.PI / 8), 'helmStoneDark'),
+      ...[0, 1, 2, 3].map((i) =>
+        paint(
+          place(new BoxGeometry(2.2, 6, 3), 0, 3, 0)
+            .translate(12.2, 0, 0)
+            .rotateY((i * Math.PI) / 2 + Math.PI / 4),
+          'helmStone',
+        ),
+      ),
+    ]),
+    0.65,
+    0.95,
+  );
+
+/** Şifa sancağı direği (bayrak ayrı emissive batch'te: healingFlag). */
+export const bannerPole = (): BufferGeometry =>
+  merge([
+    paint(place(new CylinderGeometry(0.5, 0.7, 0.8, 6), 0, 0.4, 0), 'gondorStone'),
+    paint(place(new CylinderGeometry(0.1, 0.12, 8, 5), 0, 4.4, 0), 'wood'),
+    paint(place(new ConeGeometry(0.25, 0.6, 5), 0, 8.7, 0), 'gold'),
+  ]);
+
+export const healingFlag = (): BufferGeometry =>
+  merge([
+    paint(place(new BoxGeometry(0.08, 2.6, 1.8), 0, 6.6, 0.95), 'magic'),
+    paint(place(new BoxGeometry(0.1, 0.9, 0.5), 0, 6.8, 0.95), 'ember'),
+  ]);

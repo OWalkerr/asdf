@@ -42,7 +42,7 @@ export class MatchHud {
     for (const g of def.gates) {
       const el = document.createElement('div');
       el.className = 'gate';
-      el.innerHTML = `<span class="name">${GATE_NAMES[g.id] ?? g.id}</span><span class="bar"><i></i></span><span class="hp"></span><button type="button" class="repair" title="Kapıyı onar: ${ECONOMY.repairCost} altın, ${ECONOMY.repairTime} sn'de +%${ECONOMY.repairPercent}">Onar ◆${ECONOMY.repairCost}</button>`;
+      el.innerHTML = `<span class="name">${g.name ?? GATE_NAMES[g.id] ?? g.id}</span><span class="bar"><i></i></span><span class="hp"></span><button type="button" class="repair" title="Kapıyı onar: ${ECONOMY.repairCost} altın, ${ECONOMY.repairTime} sn'de +%${ECONOMY.repairPercent}">Onar ◆${ECONOMY.repairCost}</button>`;
       const index = this.gates.length;
       el.querySelector('button')?.addEventListener('click', () => this.onRepair?.(index));
       this.root.appendChild(el);

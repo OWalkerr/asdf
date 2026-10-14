@@ -112,6 +112,7 @@ export const HELMS_DEEP: MapDef = {
   gates: [
     {
       id: 'hornburg_gate',
+      name: 'Hornburg Kapısı',
       pos: GATE_POS,
       facing: GATE_FACING,
       width: 6,
@@ -119,10 +120,19 @@ export const HELMS_DEEP: MapDef = {
       breach: HORNBURG_GATE_SHAPE,
     },
     // Deeping Wall menfezi (culvert): savunucuların çıkış kapısı, düşmanın kırmaya çalıştığı zayıf nokta.
-    { id: 'culvert', pos: [CULVERT_X, WALL_Z], facing: 90, width: 4, hp: 3000, breach: CULVERT_SHAPE },
+    {
+      id: 'culvert',
+      name: 'Menfez',
+      pos: [CULVERT_X, WALL_Z],
+      facing: 90,
+      width: 4,
+      hp: 3000,
+      breach: CULVERT_SHAPE,
+    },
     // Menfez düşerse vadiye dolan düşman Hornburg'a arka kapıdan girmeye çalışır.
     {
       id: 'hornburg_postern',
+      name: 'Arka Kapı',
       pos: POSTERN_POS,
       facing: -60,
       width: 4,
@@ -182,6 +192,14 @@ export const HELMS_DEEP: MapDef = {
       target: 'culvert',
       targets: ['culvert', 'hornburg_postern'],
     },
+  ],
+  // Başlangıç garnizonu: sur arkasında okçular ve piyade (menfezden çıkışa hazır), Hornburg'da muhafız.
+  garrison: [
+    { unitType: UnitTypeId.GondorArcher, pos: [20, -33], count: 2 },
+    { unitType: UnitTypeId.GondorSoldier, pos: [2, -46], count: 2 },
+    { unitType: UnitTypeId.TowerGuard, pos: [46, -46], count: 2 },
+    { unitType: UnitTypeId.GondorArcher, pos: [-56, -24], count: 1 },
+    { unitType: UnitTypeId.GondorSoldier, pos: [-62, -22], count: 2 },
   ],
   nav: {
     cellSize: 2,

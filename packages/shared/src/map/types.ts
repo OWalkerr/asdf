@@ -32,6 +32,8 @@ export interface SlotDef {
 
 export interface GateDef {
   id: string;
+  /** Arayüzde görünen ad. */
+  name?: string;
   pos: Vec2;
   /** Kapının dışa baktığı yön (derece). */
   facing: number;
@@ -121,6 +123,8 @@ export interface TerrainDef {
   basins?: readonly (readonly Vec2[])[];
   /** Nehirler: eksen çoklu çizgisi ve genişlik (su yüzeyi + yatak). */
   rivers?: readonly { points: readonly Vec2[]; width: number }[];
+  /** Köprüler: nehir yatağını oyulmaktan korur ve üstüne taş güverte çizilir (a → b ekseni). */
+  bridges?: readonly { a: Vec2; b: Vec2; width: number }[];
   /** Yollar (toprak boya, düzleştirme): TD yolları ve kale yolları. */
   roads?: readonly { points: readonly Vec2[]; width: number }[];
   /** Taban arazi renk teması. */
@@ -183,6 +187,8 @@ export interface MapDef {
   lives?: number;
   /** Harita seçim ekranı için kısa açıklama. */
   blurb?: string;
+  /** Başlangıç garnizonu (oyuncu tabakları; istemci maç başında spawn komutu yollar). */
+  garrison?: readonly { unitType: number; pos: Vec2; count: number }[];
   gates: readonly GateDef[];
   walls: readonly WallDef[];
   slots: readonly SlotDef[];

@@ -1,15 +1,36 @@
-import { DEFAULT_DIFFICULTY, DIFFICULTIES } from '@bulwark/shared';
+import { DEFAULT_DIFFICULTY, DIFFICULTIES, MAP_DEFS } from '@bulwark/shared';
 
 /**
- * Maç öncesi ekran (GDD §4.4, §11): harita adı, kısa görev metni ve zorluk seçimi.
- * Seçim yapılınca çözülür; sim seçilen zorlukla başlatılır. `?difficulty=easy|normal|hard`
- * veya otomasyon (navigator.webdriver; `?intro` ile yine gösterilir) ekranı atlar.
+ * Maç öncesi ekran (GDD §4.4, §11): harita (FD / TD) ve zorluk seçimi. Seçim yapılınca çözülür;
+ * harita ve sim seçilen değerlerle kurulur. `?map=…&difficulty=…` ikisi birden verilirse veya
+ * otomasyonda (navigator.webdriver; `?intro` ile yine gösterilir) ekran atlanır.
  */
-export const chooseDifficulty = (mapName: string): Promise<number> => {
+export interface MatchChoice {
+  mapId: string;
+  difficulty: number;
+}
+
+const MAP_IDS = Object.keys(MAP_DEFS);
+const DEFAULT_MAP = MAP_IDS[0] as string;
+
+export const chooseMatch = (): Promise<MatchChoice> => {
   const params = new URLSearchParams(location.search);
+  const urlMap = params.get('map');
   const fromUrl = DIFFICULTIES.findIndex((d) => d.key === params.get('difficulty'));
-  if (fromUrl >= 0) return Promise.resolve(fromUrl);
-  if (navigator.webdriver && !params.has('intro')) return Promise.resolve(DEFAULT_DIFFICULTY);
+  let mapPick = urlMap && MAP_DEFS[urlMap] ? urlMap : DEFAULT_MAP;
+  if (!urlMap)
+    try {
+      const m = localStorage.getItem('bulwark.map');
+      if (m && MAP_DEFS[m]) mapPick = m;
+    } catch {
+      /* depolama yok */
+    }
+  if (fromUrl >= 0 && urlMap) return Promise.resolve({ mapId: mapPick, difficulty: fromUrl });
+  if (navigator.webdriver && !params.has('intro'))
+    return Promise.resolve({
+      mapId: urlMap && MAP_DEFS[urlMap] ? urlMap : 'helms_deep',
+      difficulty: fromUrl >= 0 ? fromUrl : DEFAULT_DIFFICULTY,
+    });
   let saved = DEFAULT_DIFFICULTY;
   try {
     const raw = localStorage.getItem('bulwark.difficulty');
@@ -24,9 +45,20 @@ export const chooseDifficulty = (mapName: string): Promise<number> => {
     root.innerHTML = `
       <div class="card">
         <small>Orta Dünya · Kale Savunması</small>
-        <h1>${mapName}</h1>
-        <p>Isengard'ın ordusu fırtınalı gecede Deeping Wall'a yürüyor. Kuleler kurun, birlik yetiştirin,
-        kapıları koruyun ve beş dalgaya dayanın. Koçbaşlarına dikkat: oklar onları durdurmaz.</p>
+        <h1>Bulwark</h1>
+        <p>Bir harita seç: <b>Kale Savunması</b> haritalarında kapıları tut ve kaleyi koru; kale düşerse savaş biter.
+        <b>Kule Savunması</b> haritalarında düşman yolu izler — sızan her tabur can götürür.</p>
+        <div class="maps">
+          ${MAP_IDS.map((id) => {
+            const m = MAP_DEFS[id];
+            if (!m) return '';
+            return `<button type="button" data-map="${id}" class="${id === mapPick ? 'sel' : ''}">
+              <i class="mode ${m.mode}">${m.mode === 'TD' ? 'Kule Savunması' : 'Kale Savunması'}</i>
+              <b>${m.name}</b><span>${m.blurb ?? ''}</span>
+              <em>${m.waves.length} dalga${m.mode === 'TD' ? ` · ${m.lives ?? 20} can` : ` · ${m.gates.length} kapı`}</em>
+            </button>`;
+          }).join('')}
+        </div>
         <div class="diffs">
           ${DIFFICULTIES.map(
             (d, i) => `<button type="button" data-i="${i}" class="${i === saved ? 'sel' : ''}">
@@ -39,7 +71,16 @@ export const chooseDifficulty = (mapName: string): Promise<number> => {
         <p class="keys">Sol tık: seç · Sağ tık: yürü/saldır · WASD/Q/E: kamera · F: Aragorn · 1–6: büyüler · M: ses</p>
       </div>`;
     document.body.appendChild(root);
-    let pick = saved;
+    let pick = fromUrl >= 0 ? fromUrl : saved;
+    root.querySelectorAll<HTMLButtonElement>('.maps button').forEach((b) => {
+      b.addEventListener('click', () => {
+        mapPick = b.dataset.map ?? mapPick;
+        root.querySelectorAll('.maps button').forEach((x) => {
+          x.classList.toggle('sel', x === b);
+        });
+      });
+      b.addEventListener('dblclick', () => go());
+    });
     root.querySelectorAll<HTMLButtonElement>('.diffs button').forEach((b) => {
       b.addEventListener('click', () => {
         pick = Number(b.dataset.i);
@@ -52,12 +93,13 @@ export const chooseDifficulty = (mapName: string): Promise<number> => {
     const go = () => {
       try {
         localStorage.setItem('bulwark.difficulty', String(pick));
+        localStorage.setItem('bulwark.map', mapPick);
       } catch {
         /* depolama yok */
       }
       root.classList.add('out');
       setTimeout(() => root.remove(), 400);
-      resolve(pick);
+      resolve({ mapId: mapPick, difficulty: pick });
     };
     root.querySelector('.go')?.addEventListener('click', go);
   });

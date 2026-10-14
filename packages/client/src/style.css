@@ -730,3 +730,51 @@ body.debug #hud {
   margin-top: 16px;
   font-size: 12px;
 }
+#startscreen .maps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+#startscreen .maps button {
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+  text-align: left;
+  font: inherit;
+  color: var(--ink);
+  background: rgba(30, 27, 22, 0.85);
+  border: 1px solid rgba(201, 162, 58, 0.35);
+  border-radius: 8px;
+  cursor: pointer;
+}
+#startscreen .maps button.sel {
+  border-color: #f0c95a;
+  box-shadow:
+    0 0 0 1px #f0c95a,
+    0 0 18px rgba(240, 201, 90, 0.2);
+}
+#startscreen .maps b {
+  font-size: 17px;
+  font-weight: normal;
+  color: #f0c95a;
+}
+#startscreen .maps span {
+  font-size: 12px;
+  line-height: 1.4;
+}
+#startscreen .maps em {
+  font-style: normal;
+  font-size: 11px;
+  color: var(--ink-dim);
+}
+#startscreen .mode {
+  font-style: normal;
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #9cc4ff;
+}
+#startscreen .mode.TD {
+  color: #b6e39a;
+}

@@ -1,4 +1,4 @@
-import { type SlotDef, UnitTypeId } from '@bulwark/shared';
+import { MAP_DEFS, type SlotDef, UnitTypeId } from '@bulwark/shared';
 import { buildNavGrid, createOpenGrid } from '@bulwark/sim';
 import { Scene, type Texture, Timer } from 'three/webgpu';
 import { CommandPanel } from './app/CommandPanel';
@@ -6,7 +6,7 @@ import { GALLERY_CENTER, updateGallery } from './app/gallery';
 import { MatchHud } from './app/MatchHud';
 import { Minimap } from './app/Minimap';
 import { SpellBar } from './app/SpellBar';
-import { chooseDifficulty } from './app/StartScreen';
+import { chooseMatch } from './app/StartScreen';
 import { PLAYER, Scenario } from './app/scenario';
 import { AudioEngine } from './audio/AudioEngine';
 import { GameAudio } from './audio/GameAudio';
@@ -14,6 +14,7 @@ import { createDebugPanel } from './debug/DebugPanel';
 import { GroundPicker } from './input/GroundPicker';
 import { PlayerInput } from './input/PlayerInput';
 import { Selection } from './input/Selection';
+import { buildGenericMap } from './maps/genericMap';
 import { buildHelmsDeep } from './maps/helmsDeep';
 import { createRain } from './render/atmosphere/rain';
 import { createSky } from './render/atmosphere/sky';
@@ -34,6 +35,8 @@ import { buildNavOverlay } from './render/map/NavOverlay';
 import { createToonParams, type ToonParams } from './render/materials/ToonMaterial';
 import { createPaletteTexture } from './render/palette';
 import { createRenderContext } from './render/renderer';
+import { FortressRenderer } from './render/structures/FortressRenderer';
+import { GateRenderer } from './render/structures/GateRenderer';
 import { StructureRenderer } from './render/structures/StructureRenderer';
 import { UnitRenderer } from './render/units/UnitRenderer';
 import { SimHost } from './sim-host/SimHost';
@@ -43,9 +46,12 @@ import { SimHost } from './sim-host/SimHost';
  * Harita `?map=helms_deep` (varsayılan) veya `?map=lookdev` ile seçilir.
  * Sim Web Worker'da çalışır (SimHost); birimler snapshot'tan ara değerlenerek çizilir.
  */
-const MAPS: Record<string, (palette: Texture, toon: ToonParams) => MapScene> = {
-  helms_deep: buildHelmsDeep,
-  lookdev: buildLookdevScene,
+const buildMap = (mapId: string, palette: Texture, toon: ToonParams): MapScene => {
+  if (mapId === 'lookdev') return buildLookdevScene(palette, toon);
+  if (mapId === 'helms_deep') return buildHelmsDeep(palette, toon);
+  const def = MAP_DEFS[mapId];
+  if (!def) throw new Error(`Bilinmeyen harita: ${mapId} (seçenekler: ${Object.keys(MAP_DEFS).join(', ')})`);
+  return buildGenericMap(palette, toon, def);
 };
 
 const boot = async () => {
@@ -62,10 +68,12 @@ const boot = async () => {
   const gallery = params.has('gallery');
   const debugMode = params.has('debug') && params.get('debug') !== '0';
   if (debugMode) document.body.classList.add('debug');
-  const mapId = gallery ? 'lookdev' : (params.get('map') ?? 'helms_deep');
-  const build = MAPS[mapId];
-  if (!build) throw new Error(`Bilinmeyen harita: ${mapId} (seçenekler: ${Object.keys(MAPS).join(', ')})`);
-  const world = build(palette, toon);
+  // Maç öncesi ekran: harita + zorluk (galeri / look-dev'de yok).
+  const lookdev = gallery || params.get('map') === 'lookdev';
+  const choice = lookdev ? { mapId: 'lookdev', difficulty: 1 } : await chooseMatch();
+  const mapId = choice.mapId;
+  const difficulty = choice.difficulty;
+  const world = buildMap(mapId, palette, toon);
   scene.add(world.root);
   subtitle.textContent = `· ${world.name}`;
 
@@ -76,7 +84,7 @@ const boot = async () => {
   const sky = createSky(FOG_COLOR, '#262e3c', '#d98a4e');
   sky.sunDir.value.copy(light.sun.position).normalize();
   scene.add(sky.mesh);
-  const weather = !gallery && mapId === 'helms_deep';
+  const weather = !lookdev;
   const rain = weather ? createRain() : null;
   if (rain) scene.add(rain.mesh);
   const lightning = weather ? new Lightning(scene, light.hemi, sky.flash) : null;
@@ -92,8 +100,6 @@ const boot = async () => {
 
   // --- Simülasyon (Web Worker) --------------------------------------------------
   const UNIT_CAPACITY = 8192;
-  // Maç öncesi zorluk seçimi (galeri / look-dev'de yok).
-  const difficulty = world.def && !gallery ? await chooseDifficulty(world.name) : 1;
   const sim = await SimHost.start({
     difficulty,
     seed: world.def?.seed ?? 1,
@@ -114,7 +120,7 @@ const boot = async () => {
   const arrows = new ProjectileRenderer(2048, ground.sample);
   const impacts = new ImpactFx(palette, toon, ground.sample);
   scene.add(...impacts.meshes);
-  scene.add(cursor.mesh, marker.mesh, rings.mesh, arrows.mesh);
+  scene.add(cursor.mesh, marker.mesh, rings.mesh, arrows.mesh, arrows.stones);
   const hud = world.def && !gallery ? new MatchHud(world.def) : null;
   if (hud) hud.onRepair = (gate) => scenario.repair(gate);
   // --- Ses (prosedürel WebAudio; ilk tıklamada açılır, M: sessiz) ---------------------
@@ -133,6 +139,21 @@ const boot = async () => {
   const selection = new Selection(units, PLAYER);
   const structures = world.def ? new StructureRenderer(world.def, world.heightAt, palette, toon) : null;
   if (structures) scene.add(...structures.meshes);
+  // Kapı kanatları (kırılınca enkaz) ve kale yükseltme görselleri.
+  const hdPlateau = world.def?.id === 'helms_deep' ? world.def.terrain.plateaus[0] : undefined;
+  const gates = world.def
+    ? new GateRenderer(world.def, world.heightAt, palette, toon, (i) => {
+        const g = world.def?.gates[i];
+        if (!hdPlateau || !g) return undefined;
+        return g.id === 'culvert' ? 0.4 : hdPlateau.height - 0.4;
+      })
+    : null;
+  if (gates) scene.add(...gates.meshes);
+  const fortressFx =
+    world.def && world.def.id !== 'helms_deep'
+      ? new FortressRenderer(world.def, world.heightAt, palette, toon)
+      : null;
+  if (fortressFx) scene.add(...fortressFx.meshes);
   const banners = new BattalionHud(palette, toon);
   if (!gallery) scene.add(...banners.meshes);
   const panel =
@@ -241,6 +262,8 @@ const boot = async () => {
       units.updateFromSim(sim, now);
       arrows.update(sim, now);
       structures?.update(sim.frame);
+      gates?.update(sim.frame.match);
+      fortressFx?.update(sim.frame.match);
       impacts.update(sim.frame, dt);
     }
     sky.update(cam.camera.position);
