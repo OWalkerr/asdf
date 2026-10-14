@@ -1,38 +1,23 @@
 import { Rng } from '@bulwark/shared';
-import { float, positionWorld, sin, texture, time, uniform, uv } from 'three/tsl';
-import {
-  type BatchedMesh,
-  Group,
-  Matrix4,
-  MeshToonNodeMaterial,
-  Quaternion,
-  type Texture,
-  Vector3,
-} from 'three/webgpu';
+import { Group, Matrix4, Quaternion, type Texture, Vector3 } from 'three/webgpu';
 import { StaticBatch } from '../geometry/StaticBatch';
 import { createToonMaterial, type ToonParams } from '../materials/ToonMaterial';
-import { type FloatUniform, setEmissiveNode } from '../tsl-types';
+import { createFlameMaterial } from './emissive';
+import { createLookdevHeightField, createLookdevPaint, DEFAULT_TERRAIN } from './lookdevTerrain';
+import type { MapScene } from './MapScene';
 import * as P from './prefabs';
-import { buildTerrainGeometry, createHeightField, DEFAULT_TERRAIN, type TerrainSpec } from './terrain';
+import { buildTerrainGeometry } from './terrain';
 
 /**
  * Look-dev sahnesi (Phase 1 / Adım 3): ışık, toon shader ve palet ayarı için
  * küçük bir kale dioraması. Tüm statik geometri 2 BatchedMesh'te (toon + emissive).
- * Adım 4'te yerini sadeleştirilmiş Helm's Deep alacak.
+ * `?map=lookdev` ile açılır.
  */
-export interface LookdevScene {
-  root: Group;
-  heightAt: (x: number, z: number) => number;
-  spec: TerrainSpec;
-  stats: { instances: number; batches: number };
-  flameIntensity: FloatUniform;
-}
-
 const FORT_CENTER = { x: 0, z: -10 };
 
-export const buildLookdevScene = (palette: Texture, params: ToonParams): LookdevScene => {
+export const buildLookdevScene = (palette: Texture, params: ToonParams): MapScene => {
   const spec = DEFAULT_TERRAIN;
-  const heightAt = createHeightField(spec);
+  const heightAt = createLookdevHeightField(spec);
   const rng = new Rng(2026);
   const rand = () => rng.nextU32() / 4294967296;
 
@@ -45,7 +30,7 @@ export const buildLookdevScene = (palette: Texture, params: ToonParams): Lookdev
     m.compose(new Vector3(x, y, z), q.setFromAxisAngle(up, rotY), new Vector3(s, s, s));
 
   // --- Arazi -----------------------------------------------------------------
-  solid.add(buildTerrainGeometry(spec, heightAt), new Matrix4());
+  solid.add(buildTerrainGeometry(spec, heightAt, createLookdevPaint(spec)), new Matrix4(), true);
 
   // --- Kale: güneye açılan yay şeklinde sur, kapı, kuleler, ana kale -------------
   const plateauY = spec.plateauHeight;
@@ -126,21 +111,21 @@ export const buildLookdevScene = (palette: Texture, params: ToonParams): Lookdev
   const root = new Group();
   root.name = 'lookdev';
   const instances = solid.instanceCount + glow.instanceCount;
-  const solidMesh = solid.build(createToonMaterial(palette, params), 'static-toon');
-  root.add(solidMesh);
-
-  const flameIntensity = uniform(4.0);
-  const glowMat = new MeshToonNodeMaterial();
-  const flameColor = texture(palette, uv());
-  glowMat.colorNode = flameColor;
-  // Titreşen alev: dünya konumuna göre faz kaydırma ile her mangal farklı titrer.
-  const flicker = sin(time.mul(11).add(positionWorld.x.mul(3.1)).add(positionWorld.z))
-    .mul(0.18)
-    .add(float(1));
-  setEmissiveNode(glowMat, flameColor.rgb.mul(flameIntensity).mul(flicker));
-  const glowMesh: BatchedMesh = glow.build(glowMat, 'static-glow');
+  const collider = solid.buildCollider();
+  root.add(solid.build(createToonMaterial(palette, params), 'static-toon'));
+  const flameMat = createFlameMaterial(palette);
+  const glowMesh = glow.build(flameMat.material, 'static-glow');
   glowMesh.castShadow = false;
   root.add(glowMesh);
 
-  return { root, heightAt, spec, stats: { instances, batches: 2 }, flameIntensity };
+  return {
+    name: 'Look-dev',
+    root,
+    heightAt,
+    size: spec.size,
+    collider,
+    home: { x: 0, z: 12, yaw: 0, distance: 120 },
+    stats: { instances, batches: 2 },
+    flameIntensity: flameMat.intensity,
+  };
 };

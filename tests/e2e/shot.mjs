@@ -1,5 +1,5 @@
 // Görsel smoke test: sahneyi açar, konsol hatalarını toplar, ekran görüntüsü alır.
-// Kullanım: node tests/e2e/shot.mjs <url> <çıktı.png> [kamera-eylemi]
+// Kullanım: node tests/e2e/shot.mjs <url> <çıktı.png> [zoom|rotate|pan|overlay|click:x,y|cam:x,z,yaw,dist]
 import { chromium } from '@playwright/test';
 
 const [url = 'http://localhost:5173/', out = 'shot.png', action = ''] = process.argv.slice(2);
@@ -28,6 +28,24 @@ if (action === 'zoom') {
   await page.keyboard.down('KeyQ');
   await page.waitForTimeout(700);
   await page.keyboard.up('KeyQ');
+} else if (action.startsWith('click:')) {
+  // click:x,y → imleci taşı, sol tıkla (slot seçimi), imleç orada kalsın
+  const [x, y] = action.slice(6).split(',').map(Number);
+  await page.mouse.move(x, y);
+  await page.waitForTimeout(300);
+  await page.mouse.down();
+  await page.mouse.up();
+} else if (action.startsWith('cam:')) {
+  // cam:x,z,yawDeg,mesafe → kamerayı anında konumlandır
+  const [x, z, yaw, dist] = action.slice(4).split(',').map(Number);
+  await page.evaluate(
+    ([x, z, yaw, dist]) => window.__bulwark.cam.setHome(x, z, yaw, dist),
+    [x, z, yaw, dist],
+  );
+} else if (action === 'overlay') {
+  await page.evaluate(() => {
+    window.__bulwark.world.debugOverlay.visible = true;
+  });
 } else if (action === 'pan') {
   await page.keyboard.down('KeyD');
   await page.waitForTimeout(800);

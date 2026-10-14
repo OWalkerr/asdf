@@ -13,7 +13,8 @@
     "@bulwark/sim": "workspace:*",
     "lil-gui": "0.21.0",
     "stats-gl": "4.2.3",
-    "three": "0.186.1"
+    "three": "0.186.1",
+    "three-mesh-bvh": "0.9.16"
   },
   "devDependencies": {
     "@types/three": "0.186.0",

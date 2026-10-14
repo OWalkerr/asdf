@@ -1,8 +1,19 @@
 import { BufferAttribute, BufferGeometry } from 'three/webgpu';
 import { type Swatch, swatchUV } from '../palette';
 
+export type HeightFn = (x: number, z: number) => number;
+
+export interface TerrainGrid {
+  size: number;
+  segments: number;
+}
+
+/** Üçgen başına renk seçimi: ortalama yükseklik, eğim (0 düz … 1 dikey) ve merkez. */
+export type PaintFn = (avgY: number, slope: number, x: number, z: number) => Swatch;
+
 /**
- * Prosedürel low-poly arazi (look-dev / placeholder; GDD §10 diorama formu).
+ * Prosedürel low-poly arazi (GDD §10 diorama formu). Haritadan bağımsızdır:
+ * her harita kendi yükseklik fonksiyonunu ve boyama kuralını verir.
  * Kozmetik/render tarafıdır — sim ileride kendi integer yükseklik ızgarasını kullanır.
  */
 
@@ -12,7 +23,10 @@ const hash2 = (x: number, z: number, seed: number): number => {
   return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
 };
 
-const smooth = (t: number) => t * t * (3 - 2 * t);
+export const smooth = (t: number) => t * t * (3 - 2 * t);
+/** [edge0, edge1] aralığında 0→1 yumuşak geçiş. */
+export const smoothstep = (edge0: number, edge1: number, x: number) =>
+  smooth(Math.min(1, Math.max(0, (x - edge0) / (edge1 - edge0))));
 
 export const valueNoise = (x: number, z: number, seed: number): number => {
   const xi = Math.floor(x);
@@ -26,7 +40,7 @@ export const valueNoise = (x: number, z: number, seed: number): number => {
   return a + (b - a) * tx + (c - a) * tz + (a - b - c + d) * tx * tz;
 };
 
-const fbm = (x: number, z: number, seed: number): number => {
+export const fbm = (x: number, z: number, seed: number): number => {
   let sum = 0;
   let amp = 0.5;
   let freq = 1;
@@ -38,59 +52,8 @@ const fbm = (x: number, z: number, seed: number): number => {
   return sum;
 };
 
-export interface TerrainSpec {
-  size: number;
-  segments: number;
-  seed: number;
-  /** Merkez platosu (kale alanı) yarıçapı ve yüksekliği. */
-  plateauRadius: number;
-  plateauHeight: number;
-  /** Güneyden plato kapısına çıkan yol genişliği. */
-  roadWidth: number;
-}
-
-export const DEFAULT_TERRAIN: TerrainSpec = {
-  size: 260,
-  segments: 65,
-  seed: 7,
-  plateauRadius: 34,
-  plateauHeight: 4,
-  roadWidth: 9,
-};
-
-/** Analitik yükseklik fonksiyonu (kamera ve dekor yerleşimi bunu örnekler). */
-export const createHeightField = (spec: TerrainSpec) => {
-  const half = spec.size / 2;
-  return (x: number, z: number): number => {
-    const n = fbm(x / 38, z / 38, spec.seed);
-    let h = (n - 0.45) * 22;
-    // Kenarlara doğru yükselen kayalık "diorama" çerçevesi.
-    const edge = Math.max(Math.abs(x), Math.abs(z)) / half;
-    h += smooth(Math.min(1, Math.max(0, (edge - 0.72) / 0.28))) * 26;
-    // Merkezde düz plato (kale), yumuşak şev.
-    const r = Math.hypot(x, z + 10);
-    const plateau = 1 - smooth(Math.min(1, Math.max(0, (r - spec.plateauRadius) / 18)));
-    h = h * (1 - plateau) + spec.plateauHeight * plateau;
-    // Güneyden kapıya çıkan rampa yolu.
-    const road = 1 - smooth(Math.min(1, Math.abs(x) / spec.roadWidth));
-    if (z > 0) h = h * (1 - road * 0.85) + (spec.plateauHeight - z * 0.05) * road * 0.85;
-    return h;
-  };
-};
-
-/** Üçgen başına renk: eğim (kaya) ve yüksekliğe (çimen tonları / toprak / kar) göre. */
-const pickSwatch = (avgY: number, slope: number, x: number, z: number, spec: TerrainSpec): Swatch => {
-  if (slope > 0.62) return avgY > 18 ? 'rockLight' : 'rock';
-  if (slope > 0.42) return 'rockDark';
-  if (avgY > 24) return 'snow';
-  if (z > 0 && Math.abs(x) < spec.roadWidth * 0.55) return 'dirt';
-  const n = valueNoise(x / 14, z / 14, spec.seed + 99);
-  if (avgY < -4) return n > 0.5 ? 'grassDark' : 'dirtDark';
-  return n > 0.62 ? 'grassDry' : n < 0.3 ? 'grassDark' : 'grass';
-};
-
-export const buildTerrainGeometry = (spec: TerrainSpec, heightAt: (x: number, z: number) => number) => {
-  const { size, segments } = spec;
+export const buildTerrainGeometry = (grid: TerrainGrid, heightAt: HeightFn, paintAt: PaintFn) => {
+  const { size, segments } = grid;
   const step = size / segments;
   const half = size / 2;
   const triCount = segments * segments * 2;
@@ -122,7 +85,7 @@ export const buildTerrainGeometry = (spec: TerrainSpec, heightAt: (x: number, z:
     const ny = uz * vx - ux * vz;
     const nz = ux * vy - uy * vx;
     const slope = 1 - Math.abs(ny) / Math.hypot(nx, ny, nz);
-    const [u, v] = swatchUV(pickSwatch(avgY, slope, (ax + bx + cx) / 3, (az + bz + cz) / 3, spec));
+    const [u, v] = swatchUV(paintAt(avgY, slope, (ax + bx + cx) / 3, (az + bz + cz) / 3));
     // Hafif yükseklik bazlı ton (alçak yerler daha koyu → derinlik hissi).
     const shade = Math.min(1.05, Math.max(0.78, 0.9 + avgY * 0.008));
     for (const p of [a, b, c]) {

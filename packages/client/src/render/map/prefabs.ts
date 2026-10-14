@@ -155,3 +155,67 @@ export const brazierFlame = (rand: Rand): BufferGeometry =>
     paint(place(jitter(new OctahedronGeometry(0.55, 0), 0.2, rand), 0, 2.0, 0, 0, 1, 1.6, 1), 'fire'),
     paint(place(new OctahedronGeometry(0.3, 0), 0.15, 2.3, 0.1, 0.5, 1, 1.8, 1), 'ember'),
   ]);
+
+/**
+ * Deeping Wall segmenti (GDD §3.4): kalın, yüksek taş sur. Uzunluk X ekseninde,
+ * dış yüz (mazgallar) +Z'de. İç tarafta alçak korkuluk ve yürüyüş yolu.
+ */
+export const deepingWallSegment = (length: number, height: number, thickness: number): BufferGeometry => {
+  const parts = [
+    paint(place(new BoxGeometry(length, height, thickness), 0, height / 2, 0), 'helmStone'),
+    // Dış yüzde hafif eğimli payanda (Helm's Deep'in kalın tabanlı silueti)
+    paint(
+      place(new BoxGeometry(length, height * 0.45, 1.6), 0, height * 0.22, thickness / 2 + 0.6),
+      'helmStoneDark',
+    ),
+    paint(place(new BoxGeometry(length + 0.05, 0.5, thickness + 0.3), 0, height - 0.1, 0), 'helmStoneDark'),
+    // İç korkuluk
+    paint(place(new BoxGeometry(length, 0.8, 0.4), 0, height + 0.4, -thickness / 2 + 0.2), 'helmStone'),
+  ];
+  const merlons = Math.max(2, Math.round(length / 1.8));
+  for (let i = 0; i < merlons; i++) {
+    const x = -length / 2 + (i + 0.5) * (length / merlons);
+    parts.push(
+      paint(place(new BoxGeometry(0.9, 1.1, 0.6), x, height + 0.55, thickness / 2 - 0.3), 'helmStone'),
+    );
+  }
+  return verticalShade(merge(parts), 0.68, 1.0);
+};
+
+/** Deeping Wall üzerindeki yuvarlak merdiven kulesi. */
+export const wallTower = (height: number): BufferGeometry =>
+  verticalShade(
+    merge([
+      paint(place(new CylinderGeometry(4.4, 5.0, height, 8), 0, height / 2, 0), 'helmStone'),
+      paint(place(new CylinderGeometry(4.9, 4.4, 0.7, 8), 0, height + 0.35, 0), 'helmStoneDark'),
+      ...merlonRing(4.6, height + 1.1, 10, 'helmStone'),
+      paint(place(new BoxGeometry(1.6, 2.6, 0.3), 0, 1.3, 4.6), 'woodDark'),
+    ]),
+    0.68,
+    1.0,
+  );
+
+/**
+ * Glittering Caves ağzı (Citadel): kaya kemer + karanlık giriş + yan mangallar için kaide.
+ * Ön yüz +Z'ye (güneye) bakar.
+ */
+export const caveMouth = (rand: Rand): BufferGeometry => {
+  const boulder = (x: number, y: number, z: number, s: number, sy = s) =>
+    verticalShade(
+      paint(
+        place(jitter(new DodecahedronGeometry(1, 0), 0.35, rand), x, y, z, rand() * 6, s, sy, s),
+        'rockDark',
+      ),
+      0.7,
+      1.05,
+    );
+  return merge([
+    paint(place(new BoxGeometry(10, 11, 6), 0, 5.5, -2.5), 'ironDark'),
+    boulder(-8, 5, 0, 5, 7),
+    boulder(8, 5, 0, 5, 7.5),
+    boulder(0, 13, -0.5, 9, 4),
+    boulder(-12, 2, 2, 3.5),
+    boulder(12, 2.5, 1.5, 4),
+    paint(place(new BoxGeometry(8, 0.4, 5), 0, 0.2, 4), 'helmStone'),
+  ]);
+};

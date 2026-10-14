@@ -41,8 +41,8 @@ export const createLighting = (scene: Scene, mapHalfSize: number): LightingRig =
     sun,
     hemi,
     fog,
-    azimuth: 215,
-    elevation: 42,
+    azimuth: 118,
+    elevation: 46,
     applySun() {
       const az = MathUtils.degToRad(rig.azimuth);
       const el = MathUtils.degToRad(rig.elevation);

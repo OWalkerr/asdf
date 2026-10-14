@@ -1,6 +1,6 @@
 import GUI from 'lil-gui';
 import Stats from 'stats-gl';
-import type { WebGPURenderer } from 'three/webgpu';
+import type { Object3D, WebGPURenderer } from 'three/webgpu';
 import type { RTSCamera } from '../render/camera/RTSCamera';
 import type { LightingRig } from '../render/lighting';
 import type { ToonParams } from '../render/materials/ToonMaterial';
@@ -13,6 +13,8 @@ export interface DebugHooks {
   light: LightingRig;
   toon: ToonParams;
   flameIntensity: { value: number };
+  /** Harita debug katmanı (koridorlar, spawn'lar). */
+  overlay?: Object3D | undefined;
 }
 
 export const createDebugPanel = async (renderer: WebGPURenderer, hooks: DebugHooks) => {
@@ -30,6 +32,7 @@ export const createDebugPanel = async (renderer: WebGPURenderer, hooks: DebugHoo
   r.add(ctx.bloomStrength, 'value', 0, 2, 0.01).name('Bloom gücü');
   r.add(ctx.renderer, 'toneMappingExposure', 0.4, 2, 0.01).name('Pozlama');
   r.add(hooks.flameIntensity, 'value', 0, 10, 0.1).name('Alev emissive');
+  if (hooks.overlay) r.add(hooks.overlay, 'visible').name('Koridor/spawn katmanı');
 
   const l = gui.addFolder('Işık');
   l.add(light, 'azimuth', 0, 360, 1).name('Güneş azimut').onChange(light.applySun);
