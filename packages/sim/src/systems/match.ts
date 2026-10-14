@@ -20,6 +20,7 @@ import type { ScheduledGroup, SimWorld } from '../world';
 import { clearLine } from './battalion';
 import { orderBattalions, spawnBattalionRow } from './commands';
 import { fortressDoor, setupFortress } from './fortress';
+import { isLadderType, sendLadderTeam } from './ladders';
 import { isBuilding } from './structures';
 
 /** Saldıran (yapay zekâ) takım. */
@@ -90,6 +91,7 @@ export const waveSystem = (world: SimWorld): void => {
     for (const b of battalions) {
       world.c.Battalion.targetStructure[b] = goal.structure;
       world.c.Battalion.lane[b] = laneIndex + 1;
+      if (isLadderType(g.unitType)) sendLadderTeam(world, b, laneIndex);
     }
     // Boss: takımının liderlik kaynağı (aura) olur.
     if (STAT.boss[g.unitType] === 1 && battalions[0] !== undefined) m.hero[ENEMY_TEAM] = battalions[0];
@@ -153,7 +155,8 @@ export const laneGoal = (world: SimWorld, laneIndex: number): { structure: numbe
   const [ex, ez] = fxv(lane.points[lane.points.length - 1] as Vec2);
   if (map.mode === 'TD') return { structure: 0, x: ex, z: ez };
   const chain = lane.targets ?? [lane.target];
-  for (let k = 0; k < chain.length; k++) {
+  // Ayakta merdiven varsa koridorun ilk kapısı atlanır: düşman surun üstünden geçer.
+  for (let k = (m.laneLadders[laneIndex] as number) > 0 ? 1 : 0; k < chain.length; k++) {
     const gi = map.gates.findIndex((gate) => gate.id === chain[k]);
     const g = m.gates[gi];
     if (g === undefined || (world.c.Structure.hp[g] as number) <= 0) continue;
@@ -178,6 +181,7 @@ export const enemyAiSystem = (world: SimWorld): void => {
   for (const b of query(world, [Battalion, Position])) {
     if (Team.id[b] !== ENEMY_TEAM || Battalion.engaged[b]) continue;
     if ((Battalion.count[b] as number) === 0 || Battalion.mode[b] === BattalionMode.Attack) continue;
+    if ((Battalion.ladder[b] as number) > 0) continue; // ladderSystem yönetir
     const lane = (Battalion.lane[b] as number) - 1;
     if (lane < 0) continue;
     const current = Battalion.targetStructure[b] as number;

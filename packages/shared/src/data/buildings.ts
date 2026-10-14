@@ -252,3 +252,15 @@ export const FORTRESS_WEAPONS = {
   healPercentPerSec: 3,
   treasuryIncome: 4,
 } as const;
+
+/** Kuşatma merdiveni (BFME2): sura dayanmış merdivenin canı; oyuncu askerleri yakındaysa saldırır. */
+export const LADDER = {
+  hp: 600,
+  /** Yıkmaya gelen savunucunun merdiveni fark ettiği mesafe (m). */
+  defendReach: 9,
+  /** Sur soketindeki kule bu mesafedeki merdiveni saniyede `pushDamage` × seviye ile iter. */
+  pushReach: 18,
+  pushDamage: 45,
+  /** Dayandıktan sonra kendiliğinden çökme süresi (s). */
+  lifetime: 90,
+} as const;

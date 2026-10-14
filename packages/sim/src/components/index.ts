@@ -85,6 +85,8 @@ export const createComponents = (capacity = MAX_ENTITIES) => ({
     expires: new Uint32Array(capacity),
     /** Düşman taburunun koridoru (MapDef.lanes indeksi + 1; 0 = yok). */
     lane: new Uint8Array(capacity),
+    /** Merdiven takımının hedef merdiven noktası (koridor noktası indeksi + 1; 0 = yok). */
+    ladder: new Uint8Array(capacity),
   },
   /** Tabur askeri: hangi tabur, hangi yuva, yuva sapması (Fx). */
   Soldier: {
@@ -146,6 +148,8 @@ export const StructureKind = {
   Barracks: 2,
   Forge: 3,
   Catapult: 4,
+  /** Düşmanın sura dayadığı kuşatma merdiveni. */
+  Ladder: 5,
   Fortress: 9,
 } as const;
 

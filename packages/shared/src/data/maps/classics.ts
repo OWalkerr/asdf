@@ -303,6 +303,8 @@ export const fortressDefenceWaves = (spawns: readonly string[], first = 35, gap 
       if (wave >= 3) g(dt + 8, spawn, UnitTypeId.OrcArcher, 1 + Math.floor(w / 8));
       if (wave >= 4) g(dt + 12, spawn, UnitTypeId.UrukHai, Math.min(5, Math.floor((w + 1) / 3)));
       if (wave >= 6 && (w + k) % 2 === 0) g(dt + 2, spawn, UnitTypeId.WargRider, 1 + Math.floor(w / 12));
+      // Kuşatma merdivenleri: 4. dalgadan bir yönden, 10. dalgadan iki yönden.
+      if (wave >= 4 && (w + k) % (wave >= 10 ? 2 : 4) === 0) g(dt + 16, spawn, UnitTypeId.LadderTeam, 1);
     });
     const side = (i: number) => spawns[(w + i) % spawns.length] as string;
     if (wave === 5)

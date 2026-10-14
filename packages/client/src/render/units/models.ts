@@ -760,6 +760,53 @@ export const balrog = (): BufferGeometry => {
   return b.build(1.15);
 };
 
+/**
+ * Uruk merdiven takımı (BFME2 Isengard, Helm's Deep): dört Uruk omuzlarında uzun ahşap kuşatma
+ * merdivenini taşır. SPA: merdiven gövde (sabit), taşıyıcı bacakları kendi kalçalarında döner.
+ */
+export const ladderTeam = (): BufferGeometry => {
+  const b = new ModelBuilder();
+  const y = 1.72;
+  // Merdiven: iki uzun direk + basamaklar, ileri (+x) uzanır.
+  for (const z of [-0.36, 0.36]) b.add(Part.Body, box(6.4, 0.12, 0.12), 'wood', [0.2, y, z]);
+  for (let k = 0; k < 11; k++) b.add(Part.Body, box(0.08, 0.08, 0.72), 'woodDark', [-2.8 + k * 0.6, y, 0]);
+  b.add(Part.Body, box(0.2, 0.2, 0.9), 'iron', [3.45, y, 0]); // demir kancalar
+  for (const cx of [-1.6, 1.4]) {
+    for (const side of [-1, 1]) {
+      const cz = side * 0.7;
+      b.add(Part.Body, box(0.36, 0.55, 0.4), 'urukSkin', [cx, 1.12, cz]);
+      b.add(Part.Body, box(0.3, 0.32, 0.44), 'sootBlack', [cx, 0.86, cz]);
+      const neck: V3 = [cx, 1.38, cz];
+      b.add(Part.Head, box(0.22, 0.22, 0.22), 'urukSkin', [cx + 0.06, 1.5, cz], [0, 0, 0], [1, 1, 1], neck);
+      b.add(Part.Head, box(0.24, 0.12, 0.24), 'sootBlack', [cx + 0.04, 1.63, cz], [0, 0, 0], [1, 1, 1], neck);
+      b.add(Part.Head, box(0.03, 0.08, 0.06), 'whiteHand', [cx + 0.18, 1.5, cz], [0, 0, 0], [1, 1, 1], neck);
+      b.add(
+        side < 0 ? Part.ArmL : Part.ArmR,
+        box(0.13, 0.42, 0.13),
+        'urukSkin',
+        [cx, 1.45, cz - side * 0.24],
+        [side * 0.6, 0, 0],
+        [1, 1, 1],
+        [cx, 1.3, cz],
+      );
+      for (const [part, dz] of [
+        [Part.LegL, -0.1],
+        [Part.LegR, 0.1],
+      ] as const)
+        b.add(
+          part,
+          box(0.15, 0.7, 0.15),
+          'sootBlack',
+          [cx, 0.38, cz + dz],
+          [0, 0, 0],
+          [1, 1, 1],
+          [cx, 0.72, cz + dz],
+        );
+    }
+  }
+  return b.build();
+};
+
 /** Birim tipi id → model üreticisi (UNIT_DEFS ile aynı sıra). */
 export const UNIT_MODELS: Record<number, () => BufferGeometry> = {
   0: gondorSoldier,
@@ -780,4 +827,5 @@ export const UNIT_MODELS: Record<number, () => BufferGeometry> = {
   14: gandalf,
   15: legolas,
   16: balrog,
+  17: ladderTeam,
 };

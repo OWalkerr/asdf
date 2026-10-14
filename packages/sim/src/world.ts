@@ -16,6 +16,7 @@ import { type Components, createComponents } from './components';
 import { MAX_ENTITIES, SIM_HZ } from './constants';
 import { FlowFieldCache } from './nav/flowField';
 import { createOpenGrid, type NavGrid } from './nav/grid';
+import { type LadderSpot, ladderSpots } from './nav/ladders';
 import {
   battalionSpacingSystem,
   battalionSystem,
@@ -26,6 +27,7 @@ import { combatSystem, projectileSystem } from './systems/combat';
 import { deathSystem } from './systems/death';
 import { breachSystem, fortressSystem, tdExitSystem } from './systems/fortress';
 import { expireSystem, heroSystem, trampleSystem } from './systems/heroes';
+import { ladderSystem } from './systems/ladders';
 import { enemyAiSystem, matchSystem, setupMatch, waveSystem } from './systems/match';
 import { movementSystem } from './systems/movement';
 import { animStateSystem, moveToTargetSystem } from './systems/moveToTarget';
@@ -64,6 +66,11 @@ export interface MatchContext {
   nextGroup: number;
   /** MapDef.gates sırasıyla kapı entity'leri. */
   gates: number[];
+  /** Dayanmış kuşatma merdivenleri: yapı eid'i, koridor, nokta, açılan hücreler ve eski maskeleri. */
+  ladders: { eid: number; lane: number; spot: number; cells: number[]; orig: number[]; at: number }[];
+  /** Koridor başına ayakta merdiven sayısı ve merdiven takımı sırası (nokta seçimi). */
+  laneLadders: Uint8Array;
+  ladderSeq: Uint16Array;
   enemiesAlive: number;
   /** Oyuncu başına altın (GDD §5.1). */
   gold: Int32Array;
@@ -100,6 +107,8 @@ export interface SimContext {
   nav: NavGrid;
   fields: FlowFieldCache;
   map: MapDef | null;
+  /** Koridor başına kuşatma merdiveni noktaları (haritadan türetilir). */
+  ladderSpots: LadderSpot[][];
   match: MatchContext;
   /** Tick başına kurulan uzamsal hash (nav hücresi başına bağlı liste; yalnızca canlı birimler). */
   hashHead: Int32Array;
@@ -126,6 +135,7 @@ export const createSimWorld = (
     nav,
     fields: new FlowFieldCache(nav),
     map,
+    ladderSpots: map ? ladderSpots(map, nav) : [],
     match: {
       state: MatchState.Playing,
       difficulty: DIFFICULTIES[difficulty] ? difficulty : DEFAULT_DIFFICULTY,
@@ -141,6 +151,9 @@ export const createSimWorld = (
       schedule: [],
       nextGroup: 0,
       gates: [],
+      ladders: [],
+      laneLadders: new Uint8Array(map?.lanes.length ?? 0),
+      ladderSeq: new Uint16Array(map?.lanes.length ?? 0),
       enemiesAlive: 0,
       gold: new Int32Array(4),
       upgrades: new Uint8Array(4),
@@ -191,6 +204,7 @@ export const stepWorld = (world: SimWorld): void => {
   deathSystem(world);
   expireSystem(world);
   breachSystem(world);
+  ladderSystem(world);
   tdExitSystem(world);
   animStateSystem(world);
   matchSystem(world);
@@ -259,6 +273,9 @@ export const hashWorld = (world: SimWorld): number => {
   for (const v of world.match.fortResearch) h = hashInt(h, v);
   for (const v of world.match.fortProgress) h = hashInt(h, v);
   h = hashInt(h, world.match.breached);
+  for (const l of world.match.ladders) h = hashInt(h, l.eid);
+  for (const v of world.match.laneLadders) h = hashInt(h, v);
+  for (const v of world.match.ladderSeq) h = hashInt(h, v);
   h = hashInt(h, world.match.lives);
   h = hashInt(h, world.match.zone);
   for (const u of world.match.upgrades) h = hashInt(h, u);

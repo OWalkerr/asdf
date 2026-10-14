@@ -40,6 +40,7 @@ import { createPaletteTexture } from './render/palette';
 import { createRenderContext } from './render/renderer';
 import { FortressRenderer } from './render/structures/FortressRenderer';
 import { GateRenderer } from './render/structures/GateRenderer';
+import { LadderRenderer } from './render/structures/LadderRenderer';
 import { StructureRenderer } from './render/structures/StructureRenderer';
 import { UnitRenderer } from './render/units/UnitRenderer';
 import { SimHost } from './sim-host/SimHost';
@@ -110,7 +111,11 @@ const boot = async () => {
     mapId: world.def?.id ?? null,
     mapSize: world.size,
   });
-  const units = new UnitRenderer(UNIT_CAPACITY, palette, toon, ground.sample);
+  // Kuşatma merdivenleri: birimler merdiven geçidinde surun üstüne tırmanır (zemin + ek yükseklik).
+  let ladders: LadderRenderer | null = null;
+  const units = new UnitRenderer(UNIT_CAPACITY, palette, toon, (x, z) =>
+    ladders ? ground.sample(x, z) + ladders.climb(x, z) : ground.sample(x, z),
+  );
   for (const m of units.meshes) scene.add(m);
   const scenario = new Scenario(sim, world.def);
   if (!gallery) scenario.start();
@@ -141,6 +146,11 @@ const boot = async () => {
   const selection = new Selection(units, PLAYER);
   const structures = world.def ? new StructureRenderer(world.def, world.heightAt, palette, toon) : null;
   if (structures) scene.add(...structures.meshes);
+  ladders =
+    world.def?.mode === 'FD'
+      ? new LadderRenderer(world.def, buildNavGrid(world.def), ground.sample, palette, toon)
+      : null;
+  if (ladders) scene.add(ladders.mesh);
   // Kapı kanatları (kırılınca enkaz) ve kale yükseltme görselleri.
   const hdPlateau = world.def?.id === 'helms_deep' ? world.def.terrain.plateaus[0] : undefined;
   const gates = world.def
@@ -342,6 +352,7 @@ const boot = async () => {
       units.updateFromSim(sim, now);
       arrows.update(sim, now);
       structures?.update(sim.frame);
+      ladders?.update(sim.frame);
       gates?.update(sim.frame.match);
       fortressFx?.update(sim.frame.match);
       impacts.update(sim.frame, dt);
@@ -441,6 +452,7 @@ const boot = async () => {
       units,
       structures,
       fortress: fortressFx,
+      ladders,
     },
   });
 };

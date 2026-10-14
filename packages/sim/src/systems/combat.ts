@@ -8,6 +8,7 @@ import {
   fxFromFloat,
   fxLen,
   fxMul,
+  LADDER,
   Upgrade,
 } from '@bulwark/shared';
 import { addComponent, addEntity, entityExists, hasComponent, query, removeEntity } from 'bitecs';
@@ -29,6 +30,8 @@ import { forEachMember } from './spatial';
  */
 const DMG_FIRE = DAMAGE_TYPES.indexOf('fire');
 const ACQUIRE: Fx = fxFromFloat(6);
+/** Savunucunun merdiveni fark edip yıkmaya gittiği mesafe. */
+const LADDER_REACH: Fx = fxFromFloat(LADDER.defendReach);
 const ACQUIRE_CELLS = 3;
 /** Askerin sancaktan bu kadar uzaklaşınca hedefi bırakıp formasyona döndüğü mesafe. */
 const LEASH: Fx = fxFromFloat(14);
@@ -251,7 +254,8 @@ const enemyBuildings = (world: SimWorld): number[] => {
   const out: number[] = [];
   for (const e of query(world, [Structure])) {
     const kind = Structure.kind[e] as number;
-    if (kind !== StructureKind.Gate && kind !== StructureKind.Fortress) out.push(e);
+    if (kind !== StructureKind.Gate && kind !== StructureKind.Fortress && kind !== StructureKind.Ladder)
+      out.push(e);
   }
   return out;
 };
@@ -355,6 +359,43 @@ export const combatSystem = (world: SimWorld): void => {
         }
       }
       continue;
+    }
+
+    // --- Savunucu: yakındaki kuşatma merdivenini yıkar ---
+    if (team === 0 && world.match.ladders.length > 0) {
+      let lad = 0;
+      let bd = LADDER_REACH;
+      for (const l of world.match.ladders) {
+        const d = fxLen(((Position.x[l.eid] as number) - sx) | 0, ((Position.z[l.eid] as number) - sz) | 0);
+        if (d < bd) {
+          bd = d;
+          lad = l.eid;
+        }
+      }
+      if (
+        lad !== 0 &&
+        fxLen(((Position.x[b] as number) - sx) | 0, ((Position.z[b] as number) - sz) | 0) <= LEASH
+      ) {
+        const lx = Position.x[lad] as number;
+        const lz = Position.z[lad] as number;
+        const dx = (lx - sx) | 0;
+        const dz = (lz - sz) | 0;
+        if (bd > (Structure.radius[lad] as number) + (Combat.range[s] as number) + BODY) {
+          const speed = Speed.value[s] as number;
+          Velocity.x[s] = fxMul(fxDiv(dx, bd), speed);
+          Velocity.z[s] = fxMul(fxDiv(dz, bd), speed);
+        } else {
+          Velocity.x[s] = 0;
+          Velocity.z[s] = 0;
+          face(world, s, lx, lz);
+          if ((Combat.cooldown[s] as number) === 0) {
+            applyDamage(world, lad, Combat.damage[s] as number, Combat.dmgType[s] as number);
+            Combat.cooldown[s] = Combat.interval[s] as number;
+            startAttackAnim(world, s);
+          }
+        }
+        continue;
+      }
     }
 
     // --- Kapı: birim hedefi yokken, varmış tabur erişimdeki kapıya vurur ---

@@ -15,6 +15,7 @@ const P: Record<string, string> = {
   club: '<path d="M14 2a5 5 0 0 1 6 6l-3 3-6-6zM10 6l6 6-9 9-3 1-1-1 1-3zM18 3l1-1 1 2zM21 7l1 1-2 0z"/>',
   staff: '<path d="M15 2l2 2-1 1 1 3-2 1-1-3-9 15-2-1L12 5l-1-1 2-2z"/><circle cx="16" cy="4" r="2.2"/>',
   blast: '<path d="M12 2l2 6 6-3-3 6 6 2-6 2 3 6-6-3-2 6-2-6-6 3 3-6-6-2 6-2-3-6 6 3z"/>',
+  ladder: '<path d="M7 2h2v3h6V2h2v20h-2v-3H9v3H7zm2 5v3h6V7zm0 5v3h6v-3z"/>',
   stop: '<rect x="5" y="5" width="14" height="14" rx="2"/>',
   blade: '<path d="M18 2l4 0 0 4-10 10-3-3zM5 15l4 4-2 2-1-1-2 2-2-2 2-2-1-1z"/>',
   armor: '<path d="M12 2l8 3v6c0 5-3.5 9-8 11-4.5-2-8-6-8-11V5z"/>',

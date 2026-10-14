@@ -47,19 +47,22 @@ export class MatchHud {
       const ram = w?.groups.some((g) => g.unitType === 5);
       const boss = w?.groups.some((g) => g.unitType === 7);
       const balrog = w?.groups.some((g) => g.unitType === 16);
+      const ladder = w?.groups.some((g) => g.unitType === 17);
       const troll = w?.groups.some((g) => g.unitType === 13);
       const warg = w?.groups.some((g) => g.unitType === 12);
       const warn = balrog
         ? '<span>Balrog uyandı — ateş aurası yakındakileri yakar; Gandalf ve okçularla uzaktan vurun!</span>'
-        : boss
-          ? "<span>Lurtz savaşa katılıyor — Uruk'lar onun yanında daha sert vurur!</span>"
-          : troll
-            ? '<span>Mağara trolü geliyor — sopası saflarınızı yarar, mızrak ve okla karşılayın!</span>'
-            : warg
-              ? '<span>Warg binicileri hızla yaklaşıyor — okçularınızı koruyun!</span>'
-              : ram
-                ? `<span>Koçbaşı geliyor — ${this.def.mode === 'TD' ? 'mancınıkla durdurun!' : 'piyadeyle kapıyı koruyun!'}</span>`
-                : '';
+        : ladder && this.def.mode === 'FD'
+          ? '<span>Kuşatma merdivenleri! Sura dayanan merdiveni sur kuleleri iter; askerlerinizle yıkın.</span>'
+          : boss
+            ? "<span>Lurtz savaşa katılıyor — Uruk'lar onun yanında daha sert vurur!</span>"
+            : troll
+              ? '<span>Mağara trolü geliyor — sopası saflarınızı yarar, mızrak ve okla karşılayın!</span>'
+              : warg
+                ? '<span>Warg binicileri hızla yaklaşıyor — okçularınızı koruyun!</span>'
+                : ram
+                  ? `<span>Koçbaşı geliyor — ${this.def.mode === 'TD' ? 'mancınıkla durdurun!' : 'piyadeyle kapıyı koruyun!'}</span>`
+                  : '';
       this.banner.innerHTML = `<small>Dalga ${waveIndex} / ${waveCount}</small><b>${w?.name ?? ''}</b>${warn}`;
       this.banner.classList.remove('show');
       void this.banner.offsetWidth; // animasyonu yeniden başlat

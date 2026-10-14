@@ -34,6 +34,7 @@ export const STAT = {
   /** Yarma (alan) vuruş yarıçapı (Fx; 0 = yok) ve yapılara ateşli ok atan okçu. */
   cleave: UNIT_DEFS.map((d) => fxFromFloat(d.cleave ?? 0)) as readonly Fx[],
   siegeArcher: UNIT_DEFS.map((d) => (d.siegeArcher ? 1 : 0)) as readonly number[],
+  ladder: UNIT_DEFS.map((d) => (d.ladder ? 1 : 0)) as readonly number[],
   fireAuraR: UNIT_DEFS.map((d) => fxFromFloat(d.fireAura?.radius ?? 0)) as readonly Fx[],
   fireAuraDmg: UNIT_DEFS.map((d) => d.fireAura?.damage ?? 0) as readonly number[],
   lifeCost: UNIT_DEFS.map((d) => d.lifeCost ?? 1) as readonly number[],

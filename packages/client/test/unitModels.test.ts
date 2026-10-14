@@ -8,6 +8,7 @@ import {
   gandalf,
   gondorArcher,
   gondorSoldier,
+  ladderTeam,
   legolas,
   lorienArcher,
   lurtz,
@@ -39,6 +40,7 @@ const BUDGET: [string, () => import('three/webgpu').BufferGeometry, number][] = 
   ['Gandalf', gandalf, 450],
   ['Legolas', legolas, 450],
   ['Balrog', balrog, 900],
+  ['Merdiven takımı', ladderTeam, 900],
 ];
 
 describe('birim modelleri', () => {

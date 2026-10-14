@@ -99,7 +99,7 @@ export const isBuilding = (world: SimWorld, e: number): boolean => {
   if (!Number.isInteger(e) || e <= 0 || !entityExists(world, e) || !hasComponent(world, e, world.c.Structure))
     return false;
   const kind = world.c.Structure.kind[e] as number;
-  return kind !== StructureKind.Gate && kind !== StructureKind.Fortress;
+  return kind !== StructureKind.Gate && kind !== StructureKind.Fortress && kind !== StructureKind.Ladder;
 };
 
 /** Seviye çarpanı: taban × (100 + pct·(seviye−1)) / 100. */
@@ -231,7 +231,7 @@ export const structureSystem = (world: SimWorld): void => {
   const ruined: number[] = [];
   for (const e of query(world, [Structure, Position])) {
     const kind = Structure.kind[e] as number;
-    if (kind === StructureKind.Fortress) continue; // fortressSystem
+    if (kind === StructureKind.Fortress || kind === StructureKind.Ladder) continue; // fortressSystem / ladderSystem
     if (kind === StructureKind.Gate) {
       // Onarım: kalan süre boyunca her tick max·oran/süre (tamsayı, son tick'te kalan pay).
       const left = Structure.buildLeft[e] as number;
@@ -273,7 +273,32 @@ export const structureSystem = (world: SimWorld): void => {
           target = b;
         }
       }
-      if (target === 0) continue;
+      if (target === 0) {
+        // Boşta: menzildeki kuşatma merdivenine ok.
+        let lad = 0;
+        let ld = (TOWER_RANGE + up * TOWER_RANGE_STEP) | 0;
+        for (const l of world.match.ladders) {
+          const d = fxLen(((Position.x[l.eid] as number) - x) | 0, ((Position.z[l.eid] as number) - z) | 0);
+          if (d < ld) {
+            ld = d;
+            lad = l.eid;
+          }
+        }
+        if (lad !== 0) {
+          for (let v = 0; v < TOWER.volley; v++)
+            fireProjectile(
+              world,
+              x,
+              z,
+              lad,
+              TOWER.damage,
+              arrowDmgType(world, team, TOWER_DMG_TYPE),
+              Structure.height[e] as number,
+            );
+          Structure.cooldown[e] = TOWER_INTERVAL + world.rng.nextInt(4);
+        }
+        continue;
+      }
       const n = Battalion.count[target] as number;
       const dmg = ((TOWER.damage * (100 + BUILDING_LEVEL.towerDamagePercent * up)) / 100) | 0;
       for (let v = 0; v < TOWER.volley + BUILDING_LEVEL.towerVolley * up; v++) {

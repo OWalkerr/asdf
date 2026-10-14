@@ -75,6 +75,14 @@ export const fdWaves = (
         unitType: UnitTypeId.CaveTroll,
         battalions: 1,
       });
+    // Kuşatma merdivenleri (sur noktası olan haritalarda sura dayanır).
+    if (w >= 1)
+      groups.push({
+        atSec: t0 + 18,
+        spawn: spawns[(w + 1) % spawns.length] as string,
+        unitType: UnitTypeId.LadderTeam,
+        battalions: w >= 3 ? 2 : 1,
+      });
     if (w >= 2)
       groups.push({
         atSec: t0 + 24,

@@ -62,6 +62,8 @@ export interface UnitDef {
   cleave?: number;
   /** Okçu birliği yapılara da ok atar (yapılara karşı hasar tipi: ateşli ok). */
   siegeArcher?: boolean;
+  /** Kuşatma merdiveni taşır: sura dayar, düşman surun üstünden geçer. */
+  ladder?: boolean;
   /** Ateş aurası (Balrog): her saniye `radius` içindeki düşmanlara `damage` ateş hasarı. */
   fireAura?: { radius: number; damage: number };
 }
@@ -463,6 +465,33 @@ export const UNIT_DEFS: readonly UnitDef[] = [
     stepRate: 0.9,
     fireAura: { radius: 7, damage: 15 },
   },
+  {
+    // Uruk merdiven takımı (BFME2 Isengard, Helm's Deep): dört Uruk uzun kuşatma merdivenini taşır;
+    // sura varınca merdiveni dayar ve takımın ardından gelenler surun üstünden içeri akar.
+    id: 17,
+    key: 'ladder_team',
+    name: 'Siege Ladder',
+    faction: 'isengard',
+    speed: 4.4,
+    hp: 700,
+    armor: 'medium',
+    attackStyle: 'thrust',
+    damage: 5,
+    damageType: 'slash',
+    attackInterval: 2,
+    range: 2,
+    ranged: false,
+    battalionSize: 1,
+    cost: 250,
+    trainTime: 0,
+    files: 1,
+    spacing: 4,
+    jitter: 0,
+    siegeOnly: true,
+    ladder: true,
+    lifeCost: 2,
+    stepRate: 1.6,
+  },
 ];
 
 export const UnitTypeId = {
@@ -483,6 +512,7 @@ export const UnitTypeId = {
   Gandalf: 14,
   Legolas: 15,
   Balrog: 16,
+  LadderTeam: 17,
 } as const;
 
 export const unitDef = (id: number): UnitDef => {

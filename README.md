@@ -74,6 +74,12 @@ koçbaşı ve Lurtz. Kale haritalarında yakın dövüşçüler kapı yerine yak
 hasarı), Kudret Sözü (30 m, 450). **J Legolas** (1000): uzun menzilli okçu; Ok Rüzgârı (30 ok), Okçu Eğitimi
 (yakın okçu taburları bir rütbe atlar).
 
+**Kuşatma merdivenleri:** kale haritalarında (Helm's Deep, Taşkalkan, Kale Savunması) Uruk merdiven takımları
+kapının yanındaki sur kesimine merdiven dayar; merdiven ayaktayken o koldaki düşman ilk kapıyı atlayıp surun
+üstünden tırmanarak içeri akar. Sur soketindeki okçu kuleleri yakındaki merdiveni iter (seviye başına daha güçlü),
+yakındaki askerleriniz merdivene saldırıp yıkar, boştaki kuleler merdivene ok atar; merdiven 90 sn sonra kendiliğinden
+çöker.
+
 **Balrog:** Kule Savaşı'nın 28. dalgasında iki, Kale Savunması'nın final dalgasında bir Balrog gelir — dev, alev
 kılıçlı, yarma vuruşlu ve çevresini her saniye yakan ateş aurasıyla; ona yakın dövüşle değil Gandalf ve okçularla
 karşılık verin.
