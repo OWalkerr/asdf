@@ -303,11 +303,22 @@ export const fortressDefenceWaves = (spawns: readonly string[], first = 35, gap 
       if (wave >= 6 && (w + k) % 2 === 0) g(dt + 2, spawn, UnitTypeId.WargRider, 1 + Math.floor(w / 12));
     });
     const side = (i: number) => spawns[(w + i) % spawns.length] as string;
-    if (wave === 5) spawns.forEach((s, k) => g(20 + k * 3, s, UnitTypeId.CaveTroll, k % 2 === 0 ? 1 : 0));
-    if (wave === 10) spawns.forEach((s, k) => g(18 + k * 3, s, UnitTypeId.BatteringRam, 1));
-    if (wave === 15) spawns.forEach((s, k) => g(1 + k * 2, s, UnitTypeId.WargRider, 1));
+    if (wave === 5)
+      spawns.forEach((s, k) => {
+        g(20 + k * 3, s, UnitTypeId.CaveTroll, k % 2 === 0 ? 1 : 0);
+      });
+    if (wave === 10)
+      spawns.forEach((s, k) => {
+        g(18 + k * 3, s, UnitTypeId.BatteringRam, 1);
+      });
+    if (wave === 15)
+      spawns.forEach((s, k) => {
+        g(1 + k * 2, s, UnitTypeId.WargRider, 1);
+      });
     if (wave === 20) {
-      spawns.forEach((s, k) => g(20 + k * 3, s, UnitTypeId.CaveTroll, 1));
+      spawns.forEach((s, k) => {
+        g(20 + k * 3, s, UnitTypeId.CaveTroll, 1);
+      });
       g(24, side(0), UnitTypeId.Lurtz, 1);
       g(26, side(1), UnitTypeId.BatteringRam, 2);
     }
