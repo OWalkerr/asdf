@@ -1062,6 +1062,73 @@ export const eowyn = (): BufferGeometry => {
   return b.build(1.06);
 };
 
+/**
+ * Galadhrim savaşçısı (BFME2 Lothlórien): altın-gümüş pul zırh, uzun sivri elf miğferi, yaprak
+ * biçimli uzun kılıç, uzun pelerin. İnce ve uzun siluet. Takım rengi: pelerin.
+ */
+export const galadhrim = (): BufferGeometry => {
+  const b = new ModelBuilder();
+  legs(b, 'rohanGreen', 'leather');
+  b.add(Part.Body, box(0.3, 0.62, 0.44), 'gold', [0, 1.14, 0]); // pul zırh
+  b.add(Part.Body, box(0.06, 0.46, 0.36), 'silver', [0.16, 1.18, 0]);
+  b.add(Part.Body, box(0.32, 0.4, 0.46), 'silver', [0, 0.8, 0]);
+  b.add(Part.Body, box(0.05, 1.05, 0.52), 'team0', [-0.2, 0.95, 0]); // uzun pelerin
+  b.add(Part.Head, box(0.19, 0.21, 0.18), 'sand', [0.02, 1.62, 0]);
+  b.add(Part.Head, new ConeGeometry(0.15, 0.5, 6), 'gold', [-0.02, 1.88, 0], [0, 0, 0.25]); // sivri miğfer
+  b.add(Part.Head, box(0.07, 0.36, 0.2), 'gold', [-0.11, 1.5, 0]); // sarı saç
+  arm(b, Part.ArmR, 0.28, 'gold', 'sand');
+  b.add(Part.ArmR, box(0.07, 0.06, 0.22), 'gold', [0.06, 0.72, 0.28]);
+  b.add(Part.ArmR, box(1.0, 0.08, 0.035), 'silver', [0.6, 0.74, 0.28], [0, 0, 0.45]); // yaprak kılıç
+  b.add(Part.ArmR, new ConeGeometry(0.05, 0.22, 4), 'silver', [1.12, 0.98, 0.28], [0, 0, -1.1]);
+  arm(b, Part.ArmL, -0.28, 'gold', 'sand');
+  return b.build(1.04);
+};
+
+/** Haldir (BFME2): gri-yeşil pelerin, sarı saç, elf yayı ve sırtta kılıç; okçu kahraman. */
+export const haldir = (): BufferGeometry => {
+  const b = new ModelBuilder();
+  legs(b, 'rohanGreen', 'leather');
+  b.add(Part.Body, box(0.3, 0.62, 0.44), 'silver', [0, 1.14, 0]);
+  b.add(Part.Body, box(0.06, 0.44, 0.36), 'gold', [0.16, 1.18, 0]);
+  b.add(Part.Body, box(0.32, 0.38, 0.46), 'rohanGreen', [0, 0.8, 0]);
+  b.add(Part.Body, box(0.06, 1.1, 0.56), 'team0Dark', [-0.21, 0.95, 0]);
+  b.add(Part.Body, box(0.04, 0.8, 0.06), 'silver', [-0.25, 1.25, -0.1], [0.5, 0, 0]); // sırtta kılıç
+  b.add(Part.Body, cyl(0.06, 0.06, 0.62, 5), 'leather', [-0.23, 1.32, 0.12], [0.35, 0, 0]);
+  b.add(Part.Head, box(0.19, 0.21, 0.18), 'sand', [0.02, 1.62, 0]);
+  b.add(Part.Head, box(0.22, 0.12, 0.22), 'gold', [-0.01, 1.74, 0]);
+  b.add(Part.Head, box(0.08, 0.5, 0.2), 'gold', [-0.11, 1.46, 0]);
+  arm(b, Part.ArmR, 0.28, 'silver', 'sand');
+  arm(b, Part.ArmL, -0.28, 'silver', 'sand');
+  const hx = 0.04;
+  const hy = 0.72;
+  const hz = -0.28;
+  b.add(Part.ArmL, box(0.84, 0.045, 0.035), 'wood', [hx + 0.02, hy, hz]);
+  b.add(Part.ArmL, box(0.7, 0.04, 0.035), 'gold', [hx + 0.75, hy - 0.13, hz], [0, 0, -0.4]);
+  b.add(Part.ArmL, box(0.7, 0.04, 0.035), 'gold', [hx - 0.71, hy - 0.13, hz], [0, 0, 0.4]);
+  b.add(Part.ArmL, box(2.0, 0.012, 0.012), 'silver', [hx + 0.02, hy - 0.28, hz]);
+  return b.build(1.1);
+};
+
+/** Elrond (BFME2): koyu uzun saç, gümüş taç, şarap rengi uzun cüppe, elf kılıcı. */
+export const elrond = (): BufferGeometry => {
+  const b = new ModelBuilder();
+  legs(b, 'rust', 'leather');
+  b.add(Part.Body, cyl(0.24, 0.4, 0.95, 7), 'rust', [0, 0.5, 0]); // cüppe eteği
+  b.add(Part.Body, box(0.34, 0.62, 0.46), 'rust', [0, 1.13, 0]);
+  b.add(Part.Body, box(0.06, 0.5, 0.2), 'gold', [0.17, 1.15, 0]);
+  b.add(Part.Body, box(0.38, 0.08, 0.5), 'gold', [0, 0.9, 0]);
+  b.add(Part.Body, box(0.07, 1.25, 0.6), 'team0Dark', [-0.22, 0.86, 0]);
+  b.add(Part.Head, box(0.2, 0.22, 0.2), 'sand', [0.02, 1.61, 0]);
+  b.add(Part.Head, box(0.24, 0.24, 0.24), 'sootBlack', [-0.04, 1.67, 0]); // koyu saç
+  b.add(Part.Head, box(0.1, 0.46, 0.24), 'sootBlack', [-0.1, 1.44, 0]);
+  b.add(Part.Head, cyl(0.14, 0.14, 0.04, 8), 'silver', [0, 1.74, 0]); // taç
+  arm(b, Part.ArmR, 0.3, 'rust', 'sand');
+  b.add(Part.ArmR, box(0.08, 0.06, 0.22), 'gold', [0.06, 0.72, 0.3]);
+  b.add(Part.ArmR, box(0.95, 0.07, 0.04), 'silver', [0.56, 0.72, 0.3], [0, 0, 0.35]);
+  arm(b, Part.ArmL, -0.3, 'rust', 'sand');
+  return b.build(1.12);
+};
+
 /** Birim tipi id → model üreticisi (UNIT_DEFS ile aynı sıra). */
 export const UNIT_MODELS: Record<number, () => BufferGeometry> = {
   0: gondorSoldier,
@@ -1092,4 +1159,9 @@ export const UNIT_MODELS: Record<number, () => BufferGeometry> = {
   24: eowyn,
   // Kışladan yetişen Rohirrim: çağrılan Rohirrim ile aynı siluet.
   25: rohirrim,
+  26: galadhrim,
+  // Kışladan yetişen Lórien okçuları: büyüyle gelenlerle aynı siluet.
+  27: lorienArcher,
+  28: haldir,
+  29: elrond,
 };

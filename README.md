@@ -76,6 +76,11 @@ ahşap Altın Salon'dur, sancakları yeşildir. Rohan kahramanları: **F Kral Th
 +%25 hasar, rütbe 3'te Éored Çağır — 40 sn Rohirrim bölüğü), **G Éowyn** (900; Kalkan Kızı — çift hasar ve
 iyileşme, rütbe 3'te "Ben Erkek Değilim!" — yakındaki en güçlü düşmana, önce boss'a 700 hasar), **J Gandalf**.
 
+**Lothlórien** (`?faction=elves`): kışla az ama keskin **Galadhrim Savaşçıları** ve en uzun menzilli **Lórien
+Okçuları** yetiştirir; kale, gümüş gövdeli dev bir mallorn (Caras Galadhon), sancaklar gümüş-yeşil. Kahramanlar:
+**F Haldir** (1000; menzilli — Lórien Ok Yağmuru, rütbe 3'te Galadhrim Öfkesi), **G Elrond** (1500; Elf Şifası,
+rütbe 3'te Imladris Selleri — 30 m, 450 hasar), **J Legolas**.
+
 **Kahramanlar (BFME2 kadrosu):** sol üstteki portrelerden veya kale panelinden çağrılır, kalenin kapısından
 çıkar; hepsi liderlik aurası verir, ikinci yetenek rütbe 3'te açılır, ölünce 45 sn sonra geri çağrılır.
 **F Aragorn** (1200): Elendil'in Kılıcı, Athelas. **G Beyaz Gandalf** (2000): Asa Patlaması (10 m, 160 büyü

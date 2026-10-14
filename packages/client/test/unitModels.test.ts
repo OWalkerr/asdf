@@ -5,10 +5,13 @@ import {
   balrog,
   batteringRam,
   caveTroll,
+  elrond,
   eowyn,
+  galadhrim,
   gandalf,
   gondorArcher,
   gondorSoldier,
+  haldir,
   ladderTeam,
   legolas,
   lorienArcher,
@@ -55,6 +58,9 @@ const BUDGET: [string, () => import('three/webgpu').BufferGeometry, number][] = 
   ['Rohan okçusu', rohanArcher, 300],
   ['Théoden', theoden, 450],
   ['Éowyn', eowyn, 450],
+  ['Galadhrim', galadhrim, 300],
+  ['Haldir', haldir, 450],
+  ['Elrond', elrond, 450],
 ];
 
 describe('birim modelleri', () => {

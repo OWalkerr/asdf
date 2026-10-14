@@ -167,6 +167,55 @@ export const ROHAN_HEROES: readonly HeroDef[] = [
     abilities: (HEROES[1] as HeroDef).abilities,
   },
 ];
+/**
+ * Lothlórien kahramanları (Haldir F, Elrond G, Legolas J). Etkiler mevcut yetenek türlerini
+ * kullanır (key = etki), adları elflere özgü.
+ */
+export const ELF_HEROES: readonly HeroDef[] = [
+  {
+    unitType: 28,
+    key: 'KeyF',
+    icon: 'bow',
+    abilities: [
+      {
+        key: 'arrow_wind',
+        name: 'Lórien Ok Yağmuru',
+        rank: 1,
+        cooldown: 35,
+        desc: '40 m içindeki düşmanlara hızla 30 elf oku yağdırır.',
+      },
+      {
+        key: 'elendil',
+        name: 'Galadhrim Öfkesi',
+        rank: 3,
+        cooldown: 50,
+        desc: '10 sn boyunca Haldir çift hasar verir.',
+      },
+    ],
+  },
+  {
+    unitType: 29,
+    key: 'KeyG',
+    icon: 'leaf',
+    abilities: [
+      {
+        key: 'athelas',
+        name: 'Elf Şifası',
+        rank: 1,
+        cooldown: 50,
+        desc: '15 m içindeki dost birimlerin canını %50 yeniler.',
+      },
+      {
+        key: 'word_of_power',
+        name: 'Imladris Selleri',
+        rank: 3,
+        cooldown: 120,
+        desc: 'Bruinen selleri gibi: 30 m içindeki bütün düşmanlara 450 büyü hasarı.',
+      },
+    ],
+  },
+  HEROES[2] as HeroDef, // Legolas
+];
 export const SLAYER = { radius: 15, damage: 700 } as const;
 export const EORED = { duration: 40 } as const;
 export const KINGS_GLORY_DURATION = 15;

@@ -99,3 +99,25 @@ describe('Rohan tarafı', () => {
     expect(hp0 - (Health.hp[lurtz] as number)).toBeGreaterThanOrEqual(400);
   });
 });
+
+describe('Lothlórien tarafı', () => {
+  it('kışla elf birimleri yetiştirir; Haldir, Elrond ve Legolas çağrılır', () => {
+    const sim = new Simulation(5, buildNavGrid(QUIET), QUIET, 1, 2);
+    sim.world.match.gold[0] = 99_999;
+    const plot = QUIET.slots.findIndex((s) => s.kind === 'building');
+    send(sim, { type: 'build', slot: plot, kind: 1 });
+    for (const t of [UnitTypeId.Haldir, UnitTypeId.Elrond, UnitTypeId.Legolas, UnitTypeId.Aragorn])
+      send(sim, { type: 'summonHero', unitType: t });
+    run(sim);
+    const e = sim.world.match.slots[plot] as number;
+    sim.world.c.Structure.buildLeft[e] = 0;
+    send(sim, { type: 'train', building: e, unitType: UnitTypeId.RohanSpearman });
+    send(sim, { type: 'train', building: e, unitType: UnitTypeId.Galadhrim });
+    run(sim);
+    expect(sim.world.c.Structure.qLen[e]).toBe(1);
+    const h = sim.world.match.heroes;
+    const types = [0, 1, 2].map((k) => sim.world.c.Battalion.unitType[h[k] as number]);
+    expect(types).toEqual([UnitTypeId.Haldir, UnitTypeId.Elrond, UnitTypeId.Legolas]);
+    expect(battalionsOf(sim, 0, UnitTypeId.Aragorn).length).toBe(0);
+  });
+});

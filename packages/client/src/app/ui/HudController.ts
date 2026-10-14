@@ -54,6 +54,10 @@ export const UNIT_LABELS: Record<number, string> = {
   23: 'Théoden',
   24: 'Éowyn',
   25: 'Rohirrim',
+  26: 'Galadhrim Savaşçıları',
+  27: 'Lórien Okçuları',
+  28: 'Haldir',
+  29: 'Elrond',
 };
 const UNIT_ICON: Record<number, string> = {
   0: 'sword',
@@ -82,6 +86,10 @@ const UNIT_ICON: Record<number, string> = {
   23: 'crown',
   24: 'blade',
   25: 'horse',
+  26: 'blade',
+  27: 'bow',
+  28: 'bow',
+  29: 'leaf',
 };
 const STAT_HERO = new Set(UNIT_DEFS.filter((u) => u.hero).map((u) => u.id));
 const ABILITY_ICON: Record<string, string> = {
@@ -102,6 +110,8 @@ const HERO_DESC: Record<number, string> = {
   15: 'Legolas: uzun menzilli elf okçusu; Ok Rüzgârı ve Okçu Eğitimi.',
   23: 'Kral Théoden: Kralın Şanı (ordu +%25 hasar) ve Éored Çağır.',
   24: 'Éowyn: Kalkan Kızı (çift hasar, iyileşme) ve boss avcısı "Ben Erkek Değilim!".',
+  28: 'Haldir: menzilli kahraman; Lórien Ok Yağmuru ve Galadhrim Öfkesi.',
+  29: 'Elrond: Elf Şifası ve Imladris Selleri (30 m, 450 hasar).',
 };
 const UNIT_DESC: Record<number, string> = {
   0: 'Kılıç ve kalkanlı çok yönlü piyade. Orklara karşı güçlü.',
@@ -110,6 +120,8 @@ const UNIT_DESC: Record<number, string> = {
   21: 'Mızraklı Rohan piyadesi; süvari ve wargları karşılar, ucuz ve hızlı yetişir.',
   22: 'Hızlı ateş eden Rohan okçuları; zırhsız düşmana etkili.',
   25: 'Ezen süvari: hücumda yoldaki düşmanı çiğner; Ork sürülerine karşı yıkıcı.',
+  26: 'Az ama keskin elf piyadesi: yüksek hasar ve dayanıklılık; Uruk saflarını yarar.',
+  27: 'En uzun menzilli okçular (38 m); kulelerin ardından düşmanı erkenden avlar.',
 };
 const BUILD_ICON: Record<BuildingKind, string> = {
   arrow_tower: 'tower',

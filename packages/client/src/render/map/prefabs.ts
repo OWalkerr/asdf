@@ -396,6 +396,48 @@ export const rohanKeep = (): BufferGeometry => {
   return verticalShade(merge(parts), 0.7, 1.0);
 };
 
+/**
+ * Lothlórien kalesi (Caras Galadhon): dev gümüş gövdeli mallorn, altın taç yaprakları ve gövdeye
+ * sarılan ahşap flet platformları; dört köşede ince mallorn kuleleri (±7.5, külah tepesi ~20) —
+ * kale yükseltme parçalarıyla aynı ölçüler.
+ */
+export const elfKeep = (): BufferGeometry => {
+  const parts: BufferGeometry[] = [
+    paint(place(new CylinderGeometry(9.8, 10.4, 1.2, 10), 0, 0.6, 0), 'rockLight'),
+    // Dev gövde ve kökler
+    paint(place(new CylinderGeometry(3.4, 5.2, 20, 9), 0, 10.6, 0), 'silver'),
+    ...[0, 1, 2, 3, 4, 5].map((k) => {
+      const a = (k / 6) * Math.PI * 2;
+      const root = new BoxGeometry(5.5, 1.2, 1.4);
+      root.rotateZ(-0.35);
+      root.translate(3.6, 1.2, 0);
+      root.rotateY(a);
+      return paint(root, 'silver');
+    }),
+    // Flet platformları (geniş ahşap halkalar) ve kapı kemeri
+    paint(place(new CylinderGeometry(7.6, 7.6, 0.6, 12), 0, 11.4, 0), 'wood'),
+    paint(place(new CylinderGeometry(5.4, 5.4, 0.5, 12), 0, 17.2, 0), 'wood'),
+    paint(place(new BoxGeometry(4.2, 5.2, 0.6), 0, 3.6, 7.6), 'woodDark'),
+    paint(place(new BoxGeometry(5.4, 0.8, 1), 0, 6.6, 7.7), 'gold'),
+    // Altın taç
+    paint(place(new IcosahedronGeometry(7.2, 0), 0, 25, 0, 0.3, 1, 0.75, 1), 'gold'),
+    paint(place(new IcosahedronGeometry(5, 0), 3.4, 22.5, 2.6), 'gold'),
+    paint(place(new IcosahedronGeometry(4.6, 0), -3.6, 22.2, -2.2), 'leaf'),
+  ];
+  for (const [x, z] of [
+    [-7.5, -7.5],
+    [7.5, -7.5],
+    [-7.5, 7.5],
+    [7.5, 7.5],
+  ] as const) {
+    parts.push(paint(place(new CylinderGeometry(1.4, 2.0, 15, 7), x, 7.5, z), 'silver'));
+    parts.push(paint(place(new CylinderGeometry(2.8, 2.6, 0.5, 8), x, 15.3, z), 'wood'));
+    parts.push(paint(place(new IcosahedronGeometry(2.8, 0), x, 18.2, z), 'gold'));
+  }
+  for (const x of [-6, 6]) parts.push(paint(place(new BoxGeometry(0.06, 3.4, 1.6), x, 8.2, 7.9), 'team0'));
+  return verticalShade(merge(parts), 0.72, 1.05);
+};
+
 /** Mancınık (kule yuvası + kale yükseltmesi): ahşap şasi, karşı ağırlıklı kol, taş sepeti. */
 export const catapultModel = (): BufferGeometry =>
   verticalShade(
