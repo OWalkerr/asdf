@@ -107,6 +107,8 @@ export class ImpactFx {
   private readonly dust: Pool;
   private readonly prevFlags = new Uint8Array(MAX_ENTITIES);
   private lastTick = -1;
+  /** Yeni vuruş (ses için kılıç çarpışması). */
+  onHit: ((x: number, z: number) => void) | null = null;
 
   constructor(
     palette: Texture,
@@ -151,6 +153,7 @@ export class ImpactFx {
         const z = (u[o + 2] as number) * FX;
         const y = this.groundY(x, z);
         if (hit && !(prev & 1)) {
+          this.onHit?.(x, z);
           for (let k = 0; k < 5; k++) {
             const a = Math.random() * Math.PI * 2;
             const sp = 2 + Math.random() * 4;

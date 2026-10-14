@@ -68,6 +68,18 @@ export class RTSCamera {
     this.apply();
   }
 
+  /** Hedefi yumuşak geçişle (x, z)'ye taşır (mini harita tıklaması). */
+  lookAt(x: number, z: number): void {
+    const { minX, maxX, minZ, maxZ } = this.opts.bounds;
+    this.goal.x = MathUtils.clamp(x, minX, maxX);
+    this.goal.z = MathUtils.clamp(z, minZ, maxZ);
+  }
+
+  /** Kamera yaw'ı (radyan). */
+  get yaw(): number {
+    return this.cur.yaw;
+  }
+
   /** Zoom oranı 0 (en yakın) … 1 (en uzak). */
   get zoom01(): number {
     const { minDistance, maxDistance } = this.opts;

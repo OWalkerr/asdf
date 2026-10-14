@@ -12,6 +12,8 @@ export class Lightning {
   private pulses: number[] = [];
   private readonly baseHemi: number;
   enabled = true;
+  /** Çakım anında (ses için gök gürültüsü). */
+  onStrike: (() => void) | null = null;
 
   constructor(
     scene: Scene,
@@ -34,6 +36,7 @@ export class Lightning {
       this.pulses = [0, 0.12 + Math.random() * 0.1];
       if (Math.random() < 0.6) this.pulses.push(0.35 + Math.random() * 0.25);
       this.light.position.set((Math.random() - 0.5) * 400, 260, (Math.random() - 0.2) * 300);
+      this.onStrike?.();
     }
     let f = 0;
     if (this.t >= 0) {

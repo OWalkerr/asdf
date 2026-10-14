@@ -1,4 +1,4 @@
-import { type MapDef, type MatchInfo, MatchState } from '@bulwark/shared';
+import { ECONOMY, type MapDef, type MatchInfo, MatchState } from '@bulwark/shared';
 import { SIM_TICK_MS } from '../sim-host/protocol';
 
 /**
@@ -16,6 +16,15 @@ export class MatchHud {
   private readonly gates: HTMLDivElement[] = [];
   private readonly end: HTMLDivElement;
   private ended = false;
+  private readonly banner: HTMLDivElement;
+  private lastWave = 0;
+  private bannerTimer = 0;
+  /** Kapı onarımı isteği (kapı indeksi). */
+  onRepair: ((gate: number) => void) | null = null;
+  /** Yeni dalga başladığında (ses vb.). */
+  onWave: ((index: number) => void) | null = null;
+  /** Maç bitti (zafer/yenilgi). */
+  onEnd: ((victory: boolean) => void) | null = null;
 
   constructor(private readonly def: MapDef) {
     this.root = document.createElement('div');
@@ -26,7 +35,9 @@ export class MatchHud {
     for (const g of def.gates) {
       const el = document.createElement('div');
       el.className = 'gate';
-      el.innerHTML = `<span class="name">${g.id === 'hornburg_gate' ? 'Hornburg Kapısı' : g.id === 'culvert' ? 'Menfez' : g.id}</span><span class="bar"><i></i></span><span class="hp"></span>`;
+      el.innerHTML = `<span class="name">${g.id === 'hornburg_gate' ? 'Hornburg Kapısı' : g.id === 'culvert' ? 'Menfez' : g.id}</span><span class="bar"><i></i></span><span class="hp"></span><button type="button" class="repair" title="Kapıyı onar: ${ECONOMY.repairCost} altın, ${ECONOMY.repairTime} sn'de +%${ECONOMY.repairPercent}">Onar ◆${ECONOMY.repairCost}</button>`;
+      const index = this.gates.length;
+      el.querySelector('button')?.addEventListener('click', () => this.onRepair?.(index));
       this.root.appendChild(el);
       this.gates.push(el);
     }
@@ -34,10 +45,25 @@ export class MatchHud {
     this.end = document.createElement('div');
     this.end.id = 'endscreen';
     document.body.appendChild(this.end);
+    this.banner = document.createElement('div');
+    this.banner.id = 'wavebanner';
+    document.body.appendChild(this.banner);
   }
 
-  update(info: MatchInfo, tick: number): void {
+  update(info: MatchInfo, tick: number, gateRepair: readonly number[] = []): void {
     const { waveIndex, waveCount, nextWaveTick, enemiesAlive } = info;
+    if (waveIndex > this.lastWave) {
+      this.lastWave = waveIndex;
+      const w = this.def.waves[waveIndex - 1];
+      const ram = w?.groups.some((g) => g.unitType === 5);
+      this.banner.innerHTML = `<small>Dalga ${waveIndex} / ${waveCount}</small><b>${w?.name ?? ''}</b>${ram ? '<span>Koçbaşı geliyor — piyadeyle kapıyı koruyun!</span>' : ''}`;
+      this.banner.classList.remove('show');
+      void this.banner.offsetWidth; // animasyonu yeniden başlat
+      this.banner.classList.add('show');
+      clearTimeout(this.bannerTimer);
+      this.bannerTimer = window.setTimeout(() => this.banner.classList.remove('show'), 4200);
+      this.onWave?.(waveIndex);
+    }
     const name = waveIndex > 0 ? this.def.waves[waveIndex - 1]?.name : undefined;
     const next = nextWaveTick >= 0 ? ` · sonraki dalga ${fmtTime(nextWaveTick - tick)}` : '';
     this.wave.textContent =
@@ -51,11 +77,22 @@ export class MatchHud {
       const ratio = Math.max(0, hp / max);
       (el.querySelector('i') as HTMLElement).style.width = `${(ratio * 100).toFixed(1)}%`;
       el.classList.toggle('danger', ratio < 0.35);
+      const repairing = (gateRepair[i] ?? 0) > 0;
+      el.classList.toggle('repairing', repairing);
       (el.querySelector('.hp') as HTMLElement).textContent = `${hp}`;
+      const btn = el.querySelector('button') as HTMLButtonElement;
+      btn.disabled =
+        repairing ||
+        hp >= max ||
+        hp <= 0 ||
+        info.gold < ECONOMY.repairCost ||
+        info.state !== MatchState.Playing;
+      btn.textContent = repairing ? 'Onarılıyor…' : `Onar ◆${ECONOMY.repairCost}`;
     });
     if (!this.ended && info.state !== MatchState.Playing) {
       this.ended = true;
       const victory = info.state === MatchState.Victory;
+      this.onEnd?.(victory);
       const fallen = this.def.gates[info.gateHp.findIndex((hp) => hp <= 0)];
       this.end.innerHTML = `
         <div class="card ${victory ? 'victory' : 'defeat'}">

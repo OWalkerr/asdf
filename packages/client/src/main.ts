@@ -4,7 +4,10 @@ import { Scene, type Texture, Timer } from 'three/webgpu';
 import { CommandPanel } from './app/CommandPanel';
 import { GALLERY_CENTER, updateGallery } from './app/gallery';
 import { MatchHud } from './app/MatchHud';
+import { Minimap } from './app/Minimap';
 import { PLAYER, Scenario } from './app/scenario';
+import { AudioEngine } from './audio/AudioEngine';
+import { GameAudio } from './audio/GameAudio';
 import { createDebugPanel } from './debug/DebugPanel';
 import { GroundPicker } from './input/GroundPicker';
 import { PlayerInput } from './input/PlayerInput';
@@ -107,6 +110,20 @@ const boot = async () => {
   scene.add(...impacts.meshes);
   scene.add(cursor.mesh, marker.mesh, rings.mesh, arrows.mesh);
   const hud = world.def && !gallery ? new MatchHud(world.def) : null;
+  if (hud) hud.onRepair = (gate) => scenario.repair(gate);
+  // --- Ses (prosedürel WebAudio; ilk tıklamada açılır, M: sessiz) ---------------------
+  const audioEngine = new AudioEngine();
+  const sfx = new GameAudio(audioEngine);
+  if (lightning) lightning.onStrike = () => sfx.thunder();
+  impacts.onHit = (x, z) => sfx.clash(x, z);
+  if (hud) {
+    hud.onWave = () => sfx.horn(true);
+    hud.onEnd = (victory) => sfx.horn(!victory);
+  }
+  window.addEventListener('keydown', (e) => {
+    if (e.code === 'KeyM' && !e.repeat) audioEngine.setMuted(!audioEngine.isMuted);
+  });
+  const minimap = world.def && !gallery ? new Minimap(world.def, world.heightAt, cam) : null;
   const selection = new Selection(units, PLAYER);
   const structures = world.def ? new StructureRenderer(world.def, world.heightAt, palette, toon) : null;
   if (structures) scene.add(...structures.meshes);
@@ -123,6 +140,7 @@ const boot = async () => {
           selected: selection.selected,
         })
       : null;
+  if (panel) panel.onClick = () => sfx.click();
   const input = new PlayerInput({
     canvas,
     selBox: document.getElementById('selbox') as HTMLDivElement,
@@ -205,6 +223,11 @@ const boot = async () => {
         world.slots?.selectedIndex ?? -1,
       );
     panel?.update(sim.frame.match);
+    if (!gallery && world.def) {
+      sfx.setListener(cam.target.x, cam.target.z, cam.zoom01);
+      sfx.updateFromFrame(sim.frame, world.def.gates);
+    }
+    minimap?.update(dt, units, structures);
     marker.update(now);
     input.update();
     ctx.render();
@@ -235,7 +258,7 @@ const boot = async () => {
         );
       }
       info.textContent = lines.join('\n');
-      hud?.update(sim.frame.match, sim.tick);
+      hud?.update(sim.frame.match, sim.tick, structures?.gateRepair);
       infoAccum = 0;
       frames = 0;
     }

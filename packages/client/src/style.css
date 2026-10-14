@@ -100,6 +100,7 @@ body {
   align-items: center;
   flex-wrap: wrap;
   justify-content: center;
+  width: max-content;
   max-width: calc(100vw - 24px);
   pointer-events: none;
 }
@@ -120,7 +121,7 @@ body {
   align-items: center;
 }
 #matchbar .gate .bar {
-  width: 110px;
+  width: 90px;
   height: 8px;
   background: rgba(0, 0, 0, 0.5);
   border-radius: 4px;
@@ -135,6 +136,26 @@ body {
 }
 #matchbar .gate.danger .bar i {
   background: linear-gradient(90deg, #c2281e, #e36b5a);
+}
+#matchbar .gate {
+  pointer-events: auto;
+}
+#matchbar .gate button.repair {
+  font: inherit;
+  font-size: 11px;
+  padding: 2px 8px;
+  color: #f0c95a;
+  background: #2a241b;
+  border: 1px solid rgba(201, 162, 58, 0.6);
+  border-radius: 4px;
+  cursor: pointer;
+}
+#matchbar .gate button.repair:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+#matchbar .gate.repairing .bar i {
+  background: linear-gradient(90deg, #3d86c6, #8fd0ff);
 }
 #matchbar .gate .hp {
   font:
@@ -384,4 +405,79 @@ body.debug #hud {
 }
 #cmdpanel .cmd.done {
   border-color: #ffa24a;
+}
+
+/* --- Dalga duyurusu ------------------------------------------------------------ */
+#wavebanner {
+  position: fixed;
+  left: 50%;
+  top: 22%;
+  transform: translate(-50%, -10px);
+  text-align: center;
+  pointer-events: none;
+  opacity: 0;
+  text-shadow:
+    0 2px 12px rgba(0, 0, 0, 0.9),
+    0 0 2px #000;
+}
+#wavebanner.show {
+  animation: wavein 4.2s ease forwards;
+}
+#wavebanner small {
+  display: block;
+  font-size: 14px;
+  letter-spacing: 0.4em;
+  color: var(--ink-dim);
+  text-transform: uppercase;
+}
+#wavebanner b {
+  display: block;
+  font-size: 44px;
+  letter-spacing: 0.08em;
+  color: #f0c95a;
+  font-weight: normal;
+}
+#wavebanner span {
+  display: block;
+  margin-top: 6px;
+  font-size: 15px;
+  color: #ff9a7a;
+}
+@keyframes wavein {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -18px);
+  }
+  12% {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* --- Mini harita (sağ alt) ------------------------------------------------------ */
+#minimap {
+  position: fixed;
+  right: 12px;
+  bottom: 12px;
+  padding: 5px;
+  background: linear-gradient(180deg, rgba(34, 30, 24, 0.92), rgba(16, 14, 11, 0.92));
+  border: 1px solid rgba(201, 162, 58, 0.7);
+  box-shadow: 0 0 0 3px rgba(12, 10, 8, 0.65);
+  border-radius: 8px;
+  line-height: 0;
+}
+#minimap canvas {
+  border-radius: 4px;
+  cursor: crosshair;
+}
+@media (max-width: 1100px) {
+  #minimap {
+    display: none;
+  }
 }

@@ -84,6 +84,8 @@ export class CommandPanel {
   private key = '';
   private gold = 0;
   private match: MatchInfo | null = null;
+  /** Düğmeye basıldı (arayüz sesi). */
+  onClick: (() => void) | null = null;
 
   constructor(private readonly d: CommandPanelDeps) {
     this.root = document.createElement('div');
@@ -96,7 +98,10 @@ export class CommandPanel {
       const el = (e.target as HTMLElement).closest('[data-btn]') as HTMLElement | null;
       if (!el) return;
       const b = this.buttons[Number(el.dataset.btn)];
-      if (b?.enabled) b.run();
+      if (b?.enabled) {
+        b.run();
+        this.onClick?.();
+      }
     });
     // Panele tıklama haritaya geçmesin.
     this.root.addEventListener('pointerdown', (e) => e.stopPropagation());
