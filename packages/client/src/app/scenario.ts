@@ -63,6 +63,22 @@ export class Scenario {
     );
   }
 
+  /** Slota yapı kur (kind: BUILDING_KINDS indeksi). */
+  build(slot: number, kind: number): void {
+    this.sim.send({ type: 'build', slot, kind }, PLAYER);
+  }
+
+  /** Kışlada birim yetiştir. */
+  train(building: number, unitType: number): void {
+    this.sim.send({ type: 'train', building, unitType }, PLAYER);
+  }
+
+  /** Seçili taburları durdur. */
+  stop(battalions: Iterable<number>): void {
+    const units = [...battalions];
+    if (units.length > 0) this.sim.send({ type: 'stop', units }, PLAYER);
+  }
+
   /** Seçili taburlarla düşman taburuna saldır. */
   attack(battalions: Iterable<number>, target: number): void {
     const units = [...battalions];

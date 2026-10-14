@@ -52,7 +52,7 @@ export const rock = (rand: Rand, size = 1): BufferGeometry => {
 };
 
 /** Mazgal dişleri (merlon) halkası. */
-const merlonRing = (radius: number, y: number, count: number, swatch: 'gondorWhite' | 'helmStone') => {
+export const merlonRing = (radius: number, y: number, count: number, swatch: 'gondorWhite' | 'helmStone') => {
   const parts: BufferGeometry[] = [];
   for (let i = 0; i < count; i++) {
     const a = (i / count) * Math.PI * 2;

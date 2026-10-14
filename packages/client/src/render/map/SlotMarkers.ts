@@ -1,5 +1,13 @@
 import type { SlotDef, SlotKind } from '@bulwark/shared';
-import { Color, CylinderGeometry, InstancedMesh, Matrix4, type Texture } from 'three/webgpu';
+import {
+  type Camera,
+  Color,
+  CylinderGeometry,
+  InstancedMesh,
+  Matrix4,
+  type Texture,
+  Vector3,
+} from 'three/webgpu';
 import { merge, paint, place } from '../geometry/lowpoly';
 import { createToonMaterial, type ToonParams } from '../materials/ToonMaterial';
 import type { HeightFn } from './terrain';
@@ -21,6 +29,7 @@ export class SlotMarkers {
   readonly positions: { x: number; y: number; z: number }[] = [];
   private hovered = -1;
   private selected = -1;
+  private readonly v = new Vector3();
 
   constructor(
     readonly slots: readonly SlotDef[],
@@ -82,6 +91,38 @@ export class SlotMarkers {
     this.selected = i;
     this.refresh(prev);
     this.refresh(i);
+  }
+
+  get selectedIndex(): number {
+    return this.selected;
+  }
+
+  /**
+   * Ekran uzayında slot seçimi: slotun üstündeki yapıya (veya kaideye) tıklanınca da seçilsin.
+   * `lift(i)`: slotun üzerindeki yapının yarı yüksekliği (yoksa 0).
+   */
+  pickScreen(
+    camera: Camera,
+    sx: number,
+    sy: number,
+    w: number,
+    h: number,
+    lift: (i: number) => number,
+  ): number {
+    let best = -1;
+    let bestD = 36 * 36;
+    this.positions.forEach((p, i) => {
+      this.v.set(p.x, p.y + lift(i), p.z).project(camera);
+      if (this.v.z < -1 || this.v.z > 1) return;
+      const dx = ((this.v.x + 1) / 2) * w - sx;
+      const dy = ((1 - this.v.y) / 2) * h - sy;
+      const d = dx * dx + dy * dy;
+      if (d < bestD) {
+        bestD = d;
+        best = i;
+      }
+    });
+    return best;
   }
 
   get selectedSlot(): SlotDef | undefined {

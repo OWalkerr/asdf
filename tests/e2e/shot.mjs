@@ -21,6 +21,8 @@ await page.waitForFunction(
   null,
   { timeout: 60000 },
 );
+// PRE_JS: açılıştan sonra sayfada çalıştırılacak betik (ör. inşa komutları, sim hızı).
+if (process.env.PRE_JS) await page.evaluate(process.env.PRE_JS);
 if (action === 'zoom') {
   await page.mouse.move(640, 360);
   for (let i = 0; i < 8; i++) await page.mouse.wheel(0, -120);

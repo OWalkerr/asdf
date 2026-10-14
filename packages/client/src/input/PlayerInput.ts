@@ -8,7 +8,7 @@ import type { Selection } from './Selection';
 
 /**
  * Oyuncu fare girdisi (GDD §11.2, BFME2 varsayılanları):
- *   Sol tık        → tabur seç (Shift: ekle/çıkar); asker yoksa inşa slotu seç; boşsa seçimi temizle
+ *   Sol tık        → tabur seç (Shift: ekle/çıkar); asker yoksa inşa slotu / yapı seç; boşsa seçimi temizle
  *   Sol sürükle    → kutu seçimi (Shift: ekle)
  *   Sağ tık        → seçili taburlara hareket emri; düşman askerinin üstündeyse saldırı emri
  *   Esc            → seçimi temizle
@@ -26,6 +26,8 @@ export interface PlayerInputDeps {
   cursor: PickCursor;
   marker: OrderMarker;
   slots?: SlotMarkers | undefined;
+  /** Slotun üzerindeki yapının yarı yüksekliği (ekran seçimi için), yoksa 0. */
+  slotLift?: (slot: number) => number;
 }
 
 export class PlayerInput {
@@ -40,7 +42,10 @@ export class PlayerInput {
     canvas.addEventListener('pointerdown', this.onDown);
     window.addEventListener('pointerup', this.onUp);
     window.addEventListener('keydown', (e) => {
-      if (e.code === 'Escape') d.selection.click(0, false);
+      if (e.code === 'Escape') {
+        d.selection.click(0, false);
+        d.slots?.setSelected(-1);
+      }
     });
   }
 
@@ -119,8 +124,11 @@ export class PlayerInput {
       slots?.setSelected(-1);
       return;
     }
-    const hit = picker.pick(cam.camera, x, y, w, h);
-    const slot = hit && slots ? slots.nearest(hit.point.x, hit.point.y, hit.point.z) : -1;
+    let slot = slots ? slots.pickScreen(cam.camera, x, y, w, h, this.d.slotLift ?? (() => 0)) : -1;
+    if (slot < 0 && slots) {
+      const hit = picker.pick(cam.camera, x, y, w, h);
+      slot = hit ? slots.nearest(hit.point.x, hit.point.y, hit.point.z) : -1;
+    }
     slots?.setSelected(slot);
     if (!e.shiftKey) selection.click(0, false);
   };

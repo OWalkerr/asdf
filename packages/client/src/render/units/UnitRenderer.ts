@@ -6,6 +6,7 @@ import {
   unpackAnimState,
   unpackAnimTick,
   unpackFlags,
+  unpackHp8,
   unpackTeam,
   unpackUnitType,
   unpackYaw,
@@ -35,6 +36,8 @@ interface Bucket {
   /** Instance başına tabur eid'i (seçim / halka için CPU tarafı kopya). */
   battalion: Int32Array;
   team: Uint8Array;
+  /** Can (0–255, snapshot hp8). */
+  hp: Uint8Array;
   count: number;
 }
 
@@ -76,14 +79,18 @@ export class UnitRenderer {
         animAttr,
         battalion: new Int32Array(capacityPerType),
         team: new Uint8Array(capacityPerType),
+        hp: new Uint8Array(capacityPerType),
         count: 0,
       };
     }
   }
 
   /** Son karede çizilen tüm instance'ları gezer (seçim, halka, picking için). */
-  forEach(cb: (x: number, y: number, z: number, battalion: number, team: number) => void): void {
-    for (const b of this.buckets) {
+  forEach(
+    cb: (x: number, y: number, z: number, battalion: number, team: number, hp: number, type: number) => void,
+  ): void {
+    for (let type = 0; type < this.buckets.length; type++) {
+      const b = this.buckets[type] as Bucket;
       for (let i = 0; i < b.count; i++) {
         const o = i * 4;
         cb(
@@ -92,6 +99,8 @@ export class UnitRenderer {
           b.pose[o + 2] as number,
           b.battalion[i] as number,
           b.team[i] as number,
+          (b.hp[i] as number) / 255,
+          type,
         );
       }
     }
@@ -117,11 +126,13 @@ export class UnitRenderer {
     flash: number,
     team: number,
     battalion = 0,
+    hp8 = 255,
   ): void {
     const b = this.buckets[type];
     if (!b || b.count >= this.capacityPerType) return;
     b.battalion[b.count] = battalion;
     b.team[b.count] = team;
+    b.hp[b.count] = hp8;
     const o = b.count * 4;
     b.pose[o] = x;
     b.pose[o + 1] = y;
@@ -191,6 +202,7 @@ export class UnitRenderer {
         unpackFlags(animPacked) & FLAG_HIT ? 1 : 0,
         unpackTeam(packed),
         u[o + 5] as number,
+        unpackHp8(animPacked),
       );
     }
     this.end();

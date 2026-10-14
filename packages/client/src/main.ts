@@ -1,6 +1,7 @@
 import type { SlotDef } from '@bulwark/shared';
 import { buildNavGrid, createOpenGrid } from '@bulwark/sim';
 import { Scene, type Texture, Timer } from 'three/webgpu';
+import { CommandPanel } from './app/CommandPanel';
 import { GALLERY_CENTER, updateGallery } from './app/gallery';
 import { MatchHud } from './app/MatchHud';
 import { PLAYER, Scenario } from './app/scenario';
@@ -14,6 +15,7 @@ import { OrderMarker } from './render/fx/OrderMarker';
 import { PickCursor } from './render/fx/PickCursor';
 import { ProjectileRenderer } from './render/fx/ProjectileRenderer';
 import { SelectionRings } from './render/fx/SelectionRings';
+import { BattalionHud } from './render/hud/BattalionHud';
 import { createLighting } from './render/lighting';
 import { HeightGrid } from './render/map/HeightGrid';
 import { buildLookdevScene } from './render/map/lookdev';
@@ -22,6 +24,7 @@ import { buildNavOverlay } from './render/map/NavOverlay';
 import { createToonParams, type ToonParams } from './render/materials/ToonMaterial';
 import { createPaletteTexture } from './render/palette';
 import { createRenderContext } from './render/renderer';
+import { StructureRenderer } from './render/structures/StructureRenderer';
 import { UnitRenderer } from './render/units/UnitRenderer';
 import { SimHost } from './sim-host/SimHost';
 
@@ -48,6 +51,7 @@ const boot = async () => {
   // Galeri modu birim look-dev'idir: look-dev haritasında, sim olmadan çalışır.
   const gallery = params.has('gallery');
   const debugMode = params.has('debug') && params.get('debug') !== '0';
+  if (debugMode) document.body.classList.add('debug');
   const mapId = gallery ? 'lookdev' : (params.get('map') ?? 'helms_deep');
   const build = MAPS[mapId];
   if (!build) throw new Error(`Bilinmeyen harita: ${mapId} (seçenekler: ${Object.keys(MAPS).join(', ')})`);
@@ -90,6 +94,21 @@ const boot = async () => {
   scene.add(cursor.mesh, marker.mesh, rings.mesh, arrows.mesh);
   const hud = world.def && !gallery ? new MatchHud(world.def) : null;
   const selection = new Selection(units, PLAYER);
+  const structures = world.def ? new StructureRenderer(world.def, world.heightAt, palette, toon) : null;
+  if (structures) scene.add(...structures.meshes);
+  const banners = new BattalionHud(palette, toon);
+  if (!gallery) scene.add(...banners.meshes);
+  const panel =
+    world.def && structures && world.slots && !gallery
+      ? new CommandPanel({
+          def: world.def,
+          scenario,
+          units,
+          structures,
+          slots: world.slots,
+          selected: selection.selected,
+        })
+      : null;
   const input = new PlayerInput({
     canvas,
     selBox: document.getElementById('selbox') as HTMLDivElement,
@@ -100,6 +119,10 @@ const boot = async () => {
     cursor,
     marker,
     slots: world.slots,
+    slotLift: (slot) => {
+      const st = structures?.bySlot.get(slot);
+      return st ? (st.top - st.y) * 0.5 : 0;
+    },
   });
   // Nav ızgarası debug katmanı (sim'in kullandığı ızgaranın aynısı).
   const navOverlay = buildNavOverlay(
@@ -151,9 +174,19 @@ const boot = async () => {
     else {
       units.updateFromSim(sim, now);
       arrows.update(sim, now);
+      structures?.update(sim.frame);
     }
     selection.prune();
     rings.update(units, selection.selected);
+    if (!gallery)
+      banners.update(
+        units,
+        cam.camera,
+        selection.selected,
+        structures?.bySlot.values() ?? [],
+        world.slots?.selectedIndex ?? -1,
+      );
+    panel?.update(sim.frame.match.gold);
     marker.update(now);
     input.update();
     ctx.render();
@@ -165,11 +198,7 @@ const boot = async () => {
       const r = ctx.renderer.info.render;
       const t = cam.target;
       const lines = !debugMode
-        ? [
-            `fps ${(frames / infoAccum).toFixed(0)} · ${selection.selected.size ? `${selection.selected.size} tabur seçili · sağ tık: yürü / düşmana saldır` : 'tabur seçmek için tıkla veya kutu çiz'}`,
-            'İpucu: menfez ve Hornburg kapısı yalnızca sizin birliklerinize açık — piyadeyi dışarı çıkarıp',
-            'kapılara saldıranları dağıtın; okçular menzildeki düşmana kendiliğinden ateş eder.',
-          ]
+        ? [`fps ${(frames / infoAccum).toFixed(0)} · ${sim.frame.count} birim`]
         : [
             `backend  ${ctx.backend.toUpperCase()}   fps ${(frames / infoAccum).toFixed(0)}`,
             `draw     ${r.drawCalls} çağrı · ${(r.triangles / 1000).toFixed(1)}k üçgen`,
@@ -196,7 +225,9 @@ const boot = async () => {
 
   bootEl.classList.add('done');
   // Playwright / debug erişimi için.
-  Object.assign(window, { __bulwark: { ctx, cam, scene, world, picker, sim, scenario, selection, units } });
+  Object.assign(window, {
+    __bulwark: { ctx, cam, scene, world, picker, sim, scenario, selection, units, structures },
+  });
 };
 
 boot().catch((err: unknown) => {
