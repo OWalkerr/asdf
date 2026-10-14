@@ -10,6 +10,8 @@ export type ToWorker =
       view: Int32Array | null;
       mapId: string | null;
       mapSize: number;
+      /** DIFFICULTIES indeksi. */
+      difficulty: number;
     }
   | { type: 'commands'; commands: StampedCommand[] }
   | { type: 'speed'; value: number };

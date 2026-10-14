@@ -17,6 +17,7 @@ export class MatchHud {
   private readonly end: HTMLDivElement;
   private ended = false;
   private readonly banner: HTMLDivElement;
+  private readonly boss: HTMLDivElement;
   private lastWave = 0;
   private bannerTimer = 0;
   /** Kapı onarımı isteği (kapı indeksi). */
@@ -48,6 +49,17 @@ export class MatchHud {
     this.banner = document.createElement('div');
     this.banner.id = 'wavebanner';
     document.body.appendChild(this.banner);
+    this.boss = document.createElement('div');
+    this.boss.id = 'bossbar';
+    this.boss.innerHTML = '<span>Lurtz · Isengard\'ın Uruk kaptanı</span><span class="bar"><i></i></span>';
+    document.body.appendChild(this.boss);
+  }
+
+  /** Boss can oranı (null = sahada yok). */
+  setBoss(ratio: number | null): void {
+    this.boss.classList.toggle('show', ratio !== null);
+    if (ratio !== null)
+      (this.boss.querySelector('i') as HTMLElement).style.width = `${(ratio * 100).toFixed(1)}%`;
   }
 
   update(info: MatchInfo, tick: number, gateRepair: readonly number[] = []): void {
@@ -56,7 +68,13 @@ export class MatchHud {
       this.lastWave = waveIndex;
       const w = this.def.waves[waveIndex - 1];
       const ram = w?.groups.some((g) => g.unitType === 5);
-      this.banner.innerHTML = `<small>Dalga ${waveIndex} / ${waveCount}</small><b>${w?.name ?? ''}</b>${ram ? '<span>Koçbaşı geliyor — piyadeyle kapıyı koruyun!</span>' : ''}`;
+      const boss = w?.groups.some((g) => g.unitType === 7);
+      const warn = boss
+        ? "<span>Lurtz savaşa katılıyor — Uruk'lar onun yanında daha sert vurur!</span>"
+        : ram
+          ? '<span>Koçbaşı geliyor — piyadeyle kapıyı koruyun!</span>'
+          : '';
+      this.banner.innerHTML = `<small>Dalga ${waveIndex} / ${waveCount}</small><b>${w?.name ?? ''}</b>${warn}`;
       this.banner.classList.remove('show');
       void this.banner.offsetWidth; // animasyonu yeniden başlat
       this.banner.classList.add('show');

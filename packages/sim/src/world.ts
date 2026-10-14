@@ -1,4 +1,14 @@
-import { FX_ONE, fxDiv, HASH_SEED, hashInt, type MapDef, MatchState, Rng } from '@bulwark/shared';
+import {
+  DEFAULT_DIFFICULTY,
+  DIFFICULTIES,
+  FX_ONE,
+  fxDiv,
+  HASH_SEED,
+  hashInt,
+  type MapDef,
+  MatchState,
+  Rng,
+} from '@bulwark/shared';
 import { createWorld, query, type World } from 'bitecs';
 import { type Components, createComponents } from './components';
 import { MAX_ENTITIES, SIM_HZ } from './constants';
@@ -30,6 +40,8 @@ export interface ScheduledGroup {
 }
 
 export interface MatchContext {
+  /** DIFFICULTIES indeksi. */
+  difficulty: number;
   state: number;
   /** Başlamış son dalga (1 tabanlı; 0 = henüz yok). */
   waveIndex: number;
@@ -85,6 +97,7 @@ export const createSimWorld = (
   seed: number,
   nav: NavGrid = createOpenGrid(512),
   map: MapDef | null = null,
+  difficulty = DEFAULT_DIFFICULTY,
 ): SimWorld => {
   const world = createWorld<SimContext>({
     c: createComponents(),
@@ -96,6 +109,7 @@ export const createSimWorld = (
     map,
     match: {
       state: MatchState.Playing,
+      difficulty: DIFFICULTIES[difficulty] ? difficulty : DEFAULT_DIFFICULTY,
       waveIndex: 0,
       waveCount: 0,
       schedule: [],
@@ -228,6 +242,7 @@ export const hashWorld = (world: SimWorld): number => {
     h = hashInt(h, v.left);
   }
   h = hashInt(h, world.match.state);
+  h = hashInt(h, world.match.difficulty);
   h = hashInt(h, world.match.nextGroup);
   for (const s of world.rng.getState()) h = hashInt(h, s);
   return h;

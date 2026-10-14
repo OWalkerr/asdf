@@ -32,6 +32,7 @@ export const UNIT_LABELS: Record<number, string> = {
   4: 'Gondor Okçuları',
   5: 'Koçbaşı',
   6: 'Aragorn',
+  7: 'Lurtz',
 };
 
 const ICONS: Record<string, string> = {

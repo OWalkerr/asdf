@@ -1,4 +1,4 @@
-import type { SlotDef } from '@bulwark/shared';
+import { type SlotDef, UnitTypeId } from '@bulwark/shared';
 import { buildNavGrid, createOpenGrid } from '@bulwark/sim';
 import { Scene, type Texture, Timer } from 'three/webgpu';
 import { CommandPanel } from './app/CommandPanel';
@@ -6,6 +6,7 @@ import { GALLERY_CENTER, updateGallery } from './app/gallery';
 import { MatchHud } from './app/MatchHud';
 import { Minimap } from './app/Minimap';
 import { SpellBar } from './app/SpellBar';
+import { chooseDifficulty } from './app/StartScreen';
 import { PLAYER, Scenario } from './app/scenario';
 import { AudioEngine } from './audio/AudioEngine';
 import { GameAudio } from './audio/GameAudio';
@@ -91,7 +92,10 @@ const boot = async () => {
 
   // --- Simülasyon (Web Worker) --------------------------------------------------
   const UNIT_CAPACITY = 8192;
+  // Maç öncesi zorluk seçimi (galeri / look-dev'de yok).
+  const difficulty = world.def && !gallery ? await chooseDifficulty(world.name) : 1;
   const sim = await SimHost.start({
+    difficulty,
     seed: world.def?.seed ?? 1,
     capacity: UNIT_CAPACITY,
     mapId: world.def?.id ?? null,
@@ -291,6 +295,11 @@ const boot = async () => {
       }
       info.textContent = lines.join('\n');
       hud?.update(sim.frame.match, sim.tick, structures?.gateRepair);
+      let boss: number | null = null;
+      units.forEach((_x, _y, _z, b, _t, hp, type) => {
+        if (b !== 0 && type === UnitTypeId.Lurtz) boss = hp;
+      });
+      hud?.setBoss(boss);
       infoAccum = 0;
       frames = 0;
     }

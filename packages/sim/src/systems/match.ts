@@ -1,5 +1,5 @@
 import {
-  ECONOMY,
+  DIFFICULTIES,
   fxAtan2,
   fxFromFloat,
   fxLen,
@@ -11,6 +11,7 @@ import {
 import { addComponent, addEntity, query } from 'bitecs';
 import { BattalionMode } from '../components';
 import { SIM_HZ } from '../constants';
+import { STAT } from '../unitStats';
 import type { ScheduledGroup, SimWorld } from '../world';
 import { orderBattalions, spawnBattalionRow } from './commands';
 
@@ -21,6 +22,7 @@ const fxv = (p: Vec2): [number, number] => [fxFromFloat(p[0]), fxFromFloat(p[1])
 
 /** Kapı yapıları ve dalga programı (harita yüklenirken bir kez). */
 export const setupMatch = (world: SimWorld, map: MapDef): void => {
+  const diff = DIFFICULTIES[world.match.difficulty] ?? (DIFFICULTIES[1] as (typeof DIFFICULTIES)[number]);
   const { Position, Team, Structure } = world.c;
   map.gates.forEach((gate, i) => {
     const g = addEntity(world);
@@ -44,14 +46,18 @@ export const setupMatch = (world: SimWorld, map: MapDef): void => {
         wave: wi + 1,
         spawn: map.spawns.findIndex((s) => s.id === g.spawn),
         unitType: g.unitType,
-        battalions: g.battalions,
+        // Zorluk: dalga büyüklüğü (boss ve koçbaşı sayısı değişmez).
+        battalions:
+          STAT.boss[g.unitType] === 1 || STAT.siegeOnly[g.unitType] === 1
+            ? g.battalions
+            : Math.max(1, Math.round((g.battalions * diff.waveSizePercent) / 100)),
       });
     }
   });
   // Kararlı sıralama (Array.prototype.sort spec gereği kararlıdır): tick, sonra tanım sırası.
   schedule.sort((a, b) => a.tick - b.tick);
   world.match.schedule = schedule;
-  world.match.gold[0] = ECONOMY.startGold;
+  world.match.gold[0] = diff.startGold;
   world.match.waveCount = map.waves.length;
 };
 
@@ -75,6 +81,8 @@ export const waveSystem = (world: SimWorld): void => {
     const gateIndex = map.gates.findIndex((gate) => gate.id === lane.target);
     const structure = gateIndex >= 0 ? (m.gates[gateIndex] as number) : 0;
     for (const b of battalions) world.c.Battalion.targetStructure[b] = structure;
+    // Boss: takımının liderlik kaynağı (aura) olur.
+    if (STAT.boss[g.unitType] === 1 && battalions[0] !== undefined) m.hero[ENEMY_TEAM] = battalions[0];
     // Dalga başı Güç Puanı bonusu (GDD §9.1).
     if (g.wave > m.waveIndex) m.pp[0] = (m.pp[0] as number) + PP.waveBonus * 10;
     m.waveIndex = Math.max(m.waveIndex, g.wave);

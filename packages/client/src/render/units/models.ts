@@ -403,6 +403,34 @@ export const aragorn = (): BufferGeometry => {
   return b.build(1.12);
 };
 
+/**
+ * Lurtz (GDD §8.2): miğfersiz Uruk kaptanı — kel kafa, yüzde boydan boya Ak El, çıplak kaslı kollar,
+ * deri kemerler, sırtta uzun siyah yay ve sadak, iri pala. Boss okunurluğu için %25 büyük.
+ */
+export const lurtz = (): BufferGeometry => {
+  const b = new ModelBuilder({ ...HUMAN, shoulderZ: 0.36 });
+  legs(b, 'leather', 'ironDark', 0.15);
+  b.add(Part.Body, box(0.44, 0.64, 0.62), 'urukSkin', [0, 1.14, 0]);
+  b.add(Part.Body, box(0.06, 0.66, 0.1), 'leather', [0.23, 1.14, 0.12], [0.6, 0, 0]); // çapraz kayış
+  b.add(Part.Body, box(0.42, 0.34, 0.6), 'ironDark', [0, 0.82, 0]); // zırh etek
+  b.add(Part.Body, box(0.46, 0.08, 0.64), 'leather', [0, 0.98, 0]);
+  b.add(Part.Body, box(0.06, 1.5, 0.06), 'sootBlack', [-0.26, 1.2, 0], [0.4, 0, 0]); // sırtta yay
+  b.add(Part.Body, box(0.14, 0.6, 0.14), 'leather', [-0.26, 1.25, -0.12], [-0.3, 0, 0]); // sadak
+  b.add(Part.Head, box(0.24, 0.24, 0.24), 'urukSkin', [0.03, 1.63, 0]);
+  b.add(Part.Head, box(0.02, 0.2, 0.18), 'whiteHand', [0.16, 1.63, 0]); // yüzde Ak El
+  for (let f = 0; f < 3; f++)
+    b.add(Part.Head, box(0.02, 0.1, 0.03), 'whiteHand', [0.16, 1.78, -0.05 + f * 0.05]);
+  b.add(Part.Head, box(0.05, 0.05, 0.14), 'eyeRed', [0.15, 1.66, 0]);
+  arm(b, Part.ArmR, 0.36, 'urukSkin', 'urukSkin', 0.66);
+  b.add(Part.ArmR, box(0.1, 0.12, 0.12), 'leather', [0, 1.1, 0.36]); // bileklik
+  b.add(Part.ArmR, box(0.08, 0.08, 0.22), 'iron', [0.06, 0.68, 0.36]);
+  b.add(Part.ArmR, box(0.95, 0.13, 0.05), 'iron', [0.58, 0.76, 0.36], [0, 0, 0.3]); // iri pala
+  arm(b, Part.ArmL, -0.36, 'urukSkin', 'urukSkin', 0.66);
+  b.add(Part.ArmL, box(0.1, 0.12, 0.12), 'leather', [0, 1.1, -0.36]);
+  b.add(Part.ArmL, box(0.3, 0.06, 0.04), 'iron', [0.15, 0.68, -0.36], [0, 0, 0.4]); // hançer
+  return b.build(1.25);
+};
+
 export const UNIT_MODELS: Record<number, () => BufferGeometry> = {
   0: gondorSoldier,
   1: orcWarrior,
@@ -411,4 +439,5 @@ export const UNIT_MODELS: Record<number, () => BufferGeometry> = {
   4: gondorArcher,
   5: batteringRam,
   6: aragorn,
+  7: lurtz,
 };

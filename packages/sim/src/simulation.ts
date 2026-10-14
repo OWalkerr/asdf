@@ -1,4 +1,4 @@
-import type { MapDef, StampedCommand } from '@bulwark/shared';
+import { DEFAULT_DIFFICULTY, type MapDef, type StampedCommand } from '@bulwark/shared';
 import { CommandQueue } from './commandQueue';
 import type { NavGrid } from './nav/grid';
 import { writeSnapshot } from './snapshot';
@@ -16,9 +16,10 @@ export class Simulation {
   /**
    * nav: haritanın navigasyon ızgarası (buildNavGrid); verilmezse açık ızgara.
    * map: verilirse kapılar ve dalga programı kurulur (FD maçı).
+   * difficulty: DIFFICULTIES indeksi (varsayılan Normal).
    */
-  constructor(seed: number, nav?: NavGrid, map?: MapDef) {
-    this.world = createSimWorld(seed, nav, map ?? null);
+  constructor(seed: number, nav?: NavGrid, map?: MapDef, difficulty = DEFAULT_DIFFICULTY) {
+    this.world = createSimWorld(seed, nav, map ?? null, difficulty);
   }
 
   get tick(): number {

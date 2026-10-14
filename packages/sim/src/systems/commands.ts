@@ -1,4 +1,5 @@
 import {
+  DIFFICULTIES,
   FX_HALF,
   FX_ONE,
   type Fx,
@@ -56,8 +57,11 @@ export const spawnUnit = (world: SimWorld, team: number, unitType: number, x: Fx
   UnitType.id[eid] = unitType;
   Speed.value[eid] = STAT.speed[unitType] as Fx;
   MoveTarget.active[eid] = 0;
-  Health.hp[eid] = STAT.hp[unitType] as number;
-  Health.max[eid] = STAT.hp[unitType] as number;
+  // Zorluk: düşman canı (harita maçında).
+  const hpPct = world.map && team !== 0 ? (DIFFICULTIES[world.match.difficulty]?.enemyHpPercent ?? 100) : 100;
+  const hp = Math.max(1, (((STAT.hp[unitType] as number) * hpPct) / 100) | 0);
+  Health.hp[eid] = hp;
+  Health.max[eid] = hp;
   Health.lastHit[eid] = 0;
   Health.lastBy[eid] = 0;
   Anim.state[eid] = 0;

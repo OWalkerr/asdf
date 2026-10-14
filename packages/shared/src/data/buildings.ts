@@ -112,3 +112,44 @@ export const ECONOMY = {
   repairTime: 10,
   repairPercent: 25,
 } as const;
+
+/**
+ * Zorluk seviyeleri (GDD §4.4). Düşman canı ve dalga büyüklüğü yüzde; başlangıç altını.
+ * Sim'e maç başında verilir (deterministik: tüm istemciler aynı değeri kullanır).
+ */
+export interface DifficultyDef {
+  key: 'easy' | 'normal' | 'hard';
+  name: string;
+  enemyHpPercent: number;
+  waveSizePercent: number;
+  startGold: number;
+  desc: string;
+}
+
+export const DIFFICULTIES: readonly DifficultyDef[] = [
+  {
+    key: 'easy',
+    name: 'Kolay',
+    enemyHpPercent: 75,
+    waveSizePercent: 80,
+    startGold: 1000,
+    desc: 'Daha az ve daha zayıf düşman, bol altın.',
+  },
+  {
+    key: 'normal',
+    name: 'Normal',
+    enemyHpPercent: 100,
+    waveSizePercent: 100,
+    startGold: 700,
+    desc: 'Dengeli kuşatma.',
+  },
+  {
+    key: 'hard',
+    name: 'Zor',
+    enemyHpPercent: 130,
+    waveSizePercent: 125,
+    startGold: 550,
+    desc: 'Isengard tüm gücüyle gelir.',
+  },
+];
+export const DEFAULT_DIFFICULTY = 1;

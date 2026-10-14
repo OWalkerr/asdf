@@ -267,6 +267,7 @@ export const HELMS_DEEP: MapDef = {
         { atSec: 355, spawn: 'S_east', unitType: UnitTypeId.UrukHai, battalions: 3 },
         { atSec: 365, spawn: 'S_main', unitType: UnitTypeId.OrcWarrior, battalions: 4 },
         { atSec: 372, spawn: 'S_west', unitType: UnitTypeId.OrcWarrior, battalions: 3 },
+        { atSec: 368, spawn: 'S_main', unitType: UnitTypeId.Lurtz, battalions: 1 },
         { atSec: 376, spawn: 'S_main', unitType: UnitTypeId.BatteringRam, battalions: 2 },
         { atSec: 380, spawn: 'S_east', unitType: UnitTypeId.BatteringRam, battalions: 1 },
       ],

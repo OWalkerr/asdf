@@ -590,3 +590,131 @@ body.debug #hud {
   font-size: 10px;
   color: var(--ink-dim);
 }
+
+/* --- Boss çubuğu --------------------------------------------------------------- */
+#bossbar {
+  position: fixed;
+  left: 50%;
+  top: 58px;
+  transform: translateX(-50%);
+  display: none;
+  gap: 4px;
+  text-align: center;
+  pointer-events: none;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: #ffb3a3;
+  text-shadow: 0 1px 6px #000;
+}
+#bossbar.show {
+  display: grid;
+}
+#bossbar .bar {
+  display: block;
+  width: 340px;
+  height: 10px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(220, 80, 60, 0.7);
+  border-radius: 5px;
+  overflow: hidden;
+}
+#bossbar .bar i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #8a1810, #e0442e);
+}
+
+/* --- Başlangıç ekranı ---------------------------------------------------------- */
+#startscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background:
+    radial-gradient(ellipse at 50% 30%, rgba(80, 90, 110, 0.35), transparent 60%),
+    linear-gradient(180deg, #1c2029, #0f0e0c);
+  transition: opacity 0.4s;
+  overflow-y: auto;
+}
+#startscreen.out {
+  opacity: 0;
+  pointer-events: none;
+}
+#startscreen .card {
+  width: min(760px, 100%);
+  text-align: center;
+}
+#startscreen small {
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  font-size: 12px;
+}
+#startscreen h1 {
+  margin: 8px 0 10px;
+  font-size: clamp(34px, 7vw, 60px);
+  font-weight: normal;
+  letter-spacing: 0.08em;
+  color: #f0c95a;
+  text-shadow: 0 2px 18px rgba(240, 201, 90, 0.25);
+}
+#startscreen p {
+  color: var(--ink-dim);
+  line-height: 1.55;
+  max-width: 620px;
+  margin: 0 auto 18px;
+}
+#startscreen .diffs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 10px;
+  margin-bottom: 18px;
+}
+#startscreen .diffs button {
+  display: grid;
+  gap: 4px;
+  padding: 14px 12px;
+  text-align: left;
+  font: inherit;
+  color: var(--ink);
+  background: rgba(30, 27, 22, 0.85);
+  border: 1px solid rgba(201, 162, 58, 0.35);
+  border-radius: 8px;
+  cursor: pointer;
+}
+#startscreen .diffs button.sel {
+  border-color: #f0c95a;
+  box-shadow:
+    0 0 0 1px #f0c95a,
+    0 0 18px rgba(240, 201, 90, 0.2);
+}
+#startscreen .diffs b {
+  font-size: 18px;
+  font-weight: normal;
+  color: #f0c95a;
+}
+#startscreen .diffs span {
+  font-size: 13px;
+}
+#startscreen .diffs em {
+  font-style: normal;
+  font-size: 11px;
+  color: var(--ink-dim);
+}
+#startscreen .go {
+  font: inherit;
+  font-size: 18px;
+  letter-spacing: 0.08em;
+  padding: 10px 36px;
+  color: #1a1916;
+  background: linear-gradient(180deg, #f0c95a, #c9a23a);
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+}
+#startscreen .keys {
+  margin-top: 16px;
+  font-size: 12px;
+}

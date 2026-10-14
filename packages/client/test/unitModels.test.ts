@@ -5,6 +5,7 @@ import {
   batteringRam,
   gondorArcher,
   gondorSoldier,
+  lurtz,
   orcWarrior,
   Part,
   towerGuard,
@@ -21,6 +22,7 @@ const BUDGET: [string, () => import('three/webgpu').BufferGeometry, number][] = 
   ['Gondor Archer', gondorArcher, 300],
   ['Battering Ram', batteringRam, 900],
   ['Aragorn', aragorn, 450],
+  ['Lurtz', lurtz, 450],
 ];
 
 describe('birim modelleri', () => {

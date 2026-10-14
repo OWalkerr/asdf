@@ -46,6 +46,8 @@ export interface UnitDef {
   siegeOnly?: boolean;
   /** Kahraman (GDD §8): tek kişilik tabur, liderlik aurası ve yetenekler. */
   hero?: boolean;
+  /** Düşman boss'u (dalgayla gelir): kendi takımına liderlik aurası verir, oyuncu çağıramaz. */
+  boss?: boolean;
 }
 
 export const UNIT_DEFS: readonly UnitDef[] = [
@@ -201,6 +203,30 @@ export const UNIT_DEFS: readonly UnitDef[] = [
     jitter: 0,
     hero: true,
   },
+  {
+    // Lurtz (GDD §8.2): Saruman'ın ilk Uruk'u — miğfersiz, yüzünde Ak El, kalın kılıç ve sırtta yay.
+    // 5. dalganın boss'u; yakındaki Uruk taburlarına liderlik aurası verir.
+    id: 7,
+    key: 'lurtz',
+    name: 'Lurtz',
+    faction: 'isengard',
+    speed: 5.0,
+    hp: 3200,
+    armor: 'heavy',
+    attackStyle: 'slash',
+    damage: 60,
+    damageType: 'slash',
+    attackInterval: 0.9,
+    range: 1.9,
+    ranged: false,
+    battalionSize: 1,
+    cost: 1500,
+    trainTime: 0,
+    files: 1,
+    spacing: 2,
+    jitter: 0,
+    boss: true,
+  },
 ];
 
 export const UnitTypeId = {
@@ -211,6 +237,7 @@ export const UnitTypeId = {
   GondorArcher: 4,
   BatteringRam: 5,
   Aragorn: 6,
+  Lurtz: 7,
 } as const;
 
 export const unitDef = (id: number): UnitDef => {
