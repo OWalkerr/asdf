@@ -20,7 +20,7 @@ import type { SimWorld } from './world';
  * Render ara değerleme için iki ardışık snapshot'ı eid ile eşler.
  */
 export const writeSnapshot = (world: SimWorld, view: Int32Array, simMicros = 0): number => {
-  const { Position, Facing, Team, UnitType, Health, Anim } = world.c;
+  const { Position, Facing, Team, UnitType, Health, Anim, Soldier } = world.c;
   const capacity = view[G_CAPACITY] as number;
   const index = 1 - Atomics.load(view, G_ACTIVE);
   const base = bufferOffset(capacity, index);
@@ -41,6 +41,7 @@ export const writeSnapshot = (world: SimWorld, view: Int32Array, simMicros = 0):
       Team.id[eid] as number,
     );
     view[o + 4] = packAnim(Anim.state[eid] as number, 0, hp8, animTick);
+    view[o + 5] = Soldier.battalion[eid] as number;
     o += SNAP_UNIT_INTS;
     count++;
   }

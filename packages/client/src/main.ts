@@ -1,16 +1,22 @@
 import type { SlotDef } from '@bulwark/shared';
+import { buildNavGrid, createOpenGrid } from '@bulwark/sim';
 import { Scene, type Texture, Timer } from 'three/webgpu';
 import { GALLERY_CENTER, updateGallery } from './app/gallery';
-import { Scenario } from './app/scenario';
+import { PLAYER, Scenario } from './app/scenario';
 import { createDebugPanel } from './debug/DebugPanel';
 import { GroundPicker } from './input/GroundPicker';
+import { PlayerInput } from './input/PlayerInput';
+import { Selection } from './input/Selection';
 import { buildHelmsDeep } from './maps/helmsDeep';
 import { RTSCamera } from './render/camera/RTSCamera';
+import { OrderMarker } from './render/fx/OrderMarker';
 import { PickCursor } from './render/fx/PickCursor';
+import { SelectionRings } from './render/fx/SelectionRings';
 import { createLighting } from './render/lighting';
 import { HeightGrid } from './render/map/HeightGrid';
 import { buildLookdevScene } from './render/map/lookdev';
 import type { MapScene } from './render/map/MapScene';
+import { buildNavOverlay } from './render/map/NavOverlay';
 import { createToonParams, type ToonParams } from './render/materials/ToonMaterial';
 import { createPaletteTexture } from './render/palette';
 import { createRenderContext } from './render/renderer';
@@ -59,57 +65,43 @@ const boot = async () => {
   else cam.setHome(world.home.x, world.home.z, world.home.yaw, world.home.distance);
   cam.attach(canvas);
 
-  // --- Zemin / slot seçimi (three-mesh-bvh) -------------------------------------
-  const picker = new GroundPicker(world.collider);
-  const cursor = new PickCursor();
-  scene.add(cursor.mesh);
-  const pointer = { x: 0, y: 0, inside: false, dirty: false };
-  let hoverText = '—';
-  canvas.addEventListener('pointermove', (e) => {
-    pointer.x = e.offsetX;
-    pointer.y = e.offsetY;
-    pointer.inside = true;
-    pointer.dirty = true;
-  });
-  canvas.addEventListener('pointerleave', () => {
-    pointer.inside = false;
-    cursor.hide();
-    world.slots?.setHovered(-1);
-  });
   // --- Simülasyon (Web Worker) --------------------------------------------------
   const UNIT_CAPACITY = 8192;
-  const sim = await SimHost.start({ seed: world.def?.seed ?? 1, capacity: UNIT_CAPACITY });
+  const sim = await SimHost.start({
+    seed: world.def?.seed ?? 1,
+    capacity: UNIT_CAPACITY,
+    mapId: world.def?.id ?? null,
+    mapSize: world.size,
+  });
   const units = new UnitRenderer(UNIT_CAPACITY, palette, toon, ground.sample);
   for (const m of units.meshes) scene.add(m);
   const scenario = new Scenario(sim, world.def);
   if (!gallery) scenario.start();
 
-  canvas.addEventListener('pointerdown', (e) => {
-    if (e.button === 2) {
-      const hit = picker.pick(cam.camera, e.offsetX, e.offsetY, canvas.clientWidth, canvas.clientHeight);
-      if (hit) scenario.moveAll(hit.point.x, hit.point.z);
-      return;
-    }
-    if (e.button !== 0 || e.altKey || !world.slots) return;
-    const hit = picker.pick(cam.camera, e.offsetX, e.offsetY, canvas.clientWidth, canvas.clientHeight);
-    world.slots.setSelected(hit ? world.slots.nearest(hit.point.x, hit.point.y, hit.point.z) : -1);
+  // --- Girdi: zemin/slot seçimi (BVH), tabur seçimi, emirler ----------------------
+  const picker = new GroundPicker(world.collider);
+  const cursor = new PickCursor();
+  const marker = new OrderMarker();
+  const rings = new SelectionRings(2048);
+  scene.add(cursor.mesh, marker.mesh, rings.mesh);
+  const selection = new Selection(units, PLAYER);
+  const input = new PlayerInput({
+    canvas,
+    selBox: document.getElementById('selbox') as HTMLDivElement,
+    cam,
+    picker,
+    selection,
+    scenario,
+    cursor,
+    marker,
+    slots: world.slots,
   });
-  const updatePick = () => {
-    // Kamera hareket ettiğinde de imleç altı değişir; her karede bir raycast yeterince ucuz (BVH).
-    if (!pointer.inside) return;
-    const hit = picker.pick(cam.camera, pointer.x, pointer.y, canvas.clientWidth, canvas.clientHeight);
-    if (!hit) {
-      cursor.hide();
-      world.slots?.setHovered(-1);
-      hoverText = '—';
-      return;
-    }
-    const slot = world.slots ? world.slots.nearest(hit.point.x, hit.point.y, hit.point.z) : -1;
-    world.slots?.setHovered(slot);
-    cursor.show(hit.point, hit.normal, slot >= 0 ? 0.6 : 1);
-    const p = hit.point;
-    hoverText = `(${p.x.toFixed(1)}, ${p.y.toFixed(1)}, ${p.z.toFixed(1)})`;
-  };
+  // Nav ızgarası debug katmanı (sim'in kullandığı ızgaranın aynısı).
+  const navOverlay = buildNavOverlay(
+    world.def ? buildNavGrid(world.def) : createOpenGrid(world.size),
+    ground.sample,
+  );
+  scene.add(navOverlay);
 
   const ctx = await createRenderContext(canvas, scene, cam.camera);
   const debug = await createDebugPanel(ctx.renderer, {
@@ -119,13 +111,14 @@ const boot = async () => {
     toon,
     flameIntensity: world.flameIntensity,
     overlay: world.debugOverlay,
+    navOverlay,
     sim: {
       speed: 1,
       setSpeed: (v: number) => sim.setSpeed(v),
       actions: {
-        'Düşman grubu gönder (+240)': () => scenario.sendWave(240),
-        'Stres testi (+1000 düşman)': () => {
-          for (let i = 0; i < 4; i++) scenario.sendWave(250);
+        'Düşman dalgası (+3 tabur)': () => scenario.sendWave(3),
+        'Stres testi (+30 tabur)': () => {
+          for (let i = 0; i < 6; i++) scenario.sendWave(5);
         },
       },
     },
@@ -156,7 +149,10 @@ const boot = async () => {
     sim.poll(now);
     if (gallery) updateGallery(units, now / 1000, ground.sample);
     else units.updateFromSim(sim, now);
-    updatePick();
+    selection.prune();
+    rings.update(units, selection.selected);
+    marker.update(now);
+    input.update();
     ctx.render();
     debug.update();
 
@@ -170,7 +166,8 @@ const boot = async () => {
         `draw     ${r.drawCalls} çağrı · ${(r.triangles / 1000).toFixed(1)}k üçgen`,
         `statik   ${world.stats.instances} instance / ${world.stats.batches} batch`,
         `kamera   (${t.x.toFixed(0)}, ${t.z.toFixed(0)}) zoom ${(cam.zoom01 * 100).toFixed(0)}%`,
-        `imleç    ${hoverText}`,
+        `imleç    ${input.hoverText}`,
+        `seçim    ${selection.selected.size} tabur${selection.selected.size ? ' · sağ tık: hareket' : ' · tıkla / kutu çiz'}`,
         `birim    ${units.drawn} çizildi · ${units.meshes.length} InstancedMesh`,
         `sim      tick ${sim.tick} · ${sim.frame.count} birim · ${(sim.frame.simMicros / 1000).toFixed(2)} ms · ${sim.shared ? 'SAB' : 'postMessage'}`,
         `hash     #${sim.lastHash.tick} ${sim.lastHash.hash.toString(16).padStart(8, '0')}`,
@@ -189,7 +186,7 @@ const boot = async () => {
 
   bootEl.classList.add('done');
   // Playwright / debug erişimi için.
-  Object.assign(window, { __bulwark: { ctx, cam, scene, world, picker, sim, scenario } });
+  Object.assign(window, { __bulwark: { ctx, cam, scene, world, picker, sim, scenario, selection, units } });
 };
 
 boot().catch((err: unknown) => {

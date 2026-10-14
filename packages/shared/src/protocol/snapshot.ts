@@ -8,19 +8,20 @@
  *   [buffer 1: header 8 + capacity × 5]
  *
  * Buffer header: version (seqlock; tek = yazılıyor), tick, count, simMicros, …
- * Birim kaydı (5 × int32 = 20 bayt):
+ * Birim kaydı (6 × int32 = 24 bayt):
  *   0 eid
  *   1 x  (Q16.16)
  *   2 z  (Q16.16)
  *   3 yaw:16 | unitType:8 | team:8
  *   4 anim:8 | flags:8 | hp8:8 | animTick:8
+ *   5 tabur eid'i (0 = taburda değil)
  *
  * Konumlar ham Q16.16 olarak taşınır; float'a çeviri render tarafında yapılır
  * (sim paketi float üretmez — GDD §13.7).
  */
 export const SNAP_GLOBAL_INTS = 4;
 export const SNAP_HEADER_INTS = 8;
-export const SNAP_UNIT_INTS = 5;
+export const SNAP_UNIT_INTS = 6;
 
 export const G_ACTIVE = 0;
 export const G_PUBLISH = 1;

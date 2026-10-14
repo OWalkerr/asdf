@@ -20,6 +20,9 @@ import { type FromWorker, SIM_TICK_MS, type ToWorker } from './protocol';
 export interface SimHostOptions {
   seed: number;
   capacity: number;
+  /** MAP_DEFS anahtarı (null = look-dev, açık ızgara). */
+  mapId: string | null;
+  mapSize: number;
   /** Komutun uygulanacağı tick = son görülen tick + inputDelay (lockstep'te ≥ 2). */
   inputDelay?: number;
 }
@@ -66,7 +69,14 @@ export class SimHost {
         if (msg.type === 'ready') resolve();
         host.onMessage(msg);
       };
-      host.post({ type: 'init', seed: opts.seed, capacity: opts.capacity, view });
+      host.post({
+        type: 'init',
+        seed: opts.seed,
+        capacity: opts.capacity,
+        view,
+        mapId: opts.mapId,
+        mapSize: opts.mapSize,
+      });
     });
     return host;
   }

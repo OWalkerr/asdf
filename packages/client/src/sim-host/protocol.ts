@@ -2,7 +2,15 @@ import type { StampedCommand } from '@bulwark/shared';
 
 /** Ana thread ↔ sim worker mesajları. */
 export type ToWorker =
-  | { type: 'init'; seed: number; capacity: number; view: Int32Array | null }
+  /** mapId: MAP_DEFS anahtarı; null ise mapSize kenarlı açık ızgara (look-dev). */
+  | {
+      type: 'init';
+      seed: number;
+      capacity: number;
+      view: Int32Array | null;
+      mapId: string | null;
+      mapSize: number;
+    }
   | { type: 'commands'; commands: StampedCommand[] }
   | { type: 'speed'; value: number };
 

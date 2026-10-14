@@ -8,7 +8,15 @@ import type { Fx } from '../math/fixed';
 export type Command =
   /** Debug/senaryo: (x,z) merkezli ızgarada `count` birim oluştur. */
   | { type: 'spawn'; team: number; unitType: number; x: Fx; z: Fx; count: number; spacing: Fx }
-  /** Birimleri hedefe yürüt (kare formasyon ofsetleriyle). */
+  /**
+   * Debug/senaryo: (x,z) merkezli yan yana `count` tabur oluştur (GDD §6.1).
+   * facing: uint16 açı; taburlar bu yöne bakar ve dik eksende sıralanır.
+   */
+  | { type: 'spawnBattalion'; team: number; unitType: number; x: Fx; z: Fx; count: number; facing: number }
+  /**
+   * Birimleri/taburları hedefe yürüt. Tabur eid'leri akış alanıyla (flow field) yürür ve
+   * hedefte yan yana dizilir; serbest birimler kare formasyonla doğrudan yürür.
+   */
   | { type: 'move'; units: readonly number[]; x: Fx; z: Fx; spacing: Fx }
   | { type: 'stop'; units: readonly number[] };
 

@@ -15,6 +15,7 @@ export interface DebugHooks {
   flameIntensity: { value: number };
   /** Harita debug katmanı (koridorlar, spawn'lar). */
   overlay?: Object3D | undefined;
+  navOverlay?: Object3D | undefined;
   sim?: { speed: number; setSpeed(v: number): void; actions: Record<string, () => void> };
 }
 
@@ -34,6 +35,7 @@ export const createDebugPanel = async (renderer: WebGPURenderer, hooks: DebugHoo
   r.add(ctx.renderer, 'toneMappingExposure', 0.4, 2, 0.01).name('Pozlama');
   r.add(hooks.flameIntensity, 'value', 0, 10, 0.1).name('Alev emissive');
   if (hooks.overlay) r.add(hooks.overlay, 'visible').name('Koridor/spawn katmanı');
+  if (hooks.navOverlay) r.add(hooks.navOverlay, 'visible').name('Nav ızgarası sınırı');
 
   const l = gui.addFolder('Işık');
   l.add(light, 'azimuth', 0, 360, 1).name('Güneş azimut').onChange(light.applySun);

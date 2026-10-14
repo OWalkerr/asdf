@@ -4,6 +4,7 @@ import {
   FX_ONE,
   fxFromInt,
   readLatestSnapshot,
+  SNAP_UNIT_INTS,
   type StampedCommand,
   unpackTeam,
   unpackUnitType,
@@ -141,7 +142,9 @@ describe('snapshot (SharedArrayBuffer)', () => {
     expect(frame.tick).toBe(1);
     expect(frame.count).toBe(8);
     expect(frame.simMicros).toBe(1234);
-    const teams = Array.from({ length: frame.count }, (_, i) => unpackTeam(frame.units[i * 5 + 3] as number));
+    const teams = Array.from({ length: frame.count }, (_, i) =>
+      unpackTeam(frame.units[i * SNAP_UNIT_INTS + 3] as number),
+    );
     expect(teams.filter((t) => t === 1).length).toBe(3);
     expect(unpackUnitType(frame.units[3] as number)).toBe(0);
     expect(readLatestSnapshot(view, frame)).toBe(false);

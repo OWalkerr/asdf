@@ -1,9 +1,9 @@
 import {
-  CylinderGeometry,
   InstancedMesh,
   Matrix4,
   MeshBasicNodeMaterial,
   Quaternion,
+  RingGeometry,
   Vector3,
 } from 'three/webgpu';
 
@@ -20,7 +20,8 @@ export class PickCursor {
   private readonly p = new Vector3();
 
   constructor() {
-    const ring = new CylinderGeometry(1.6, 1.6, 0.08, 6, 1, true);
+    // Yüzeye yatan altıgen halka (normal +Y; show() bunu yüzey normaline hizalar).
+    const ring = new RingGeometry(1.25, 1.6, 6).rotateX(-Math.PI / 2);
     const mat = new MeshBasicNodeMaterial({
       color: '#f5d77a',
       transparent: true,

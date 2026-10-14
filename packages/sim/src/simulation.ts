@@ -1,5 +1,6 @@
 import type { StampedCommand } from '@bulwark/shared';
 import { CommandQueue } from './commandQueue';
+import type { NavGrid } from './nav/grid';
 import { writeSnapshot } from './snapshot';
 import { applyCommand } from './systems/commands';
 import { createSimWorld, hashWorld, type SimWorld, stepWorld } from './world';
@@ -12,8 +13,9 @@ export class Simulation {
   readonly world: SimWorld;
   readonly queue = new CommandQueue();
 
-  constructor(seed: number) {
-    this.world = createSimWorld(seed);
+  /** nav: haritanın navigasyon ızgarası (buildNavGrid); verilmezse açık ızgara. */
+  constructor(seed: number, nav?: NavGrid) {
+    this.world = createSimWorld(seed, nav);
   }
 
   get tick(): number {

@@ -31,6 +31,10 @@ URL parametreleri: `?map=helms_deep` (varsayılan) veya `?map=lookdev`, `?galler
 
 ## Kamera kontrolleri
 WASD / ok tuşları / ekran kenarı: kaydır · Orta tuş sürükle: kaydır · Q/E veya Alt+sol sürükle: döndür ·
-Tekerlek: imlece doğru zoom · Space/Home: başlangıç görünümü · Sol tık: inşa slotu seç ·
-Sağ tık: (geçici) tüm Gondor birimlerini oraya yürüt. Debug panelindeki "Simülasyon" bölümünden
-sim hızı ve düşman grubu / stres testi tetiklenebilir.
+Tekerlek: imlece doğru zoom · Space/Home: başlangıç görünümü.
+
+## Birim kontrolleri
+Sol tık: tabur seç (Shift ile ekle/çıkar) · Sol sürükle: kutu seçimi · Sağ tık: seçili taburları yürüt ·
+Esc: seçimi temizle · Asker olmayan yere sol tık: inşa slotu seç. Taburlar akış alanıyla (flow field)
+engellerin etrafından dolaşır, dar geçitte formasyonu daraltır. Debug panelinde "Nav ızgarası sınırı",
+sim hızı ve düşman dalgası / stres testi düğmeleri var.

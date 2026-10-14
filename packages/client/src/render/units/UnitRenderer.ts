@@ -30,6 +30,9 @@ interface Bucket {
   anim: Float32Array;
   poseAttr: InstancedBufferAttribute;
   animAttr: InstancedBufferAttribute;
+  /** Instance başına tabur eid'i (seçim / halka için CPU tarafı kopya). */
+  battalion: Int32Array;
+  team: Uint8Array;
   count: number;
 }
 
@@ -62,7 +65,32 @@ export class UnitRenderer {
       mesh.castShadow = true;
       mesh.receiveShadow = true;
       mesh.count = 0;
-      this.buckets[def.id] = { mesh, pose, anim, poseAttr, animAttr, count: 0 };
+      this.buckets[def.id] = {
+        mesh,
+        pose,
+        anim,
+        poseAttr,
+        animAttr,
+        battalion: new Int32Array(capacityPerType),
+        team: new Uint8Array(capacityPerType),
+        count: 0,
+      };
+    }
+  }
+
+  /** Son karede çizilen tüm instance'ları gezer (seçim, halka, picking için). */
+  forEach(cb: (x: number, y: number, z: number, battalion: number, team: number) => void): void {
+    for (const b of this.buckets) {
+      for (let i = 0; i < b.count; i++) {
+        const o = i * 4;
+        cb(
+          b.pose[o] as number,
+          b.pose[o + 1] as number,
+          b.pose[o + 2] as number,
+          b.battalion[i] as number,
+          b.team[i] as number,
+        );
+      }
     }
   }
 
@@ -74,7 +102,7 @@ export class UnitRenderer {
     for (const b of this.buckets) b.count = 0;
   }
 
-  /** Bir birim ekle. yaw: radyan (0 = +X). t: durumdaki süre (s). */
+  /** Bir birim ekle. yaw: radyan (0 = +X). t: durumdaki süre (s). battalion: tabur eid'i (0 = yok). */
   push(
     type: number,
     x: number,
@@ -85,9 +113,12 @@ export class UnitRenderer {
     t: number,
     flash: number,
     team: number,
+    battalion = 0,
   ): void {
     const b = this.buckets[type];
     if (!b || b.count >= this.capacityPerType) return;
+    b.battalion[b.count] = battalion;
+    b.team[b.count] = team;
     const o = b.count * 4;
     b.pose[o] = x;
     b.pose[o + 1] = y;
@@ -156,6 +187,7 @@ export class UnitRenderer {
         t,
         0,
         unpackTeam(packed),
+        u[o + 5] as number,
       );
     }
     this.end();

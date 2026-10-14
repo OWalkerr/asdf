@@ -10,24 +10,28 @@ import {
 import type { SimHost } from '../sim-host/SimHost';
 
 /**
- * Phase 1 test senaryosu (Adım 5): sim hattını uçtan uca doğrulamak için
- * savunan taburları ve güneyden yürüyen bir düşman ordusu oluşturur.
- * Adım 8'de dalga sistemi (WaveSpawnSystem) ve gerçek birim tanımları bunun yerini alacak.
+ * Phase 1 test senaryosu: savunan Gondor taburları ve rotalar boyunca gelen Isengard/Mordor
+ * taburları. Adım 8'de dalga sistemi (WaveSpawnSystem) bunun yerini alacak.
  */
 export const PLAYER = 0;
 export const ENEMY_PLAYER = 1;
 
-export const unitsOfTeam = (frame: SnapshotFrame, team: number): number[] => {
-  const out: number[] = [];
+/** uint16 açılar: 0 = +X (doğu), 16384 = +Z (güney), 49152 = −Z (kuzey). */
+const FACE_SOUTH = 16384;
+const FACE_NORTH = 49152;
+
+/** Karede görülen, verilen takıma ait tabur eid'leri. */
+export const battalionsOfTeam = (frame: SnapshotFrame, team: number): Set<number> => {
+  const out = new Set<number>();
   for (let i = 0; i < frame.count; i++) {
     const o = i * SNAP_UNIT_INTS;
-    if (unpackTeam(frame.units[o + 3] as number) === team) out.push(frame.units[o] as number);
+    const b = frame.units[o + 5] as number;
+    if (b !== 0 && unpackTeam(frame.units[o + 3] as number) === team) out.add(b);
   }
   return out;
 };
 
 export class Scenario {
-  /** Spawn edilip henüz emir verilmemiş düşmanlar için bekleyen hedefler. */
   private pendingEnemyTargets: Vec2[] = [];
   private orderedEnemies = new Set<number>();
   private waveIndex = 0;
@@ -39,87 +43,79 @@ export class Scenario {
     sim.onFrame((frame) => this.onFrame(frame));
   }
 
-  start(): void {
-    const at = (x: number, z: number) => ({ x: fxFromFloat(x), z: fxFromFloat(z) });
-    const spacing = fxFromFloat(1.6);
-    if (!this.def) {
-      this.sim.send(
-        { type: 'spawn', team: 0, unitType: UnitTypeId.GondorSoldier, ...at(0, 40), count: 64, spacing },
-        PLAYER,
-      );
-      return;
-    }
-    // Savunucular: Deeping Wall arkasında Gondor askerleri + Tower Guard'lar, Hornburg avlusunda askerler.
-    const wallZ = this.def.walls[0]?.points[0]?.[1] ?? 0;
-    for (const [x, unitType] of [
-      [-2, UnitTypeId.GondorSoldier],
-      [40, UnitTypeId.TowerGuard],
-    ] as const) {
-      this.sim.send({ type: 'spawn', team: 0, unitType, ...at(x, wallZ - 14), count: 60, spacing }, PLAYER);
-    }
-    const plateau = this.def.terrain.plateaus[0];
-    if (plateau) {
-      const [px, pz] = plateau.center;
-      this.sim.send(
-        {
-          type: 'spawn',
-          team: 0,
-          unitType: UnitTypeId.GondorSoldier,
-          ...at(px + 4, pz + 4),
-          count: 36,
-          spacing,
-        },
-        PLAYER,
-      );
-    }
-    this.sendWave(240);
+  private spawn(
+    team: number,
+    unitType: number,
+    x: number,
+    z: number,
+    count: number,
+    facing: number,
+    player: number,
+  ) {
+    this.sim.send(
+      { type: 'spawnBattalion', team, unitType, x: fxFromFloat(x), z: fxFromFloat(z), count, facing },
+      player,
+    );
   }
 
-  /** Spawn noktalarından sırayla bir düşman grubu (Orc / Uruk-hai dönüşümlü) çıkarır ve koridor sonuna yürütür. */
-  sendWave(count: number): void {
+  start(): void {
+    if (!this.def) {
+      this.spawn(0, UnitTypeId.GondorSoldier, 0, 40, 2, FACE_SOUTH, PLAYER);
+      this.spawn(0, UnitTypeId.TowerGuard, 0, 52, 2, FACE_SOUTH, PLAYER);
+      return;
+    }
+    // Deeping Wall arkasında Gondor askerleri + Tower Guard'lar, Hornburg avlusunda bir tabur.
+    const wallZ = this.def.walls[0]?.points[0]?.[1] ?? 0;
+    this.spawn(0, UnitTypeId.GondorSoldier, 0, wallZ - 16, 2, FACE_SOUTH, PLAYER);
+    this.spawn(0, UnitTypeId.TowerGuard, 45, wallZ - 16, 2, FACE_SOUTH, PLAYER);
+    const plateau = this.def.terrain.plateaus[0];
+    if (plateau)
+      this.spawn(
+        0,
+        UnitTypeId.GondorSoldier,
+        plateau.center[0] + 3,
+        plateau.center[1] + 3,
+        1,
+        FACE_SOUTH,
+        PLAYER,
+      );
+    this.sendWave(3);
+  }
+
+  /** Sıradaki spawn noktasından `battalions` adet düşman taburu çıkarır (Orc / Uruk-hai dönüşümlü). */
+  sendWave(battalions: number): void {
     if (!this.def) return;
     const unitType = this.waveIndex % 2 === 0 ? UnitTypeId.OrcWarrior : UnitTypeId.UrukHai;
     const spawn = this.def.spawns[this.waveIndex++ % this.def.spawns.length];
     if (!spawn) return;
     const lane = this.def.lanes.find((l) => l.id === spawn.lane);
     const target = lane?.points[lane.points.length - 1] ?? this.def.citadel.pos;
-    this.sim.send(
-      {
-        type: 'spawn',
-        team: 1,
-        unitType,
-        x: fxFromFloat(spawn.pos[0]),
-        z: fxFromFloat(spawn.pos[1] - 12),
-        count,
-        spacing: fxFromFloat(1.5),
-      },
-      ENEMY_PLAYER,
-    );
+    this.spawn(1, unitType, spawn.pos[0], spawn.pos[1] - 10, battalions, FACE_NORTH, ENEMY_PLAYER);
     this.pendingEnemyTargets.push(target);
   }
 
-  /** Sağ tık: oyuncunun tüm birimlerini hedefe yürüt (Adım 7'de seçim + tabur emirleri gelecek). */
-  moveAll(x: number, z: number): void {
-    const units = unitsOfTeam(this.sim.frame, 0);
+  /** Seçili taburlara hareket emri. */
+  order(battalions: Iterable<number>, x: number, z: number): void {
+    const units = [...battalions];
     if (units.length === 0) return;
     this.sim.send(
-      { type: 'move', units, x: fxFromFloat(x), z: fxFromFloat(z), spacing: fxFromFloat(1.6) },
+      { type: 'move', units, x: fxFromFloat(x), z: fxFromFloat(z), spacing: fxFromFloat(1.5) },
       PLAYER,
     );
   }
 
   private onFrame(frame: SnapshotFrame): void {
     if (this.pendingEnemyTargets.length === 0) return;
-    const fresh = unitsOfTeam(frame, 1).filter((e) => !this.orderedEnemies.has(e));
+    const fresh = [...battalionsOfTeam(frame, 1)].filter((b) => !this.orderedEnemies.has(b));
     if (fresh.length === 0) return;
     const target = this.pendingEnemyTargets.shift() as Vec2;
-    for (const e of fresh) this.orderedEnemies.add(e);
+    for (const b of fresh) this.orderedEnemies.add(b);
     this.sim.send(
       {
         type: 'move',
         units: fresh,
         x: fxFromFloat(target[0]),
-        z: fxFromFloat(target[1] + 8),
+        z: fxFromFloat(target[1]),
         spacing: fxFromFloat(1.5),
       },
       ENEMY_PLAYER,

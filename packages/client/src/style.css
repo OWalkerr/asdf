@@ -83,3 +83,10 @@ body {
   text-align: center;
   white-space: pre-wrap;
 }
+#selbox {
+  position: fixed;
+  display: none;
+  pointer-events: none;
+  border: 1px solid #f2cf63;
+  background: rgba(242, 207, 99, 0.12);
+}

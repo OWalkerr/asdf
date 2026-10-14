@@ -130,6 +130,67 @@ export const HELMS_DEEP: MapDef = {
       target: 'deeping_wall',
     },
   ],
+  nav: {
+    cellSize: 2,
+    ops: [
+      // Yürünebilir zemin: güney ovası + kuzeye daralan Deeping-coomb (render'daki vadi şekliyle aynı).
+      {
+        op: 'open',
+        label: 'güney ovası',
+        shape: {
+          type: 'polygon',
+          points: [
+            [-150, -10],
+            [150, -10],
+            [150, 190],
+            [-150, 190],
+          ],
+        },
+      },
+      {
+        op: 'open',
+        label: 'Deeping-coomb',
+        shape: {
+          type: 'polygon',
+          points: [
+            [-60, -10],
+            [90, -10],
+            [54.5, -152],
+            [-24.5, -152],
+          ],
+        },
+      },
+      // Hornburg kayası: 13 m'lik uçurum bandı kapalı, plato içi açık.
+      {
+        op: 'block',
+        label: 'Hornburg uçurumu',
+        shape: { type: 'ring', center: HORNBURG, inner: 17.5, outer: 30 },
+      },
+      { op: 'open', label: 'Hornburg avlusu', shape: { type: 'circle', center: HORNBURG, radius: 17.5 } },
+      // Causeway: setin yüksek kısmının yanları kapalı (yamaçtan tırmanılmaz), set üstü açık.
+      {
+        op: 'block',
+        label: 'causeway yamaçları',
+        shape: { type: 'capsule', a: [-9.1, 29.3], b: [GATE_POS[0] + 4, GATE_POS[1] + 4], halfWidth: 11 },
+      },
+      {
+        op: 'open',
+        label: 'causeway',
+        shape: { type: 'capsule', a: [10, 52], b: [GATE_POS[0] + 4, GATE_POS[1] + 4], halfWidth: 4 },
+      },
+      // Surlar en son: kapı kapalıdır (kırılması Adım 8+), Deeping Wall vadiyi mühürler.
+      {
+        op: 'block',
+        label: 'Hornburg sur halkası + kapı',
+        shape: { type: 'ring', center: HORNBURG, inner: 17.5, outer: 20.5 },
+      },
+      {
+        op: 'block',
+        label: 'Deeping Wall',
+        shape: { type: 'capsule', a: [WALL_X0, WALL_Z], b: [WALL_X1, WALL_Z], halfWidth: 3.5 },
+      },
+    ],
+  },
   terrain: {
     plateaus: [{ id: 'hornburg_rock', center: HORNBURG, radius: HORNBURG_RADIUS, height: HORNBURG_HEIGHT }],
     ramps: [

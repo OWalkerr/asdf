@@ -1,13 +1,14 @@
 import { AnimState, fxDiv, fxLen, fxMul } from '@bulwark/shared';
 import { query } from 'bitecs';
 import type { SimWorld } from '../world';
+import { MIN_MOVE_SPEED_SQ, speedSq } from './movement';
 
 /**
  * Hedefe doğrudan yürüme (Phase 1 / Adım 5). Adım 7'de flow field + formasyon
  * steering bunun yerini alacak. Bir tick'te hedefe ulaşılabiliyorsa birim tam hedefe oturur.
  */
 export const moveToTargetSystem = (world: SimWorld): void => {
-  const { Position, Velocity, MoveTarget, Speed, Anim } = world.c;
+  const { Position, Velocity, MoveTarget, Speed } = world.c;
   const dt = world.dtFx;
   for (const eid of query(world, [Position, Velocity, MoveTarget, Speed])) {
     if (!MoveTarget.active[eid]) continue;
@@ -26,19 +27,19 @@ export const moveToTargetSystem = (world: SimWorld): void => {
     const speed = Speed.value[eid] as number;
     Velocity.x[eid] = fxMul(fxDiv(dx, dist), speed);
     Velocity.z[eid] = fxMul(fxDiv(dz, dist), speed);
-    if (Anim.state[eid] !== AnimState.Walk) {
-      Anim.state[eid] = AnimState.Walk;
-      Anim.startTick[eid] = world.tick;
-    }
   }
 };
 
-/** Duran birimleri Idle'a çeker. */
+/** Hız eşiğine göre Walk/Idle geçişi (ayrışma titreşimi yürüme sayılmaz). */
 export const animStateSystem = (world: SimWorld): void => {
   const { Velocity, Anim } = world.c;
   for (const eid of query(world, [Velocity, Anim])) {
-    const moving = Velocity.x[eid] !== 0 || Velocity.z[eid] !== 0;
-    if (!moving && Anim.state[eid] === AnimState.Walk) {
+    const moving = speedSq(Velocity.x[eid] as number, Velocity.z[eid] as number) > MIN_MOVE_SPEED_SQ;
+    const state = Anim.state[eid] as number;
+    if (moving && state === AnimState.Idle) {
+      Anim.state[eid] = AnimState.Walk;
+      Anim.startTick[eid] = world.tick;
+    } else if (!moving && state === AnimState.Walk) {
       Anim.state[eid] = AnimState.Idle;
       Anim.startTick[eid] = world.tick;
     }

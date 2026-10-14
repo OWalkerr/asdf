@@ -22,6 +22,14 @@ export interface UnitDef {
   hp: number;
   armor: ArmorClass;
   attackStyle: AttackStyle;
+  /** Tabur başına asker (GDD §6.1). */
+  battalionSize: number;
+  /** Tercih edilen ön cephe genişliği (asker); dar geçitte otomatik daralır. */
+  files: number;
+  /** Formasyon aralığı (m). */
+  spacing: number;
+  /** Yuva sapması (m): Orc sürüleri düzensiz, Uruk/Gondor disiplinli (GDD §3.3). */
+  jitter: number;
 }
 
 export const UNIT_DEFS: readonly UnitDef[] = [
@@ -34,6 +42,10 @@ export const UNIT_DEFS: readonly UnitDef[] = [
     hp: 100,
     armor: 'medium',
     attackStyle: 'slash',
+    battalionSize: 15,
+    files: 5,
+    spacing: 1.4,
+    jitter: 0.05,
   },
   {
     id: 1,
@@ -44,6 +56,10 @@ export const UNIT_DEFS: readonly UnitDef[] = [
     hp: 60,
     armor: 'light',
     attackStyle: 'slash',
+    battalionSize: 20,
+    files: 5,
+    spacing: 1.25,
+    jitter: 0.35,
   },
   {
     id: 2,
@@ -54,6 +70,10 @@ export const UNIT_DEFS: readonly UnitDef[] = [
     hp: 140,
     armor: 'heavy',
     attackStyle: 'thrust',
+    battalionSize: 15,
+    files: 5,
+    spacing: 1.4,
+    jitter: 0.05,
   },
   {
     id: 3,
@@ -64,6 +84,10 @@ export const UNIT_DEFS: readonly UnitDef[] = [
     hp: 160,
     armor: 'heavy',
     attackStyle: 'slash',
+    battalionSize: 10,
+    files: 5,
+    spacing: 1.5,
+    jitter: 0.08,
   },
 ];
 

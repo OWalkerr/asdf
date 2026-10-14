@@ -5,10 +5,11 @@ import {
   G_ACTIVE,
   G_CAPACITY,
   H_COUNT,
+  MAP_DEFS,
   SNAP_HEADER_INTS,
   SNAP_UNIT_INTS,
 } from '@bulwark/shared';
-import { Simulation } from '@bulwark/sim';
+import { buildNavGrid, createOpenGrid, Simulation } from '@bulwark/sim';
 import { type FromWorker, HASH_INTERVAL, SIM_TICK_MS, type ToWorker } from './protocol';
 
 /**
@@ -63,7 +64,11 @@ self.onmessage = (e: MessageEvent<ToWorker>) => {
   try {
     switch (msg.type) {
       case 'init':
-        sim = new Simulation(msg.seed);
+        {
+          const def = msg.mapId ? MAP_DEFS[msg.mapId] : undefined;
+          const nav = def ? buildNavGrid(def) : createOpenGrid(msg.mapSize);
+          sim = new Simulation(msg.seed, nav);
+        }
         shared = msg.view !== null;
         view = msg.view ?? createSnapshotView(msg.capacity, false);
         nextAt = performance.now();

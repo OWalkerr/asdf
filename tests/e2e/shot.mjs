@@ -1,5 +1,5 @@
 // Görsel smoke test: sahneyi açar, konsol hatalarını toplar, ekran görüntüsü alır.
-// Kullanım: node tests/e2e/shot.mjs <url> <çıktı.png> [zoom|rotate|pan|overlay|click:x,y|cam:x,z,yaw,dist]
+// Kullanım: node tests/e2e/shot.mjs <url> <çıktı.png> [zoom|rotate|pan|overlay|nav|click:x,y|cam:x,z,yaw,dist]
 import { chromium } from '@playwright/test';
 
 const [url = 'http://localhost:5173/', out = 'shot.png', action = ''] = process.argv.slice(2);
@@ -42,6 +42,10 @@ if (action === 'zoom') {
     ([x, z, yaw, dist]) => window.__bulwark.cam.setHome(x, z, yaw, dist),
     [x, z, yaw, dist],
   );
+} else if (action === 'nav') {
+  await page.evaluate(() => {
+    window.__bulwark.scene.getObjectByName('nav-overlay').visible = true;
+  });
 } else if (action === 'overlay') {
   await page.evaluate(() => {
     window.__bulwark.world.debugOverlay.visible = true;

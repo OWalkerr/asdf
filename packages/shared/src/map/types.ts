@@ -82,6 +82,31 @@ export interface RampDef {
   width: number;
 }
 
+/**
+ * Navigasyon ızgarası şekli (GDD §2.4). Işlemler sırayla uygulanır: başlangıçta her hücre
+ * kapalıdır; `open` yürünebilir yapar, `block` kapatır. Sim bu listeyi yalnızca temel
+ * aritmetikle (trigonometri yok) hücrelere çizer → tüm istemcilerde aynı ızgara.
+ */
+export type NavShape =
+  | { type: 'polygon'; points: readonly Vec2[] }
+  | { type: 'circle'; center: Vec2; radius: number }
+  | { type: 'ring'; center: Vec2; inner: number; outer: number }
+  /** a–b doğru parçası etrafında halfWidth kalınlığında kapsül. */
+  | { type: 'capsule'; a: Vec2; b: Vec2; halfWidth: number };
+
+export interface NavOp {
+  op: 'open' | 'block';
+  shape: NavShape;
+  /** Debug / test için açıklama. */
+  label?: string;
+}
+
+export interface NavDef {
+  /** Hücre kenarı (m, tamsayı). */
+  cellSize: number;
+  ops: readonly NavOp[];
+}
+
 export interface MapDef {
   id: string;
   name: string;
@@ -97,6 +122,7 @@ export interface MapDef {
   spawns: readonly SpawnDef[];
   lanes: readonly LaneDef[];
   terrain: { plateaus: readonly PlateauDef[]; ramps: readonly RampDef[] };
+  nav: NavDef;
 }
 
 /** Haritanın iç tutarlılığını kontrol eder; hata mesajları listesi döner (boş = geçerli). */
@@ -144,6 +170,9 @@ export const validateMap = (map: MapDef): string[] => {
     unique(p.id, 'plateau');
     if (!inBounds(p.center)) errors.push(`${p.id} harita dışında`);
   }
+  if (!Number.isInteger(map.nav.cellSize) || map.nav.cellSize < 1)
+    errors.push('nav.cellSize pozitif tamsayı olmalı');
+  if (map.size % map.nav.cellSize !== 0) errors.push('harita boyu nav.cellSize katı olmalı');
   for (const r of map.terrain.ramps) {
     unique(r.id, 'ramp');
     if (!inBounds(r.from) || !inBounds(r.to)) errors.push(`${r.id} harita dışında`);
