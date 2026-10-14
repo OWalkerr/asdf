@@ -61,7 +61,7 @@ export class ProjectileRenderer {
       const fz = (pr[o + 2] as number) * FX;
       const tx = (pr[o + 3] as number) * FX;
       const tz = (pr[o + 4] as number) * FX;
-      const y0 = this.groundY(fx, fz) + (pr[o + 6] as number) / 100;
+      const y0 = this.groundY(fx, fz) + ((pr[o + 6] as number) & 0xffff) / 100;
       const y1 = this.groundY(tx, tz) + 0.9;
       const dist = Math.hypot(tx - fx, tz - fz);
       const h = dist * ARC;

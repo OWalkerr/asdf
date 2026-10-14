@@ -18,6 +18,7 @@ import { BattalionMode } from '../components';
 import { cellAt, cellCenterX, cellCenterZ, isBlockedAt, nearestOpenCell } from '../nav/grid';
 import { isUnitType, STAT } from '../unitStats';
 import type { SimWorld } from '../world';
+import { fortressUpgrade } from './fortress';
 import { castSpell, summonHero, unlockSpell, useAbility } from './heroes';
 import { buildStructure, repairGate, researchUpgrade, trainUnit } from './structures';
 
@@ -366,6 +367,10 @@ export const applyCommand = (world: SimWorld, sc: StampedCommand): void => {
     }
     case 'castSpell': {
       castSpell(world, team, cmd.spell, cmd.x, cmd.z);
+      break;
+    }
+    case 'fortressUpgrade': {
+      fortressUpgrade(world, team, cmd.upgrade);
       break;
     }
     case 'stop': {

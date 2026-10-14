@@ -14,6 +14,7 @@ import { SIM_HZ } from '../constants';
 import { STAT } from '../unitStats';
 import type { ScheduledGroup, SimWorld } from '../world';
 import { orderBattalions, spawnBattalionRow } from './commands';
+import { fortressDoor, setupFortress } from './fortress';
 
 /** Saldıran (yapay zekâ) takım. */
 export const ENEMY_TEAM = 1;
@@ -38,6 +39,7 @@ export const setupMatch = (world: SimWorld, map: MapDef): void => {
     Structure.slot[g] = -1;
     world.match.gates.push(g);
   });
+  setupFortress(world);
   const schedule: ScheduledGroup[] = [];
   map.waves.forEach((wave, wi) => {
     for (const g of wave.groups) {
@@ -76,11 +78,13 @@ export const waveSystem = (world: SimWorld): void => {
     const [nx, nz] = fxv(lane.points[1] ?? spawn.pos);
     const facing = fxAtan2((nz - sz) | 0, (nx - sx) | 0);
     const battalions = spawnBattalionRow(world, ENEMY_TEAM, g.unitType, sx, sz, g.battalions, facing);
-    const [tx, tz] = fxv(lane.points[lane.points.length - 1] as Vec2);
-    orderBattalions(world, battalions, tx, tz, ENEMY_TEAM, BattalionMode.AttackMove);
-    const gateIndex = map.gates.findIndex((gate) => gate.id === lane.target);
-    const structure = gateIndex >= 0 ? (m.gates[gateIndex] as number) : 0;
-    for (const b of battalions) world.c.Battalion.targetStructure[b] = structure;
+    const laneIndex = map.lanes.indexOf(lane);
+    const goal = laneGoal(world, laneIndex);
+    orderBattalions(world, battalions, goal.x, goal.z, ENEMY_TEAM, BattalionMode.AttackMove);
+    for (const b of battalions) {
+      world.c.Battalion.targetStructure[b] = goal.structure;
+      world.c.Battalion.lane[b] = laneIndex + 1;
+    }
     // Boss: takımının liderlik kaynağı (aura) olur.
     if (STAT.boss[g.unitType] === 1 && battalions[0] !== undefined) m.hero[ENEMY_TEAM] = battalions[0];
     // Dalga başı Güç Puanı bonusu (GDD §9.1).
@@ -95,8 +99,32 @@ const AI_INTERVAL = SIM_HZ;
 const REGROUP_DIST = fxFromFloat(10);
 
 /**
- * Düşman taburu kuşatma inadı: hedef kapısı ayaktayken boşta (varmış/yerleşmiş, çatışmada değil)
- * ve kapıdan uzaktaysa, kendi koridorunun kapı ucuna yeniden "saldırarak ilerle" emri alır.
+ * Koridorun şu anki hedefi (GDD §4.2 kapı zinciri): sıradaki ayakta kapı ve yaklaşma noktası;
+ * zincir bittiyse kale (kapısının önü). TD'de çıkış noktası (yapı yok).
+ */
+export const laneGoal = (world: SimWorld, laneIndex: number): { structure: number; x: number; z: number } => {
+  const map = world.map as MapDef;
+  const m = world.match;
+  const lane = map.lanes[laneIndex] as MapDef['lanes'][number];
+  const [ex, ez] = fxv(lane.points[lane.points.length - 1] as Vec2);
+  if (map.mode === 'TD') return { structure: 0, x: ex, z: ez };
+  const chain = lane.targets ?? [lane.target];
+  for (let k = 0; k < chain.length; k++) {
+    const gi = map.gates.findIndex((gate) => gate.id === chain[k]);
+    const g = m.gates[gi];
+    if (g === undefined || (world.c.Structure.hp[g] as number) <= 0) continue;
+    const gate = map.gates[gi] as MapDef['gates'][number];
+    // İlk hedef: koridorun uç noktası; zincirdeki sonraki kapılar: kendi dış yaklaşma noktası.
+    const [ax, az] = k === 0 ? [ex, ez] : fxv(gate.approach ?? gate.pos);
+    return { structure: g, x: ax, z: az };
+  }
+  const [dx, dz] = fortressDoor(world);
+  return { structure: m.fortress, x: dx, z: dz };
+};
+
+/**
+ * Düşman taburu kuşatma inadı: hedef yapısı düşünce (gedik) zincirdeki sıradaki kapıya, en sonda
+ * kaleye yönelir; boşta kalıp hedefinden uzaktaysa yeniden "saldırarak ilerle" emri alır.
  * Kalabalıkta veya çatışma sonrası yerleşen taburların ovada sonsuza dek beklemesini önler.
  */
 export const enemyAiSystem = (world: SimWorld): void => {
@@ -104,30 +132,29 @@ export const enemyAiSystem = (world: SimWorld): void => {
   if (!map || world.match.state !== MatchState.Playing || world.tick % AI_INTERVAL !== 0) return;
   const { Battalion, Position, Team, Structure } = world.c;
   for (const b of query(world, [Battalion, Position])) {
-    if (Team.id[b] !== ENEMY_TEAM || Battalion.active[b] || Battalion.engaged[b]) continue;
+    if (Team.id[b] !== ENEMY_TEAM || Battalion.engaged[b]) continue;
     if ((Battalion.count[b] as number) === 0 || Battalion.mode[b] === BattalionMode.Attack) continue;
-    const g = Battalion.targetStructure[b] as number;
-    if (g === 0 || (Structure.hp[g] as number) <= 0) continue;
-    const bx = Position.x[b] as number;
-    const bz = Position.z[b] as number;
-    const reach = ((Structure.radius[g] as number) + REGROUP_DIST) | 0;
-    if (fxLen(((Position.x[g] as number) - bx) | 0, ((Position.z[g] as number) - bz) | 0) <= reach) continue;
-    // Bu kapıya giden koridorlardan uç noktası en yakın olanı.
-    const gateId = map.gates[Structure.gateIndex[g] as number]?.id;
-    let best: [number, number] | null = null;
-    let bestD = 0x7fffffff;
-    for (const lane of map.lanes) {
-      if (lane.target !== gateId) continue;
-      const [ex, ez] = fxv(lane.points[lane.points.length - 1] as Vec2);
-      const d = fxLen((ex - bx) | 0, (ez - bz) | 0);
-      if (d < bestD) {
-        bestD = d;
-        best = [ex, ez];
-      }
+    const lane = (Battalion.lane[b] as number) - 1;
+    if (lane < 0) continue;
+    const goal = laneGoal(world, lane);
+    const current = Battalion.targetStructure[b] as number;
+    const retarget = goal.structure !== current;
+    if (!retarget) {
+      if (Battalion.active[b]) continue;
+      const bx = Position.x[b] as number;
+      const bz = Position.z[b] as number;
+      const near =
+        goal.structure !== 0
+          ? fxLen(
+              ((Position.x[goal.structure] as number) - bx) | 0,
+              ((Position.z[goal.structure] as number) - bz) | 0,
+            ) <=
+            (((Structure.radius[goal.structure] as number) + REGROUP_DIST) | 0)
+          : fxLen((goal.x - bx) | 0, (goal.z - bz) | 0) <= REGROUP_DIST;
+      if (near) continue;
     }
-    if (!best) continue;
-    orderBattalions(world, [b], best[0], best[1], ENEMY_TEAM, BattalionMode.AttackMove);
-    Battalion.targetStructure[b] = g;
+    orderBattalions(world, [b], goal.x, goal.z, ENEMY_TEAM, BattalionMode.AttackMove);
+    Battalion.targetStructure[b] = goal.structure;
   }
 };
 
@@ -141,15 +168,19 @@ export const nextWaveTick = (world: SimWorld): number => {
   return -1;
 };
 
-/** Zafer: tüm dalgalar çıktı ve canlı düşman kalmadı. Yenilgi: bir kapı düştü (GDD §4.2). */
+/**
+ * Zafer: tüm dalgalar çıktı ve canlı düşman kalmadı. Yenilgi (GDD §4): FD'de kale düştü,
+ * TD'de canlar bitti. Kapılar yalnızca engeldir — kırılınca düşman içeri akar.
+ */
 export const matchSystem = (world: SimWorld): void => {
   const m = world.match;
-  if (!world.map || m.state !== MatchState.Playing) return;
-  for (const g of m.gates) {
-    if ((world.c.Structure.hp[g] as number) <= 0) {
-      m.state = MatchState.Defeat;
-      return;
-    }
+  const map = world.map;
+  if (!map || m.state !== MatchState.Playing) return;
+  const fallen =
+    map.mode === 'TD' ? m.lives <= 0 : m.fortress !== 0 && (world.c.Structure.hp[m.fortress] as number) <= 0;
+  if (fallen) {
+    m.state = MatchState.Defeat;
+    return;
   }
   if (m.nextGroup >= m.schedule.length && m.enemiesAlive === 0) m.state = MatchState.Victory;
 };

@@ -16,6 +16,7 @@ const grid = buildNavGrid(HELMS_DEEP);
 const cell = (p: Vec2) => cellAt(grid, ...at(p));
 /** Düşman (takım 1) için kapalı mı. */
 const blocked = (p: Vec2, team = 1) => blockedFor(grid, cell(p), team);
+const DOOR = HELMS_DEEP.citadel.door as Vec2;
 const field = (target: Vec2, team = 1) => {
   const f = new FlowFieldCache(grid).get(...at(target), team);
   if (!f) throw new Error('alan yok');
@@ -27,7 +28,8 @@ describe("Helm's Deep navigasyon ızgarası", () => {
     for (const s of HELMS_DEEP.spawns) expect(blocked(s.pos), s.id).toBe(false);
     expect(grid.blocked[cell([40, -24])]).toBe(BLOCK_ALL); // Deeping Wall herkese kapalı
     expect(blocked([15, -60])).toBe(false); // Deeping-coomb
-    expect(blocked(HELMS_DEEP.citadel.pos)).toBe(false);
+    expect(blocked(HELMS_DEEP.citadel.pos)).toBe(true); // kale gövdesi
+    expect(blocked(DOOR)).toBe(false); // kale kapısı önü
     expect(blocked([-62, -30])).toBe(false); // Hornburg avlusu
     // Arka kapılar: Hornburg kapısı ve menfez düşmana kapalı, savunucuya açık.
     for (const g of HELMS_DEEP.gates) {
@@ -39,17 +41,16 @@ describe("Helm's Deep navigasyon ızgarası", () => {
   });
 
   it('savunucu arka kapılardan dışarı çıkabilir (menfez + Hornburg kapısı)', () => {
-    const f = field(HELMS_DEEP.citadel.pos, 0);
+    const f = field(DOOR, 0);
     for (const s of HELMS_DEEP.spawns) expect(f.cost[cell(s.pos)], s.id).toBeLessThan(COST_INF);
-    expect(f.cost[cell([-62, -30])]).toBeLessThan(COST_INF);
+    expect(f.cost[cell([15, -60])]).toBeLessThan(COST_INF); // vadiden arka kapıyla kaleye
   });
 
-  it('sur ve kapalı kapı vadiyi mühürler: güneyden Citadel’e yol yok', () => {
-    const f = field(HELMS_DEEP.citadel.pos);
+  it('kapılar sağlamken düşmanın kaleye yolu yok (ovadan da vadiden de)', () => {
+    const f = field(DOOR);
     for (const s of HELMS_DEEP.spawns) expect(f.cost[cell(s.pos)], s.id).toBe(COST_INF);
-    expect(f.cost[cell([15, -60])]).toBeLessThan(COST_INF);
-    // Hornburg avlusu da vadiden ayrı (yalnızca kapıdan girilir).
-    expect(f.cost[cell([-62, -30])]).toBe(COST_INF);
+    expect(f.cost[cell([15, -60])]).toBe(COST_INF); // vadi: arka kapı kapalı
+    expect(f.cost[cell([-62, -30])]).toBeLessThan(COST_INF); // avlu kalenin önü
   });
 
   it('her koridorun hedefi kendi spawn noktasından ulaşılabilir', () => {
@@ -70,7 +71,7 @@ describe("Helm's Deep navigasyon ızgarası", () => {
 
   it('akış alanı makul sürede hesaplanır', () => {
     const t0 = performance.now();
-    computeFlowField(grid, goalCellsAround(grid, ...at(HELMS_DEEP.citadel.pos), 1), 1);
+    computeFlowField(grid, goalCellsAround(grid, ...at(DOOR), 1), 1);
     expect(performance.now() - t0).toBeLessThan(150);
   });
 });

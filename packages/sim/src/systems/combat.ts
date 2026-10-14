@@ -37,6 +37,9 @@ const BODY: Fx = fxFromFloat(0.7);
 const ARROW_STEP: Fx = fxFromFloat(2);
 const ARROW_SPREAD: Fx = fxFromFloat(1.2);
 const ARROW_HIT_RADIUS: Fx = fxFromFloat(1.3);
+/** Taş: tick başına 1.1 m (22 m/s), saçılma 3 m. */
+const STONE_STEP: Fx = fxFromFloat(1.1);
+const STONE_SPREAD: Fx = fxFromFloat(3);
 /** Saldırı animasyonunun süresi (tick); bu sürede yürüme/durma animasyonu araya girmez. */
 export const ATTACK_ANIM_TICKS = 14;
 
@@ -152,6 +155,75 @@ export const fireProjectile = (
   Projectile.dmgType[p] = dmgType;
   Projectile.height[p] = height;
   Projectile.source[p] = source;
+  Projectile.aoe[p] = 0;
+  Projectile.kind[p] = 0;
+};
+
+/** Taş/gülle: noktaya atılır (yavaş, yüksek yay), isabette yarıçaptaki tüm düşmanlara hasar. */
+export const fireStone = (
+  world: SimWorld,
+  fromX: number,
+  fromZ: number,
+  toX: number,
+  toZ: number,
+  damage: number,
+  dmgType: number,
+  height: number,
+  aoe: Fx,
+  team: number,
+): void => {
+  const { Projectile } = world.c;
+  const tx = (toX + fxMul(world.rng.nextFx() - FX_HALF, STONE_SPREAD)) | 0;
+  const tz = (toZ + fxMul(world.rng.nextFx() - FX_HALF, STONE_SPREAD)) | 0;
+  const d = fxLen((tx - fromX) | 0, (tz - fromZ) | 0);
+  const p = addEntity(world);
+  addComponent(world, p, Projectile);
+  Projectile.fromX[p] = fromX;
+  Projectile.fromZ[p] = fromZ;
+  Projectile.toX[p] = tx;
+  Projectile.toZ[p] = tz;
+  Projectile.fireTick[p] = world.tick;
+  Projectile.flight[p] = Math.max(8, Math.min(4000, (d / STONE_STEP) | 0));
+  Projectile.target[p] = 0;
+  Projectile.damage[p] = damage;
+  Projectile.dmgType[p] = dmgType;
+  Projectile.height[p] = height;
+  Projectile.source[p] = 0;
+  Projectile.aoe[p] = aoe;
+  Projectile.team[p] = team;
+  Projectile.kind[p] = 1;
+};
+
+/** Alan hasarı: (x, z) çevresinde `radius` içindeki karşı takım birimleri (uzamsal hash). */
+const splash = (
+  world: SimWorld,
+  x: number,
+  z: number,
+  radius: Fx,
+  team: number,
+  damage: number,
+  dmgType: number,
+) => {
+  const { Position, Team, Dead } = world.c;
+  const grid = world.nav;
+  const c = cellAt(grid, x, z);
+  if (c < 0) return;
+  const reach = Math.ceil(radius / grid.cellFx) + 1;
+  const c0 = c % grid.cols;
+  const r0 = (c / grid.cols) | 0;
+  for (let dr = -reach; dr <= reach; dr++) {
+    const r = r0 + dr;
+    if (r < 0 || r >= grid.rows) continue;
+    for (let dc = -reach; dc <= reach; dc++) {
+      const cc = c0 + dc;
+      if (cc < 0 || cc >= grid.cols) continue;
+      for (let o = world.hashHead[r * grid.cols + cc] as number; o !== -1; o = world.hashNext[o] as number) {
+        if (Team.id[o] === team || Dead.at[o] !== 0) continue;
+        if (fxLen(((Position.x[o] as number) - x) | 0, ((Position.z[o] as number) - z) | 0) <= radius)
+          applyDamage(world, o, damage, dmgType);
+      }
+    }
+  }
 };
 
 const fireArrow = (world: SimWorld, s: number, target: number): void => {
@@ -268,6 +340,20 @@ export const projectileSystem = (world: SimWorld): void => {
   const { Projectile, Position } = world.c;
   for (const p of query(world, [Projectile])) {
     if (world.tick < (Projectile.fireTick[p] as number) + (Projectile.flight[p] as number)) continue;
+    const aoe = Projectile.aoe[p] as number;
+    if (aoe > 0) {
+      splash(
+        world,
+        Projectile.toX[p] as number,
+        Projectile.toZ[p] as number,
+        aoe,
+        Projectile.team[p] as number,
+        Projectile.damage[p] as number,
+        Projectile.dmgType[p] as number,
+      );
+      removeEntity(world, p);
+      continue;
+    }
     const t = Projectile.target[p] as number;
     if (alive(world, t)) {
       const d = fxLen(

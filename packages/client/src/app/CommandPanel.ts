@@ -60,11 +60,17 @@ const UNIT_ICON: Record<number, string> = {
   5: 'hall',
   6: 'blade',
 };
-const BUILD_ICON: Record<BuildingKind, string> = { arrow_tower: 'tower', barracks: 'hall', forge: 'anvil' };
+const BUILD_ICON: Record<BuildingKind, string> = {
+  arrow_tower: 'tower',
+  barracks: 'hall',
+  forge: 'anvil',
+  catapult: 'tower',
+};
 const BUILD_DESC: Record<BuildingKind, string> = {
   arrow_tower: 'Menzildeki düşman taburlarına 3 oklu yaylım atar.',
   barracks: 'Gondor piyadesi, okçu ve Kule Muhafızı yetiştirir.',
   forge: 'Takım çapında yükseltmeler: kılıç, zırh, ateşli ok.',
+  catapult: 'Uzaktaki düşman kümelerine alan hasarlı taş atar.',
 };
 const SLOT_NAMES: Record<string, string> = {
   wall_socket: 'Sur soketi',

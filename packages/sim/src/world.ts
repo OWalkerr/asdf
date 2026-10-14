@@ -23,6 +23,7 @@ import {
 } from './systems/battalion';
 import { combatSystem, projectileSystem } from './systems/combat';
 import { deathSystem } from './systems/death';
+import { breachSystem, fortressSystem, tdExitSystem } from './systems/fortress';
 import { expireSystem, heroSystem, trampleSystem } from './systems/heroes';
 import { enemyAiSystem, matchSystem, setupMatch, waveSystem } from './systems/match';
 import { movementSystem } from './systems/movement';
@@ -43,6 +44,15 @@ export interface ScheduledGroup {
 export interface MatchContext {
   /** DIFFICULTIES indeksi. */
   difficulty: number;
+  /** Kale yapısı eid'i (0 = yok), yükseltme bitleri, araştırılan (−1 = yok) ve kalan tick. */
+  fortress: number;
+  fortressUp: Uint8Array;
+  fortResearch: Int8Array;
+  fortProgress: Int32Array;
+  /** Kırılmış kapılar (bit = kapı indeksi). */
+  breached: number;
+  /** TD: kalan can. */
+  lives: number;
   state: number;
   /** Başlamış son dalga (1 tabanlı; 0 = henüz yok). */
   waveIndex: number;
@@ -111,6 +121,12 @@ export const createSimWorld = (
     match: {
       state: MatchState.Playing,
       difficulty: DIFFICULTIES[difficulty] ? difficulty : DEFAULT_DIFFICULTY,
+      fortress: 0,
+      fortressUp: new Uint8Array(4),
+      fortResearch: new Int8Array(4).fill(-1),
+      fortProgress: new Int32Array(4),
+      breached: 0,
+      lives: 0,
       waveIndex: 0,
       waveCount: 0,
       schedule: [],
@@ -156,6 +172,7 @@ export const stepWorld = (world: SimWorld): void => {
   combatSystem(world);
   structureSystem(world);
   heroSystem(world);
+  fortressSystem(world);
   moveToTargetSystem(world);
   separationSystem(world);
   movementSystem(world);
@@ -163,6 +180,8 @@ export const stepWorld = (world: SimWorld): void => {
   projectileSystem(world);
   deathSystem(world);
   expireSystem(world);
+  breachSystem(world);
+  tdExitSystem(world);
   animStateSystem(world);
   matchSystem(world);
   world.tick++;
@@ -225,6 +244,12 @@ export const hashWorld = (world: SimWorld): number => {
     h = hashInt(h, Structure.qProgress[eid] as number);
   }
   for (const g of world.match.gold) h = hashInt(h, g);
+  h = hashInt(h, world.match.fortress);
+  for (const v of world.match.fortressUp) h = hashInt(h, v);
+  for (const v of world.match.fortResearch) h = hashInt(h, v);
+  for (const v of world.match.fortProgress) h = hashInt(h, v);
+  h = hashInt(h, world.match.breached);
+  h = hashInt(h, world.match.lives);
   for (const u of world.match.upgrades) h = hashInt(h, u);
   for (const u of world.match.researching) h = hashInt(h, u);
   const m = world.match;

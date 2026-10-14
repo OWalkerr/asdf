@@ -32,6 +32,7 @@ import { STAT } from '../unitStats';
 import type { SimWorld } from '../world';
 import { applyDamage, arrowDmgType, fireProjectile, hasUpgrade } from './combat';
 import { orderBattalions, spawnBattalion, spawnBattalionRow } from './commands';
+import { fortressDoor } from './fortress';
 
 /**
  * Phase 3 derinliği (GDD §5.2, §8, §9):
@@ -103,9 +104,9 @@ export const summonHero = (world: SimWorld, team: number, unitType: number): boo
   const cost = UNIT_DEFS[unitType]?.cost ?? 0;
   if ((m.gold[team] as number) < cost) return false;
   m.gold[team] = (m.gold[team] as number) - cost;
-  // Hornburg avlusu (plato) — yoksa kale/mağara önü.
-  const [px, pz] = map.terrain.plateaus[0]?.center ?? map.citadel.pos;
-  const b = spawnBattalion(world, team, unitType, fxFromFloat(px + 6), fxFromFloat(pz + 8), 16384);
+  // Kahraman kalenin kapısından çıkar (GDD §8.1).
+  const [dx, dz] = fortressDoor(world);
+  const b = spawnBattalion(world, team, unitType, dx, dz, 16384);
   m.hero[team] = b;
   return true;
 };

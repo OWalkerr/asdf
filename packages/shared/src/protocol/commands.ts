@@ -35,7 +35,9 @@ export type Command =
   | { type: 'ability'; unit: number; ability: number }
   /** Spellbook: büyüyü PP ile aç; açık büyüyü (x, z) hedefine kullan. */
   | { type: 'unlockSpell'; spell: number }
-  | { type: 'castSpell'; spell: number; x: number; z: number };
+  | { type: 'castSpell'; spell: number; x: number; z: number }
+  /** Kale yükseltmesi (FORTRESS_UPGRADES indeksi). */
+  | { type: 'fortressUpgrade'; upgrade: number };
 
 export interface StampedCommand {
   /** Uygulanacağı sim tick'i. */

@@ -83,6 +83,8 @@ export const createComponents = (capacity = MAX_ENTITIES) => ({
     aura: new Uint8Array(capacity),
     /** Çağrılan birliğin yok olacağı tick (0 = kalıcı). */
     expires: new Uint32Array(capacity),
+    /** Düşman taburunun koridoru (MapDef.lanes indeksi + 1; 0 = yok). */
+    lane: new Uint8Array(capacity),
   },
   /** Tabur askeri: hangi tabur, hangi yuva, yuva sapması (Fx). */
   Soldier: {
@@ -125,13 +127,24 @@ export const createComponents = (capacity = MAX_ENTITIES) => ({
     height: new Uint16Array(capacity),
     /** Atan tabur (XP için; 0 = kule/büyü). */
     source: new Int32Array(capacity),
+    /** Alan hasarı yarıçapı (Fx; 0 = tek hedef), atan takım, tür (0 ok, 1 taş). */
+    aoe: new Int32Array(capacity),
+    team: new Uint8Array(capacity),
+    kind: new Uint8Array(capacity),
   },
 });
 
 /** Kışla kuyruğu dilim boyu (Structure.queue[eid * QUEUE_STRIDE + i]). */
 export const QUEUE_STRIDE = 8;
 /** Structure.kind: 0 kapı, sonra BUILDING_KINDS sırası + 1. */
-export const StructureKind = { Gate: 0, ArrowTower: 1, Barracks: 2, Forge: 3 } as const;
+export const StructureKind = {
+  Gate: 0,
+  ArrowTower: 1,
+  Barracks: 2,
+  Forge: 3,
+  Catapult: 4,
+  Fortress: 9,
+} as const;
 
 export type Components = ReturnType<typeof createComponents>;
 

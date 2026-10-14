@@ -37,6 +37,13 @@ export interface GateDef {
   facing: number;
   width: number;
   hp: number;
+  /**
+   * Kapı kırılınca saldıranlara açılan hücreler (genelde kapının arka kapı `block` şekli).
+   * Verilmezse kapı kırılsa da yol açılmaz.
+   */
+  breach?: NavShape;
+  /** Saldıranların kapıya yaklaşırken toplandığı dış nokta (zincirdeki iç kapılar için gerekli). */
+  approach?: Vec2;
 }
 
 export interface WallDef {
@@ -60,8 +67,32 @@ export interface LaneDef {
   id: string;
   /** Spawn'dan hedefe kaba rota (flow field hedef seçimi ve debug çizimi için). */
   points: readonly Vec2[];
-  /** Koridorun bittiği savunma hedefi (gate / wall / citadel id). */
+  /**
+   * Koridorun ilk savunma hedefi (gate / citadel id; TD'de 'exit' = çıkış noktası).
+   * `targets` verilirse sırayla kırılacak kapı zinciri (ilki = target); hepsi düşünce kale.
+   */
   target: string;
+  targets?: readonly string[];
+}
+
+/**
+ * Kale (Citadel/Fortress, GDD §4.2): FD'de savunulan asıl yapı — düşerse yenilgi. Kahramanlar
+ * kapısından çıkar; yükseltmeleri (surlar, mazgallar, mancınık, şifa, hazine) satın alınır.
+ * TD'de oyuncunun üssüdür (çıkışın yanında), saldırılmaz.
+ */
+export interface CitadelDef {
+  id: string;
+  name?: string;
+  pos: Vec2;
+  /** Saldırılabilir yarıçap (m). */
+  radius: number;
+  hp: number;
+  /** Kahraman/birlik çıkış noktası (kapı önü). Verilmezse pos'un güneyi. */
+  door?: Vec2;
+  /** Kalenin ön yüzünün baktığı yön (derece). */
+  facing?: number;
+  /** Zemin yüksekliği üstüne oturduğu taban (m, render). */
+  elevation?: number;
 }
 
 /** Oynanışı etkileyen arazi şekillendirmeleri (yükseklik + ileride navmesh). */
@@ -80,6 +111,20 @@ export interface RampDef {
   fromHeight: number;
   toHeight: number;
   width: number;
+}
+
+/** Genel harita oluşturucunun arazi tanımı (render; oynanış nav'dan gelir). */
+export interface TerrainDef {
+  plateaus: readonly PlateauDef[];
+  ramps: readonly RampDef[];
+  /** Yürünebilir alanın dışını dağ/tepe olarak yükselten sınır çokgenleri (genel oluşturucu). */
+  basins?: readonly (readonly Vec2[])[];
+  /** Nehirler: eksen çoklu çizgisi ve genişlik (su yüzeyi + yatak). */
+  rivers?: readonly { points: readonly Vec2[]; width: number }[];
+  /** Yollar (toprak boya, düzleştirme): TD yolları ve kale yolları. */
+  roads?: readonly { points: readonly Vec2[]; width: number }[];
+  /** Taban arazi renk teması. */
+  theme?: 'meadow' | 'autumn' | 'dark' | 'snow';
 }
 
 /**
@@ -133,13 +178,17 @@ export interface MapDef {
   size: number;
   seed: number;
   camera: { home: Vec2; yaw: number; distance: number };
-  citadel: { id: string; pos: Vec2; radius: number; hp: number };
+  citadel: CitadelDef;
+  /** TD: sızan düşman başına can kaybı sayacı (başlangıç canı). */
+  lives?: number;
+  /** Harita seçim ekranı için kısa açıklama. */
+  blurb?: string;
   gates: readonly GateDef[];
   walls: readonly WallDef[];
   slots: readonly SlotDef[];
   spawns: readonly SpawnDef[];
   lanes: readonly LaneDef[];
-  terrain: { plateaus: readonly PlateauDef[]; ramps: readonly RampDef[] };
+  terrain: TerrainDef;
   nav: NavDef;
   /** Düşman dalgaları (sırayla); savunan takım 0, saldıran takım 1. */
   waves: readonly WaveDef[];
@@ -178,7 +227,8 @@ export const validateMap = (map: MapDef): string[] => {
     unique(l.id, 'lane');
     if (l.points.length < 2) errors.push(`${l.id} en az 2 nokta içermeli`);
     for (const p of l.points) if (!inBounds(p)) errors.push(`${l.id} noktası harita dışında`);
-    if (!ids.has(l.target)) errors.push(`${l.id} hedefi bilinmiyor: ${l.target}`);
+    for (const t of l.targets ?? [l.target])
+      if (!(map.mode === 'TD' && t === 'exit') && !ids.has(t)) errors.push(`${l.id} hedefi bilinmiyor: ${t}`);
   }
   for (const s of map.spawns) {
     unique(s.id, 'spawn');

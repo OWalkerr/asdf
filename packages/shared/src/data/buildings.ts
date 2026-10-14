@@ -5,7 +5,7 @@ import { UnitTypeId } from './units';
  * İnşa edilebilir yapılar (GDD §4, §7.1, §7.5). Slot türüne göre izinli; maliyet altın,
  * süreler saniye. Okçu kulesi menzildeki düşman taburlarına ok atar; kışla tabur yetiştirir.
  */
-export type BuildingKind = 'arrow_tower' | 'barracks' | 'forge';
+export type BuildingKind = 'arrow_tower' | 'barracks' | 'forge' | 'catapult';
 
 export interface BuildingDef {
   kind: BuildingKind;
@@ -14,7 +14,15 @@ export interface BuildingDef {
   buildTime: number;
   hp: number;
   /** Kule saldırısı (yalnızca arrow_tower). */
-  attack?: { damage: number; damageType: DamageType; interval: number; range: number; volley: number };
+  attack?: {
+    damage: number;
+    damageType: DamageType;
+    interval: number;
+    range: number;
+    volley: number;
+    /** Alan hasarı yarıçapı (m); verilirse taş/gülle (yavaş, yüksek yay). */
+    aoe?: number;
+  };
   /** Yetiştirilebilen birimler (yalnızca barracks). */
   trains?: readonly number[];
   /** Araştırılabilen yükseltmeler (UPGRADE_DEFS indeksleri; yalnızca forge). */
@@ -45,6 +53,14 @@ export const BUILDING_DEFS: Readonly<Record<BuildingKind, BuildingDef>> = {
     buildTime: 15,
     hp: 2500,
     researches: [0, 1, 2],
+  },
+  catapult: {
+    kind: 'catapult',
+    name: 'Mancınık',
+    cost: 450,
+    buildTime: 16,
+    hp: 1500,
+    attack: { damage: 55, damageType: 'crush', interval: 5, range: 72, volley: 1, aoe: 5 },
   },
 };
 
@@ -89,12 +105,12 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
 export const Upgrade = { ForgedBlades: 0, HeavyArmor: 1, FireArrows: 2 } as const;
 
 /** Snapshot ve komutlarda yapı türü indeksi. */
-export const BUILDING_KINDS: readonly BuildingKind[] = ['arrow_tower', 'barracks', 'forge'];
+export const BUILDING_KINDS: readonly BuildingKind[] = ['arrow_tower', 'barracks', 'forge', 'catapult'];
 
 /** Slot türü → inşa edilebilecek yapılar. */
 export const SLOT_BUILDS: Readonly<Record<string, readonly BuildingKind[]>> = {
-  wall_socket: ['arrow_tower'],
-  tower: ['arrow_tower'],
+  wall_socket: ['arrow_tower', 'catapult'],
+  tower: ['arrow_tower', 'catapult'],
   building: ['barracks', 'forge'],
 };
 
@@ -153,3 +169,63 @@ export const DIFFICULTIES: readonly DifficultyDef[] = [
   },
 ];
 export const DEFAULT_DIFFICULTY = 1;
+
+/**
+ * Kale yükseltmeleri (GDD §4.2, §7.5): kale panelinden satın alınır, sırayla araştırılır.
+ * Bit = 1 << indeks (match.fortressUp).
+ */
+export interface FortressUpgradeDef {
+  key: 'stone_walls' | 'arrow_slits' | 'catapult' | 'healing' | 'treasury';
+  name: string;
+  cost: number;
+  time: number;
+  desc: string;
+}
+
+export const FORTRESS_UPGRADES: readonly FortressUpgradeDef[] = [
+  {
+    key: 'stone_walls',
+    name: 'Taş Takviye',
+    cost: 600,
+    time: 30,
+    desc: 'Kalenin canı %50 artar ve onarılır.',
+  },
+  {
+    key: 'arrow_slits',
+    name: 'Ok Mazgalları',
+    cost: 500,
+    time: 25,
+    desc: 'Kale menzildeki düşmana 5 oklu yaylım atar.',
+  },
+  {
+    key: 'catapult',
+    name: 'Kale Mancınığı',
+    cost: 900,
+    time: 40,
+    desc: 'Kale uzaktaki düşman kümelerine alan hasarlı taş atar.',
+  },
+  {
+    key: 'healing',
+    name: 'Şifa Sancağı',
+    cost: 500,
+    time: 20,
+    desc: 'Kale çevresindeki (30 m) dost birimler sürekli iyileşir.',
+  },
+  { key: 'treasury', name: 'Hazine', cost: 700, time: 30, desc: 'Pasif gelir +4 altın/sn.' },
+];
+export const FortressUpgrade = {
+  StoneWalls: 0,
+  ArrowSlits: 1,
+  Catapult: 2,
+  Healing: 3,
+  Treasury: 4,
+} as const;
+/** Kale silahları: ok mazgalı ve mancınık. */
+export const FORTRESS_WEAPONS = {
+  arrows: { damage: 15, interval: 1.2, range: 42, volley: 5 },
+  catapult: { damage: 70, interval: 6, range: 95, aoe: 6 },
+  healRadius: 30,
+  /** Şifa: her saniye can yüzdesi. */
+  healPercentPerSec: 3,
+  treasuryIncome: 4,
+} as const;

@@ -17,7 +17,7 @@
  *   0 eid · 1 x (Q16.16) · 2 z (Q16.16) · 3 yaw:16|unitType:8|team:8
  *   4 anim:8|flags:8|hp8:8|animTick:8 · 5 tabur eid'i:24|rütbe:8 (0 = yok/ölü)
  * Ok kaydı (7 × int32):
- *   0 eid · 1 fromX · 2 fromZ · 3 toX · 4 toZ · 5 fireTick:20|flightTicks:12 · 6 çıkış yüksekliği (cm, zeminden)
+ *   0 eid · 1 fromX · 2 fromZ · 3 toX · 4 toZ · 5 fireTick:20|flightTicks:12 · 6 yükseklik (cm):16|tür:8 (0 ok, 1 taş)
  * Yapı kaydı (6 × int32) — kapılar da (kind 0, slot = kapı indeksi, 4 = kalan onarım tick'i):
  *   0 eid · 1 kind:8|slot:8|team:8 · 2 hp · 3 max · 4 kalan inşa tick'i · 5 kuyruk (packQueue)
  *
@@ -58,7 +58,11 @@ export const H_UPGRADES = 18;
 export const H_PP = 19;
 /** Açık büyü bitleri (SPELL_DEFS). */
 export const H_SPELLS = 20;
-/** 21–23 ayrılmış (eski büyü hazır alanları). Büyü i'nin hazır tick'i: H_SPELL_READY + i (30–37). */
+/** Kale eid'i, kale yükseltmeleri (bitler | araştırılan+1 << 8 | ilerleme% << 16), TD canı. */
+export const H_FORTRESS = 21;
+export const H_FORT_UP = 22;
+export const H_LIVES = 23;
+/** Büyü i'nin hazır tick'i: H_SPELL_READY + i (30–37). */
 export const H_SPELL_READY = 30;
 export const SNAP_SPELLS = 8;
 /** Kahraman taburu eid'i (0 = yok) ve yeniden çağrılabileceği tick. */
@@ -164,6 +168,12 @@ export interface MatchInfo {
   abilityReady: number[];
   elendilUntil: number;
   rallyUntil: number;
+  fortress: number;
+  fortUp: number;
+  /** Araştırılan kale yükseltmesi (−1 = yok) ve ilerleme [0, 1]. */
+  fortResearch: number;
+  fortPct: number;
+  lives: number;
 }
 
 /** Okunan tek bir snapshot (render tarafının kendi kopyası). */
@@ -208,6 +218,11 @@ export const createFrame = (capacity: number, projCapacity = 2048): SnapshotFram
     abilityReady: [0, 0],
     elendilUntil: 0,
     rallyUntil: 0,
+    fortress: 0,
+    fortUp: 0,
+    fortResearch: -1,
+    fortPct: 0,
+    lives: 0,
   },
 });
 
@@ -230,6 +245,12 @@ export const readMatchHeader = (view: Int32Array, base: number, out: MatchInfo):
   for (let i = 0; i < 2; i++) out.abilityReady[i] = view[base + H_ABILITY_READY + i] as number;
   out.elendilUntil = view[base + H_ELENDIL_UNTIL] as number;
   out.rallyUntil = view[base + H_RALLY_UNTIL] as number;
+  out.fortress = view[base + H_FORTRESS] as number;
+  const fu = view[base + H_FORT_UP] as number;
+  out.fortUp = fu & 0xff;
+  out.fortResearch = ((fu >>> 8) & 0xff) - 1;
+  out.fortPct = ((fu >>> 16) & 0x7f) / 100;
+  out.lives = view[base + H_LIVES] as number;
   out.gateHp.length = 0;
   out.gateMax.length = 0;
   for (let g = 0; g < SNAP_MAX_GATES; g++) {

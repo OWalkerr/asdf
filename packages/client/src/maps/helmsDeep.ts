@@ -67,7 +67,7 @@ const valleyMargin = (x: number, z: number): number => {
 export const createHelmsDeepHeight = (def: MapDef): HeightFn => {
   const wall = def.walls[0];
   const plateau = def.terrain.plateaus[0];
-  const ramp = def.terrain.ramps[0];
+  const ramps = def.terrain.ramps;
   const half = def.size / 2;
   return (x, z) => {
     // Vadi tabanı: hafif dalgalı ova; iç vadi mağaralara doğru yükselir.
@@ -95,7 +95,7 @@ export const createHelmsDeepHeight = (def: MapDef): HeightFn => {
       h += (plateau.height - h) * blend;
     }
     // Causeway: ovadan kapıya yükselen set.
-    if (ramp) {
+    for (const ramp of ramps) {
       const p = projectOnSegment(x, z, ramp.from, ramp.to);
       const target = ramp.fromHeight + (ramp.toHeight - ramp.fromHeight) * p.t;
       const blend = 1 - smoothstep(ramp.width / 2, ramp.width / 2 + 7, p.dist);
@@ -106,7 +106,7 @@ export const createHelmsDeepHeight = (def: MapDef): HeightFn => {
 };
 
 const createHelmsDeepPaint = (def: MapDef): PaintFn => {
-  const ramp = def.terrain.ramps[0];
+  const ramps = def.terrain.ramps;
   const plateau = def.terrain.plateaus[0];
   return (avgY, slope, x, z) => {
     // Hornburg avlusu: taş döşeme.
@@ -115,7 +115,8 @@ const createHelmsDeepPaint = (def: MapDef): PaintFn => {
     if (slope > 0.6) return avgY > 30 ? 'rockLight' : 'rock';
     if (slope > 0.4) return 'rockDark';
     if (avgY > 40) return 'snow';
-    if (ramp && projectOnSegment(x, z, ramp.from, ramp.to).dist < ramp.width / 2 - 0.5) return 'dirt';
+    if (ramps.some((ramp) => projectOnSegment(x, z, ramp.from, ramp.to).dist < ramp.width / 2 - 0.5))
+      return 'dirt';
     if (avgY > 18) return 'rockDark';
     const n = valueNoise(x / 16, z / 16, def.seed + 99);
     // Rohan ovası: kuru, sarımsı çimen ağırlıklı.
@@ -184,6 +185,7 @@ export const buildHelmsDeep = (palette: Texture, params: ToonParams, def: MapDef
   // --- Hornburg: plato, sur halkası, kapı, kale --------------------------------
   const plateau = def.terrain.plateaus[0];
   const gate = def.gates[0];
+  const postern = def.gates.find((g) => g.id === 'hornburg_postern');
   if (plateau && gate) {
     const [cx, cz] = plateau.center;
     const baseY = plateau.height - 0.4;
@@ -193,10 +195,18 @@ export const buildHelmsDeep = (palette: Texture, params: ToonParams, def: MapDef
     // Batı/kuzeybatı dağa yaslanır (160°–290° arası sur yok); kapı çevresinde boşluk.
     for (let a = -70 * DEG; a <= 160 * DEG; a += segAngle) {
       if (Math.abs(a - gate.facing * DEG) < 0.3) continue;
+      if (postern && Math.abs(a - postern.facing * DEG) < 0.25) continue;
       solid.add(ringWall, at(cx + Math.cos(a) * R, cz + Math.sin(a) * R, -a + Math.PI / 2, 1, baseY), true);
     }
     const gateRot = Math.PI / 2 - gate.facing * DEG;
     solid.add(P.gateHouse(), at(gate.pos[0], gate.pos[1], gateRot, 1, baseY), true);
+    // Arka kapı (vadiye bakan küçük kapı) — rampanın üst ucunda.
+    if (postern)
+      solid.add(
+        P.gateHouse(),
+        at(postern.pos[0], postern.pos[1], Math.PI / 2 - postern.facing * DEG, 0.75, baseY),
+        true,
+      );
     // Ana kale (Hornburg kulesi) platonun arkasında, kapıya bakar.
     const keepPos: Vec2 = [cx - 6, cz - 7];
     solid.add(P.keep(), at(keepPos[0], keepPos[1], gateRot, 1, plateau.height - 0.2), true);

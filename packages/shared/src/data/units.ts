@@ -56,6 +56,8 @@ export interface UnitDef {
   invulnerable?: boolean;
   /** Yürüme/dörtnal adım frekansı (Hz, render). */
   stepRate?: number;
+  /** TD: çıkışa ulaşan tabur başına kaybedilen can (varsayılan 1). */
+  lifeCost?: number;
 }
 
 export const UNIT_DEFS: readonly UnitDef[] = [
@@ -125,6 +127,7 @@ export const UNIT_DEFS: readonly UnitDef[] = [
   {
     id: 3,
     key: 'uruk_hai',
+    lifeCost: 2,
     name: 'Uruk-hai',
     faction: 'isengard',
     speed: 4.5,
@@ -169,6 +172,7 @@ export const UNIT_DEFS: readonly UnitDef[] = [
     // kılıca açık — durdurmak için piyadeyle kapı önüne çıkmak gerekir.
     id: 5,
     key: 'battering_ram',
+    lifeCost: 3,
     name: 'Battering Ram',
     faction: 'isengard',
     speed: 2.6,
@@ -216,6 +220,7 @@ export const UNIT_DEFS: readonly UnitDef[] = [
     // 5. dalganın boss'u; yakındaki Uruk taburlarına liderlik aurası verir.
     id: 7,
     key: 'lurtz',
+    lifeCost: 10,
     name: 'Lurtz',
     faction: 'isengard',
     speed: 5.0,

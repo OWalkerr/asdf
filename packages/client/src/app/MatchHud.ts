@@ -5,6 +5,12 @@ import { SIM_TICK_MS } from '../sim-host/protocol';
  * Maç HUD'u (GDD §11.1 üst şerit): dalga, geri sayım, düşman sayısı, kapı canları;
  * maç bitince zafer/yenilgi ekranı. Solid.js arayüzü gelene kadar düz DOM.
  */
+const GATE_NAMES: Record<string, string> = {
+  hornburg_gate: 'Hornburg Kapısı',
+  culvert: 'Menfez',
+  hornburg_postern: 'Arka Kapı',
+};
+
 const fmtTime = (ticks: number) => {
   const s = Math.max(0, Math.ceil((ticks * SIM_TICK_MS) / 1000));
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
@@ -36,7 +42,7 @@ export class MatchHud {
     for (const g of def.gates) {
       const el = document.createElement('div');
       el.className = 'gate';
-      el.innerHTML = `<span class="name">${g.id === 'hornburg_gate' ? 'Hornburg Kapısı' : g.id === 'culvert' ? 'Menfez' : g.id}</span><span class="bar"><i></i></span><span class="hp"></span><button type="button" class="repair" title="Kapıyı onar: ${ECONOMY.repairCost} altın, ${ECONOMY.repairTime} sn'de +%${ECONOMY.repairPercent}">Onar ◆${ECONOMY.repairCost}</button>`;
+      el.innerHTML = `<span class="name">${GATE_NAMES[g.id] ?? g.id}</span><span class="bar"><i></i></span><span class="hp"></span><button type="button" class="repair" title="Kapıyı onar: ${ECONOMY.repairCost} altın, ${ECONOMY.repairTime} sn'de +%${ECONOMY.repairPercent}">Onar ◆${ECONOMY.repairCost}</button>`;
       const index = this.gates.length;
       el.querySelector('button')?.addEventListener('click', () => this.onRepair?.(index));
       this.root.appendChild(el);
@@ -111,11 +117,11 @@ export class MatchHud {
       this.ended = true;
       const victory = info.state === MatchState.Victory;
       this.onEnd?.(victory);
-      const fallen = this.def.gates[info.gateHp.findIndex((hp) => hp <= 0)];
+
       this.end.innerHTML = `
         <div class="card ${victory ? 'victory' : 'defeat'}">
           <h1>${victory ? 'ZAFER' : 'YENİLGİ'}</h1>
-          <p>${victory ? `${this.def.name} tutuldu. ${waveCount} dalga püskürtüldü.` : `${fallen?.id === 'culvert' ? 'Menfez' : 'Hornburg Kapısı'} düştü.`}</p>
+          <p>${victory ? `${this.def.name} tutuldu. ${waveCount} dalga püskürtüldü.` : this.def.mode === 'TD' ? 'Düşman sınırı aştı.' : `${this.def.citadel.name ?? 'Kale'} düştü.`}</p>
           <button type="button">Yeniden başlat</button>
         </div>`;
       this.end.querySelector('button')?.addEventListener('click', () => location.reload());

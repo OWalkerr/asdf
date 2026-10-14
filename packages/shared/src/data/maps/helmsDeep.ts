@@ -39,6 +39,23 @@ export const HORNBURG_CURTAIN = { radius: 19, height: 5 } as const;
 const GATE_FACING = 45;
 const GATE_POS: Vec2 = [-48.57, -16.57];
 
+/** Kapı kanatlarının nav şekilleri (arka kapı: savunucuya açık, saldırana kapalı; gedikte açılır). */
+const HORNBURG_GATE_SHAPE = {
+  type: 'capsule',
+  a: [-50.69, -18.69],
+  b: [-46.45, -14.45],
+  halfWidth: 2.6,
+} as const;
+const CULVERT_SHAPE = { type: 'capsule', a: [20, -28], b: [20, -20], halfWidth: 2 } as const;
+/**
+ * Hornburg arka kapısı (postern): Deeping-coomb'dan kuzeydoğu yamacındaki rampayla avluya çıkar.
+ * Konumlar HORNBURG + r·(cos −60°, sin −60°) ile önceden hesaplandı (sim verisinde trigonometri yok).
+ */
+const POSTERN_POS: Vec2 = [-52.5, -46.45];
+const POSTERN_SHAPE = { type: 'capsule', a: [-53.75, -44.29], b: [-51.25, -48.62], halfWidth: 2.4 } as const;
+/** Hornburg kalesi (Citadel): avlunun kuzeybatısında, kapıya bakar. */
+const KEEP_POS: Vec2 = [-68, -37];
+
 /** Sur üstü soketler: duvar boyunca eşit aralıklı (kuleler hariç). */
 const wallSockets: SlotDef[] = [-30, -14, 2, 24, 40, 70, 82].map((x, i) => ({
   id: `W${i + 1}`,
@@ -81,11 +98,38 @@ export const HELMS_DEEP: MapDef = {
   size: 384,
   seed: 3019,
   camera: { home: [6, -8], yaw: 0, distance: 135 },
-  citadel: { id: 'glittering_caves', pos: [15, -140], radius: 10, hp: 10_000 },
+  blurb: 'Klasik kuşatma: Deeping Wall, menfez ve Hornburg. Kale düşerse savaş biter.',
+  citadel: {
+    id: 'hornburg_keep',
+    name: 'Hornburg',
+    pos: KEEP_POS,
+    radius: 11,
+    hp: 9000,
+    door: [-60.5, -29.5],
+    facing: GATE_FACING,
+    elevation: 13,
+  },
   gates: [
-    { id: 'hornburg_gate', pos: GATE_POS, facing: GATE_FACING, width: 6, hp: 4000 },
+    {
+      id: 'hornburg_gate',
+      pos: GATE_POS,
+      facing: GATE_FACING,
+      width: 6,
+      hp: 4000,
+      breach: HORNBURG_GATE_SHAPE,
+    },
     // Deeping Wall menfezi (culvert): savunucuların çıkış kapısı, düşmanın kırmaya çalıştığı zayıf nokta.
-    { id: 'culvert', pos: [CULVERT_X, WALL_Z], facing: 90, width: 4, hp: 3000 },
+    { id: 'culvert', pos: [CULVERT_X, WALL_Z], facing: 90, width: 4, hp: 3000, breach: CULVERT_SHAPE },
+    // Menfez düşerse vadiye dolan düşman Hornburg'a arka kapıdan girmeye çalışır.
+    {
+      id: 'hornburg_postern',
+      pos: POSTERN_POS,
+      facing: -60,
+      width: 4,
+      hp: 2500,
+      breach: POSTERN_SHAPE,
+      approach: [-49.25, -52.08],
+    },
   ],
   walls: [
     {
@@ -125,6 +169,7 @@ export const HELMS_DEEP: MapDef = {
         [CULVERT_X - 4, WALL_Z + 5],
       ],
       target: 'culvert',
+      targets: ['culvert', 'hornburg_postern'],
     },
     {
       id: 'wall_east',
@@ -135,6 +180,7 @@ export const HELMS_DEEP: MapDef = {
         [CULVERT_X + 4, WALL_Z + 5],
       ],
       target: 'culvert',
+      targets: ['culvert', 'hornburg_postern'],
     },
   ],
   nav: {
@@ -198,28 +244,19 @@ export const HELMS_DEEP: MapDef = {
       },
       // Arka kapılar: kapı/menfez hücreleri savunucuya açık, düşmana kapalı (GDD §4.2 Postern Gate).
       // Hornburg kapısı ekseni = GATE_POS ± 3·(cos 45°, sin 45°), önceden hesaplandı.
+      { op: 'open', label: 'Hornburg kapısı', shape: HORNBURG_GATE_SHAPE },
+      { op: 'block', label: 'Hornburg kapısı (düşman)', teams: [1], shape: HORNBURG_GATE_SHAPE },
+      { op: 'open', label: 'menfez', shape: CULVERT_SHAPE },
+      { op: 'block', label: 'menfez (düşman)', teams: [1], shape: CULVERT_SHAPE },
+      // Arka kapı rampası: vadi tabanından uçurumu ve sur halkasını yararak avluya.
       {
         op: 'open',
-        label: 'Hornburg kapısı',
-        shape: { type: 'capsule', a: [-50.69, -18.69], b: [-46.45, -14.45], halfWidth: 2.6 },
+        label: 'arka kapı rampası',
+        shape: { type: 'capsule', a: [-43, -62.91], b: [-54.5, -42.99], halfWidth: 2.4 },
       },
-      {
-        op: 'block',
-        label: 'Hornburg kapısı (düşman)',
-        teams: [1],
-        shape: { type: 'capsule', a: [-50.69, -18.69], b: [-46.45, -14.45], halfWidth: 2.6 },
-      },
-      {
-        op: 'open',
-        label: 'menfez',
-        shape: { type: 'capsule', a: [CULVERT_X, WALL_Z - 4], b: [CULVERT_X, WALL_Z + 4], halfWidth: 2 },
-      },
-      {
-        op: 'block',
-        label: 'menfez (düşman)',
-        teams: [1],
-        shape: { type: 'capsule', a: [CULVERT_X, WALL_Z - 4], b: [CULVERT_X, WALL_Z + 4], halfWidth: 2 },
-      },
+      { op: 'block', label: 'arka kapı (düşman)', teams: [1], shape: POSTERN_SHAPE },
+      // Kale gövdesi: birimler etrafında toplanır, içinden geçemez.
+      { op: 'block', label: 'Hornburg kalesi', shape: { type: 'circle', center: KEEP_POS, radius: 7 } },
     ],
   },
   waves: [
@@ -283,6 +320,14 @@ export const HELMS_DEEP: MapDef = {
         fromHeight: 0.5,
         toHeight: HORNBURG_HEIGHT,
         width: 8,
+      },
+      {
+        id: 'postern_ramp',
+        from: [-43, -62.91],
+        to: [-51.25, -48.62],
+        fromHeight: 2,
+        toHeight: HORNBURG_HEIGHT,
+        width: 5,
       },
     ],
   },

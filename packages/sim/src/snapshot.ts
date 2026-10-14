@@ -9,11 +9,14 @@ import {
   H_COUNT,
   H_ELENDIL_UNTIL,
   H_ENEMIES_ALIVE,
+  H_FORT_UP,
+  H_FORTRESS,
   H_GATE_HP,
   H_GATE_MAX,
   H_GOLD,
   H_HERO,
   H_HERO_READY,
+  H_LIVES,
   H_MATCH_STATE,
   H_NEXT_WAVE_TICK,
   H_PP,
@@ -48,6 +51,7 @@ import {
 import { query } from 'bitecs';
 import { QUEUE_STRIDE, StructureKind } from './components';
 import { SIM_HZ } from './constants';
+import { fortressPct } from './systems/fortress';
 import { nextWaveTick } from './systems/match';
 import { STAT } from './unitStats';
 import type { SimWorld } from './world';
@@ -100,7 +104,7 @@ export const writeSnapshot = (world: SimWorld, view: Int32Array, simMicros = 0):
     view[p + 3] = Projectile.toX[eid] as number;
     view[p + 4] = Projectile.toZ[eid] as number;
     view[p + 5] = packFlight(Projectile.fireTick[eid] as number, Projectile.flight[eid] as number);
-    view[p + 6] = Projectile.height[eid] as number;
+    view[p + 6] = (Projectile.height[eid] as number) | ((Projectile.kind[eid] as number) << 16);
     p += SNAP_PROJ_INTS;
     projCount++;
   }
@@ -136,6 +140,10 @@ export const writeSnapshot = (world: SimWorld, view: Int32Array, simMicros = 0):
   const m = world.match;
   view[base + H_STRUCT_COUNT] = structCount;
   view[base + H_GOLD] = m.gold[0] as number;
+  view[base + H_FORTRESS] = m.fortress;
+  view[base + H_FORT_UP] =
+    (m.fortressUp[0] as number) | (((m.fortResearch[0] as number) + 1) << 8) | (fortressPct(world) << 16);
+  view[base + H_LIVES] = m.lives;
   view[base + H_PP] = m.pp[0] as number;
   view[base + H_SPELLS] = m.spells[0] as number;
   for (let i = 0; i < SNAP_SPELLS; i++) view[base + H_SPELL_READY + i] = m.spellReady[i] as number;

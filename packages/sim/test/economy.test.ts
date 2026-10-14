@@ -246,6 +246,7 @@ describe('kapı onarımı ve koçbaşı', () => {
     const ram = battalionsOf(sim, 1)[0] as number;
     const [gx, gz] = lane?.points[lane.points.length - 1] ?? [0, 0];
     sim.world.c.Battalion.targetStructure[ram] = gate;
+    sim.world.c.Battalion.lane[ram] = HELMS_DEEP.lanes.findIndex((l) => l.id === 'causeway') + 1;
     sim.schedule(stamp(1, { type: 'move', units: [ram], x: F(gx), z: F(gz), spacing: F(1.5) }));
     // `move` yalnızca oyuncu birimleri için; yapay zekâ adımı boşta kalan koçbaşını kapıya yollar.
     for (let i = 0; i < 90 * 20 && (S.hp[gate] as number) === (S.max[gate] as number); i++) sim.step();

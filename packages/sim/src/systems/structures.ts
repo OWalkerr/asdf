@@ -15,8 +15,9 @@ import { QUEUE_STRIDE, StructureKind } from '../components';
 import { SIM_HZ } from '../constants';
 import { STAT } from '../unitStats';
 import type { SimWorld } from '../world';
-import { arrowDmgType, fireProjectile } from './combat';
+import { arrowDmgType, fireProjectile, fireStone } from './combat';
 import { spawnBattalion } from './commands';
+import { treasuryIncome } from './fortress';
 import { forEachMember } from './spatial';
 
 /**
@@ -37,10 +38,16 @@ const TOWER = BUILDING_DEFS.arrow_tower.attack as NonNullable<typeof BUILDING_DE
 const TOWER_RANGE: Fx = fxFromFloat(TOWER.range);
 const TOWER_INTERVAL = Math.round(TOWER.interval * SIM_HZ);
 const TOWER_DMG_TYPE = DAMAGE_TYPES.indexOf(TOWER.damageType);
+const CATA = BUILDING_DEFS.catapult.attack as NonNullable<typeof BUILDING_DEFS.catapult.attack>;
+const CATA_RANGE: Fx = fxFromFloat(CATA.range);
+const CATA_AOE: Fx = fxFromFloat(CATA.aoe ?? 4);
+const CATA_INTERVAL = Math.round(CATA.interval * SIM_HZ);
+const CATA_DMG_TYPE = DAMAGE_TYPES.indexOf(CATA.damageType);
 
 export const economySystem = (world: SimWorld): void => {
   if (!world.map || world.match.state !== MatchState.Playing) return;
   if (world.tick % INCOME_EVERY === 0) world.match.gold[0] = (world.match.gold[0] as number) + 1;
+  treasuryIncome(world);
 };
 
 /** İnşa komutu: geçerliyse yapıyı kurar ve eid'ini döner, değilse 0. */
@@ -144,6 +151,7 @@ export const structureSystem = (world: SimWorld): void => {
   const { Structure, Position, Team, Battalion } = world.c;
   for (const e of query(world, [Structure, Position])) {
     const kind = Structure.kind[e] as number;
+    if (kind === StructureKind.Fortress) continue; // fortressSystem
     if (kind === StructureKind.Gate) {
       // Onarım: kalan süre boyunca her tick max·oran/süre (tamsayı, son tick'te kalan pay).
       const left = Structure.buildLeft[e] as number;
@@ -200,6 +208,38 @@ export const structureSystem = (world: SimWorld): void => {
           );
       }
       Structure.cooldown[e] = TOWER_INTERVAL + world.rng.nextInt(4);
+      continue;
+    }
+    if (kind === StructureKind.Catapult) {
+      const cd = Structure.cooldown[e] as number;
+      if (cd > 0) {
+        Structure.cooldown[e] = cd - 1;
+        continue;
+      }
+      let target = 0;
+      let best = CATA_RANGE;
+      for (const b of query(world, [Battalion, Position])) {
+        if (Team.id[b] === team || (Battalion.count[b] as number) === 0) continue;
+        const d = fxLen(((Position.x[b] as number) - x) | 0, ((Position.z[b] as number) - z) | 0);
+        if (d < best || (d === best && b < target)) {
+          best = d;
+          target = b;
+        }
+      }
+      if (target === 0) continue;
+      fireStone(
+        world,
+        x,
+        z,
+        Position.x[target] as number,
+        Position.z[target] as number,
+        CATA.damage,
+        CATA_DMG_TYPE,
+        (Structure.height[e] as number) + 200,
+        CATA_AOE,
+        team,
+      );
+      Structure.cooldown[e] = CATA_INTERVAL + world.rng.nextInt(6);
       continue;
     }
     if (kind === StructureKind.Forge && (Structure.qLen[e] as number) > 0) {
