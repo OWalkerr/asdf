@@ -1,8 +1,11 @@
 import {
   DIFFICULTIES,
+  type Fx,
   fxAtan2,
+  fxDiv,
   fxFromFloat,
   fxLen,
+  fxMul,
   type MapDef,
   MatchState,
   PP,
@@ -11,10 +14,13 @@ import {
 import { addComponent, addEntity, query } from 'bitecs';
 import { BattalionMode } from '../components';
 import { SIM_HZ } from '../constants';
+import { isBlockedAt } from '../nav/grid';
 import { STAT } from '../unitStats';
 import type { ScheduledGroup, SimWorld } from '../world';
+import { clearLine } from './battalion';
 import { orderBattalions, spawnBattalionRow } from './commands';
 import { fortressDoor, setupFortress } from './fortress';
+import { isBuilding } from './structures';
 
 /** Saldıran (yapay zekâ) takım. */
 export const ENEMY_TEAM = 1;
@@ -93,6 +99,39 @@ export const waveSystem = (world: SimWorld): void => {
   }
 };
 
+/** FD: yakın dövüş taburu bu mesafedeki (ulaşılabilir) oyuncu binasına sapar. */
+const BUILDING_AGGRO: Fx = fxFromFloat(14);
+
+/**
+ * Taburun yakınındaki, ulaşılabilir (yapı arsası; sur üstü değil) en yakın düşman binası ve
+ * yaklaşma noktası; yoksa null.
+ */
+const nearbyBuilding = (world: SimWorld, b: number): { e: number; x: Fx; z: Fx } | null => {
+  const map = world.map as MapDef;
+  const { Structure, Position, Team } = world.c;
+  const bx = Position.x[b] as number;
+  const bz = Position.z[b] as number;
+  const team = Team.id[b] as number;
+  let best: { e: number; x: Fx; z: Fx } | null = null;
+  let bestD = BUILDING_AGGRO;
+  for (const e of world.match.slots) {
+    if (e === 0 || !isBuilding(world, e) || Team.id[e] === team || (Structure.hp[e] as number) <= 0) continue;
+    if (map.slots[Structure.slot[e] as number]?.kind !== 'building') continue;
+    const ex = Position.x[e] as number;
+    const ez = Position.z[e] as number;
+    const d = fxLen((bx - ex) | 0, (bz - ez) | 0);
+    if (d >= bestD || d === 0) continue;
+    // Yaklaşma noktası: binanın tabura bakan yüzü.
+    const r = Structure.radius[e] as number;
+    const ax = (ex + fxMul(fxDiv((bx - ex) | 0, d), r)) | 0;
+    const az = (ez + fxMul(fxDiv((bz - ez) | 0, d), r)) | 0;
+    if (isBlockedAt(world.nav, ax, az, team) || !clearLine(world.nav, bx, bz, ax, az, team)) continue;
+    bestD = d;
+    best = { e, x: ax, z: az };
+  }
+  return best;
+};
+
 /** Düşman yapay zekâsının yeniden değerlendirme aralığı (tick). */
 const AI_INTERVAL = SIM_HZ;
 /** Hedef kapıya bundan uzakta boşta kalan düşman taburu yeniden yola çıkar. */
@@ -136,8 +175,26 @@ export const enemyAiSystem = (world: SimWorld): void => {
     if ((Battalion.count[b] as number) === 0 || Battalion.mode[b] === BattalionMode.Attack) continue;
     const lane = (Battalion.lane[b] as number) - 1;
     if (lane < 0) continue;
-    const goal = laneGoal(world, lane);
     const current = Battalion.targetStructure[b] as number;
+    // Bina saldırısı sürüyor: yıkılana kadar inat.
+    if (current !== 0 && isBuilding(world, current) && (Structure.hp[current] as number) > 0) {
+      if (Battalion.active[b]) continue;
+      const d = fxLen(
+        ((Position.x[current] as number) - (Position.x[b] as number)) | 0,
+        ((Position.z[current] as number) - (Position.z[b] as number)) | 0,
+      );
+      // Takıldıysa binayı bırakıp koridora döner.
+      if (d <= (((Structure.radius[current] as number) + REGROUP_DIST) | 0)) continue;
+    }
+    if (map.mode === 'FD' && STAT.siegeOnly[Battalion.unitType[b] as number] !== 1) {
+      const t = nearbyBuilding(world, b);
+      if (t) {
+        orderBattalions(world, [b], t.x, t.z, ENEMY_TEAM, BattalionMode.AttackMove);
+        Battalion.targetStructure[b] = t.e;
+        continue;
+      }
+    }
+    const goal = laneGoal(world, lane);
     const retarget = goal.structure !== current;
     if (!retarget) {
       if (Battalion.active[b]) continue;

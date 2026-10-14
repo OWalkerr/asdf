@@ -129,7 +129,7 @@ export const writeSnapshot = (world: SimWorld, view: Int32Array, simMicros = 0):
     // Kapılarda slot alanı kapı indeksini taşır.
     const slot =
       kind === StructureKind.Gate ? (Structure.gateIndex[eid] as number) : (Structure.slot[eid] as number);
-    view[s + 1] = packStructKind(kind, slot, Team.id[eid] as number);
+    view[s + 1] = packStructKind(kind, slot, Team.id[eid] as number, Structure.level[eid] as number);
     view[s + 2] = Structure.hp[eid] as number;
     view[s + 3] = Structure.max[eid] as number;
     view[s + 4] = Structure.buildLeft[eid] as number;

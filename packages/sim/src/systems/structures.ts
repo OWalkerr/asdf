@@ -1,6 +1,7 @@
 import {
   BUILDING_DEFS,
   BUILDING_KINDS,
+  BUILDING_LEVEL,
   DAMAGE_TYPES,
   ECONOMY,
   type Fx,
@@ -10,7 +11,7 @@ import {
   SLOT_BUILDS,
   UPGRADE_DEFS,
 } from '@bulwark/shared';
-import { addComponent, addEntity, entityExists, hasComponent, query } from 'bitecs';
+import { addComponent, addEntity, entityExists, hasComponent, query, removeEntity } from 'bitecs';
 import { QUEUE_STRIDE, StructureKind } from '../components';
 import { SIM_HZ } from '../constants';
 import { STAT } from '../unitStats';
@@ -37,6 +38,7 @@ const FACE_SOUTH = 16384;
 const TOWER = BUILDING_DEFS.arrow_tower.attack as NonNullable<typeof BUILDING_DEFS.arrow_tower.attack>;
 const TOWER_RANGE: Fx = fxFromFloat(TOWER.range);
 const TOWER_INTERVAL = Math.round(TOWER.interval * SIM_HZ);
+const TOWER_RANGE_STEP: Fx = fxFromFloat(BUILDING_LEVEL.towerRange);
 const TOWER_DMG_TYPE = DAMAGE_TYPES.indexOf(TOWER.damageType);
 const CATA = BUILDING_DEFS.catapult.attack as NonNullable<typeof BUILDING_DEFS.catapult.attack>;
 const CATA_RANGE: Fx = fxFromFloat(CATA.range);
@@ -84,8 +86,85 @@ export const buildStructure = (
   Structure.height[e] = Math.round((slot.elevation + 6) * 100);
   Structure.qLen[e] = 0;
   Structure.qProgress[e] = 0;
+  Structure.level[e] = 1;
+  Structure.invested[e] = def.cost;
   world.match.slots[slotIndex] = e;
   return e;
+};
+
+const UPGRADE_TICKS = Math.round(BUILDING_LEVEL.upgradeTime * SIM_HZ);
+
+/** Oyuncunun inşa ettiği (kapı/kale olmayan) ve hâlâ var olan yapı mı. */
+export const isBuilding = (world: SimWorld, e: number): boolean => {
+  if (!Number.isInteger(e) || e <= 0 || !entityExists(world, e) || !hasComponent(world, e, world.c.Structure))
+    return false;
+  const kind = world.c.Structure.kind[e] as number;
+  return kind !== StructureKind.Gate && kind !== StructureKind.Fortress;
+};
+
+/** Seviye çarpanı: taban × (100 + pct·(seviye−1)) / 100. */
+const lvl = (world: SimWorld, e: number): number => Math.max(1, world.c.Structure.level[e] as number) - 1;
+
+/** Kışla seviyesine göre yetiştirme süresi (−%20 / seviye). */
+const trainTicksAt = (world: SimWorld, e: number, unitType: number): number =>
+  Math.max(
+    1,
+    (((STAT.trainTicks[unitType] as number) * (100 - BUILDING_LEVEL.trainTimePercent * lvl(world, e))) /
+      100) |
+      0,
+  );
+
+/**
+ * Bina yükseltme (BFME2 seviyeleri): kule, mancınık ve kışla 3 seviyeye kadar; yükseltme
+ * süresince bina devre dışıdır (buildLeft). Her seviye +%25 azami can.
+ */
+export const upgradeBuilding = (world: SimWorld, team: number, building: number): boolean => {
+  const { Structure, Team } = world.c;
+  if (world.match.state !== MatchState.Playing || !isBuilding(world, building)) return false;
+  if (Team.id[building] !== team || (Structure.buildLeft[building] as number) > 0) return false;
+  if ((Structure.hp[building] as number) <= 0) return false;
+  const kind = BUILDING_KINDS[(Structure.kind[building] as number) - 1];
+  const def = kind ? BUILDING_DEFS[kind] : undefined;
+  const level = Structure.level[building] as number;
+  const cost = def?.levelCosts?.[level - 1];
+  if (!def || cost === undefined || level >= BUILDING_LEVEL.max) return false;
+  if ((world.match.gold[team] as number) < cost) return false;
+  world.match.gold[team] = (world.match.gold[team] as number) - cost;
+  const extra = ((def.hp * BUILDING_LEVEL.hpPercent) / 100) | 0;
+  Structure.level[building] = level + 1;
+  Structure.max[building] = (Structure.max[building] as number) + extra;
+  Structure.hp[building] = (Structure.hp[building] as number) + extra;
+  Structure.invested[building] = (Structure.invested[building] as number) + cost;
+  Structure.buildLeft[building] = UPGRADE_TICKS;
+  return true;
+};
+
+/** Yapıyı kaldırır: slotu boşaltır, süren araştırmayı iptal eder. */
+const removeBuilding = (world: SimWorld, e: number): void => {
+  const { Structure, Team } = world.c;
+  const m = world.match;
+  const slot = Structure.slot[e] as number;
+  if (slot >= 0 && m.slots[slot] === e) m.slots[slot] = 0;
+  if ((Structure.kind[e] as number) === StructureKind.Forge && (Structure.qLen[e] as number) > 0) {
+    const team = Team.id[e] as number;
+    m.researching[team] =
+      (m.researching[team] as number) & ~(1 << (Structure.queue[e * QUEUE_STRIDE] as number));
+  }
+  Structure.hp[e] = 0;
+  Structure.qLen[e] = 0;
+  Structure.kind[e] = 0;
+  removeEntity(world, e);
+};
+
+/** Satış: yatırılan altının %50'si iade, slot boşalır. */
+export const sellBuilding = (world: SimWorld, team: number, building: number): boolean => {
+  const { Structure, Team } = world.c;
+  if (world.match.state !== MatchState.Playing || !isBuilding(world, building)) return false;
+  if (Team.id[building] !== team || (Structure.hp[building] as number) <= 0) return false;
+  const refund = (((Structure.invested[building] as number) * BUILDING_LEVEL.sellRefundPercent) / 100) | 0;
+  world.match.gold[team] = (world.match.gold[team] as number) + refund;
+  removeBuilding(world, building);
+  return true;
 };
 
 /** Araştırma komutu: geçerliyse demirhane kuyruğuna (tek iş) alır. */
@@ -142,13 +221,14 @@ export const trainUnit = (world: SimWorld, team: number, building: number, unitT
   if (len >= ECONOMY.queueMax || (world.match.gold[team] as number) < cost) return false;
   world.match.gold[team] = (world.match.gold[team] as number) - cost;
   Structure.queue[building * QUEUE_STRIDE + len] = unitType;
-  if (len === 0) Structure.qProgress[building] = STAT.trainTicks[unitType] as number;
+  if (len === 0) Structure.qProgress[building] = trainTicksAt(world, building, unitType);
   Structure.qLen[building] = len + 1;
   return true;
 };
 
 export const structureSystem = (world: SimWorld): void => {
   const { Structure, Position, Team, Battalion } = world.c;
+  const ruined: number[] = [];
   for (const e of query(world, [Structure, Position])) {
     const kind = Structure.kind[e] as number;
     if (kind === StructureKind.Fortress) continue; // fortressSystem
@@ -164,11 +244,16 @@ export const structureSystem = (world: SimWorld): void => {
       }
       continue;
     }
+    if ((Structure.hp[e] as number) <= 0) {
+      ruined.push(e); // yıkıldı: slot yeniden inşaya açılır
+      continue;
+    }
     if ((Structure.buildLeft[e] as number) > 0) {
       Structure.buildLeft[e] = (Structure.buildLeft[e] as number) - 1;
       continue;
     }
     const team = Team.id[e] as number;
+    const up = lvl(world, e);
     const x = Position.x[e] as number;
     const z = Position.z[e] as number;
     if (kind === StructureKind.ArrowTower) {
@@ -179,7 +264,7 @@ export const structureSystem = (world: SimWorld): void => {
       }
       // En yakın düşman taburu (sancak) menzilde mi.
       let target = 0;
-      let best = TOWER_RANGE;
+      let best = (TOWER_RANGE + up * TOWER_RANGE_STEP) | 0;
       for (const b of query(world, [Battalion, Position])) {
         if (Team.id[b] === team || (Battalion.count[b] as number) === 0) continue;
         const d = fxLen(((Position.x[b] as number) - x) | 0, ((Position.z[b] as number) - z) | 0);
@@ -190,7 +275,8 @@ export const structureSystem = (world: SimWorld): void => {
       }
       if (target === 0) continue;
       const n = Battalion.count[target] as number;
-      for (let v = 0; v < TOWER.volley; v++) {
+      const dmg = ((TOWER.damage * (100 + BUILDING_LEVEL.towerDamagePercent * up)) / 100) | 0;
+      for (let v = 0; v < TOWER.volley + BUILDING_LEVEL.towerVolley * up; v++) {
         let pick = world.rng.nextInt(n);
         let victim = 0;
         forEachMember(world, target, (m) => {
@@ -202,7 +288,7 @@ export const structureSystem = (world: SimWorld): void => {
             x,
             z,
             victim,
-            TOWER.damage,
+            dmg,
             arrowDmgType(world, team, TOWER_DMG_TYPE),
             Structure.height[e] as number,
           );
@@ -233,13 +319,15 @@ export const structureSystem = (world: SimWorld): void => {
         z,
         Position.x[target] as number,
         Position.z[target] as number,
-        CATA.damage,
+        ((CATA.damage * (100 + BUILDING_LEVEL.catapultDamagePercent * up)) / 100) | 0,
         CATA_DMG_TYPE,
         (Structure.height[e] as number) + 200,
         CATA_AOE,
         team,
       );
-      Structure.cooldown[e] = CATA_INTERVAL + world.rng.nextInt(6);
+      Structure.cooldown[e] =
+        (((CATA_INTERVAL * (100 - BUILDING_LEVEL.catapultIntervalPercent * up)) / 100) | 0) +
+        world.rng.nextInt(6);
       continue;
     }
     if (kind === StructureKind.Forge && (Structure.qLen[e] as number) > 0) {
@@ -264,7 +352,8 @@ export const structureSystem = (world: SimWorld): void => {
       const len = (Structure.qLen[e] as number) - 1;
       for (let i = 0; i < len; i++) Structure.queue[base + i] = Structure.queue[base + i + 1] as number;
       Structure.qLen[e] = len;
-      Structure.qProgress[e] = len > 0 ? (STAT.trainTicks[Structure.queue[base] as number] as number) : 0;
+      Structure.qProgress[e] = len > 0 ? trainTicksAt(world, e, Structure.queue[base] as number) : 0;
     }
   }
+  for (const e of ruined) removeBuilding(world, e);
 };

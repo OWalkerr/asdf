@@ -19,7 +19,7 @@
  * Ok kaydı (7 × int32):
  *   0 eid · 1 fromX · 2 fromZ · 3 toX · 4 toZ · 5 fireTick:20|flightTicks:12 · 6 yükseklik (cm):16|tür:8 (0 ok, 1 taş)
  * Yapı kaydı (6 × int32) — kapılar da (kind 0, slot = kapı indeksi, 4 = kalan onarım tick'i):
- *   0 eid · 1 kind:8|slot:8|team:8 · 2 hp · 3 max · 4 kalan inşa tick'i · 5 kuyruk (packQueue)
+ *   0 eid · 1 seviye:4|kind:8|slot:8|team:8 · 2 hp · 3 max · 4 kalan inşa tick'i · 5 kuyruk (packQueue)
  *
  * Konumlar ham Q16.16 olarak taşınır; float'a çeviri render tarafında (GDD §13.7).
  */
@@ -113,8 +113,9 @@ export const packBattalionRank = (battalion: number, rank: number): number =>
 export const unpackBattalion = (v: number): number => v & 0xffffff;
 export const unpackRank = (v: number): number => (v >>> 24) & 0xff;
 
-export const packStructKind = (kind: number, slot: number, team: number): number =>
-  ((kind & 0xff) << 16) | ((slot & 0xff) << 8) | (team & 0xff);
+export const packStructKind = (kind: number, slot: number, team: number, level = 1): number =>
+  ((level & 0x0f) << 24) | ((kind & 0xff) << 16) | ((slot & 0xff) << 8) | (team & 0xff);
+export const unpackStructLevel = (v: number): number => Math.max(1, (v >>> 24) & 0x0f);
 export const unpackStructKind = (v: number): number => (v >>> 16) & 0xff;
 export const unpackStructSlot = (v: number): number => (v >>> 8) & 0xff;
 

@@ -111,6 +111,9 @@ export const createComponents = (capacity = MAX_ENTITIES) => ({
     qLen: new Uint8Array(capacity),
     qProgress: new Int32Array(capacity),
     queue: new Uint8Array(capacity * 8),
+    /** Bina seviyesi (1–3; kapı/kale 1) ve yatırılan toplam altın (satış iadesi). */
+    level: new Uint8Array(capacity),
+    invested: new Int32Array(capacity),
   },
   /** Analitik mermi (GDD §6.4): uçuş önceden bilinir, isabet impact tick'inde çözülür. */
   Projectile: {

@@ -31,6 +31,9 @@ export const STAT = {
   summoned: UNIT_DEFS.map((d) => (d.summoned ? 1 : 0)) as readonly number[],
   charger: UNIT_DEFS.map((d) => (d.charger ? 1 : 0)) as readonly number[],
   invulnerable: UNIT_DEFS.map((d) => (d.invulnerable ? 1 : 0)) as readonly number[],
+  /** Yarma (alan) vuruş yarıçapı (Fx; 0 = yok) ve yapılara ateşli ok atan okçu. */
+  cleave: UNIT_DEFS.map((d) => fxFromFloat(d.cleave ?? 0)) as readonly Fx[],
+  siegeArcher: UNIT_DEFS.map((d) => (d.siegeArcher ? 1 : 0)) as readonly number[],
   lifeCost: UNIT_DEFS.map((d) => d.lifeCost ?? 1) as readonly number[],
   /** Öldürülünce verilen XP (asker başı değer) ve Güç Puanı ×10 (değer / PP.perValue). */
   xpValue: UNIT_DEFS.map((d) => Math.max(1, Math.round(d.cost / d.battalionSize))) as readonly number[],

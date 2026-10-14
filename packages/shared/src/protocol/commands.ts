@@ -37,7 +37,10 @@ export type Command =
   | { type: 'unlockSpell'; spell: number }
   | { type: 'castSpell'; spell: number; x: number; z: number }
   /** Kale yükseltmesi (FORTRESS_UPGRADES indeksi). */
-  | { type: 'fortressUpgrade'; upgrade: number };
+  | { type: 'fortressUpgrade'; upgrade: number }
+  /** Bina seviyesini yükselt / binayı sat (yapı eid'i). */
+  | { type: 'upgradeBuilding'; building: number }
+  | { type: 'sellBuilding'; building: number };
 
 export interface StampedCommand {
   /** Uygulanacağı sim tick'i. */

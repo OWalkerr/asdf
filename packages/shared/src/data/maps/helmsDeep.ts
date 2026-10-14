@@ -291,6 +291,7 @@ export const HELMS_DEEP: MapDef = {
         { atSec: 95, spawn: 'S_east', unitType: UnitTypeId.UrukHai, battalions: 3 },
         { atSec: 100, spawn: 'S_main', unitType: UnitTypeId.OrcWarrior, battalions: 5 },
         { atSec: 108, spawn: 'S_west', unitType: UnitTypeId.OrcWarrior, battalions: 2 },
+        { atSec: 112, spawn: 'S_east', unitType: UnitTypeId.OrcArcher, battalions: 1 },
       ],
     },
     {
@@ -301,6 +302,8 @@ export const HELMS_DEEP: MapDef = {
         { atSec: 180, spawn: 'S_east', unitType: UnitTypeId.OrcWarrior, battalions: 4 },
         { atSec: 190, spawn: 'S_main', unitType: UnitTypeId.OrcWarrior, battalions: 2 },
         { atSec: 196, spawn: 'S_main', unitType: UnitTypeId.BatteringRam, battalions: 1 },
+        { atSec: 172, spawn: 'S_west', unitType: UnitTypeId.WargRider, battalions: 1 },
+        { atSec: 186, spawn: 'S_main', unitType: UnitTypeId.OrcArcher, battalions: 2 },
       ],
     },
     {
@@ -312,6 +315,9 @@ export const HELMS_DEEP: MapDef = {
         { atSec: 280, spawn: 'S_main', unitType: UnitTypeId.OrcWarrior, battalions: 4 },
         { atSec: 284, spawn: 'S_main', unitType: UnitTypeId.BatteringRam, battalions: 1 },
         { atSec: 290, spawn: 'S_west', unitType: UnitTypeId.BatteringRam, battalions: 1 },
+        { atSec: 258, spawn: 'S_east', unitType: UnitTypeId.WargRider, battalions: 2 },
+        { atSec: 274, spawn: 'S_west', unitType: UnitTypeId.OrcArcher, battalions: 2 },
+        { atSec: 288, spawn: 'S_main', unitType: UnitTypeId.CaveTroll, battalions: 1 },
       ],
     },
     {
@@ -325,6 +331,9 @@ export const HELMS_DEEP: MapDef = {
         { atSec: 368, spawn: 'S_main', unitType: UnitTypeId.Lurtz, battalions: 1 },
         { atSec: 376, spawn: 'S_main', unitType: UnitTypeId.BatteringRam, battalions: 2 },
         { atSec: 380, spawn: 'S_east', unitType: UnitTypeId.BatteringRam, battalions: 1 },
+        { atSec: 348, spawn: 'S_west', unitType: UnitTypeId.WargRider, battalions: 2 },
+        { atSec: 360, spawn: 'S_east', unitType: UnitTypeId.OrcArcher, battalions: 3 },
+        { atSec: 384, spawn: 'S_main', unitType: UnitTypeId.CaveTroll, battalions: 2 },
       ],
     },
   ],

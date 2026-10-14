@@ -27,6 +27,8 @@ export interface BuildingDef {
   trains?: readonly number[];
   /** Araştırılabilen yükseltmeler (UPGRADE_DEFS indeksleri; yalnızca forge). */
   researches?: readonly number[];
+  /** Seviye yükseltme maliyetleri (seviye 2, 3); yoksa seviye atlamaz (BFME2 bina seviyeleri). */
+  levelCosts?: readonly number[];
 }
 
 export const BUILDING_DEFS: Readonly<Record<BuildingKind, BuildingDef>> = {
@@ -36,6 +38,7 @@ export const BUILDING_DEFS: Readonly<Record<BuildingKind, BuildingDef>> = {
     cost: 250,
     buildTime: 12,
     hp: 1500,
+    levelCosts: [300, 450],
     attack: { damage: 16, damageType: 'pierce', interval: 1.2, range: 36, volley: 3 },
   },
   barracks: {
@@ -44,6 +47,7 @@ export const BUILDING_DEFS: Readonly<Record<BuildingKind, BuildingDef>> = {
     cost: 400,
     buildTime: 18,
     hp: 2500,
+    levelCosts: [350, 500],
     trains: [UnitTypeId.GondorSoldier, UnitTypeId.GondorArcher, UnitTypeId.TowerGuard],
   },
   forge: {
@@ -60,6 +64,7 @@ export const BUILDING_DEFS: Readonly<Record<BuildingKind, BuildingDef>> = {
     cost: 450,
     buildTime: 16,
     hp: 1500,
+    levelCosts: [400, 600],
     attack: { damage: 55, damageType: 'crush', interval: 5, range: 72, volley: 1, aoe: 5 },
   },
 };
@@ -220,6 +225,24 @@ export const FortressUpgrade = {
   Healing: 3,
   Treasury: 4,
 } as const;
+/**
+ * Bina seviyeleri (BFME2): seviye başına can +%25; kule hasarı +%40, yaylım +1, menzil +4 m;
+ * mancınık hasarı +%40, atış aralığı −%15; kışla eğitim süresi −%20. Yükseltme 8 sn sürer
+ * (bina bu sürede çalışmaz). Satış: harcanan altının yarısı geri döner.
+ */
+export const BUILDING_LEVEL = {
+  max: 3,
+  upgradeTime: 8,
+  hpPercent: 25,
+  towerDamagePercent: 40,
+  towerVolley: 1,
+  towerRange: 4,
+  catapultDamagePercent: 40,
+  catapultIntervalPercent: 15,
+  trainTimePercent: 20,
+  sellRefundPercent: 50,
+} as const;
+
 /** Kale silahları: ok mazgalı ve mancınık. */
 export const FORTRESS_WEAPONS = {
   arrows: { damage: 15, interval: 1.2, range: 42, volley: 5 },

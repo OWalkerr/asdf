@@ -11,6 +11,7 @@ import {
   Upgrade,
 } from '@bulwark/shared';
 import { addComponent, addEntity, entityExists, hasComponent, query, removeEntity } from 'bitecs';
+import { StructureKind } from '../components';
 import { cellAt } from '../nav/grid';
 import { ARMOR_STRUCTURE, PERCENT, STAT } from '../unitStats';
 import type { SimWorld } from '../world';
@@ -203,6 +204,8 @@ const splash = (
   team: number,
   damage: number,
   dmgType: number,
+  exclude = 0,
+  source = 0,
 ) => {
   const { Position, Team, Dead } = world.c;
   const grid = world.nav;
@@ -218,9 +221,9 @@ const splash = (
       const cc = c0 + dc;
       if (cc < 0 || cc >= grid.cols) continue;
       for (let o = world.hashHead[r * grid.cols + cc] as number; o !== -1; o = world.hashNext[o] as number) {
-        if (Team.id[o] === team || Dead.at[o] !== 0) continue;
+        if (Team.id[o] === team || Dead.at[o] !== 0 || o === exclude) continue;
         if (fxLen(((Position.x[o] as number) - x) | 0, ((Position.z[o] as number) - z) | 0) <= radius)
-          applyDamage(world, o, damage, dmgType);
+          applyDamage(world, o, damage, dmgType, source);
       }
     }
   }
@@ -242,8 +245,20 @@ const fireArrow = (world: SimWorld, s: number, target: number): void => {
   );
 };
 
+/** İnşa edilmiş binalar (kapı ve kale hariç); tick başına bir kez, kuşatma okçuları için. */
+const enemyBuildings = (world: SimWorld): number[] => {
+  const { Structure } = world.c;
+  const out: number[] = [];
+  for (const e of query(world, [Structure])) {
+    const kind = Structure.kind[e] as number;
+    if (kind !== StructureKind.Gate && kind !== StructureKind.Fortress) out.push(e);
+  }
+  return out;
+};
+
 export const combatSystem = (world: SimWorld): void => {
-  const { Position, Velocity, Combat, Soldier, Battalion, Team, Speed, Structure, Dead } = world.c;
+  const { Position, Velocity, Combat, Soldier, Battalion, Team, Speed, Structure, Dead, UnitType } = world.c;
+  let buildings: number[] | null = null;
   for (const s of query(world, [Soldier, Combat, Position, Velocity])) {
     if (Dead.at[s] !== 0) continue;
     const cd = Combat.cooldown[s] as number;
@@ -274,6 +289,29 @@ export const combatSystem = (world: SimWorld): void => {
       face(world, s, Position.x[target] as number, Position.z[target] as number);
       startAttackAnim(world, s);
       continue;
+    }
+
+    // --- Kuşatma okçusu: çatışmada değilken menzildeki düşman binasına ateşli ok ---
+    if (Combat.ranged[s] === 1 && STAT.siegeArcher[UnitType.id[s] as number] === 1) {
+      if ((Combat.cooldown[s] as number) > 0) continue;
+      buildings ??= enemyBuildings(world);
+      let target = 0;
+      let best = Combat.range[s] as number;
+      for (const e of buildings) {
+        if (Team.id[e] === team || (Structure.hp[e] as number) <= 0) continue;
+        const d = fxLen(((Position.x[e] as number) - sx) | 0, ((Position.z[e] as number) - sz) | 0);
+        if (d < best) {
+          best = d;
+          target = e;
+        }
+      }
+      if (target !== 0) {
+        fireProjectile(world, sx, sz, target, (Combat.damage[s] as number) >> 1, DMG_FIRE, 150, b);
+        Combat.cooldown[s] = (Combat.interval[s] as number) + world.rng.nextInt(6);
+        face(world, s, Position.x[target] as number, Position.z[target] as number);
+        startAttackAnim(world, s);
+        continue;
+      }
     }
 
     // --- Yakın dövüş ---
@@ -308,6 +346,10 @@ export const combatSystem = (world: SimWorld): void => {
           // Rütbe, aura, Toplanma, Dövme Kılıçlar, Elendil.
           const dmg = (((Combat.damage[s] as number) * attackPercent(world, b, team, true)) / 100) | 0;
           applyDamage(world, t, dmg, Combat.dmgType[s] as number, b);
+          // Yarma (trol): hedefin çevresindeki düşmanlara yarım hasar.
+          const cleave = STAT.cleave[UnitType.id[s] as number] as number;
+          if (cleave > 0 && !hasComponent(world, t, Structure))
+            splash(world, tx, tz, cleave, team, dmg >> 1, Combat.dmgType[s] as number, t, b);
           Combat.cooldown[s] = Combat.interval[s] as number;
           startAttackAnim(world, s);
         }
@@ -317,7 +359,13 @@ export const combatSystem = (world: SimWorld): void => {
 
     // --- Kapı: birim hedefi yokken, varmış tabur erişimdeki kapıya vurur ---
     const g = Battalion.targetStructure[b] as number;
-    if (g !== 0 && Battalion.active[b] === 0 && (Structure.hp[g] as number) > 0) {
+    if (
+      g !== 0 &&
+      Battalion.active[b] === 0 &&
+      entityExists(world, g) &&
+      hasComponent(world, g, Structure) &&
+      (Structure.hp[g] as number) > 0
+    ) {
       const gx = Position.x[g] as number;
       const gz = Position.z[g] as number;
       const d = fxLen((gx - sx) | 0, (gz - sz) | 0);
@@ -355,7 +403,10 @@ export const projectileSystem = (world: SimWorld): void => {
       continue;
     }
     const t = Projectile.target[p] as number;
-    if (alive(world, t)) {
+    if (t > 0 && entityExists(world, t) && hasComponent(world, t, world.c.Structure)) {
+      if ((world.c.Structure.hp[t] as number) > 0)
+        applyDamage(world, t, Projectile.damage[p] as number, Projectile.dmgType[p] as number);
+    } else if (alive(world, t)) {
       const d = fxLen(
         ((Position.x[t] as number) - (Projectile.toX[p] as number)) | 0,
         ((Position.z[t] as number) - (Projectile.toZ[p] as number)) | 0,

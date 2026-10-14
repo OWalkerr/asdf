@@ -58,6 +58,10 @@ export interface UnitDef {
   stepRate?: number;
   /** TD: çıkışa ulaşan tabur başına kaybedilen can (varsayılan 1). */
   lifeCost?: number;
+  /** Yakın dövüş vuruşu hedefin çevresine de yayılır (yarıçap m; Trol). */
+  cleave?: number;
+  /** Okçu birliği yapılara da ok atar (yapılara karşı hasar tipi: ateşli ok). */
+  siegeArcher?: boolean;
 }
 
 export const UNIT_DEFS: readonly UnitDef[] = [
@@ -312,6 +316,77 @@ export const UNIT_DEFS: readonly UnitDef[] = [
     summoned: true,
     invulnerable: true,
   },
+  {
+    // Mordor Ork okçuları (GDD §7.4): menzilde birliklere, yoksa kulelere/binalara ateşli ok atar.
+    id: 11,
+    key: 'orc_archer',
+    name: 'Orc Archers',
+    faction: 'mordor',
+    speed: 4.8,
+    hp: 50,
+    armor: 'light',
+    attackStyle: 'bow',
+    damage: 7,
+    damageType: 'pierce',
+    attackInterval: 1.8,
+    range: 26,
+    ranged: true,
+    battalionSize: 15,
+    cost: 120,
+    trainTime: 0,
+    files: 5,
+    spacing: 1.3,
+    jitter: 0.3,
+    siegeArcher: true,
+  },
+  {
+    // Isengard Warg biniciler: hızlı kurt süvarisi; mızrağa karşı zayıf.
+    id: 12,
+    key: 'warg_rider',
+    name: 'Warg Riders',
+    faction: 'isengard',
+    speed: 9,
+    hp: 120,
+    armor: 'cavalry',
+    attackStyle: 'slash',
+    damage: 14,
+    damageType: 'slash',
+    attackInterval: 1.0,
+    range: 1.8,
+    ranged: false,
+    battalionSize: 8,
+    cost: 200,
+    trainTime: 0,
+    files: 4,
+    spacing: 2.4,
+    jitter: 0.25,
+    stepRate: 2.6,
+  },
+  {
+    // Mağara Trolü: yavaş ve dev; vuruşu çevresine yayılır, kapı ve binalara çok etkili.
+    id: 13,
+    key: 'cave_troll',
+    name: 'Cave Troll',
+    faction: 'mordor',
+    speed: 3.2,
+    hp: 1400,
+    armor: 'monster',
+    attackStyle: 'slash',
+    damage: 70,
+    damageType: 'crush',
+    attackInterval: 2.2,
+    range: 2.6,
+    ranged: false,
+    battalionSize: 1,
+    cost: 600,
+    trainTime: 0,
+    files: 1,
+    spacing: 4,
+    jitter: 0,
+    lifeCost: 4,
+    cleave: 2.8,
+    stepRate: 1.1,
+  },
 ];
 
 export const UnitTypeId = {
@@ -326,6 +401,9 @@ export const UnitTypeId = {
   LorienArcher: 8,
   Rohirrim: 9,
   DeadArmy: 10,
+  OrcArcher: 11,
+  WargRider: 12,
+  CaveTroll: 13,
 } as const;
 
 export const unitDef = (id: number): UnitDef => {

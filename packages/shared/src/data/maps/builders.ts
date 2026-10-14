@@ -52,6 +52,28 @@ export const fdWaves = (
       if (uruks > 0)
         groups.push({ atSec: t0 + 10 + k * 6, spawn, unitType: UnitTypeId.UrukHai, battalions: uruks });
     });
+    // Ork okçuları (binalara ateşli ok), Warg akıncıları (ilk ulaşan), Mağara trolü.
+    if (w >= 1)
+      groups.push({
+        atSec: t0 + 14,
+        spawn: spawns[(w + 1) % spawns.length] as string,
+        unitType: UnitTypeId.OrcArcher,
+        battalions: 1 + Math.floor(w / 3),
+      });
+    if (w >= 2)
+      groups.push({
+        atSec: t0 + 2,
+        spawn: spawns[(w + 2) % spawns.length] as string,
+        unitType: UnitTypeId.WargRider,
+        battalions: w >= 4 ? 2 : 1,
+      });
+    if (w >= 3)
+      groups.push({
+        atSec: t0 + 30,
+        spawn: spawns[w % spawns.length] as string,
+        unitType: UnitTypeId.CaveTroll,
+        battalions: w >= count - 2 ? 2 : 1,
+      });
     if (w >= 2)
       groups.push({
         atSec: t0 + 24,
@@ -99,6 +121,22 @@ export const tdWaves = (
         unitType: UnitTypeId.UrukHai,
         battalions: Math.floor((w - 1) / 2),
       });
+    if (w >= 2 && w % 2 === 0)
+      groups.push({
+        atSec: t0 + 10,
+        spawn: s(1),
+        unitType: UnitTypeId.OrcArcher,
+        battalions: 1 + Math.floor(w / 5),
+      });
+    if (w >= 4 && w % 2 === 1)
+      groups.push({
+        atSec: t0 + 4,
+        spawn: s(1),
+        unitType: UnitTypeId.WargRider,
+        battalions: 1 + Math.floor(w / 6),
+      });
+    if (w >= 6 && w % 3 === 1)
+      groups.push({ atSec: t0 + 18, spawn: s(0), unitType: UnitTypeId.CaveTroll, battalions: 1 });
     if (w % 3 === 2 && w >= 5)
       groups.push({ atSec: t0 + 20, spawn: s(1), unitType: UnitTypeId.BatteringRam, battalions: 1 });
     if (w === count - 1)

@@ -20,7 +20,14 @@ import { isUnitType, STAT } from '../unitStats';
 import type { SimWorld } from '../world';
 import { fortressUpgrade } from './fortress';
 import { castSpell, summonHero, unlockSpell, useAbility } from './heroes';
-import { buildStructure, repairGate, researchUpgrade, trainUnit } from './structures';
+import {
+  buildStructure,
+  repairGate,
+  researchUpgrade,
+  sellBuilding,
+  trainUnit,
+  upgradeBuilding,
+} from './structures';
 
 /** Oyuncu → takım eşlemesi (Phase 1: oyuncu N = takım N). Co-op'ta lobi belirleyecek. */
 const teamOf = (player: number): number => player;
@@ -352,6 +359,14 @@ export const applyCommand = (world: SimWorld, sc: StampedCommand): void => {
     }
     case 'research': {
       researchUpgrade(world, team, cmd.building, cmd.upgrade);
+      break;
+    }
+    case 'upgradeBuilding': {
+      upgradeBuilding(world, team, cmd.building);
+      break;
+    }
+    case 'sellBuilding': {
+      sellBuilding(world, team, cmd.building);
       break;
     }
     case 'repair': {
