@@ -44,12 +44,21 @@ Taş Takviye (+%50 can), Ok Mazgalları, Kale Mancınığı, Şifa Sancağı, Ha
 kalenin kapısından çıkar; kapılar kale panelinden onarılır.
 
 **Kule Savunması (TD)** — *Yılan Vadisi*, *Çatal Yol*: düşman sabit yolu izleyip çıkışa yürür; çıkışa
-ulaşan her tabur **can** götürür (Uruk 2, koçbaşı 3, Lurtz 10). Yol kenarındaki yuvalara **okçu kulesi**
+ulaşan her tabur **can** götürür (Uruk 2, koçbaşı 3, trol 3, Lurtz 10). Yol kenarındaki yuvalara **okçu kulesi**
 (250) ve alan hasarlı **mancınık** (450) kurun; üssün yanındaki arsalara kışla/demirhane.
 
 **Ekonomi:** saniyede +5 altın ve öldürülen her düşman için ödül. Sur soketleri ve kule platformlarına okçu
 kulesi veya mancınık, arsalara **Kışla** (400) ve **Demirhane** (500: Dövme Kılıçlar, Ağır Zırh, Ateşli Oklar).
 Koçbaşları oklara dayanıklıdır — mancınık, Ateşli Oklar veya piyadeyle durdurun.
+
+**Bina seviyeleri ve satış:** okçu kulesi, mancınık ve kışla **3 seviyeye** kadar yükseltilir (seviye başına
++%25 dayanıklılık; kule +%40 hasar, +1 ok, +4 m menzil; mancınık +%40 hasar, −%15 atış aralığı; kışla −%20
+yetiştirme süresi). Yükseltme 8 sn sürer ve bu sırada bina çalışmaz. Her yapı **satılabilir** (yatırılan
+altının %50'si); yıkılan veya satılan yapının yuvası yeniden inşaya açılır.
+
+**Düşmanlar:** Mordor Orkları, Uruk-hai, **Ork Okçuları** (binalara ateşli ok atar — kulelerinizi korur
+gibi okçularla avlayın), hızlı **Warg Biniciler**, saflarınızı yarma vuruşuyla dağıtan dev **Mağara Trolü**,
+koçbaşı ve Lurtz. Kale haritalarında yakın dövüşçüler kapı yerine yakındaki arsa binalarınıza da saldırır.
 
 **Kahraman ve Güçler:** **F** ile Aragorn'u çağırın (1200; liderlik aurası, Elendil'in Kılıcı, rütbe 3'te
 Athelas). Düşman öldürmek ve dalga başları **Güç Puanı** verir; ekranın solundaki **Güçler** sütunundan (**1–6**)

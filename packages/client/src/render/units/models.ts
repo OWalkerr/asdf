@@ -273,7 +273,6 @@ export const gondorArcher = (): BufferGeometry => {
   return b.build();
 };
 
-/** Birim tipi id → model üreticisi (UNIT_DEFS ile aynı sıra). */
 /**
  * Isengard koçbaşı (GDD §7.4, Helm's Deep): demir kurt başlı kalın kütük, Uruk taşıyıcılar ve
  * üstte deri kaplı koruma çatısı. SPA: kütük = sağ kol (dürtme animasyonu ileri vurur),
@@ -528,6 +527,129 @@ export const rohirrim = (): BufferGeometry => {
   return b.build();
 };
 
+/**
+ * Mordor Ork okçusu (BFME2): ork savaşçısının kambur silueti, paçavra başlık, kalkansız;
+ * sol elde kaba kısa yay, sırtta sadak. Takım rengi: bez etek + başlık.
+ */
+export const orcArcher = (): BufferGeometry => {
+  const b = new ModelBuilder({ ...HUMAN, neck: 1.36, shoulder: 1.28 });
+  legs(b, 'leather', 'dirtDark', 0.15);
+  b.add(Part.Body, box(0.38, 0.55, 0.48), 'orcSkin', [0.06, 1.1, 0], [0, 0, -0.35]);
+  b.add(Part.Body, box(0.28, 0.38, 0.5), 'leather', [0.02, 1.12, 0], [0, 0, -0.35]); // deri yelek
+  b.add(Part.Body, box(0.36, 0.28, 0.5), 'team0Dark', [0, 0.82, 0]);
+  b.add(Part.Body, box(0.2, 0.25, 0.56), 'orcSkin', [-0.08, 1.36, 0], [0, 0, -0.5]);
+  b.add(Part.Body, cyl(0.07, 0.07, 0.55, 5), 'woodDark', [-0.2, 1.3, 0.12], [0.35, 0, -0.3]); // sadak
+  b.add(Part.Body, box(0.08, 0.12, 0.1), 'rust', [-0.28, 1.6, 0.22], [0.35, 0, -0.3]); // ok yeleleri
+  b.add(Part.Head, box(0.22, 0.2, 0.22), 'orcSkin', [0.16, 1.44, 0]);
+  b.add(Part.Head, box(0.06, 0.04, 0.16), 'eyeRed', [0.27, 1.47, 0]);
+  b.add(Part.Head, box(0.26, 0.16, 0.28), 'team0', [0.1, 1.58, 0], [0, 0, 0.25]); // paçavra başlık
+  b.add(Part.Head, box(0.16, 0.08, 0.06), 'orcSkin', [0.12, 1.5, 0.15], [0, 0.4, 0]); // sivri kulak
+  b.add(Part.Head, box(0.16, 0.08, 0.06), 'orcSkin', [0.12, 1.5, -0.15], [0, -0.4, 0]);
+  arm(b, Part.ArmR, 0.3, 'orcSkin', 'orcSkin', 0.68);
+  arm(b, Part.ArmL, -0.3, 'orcSkin', 'orcSkin', 0.68);
+  // Kaba kısa yay: iki eğri kol + kiriş.
+  const hx = 0.04;
+  const hy = 0.66;
+  const hz = -0.3;
+  b.add(Part.ArmL, box(0.42, 0.06, 0.05), 'woodDark', [hx + 0.24, hy - 0.04, hz], [0, 0, -0.25]);
+  b.add(Part.ArmL, box(0.42, 0.06, 0.05), 'woodDark', [hx - 0.2, hy - 0.04, hz], [0, 0, 0.25]);
+  b.add(Part.ArmL, box(0.9, 0.012, 0.012), 'sand', [hx + 0.02, hy - 0.14, hz]);
+  return b.build(0.9);
+};
+
+/**
+ * Isengard Warg binicisi (BFME2): iri, kamburlu gri-kahve kurt (kısa bacak, uzun gövde, büyük
+ * çene, dik kulaklar) ve üstünde eğri kılıçlı ork binici. Kurdun çapraz bacak çiftleri
+ * LegL/LegR (koşu); binici kılıcı sağ kol.
+ */
+export const wargRider = (): BufferGeometry => {
+  const b = new ModelBuilder();
+  // Kurt: omuzda yüksek, kalçada alçak (sırt eğimi), kalın boyun, iri baş.
+  b.add(Part.Body, box(1.5, 0.66, 0.6), 'rockDark', [0, 1.0, 0], [0, 0, 0.12]);
+  b.add(Part.Body, box(0.6, 0.62, 0.66), 'dirtDark', [0.5, 1.14, 0], [0, 0, 0.12]); // yeleli omuz
+  b.add(Part.Body, box(0.5, 0.42, 0.4), 'rockDark', [0.98, 1.22, 0], [0, 0, 0.3]); // boyun
+  b.add(Part.Body, box(0.46, 0.34, 0.36), 'rockDark', [1.3, 1.24, 0]); // kafa
+  b.add(Part.Body, box(0.36, 0.14, 0.26), 'rockDark', [1.6, 1.16, 0]); // üst çene
+  b.add(Part.Body, box(0.3, 0.08, 0.22), 'sootBlack', [1.56, 1.04, 0], [0, 0, -0.2]); // alt çene
+  b.add(Part.Body, box(0.04, 0.06, 0.2), 'gondorWhite', [1.66, 1.09, 0]); // dişler
+  b.add(Part.Body, box(0.06, 0.04, 0.3), 'eyeRed', [1.42, 1.32, 0]);
+  for (const z of [-0.12, 0.12]) b.add(Part.Body, new ConeGeometry(0.07, 0.2, 4), 'dirtDark', [1.2, 1.48, z]); // kulak
+  b.add(Part.Body, box(0.6, 0.12, 0.12), 'rockDark', [-0.94, 1.04, 0], [0, 0, 0.6]); // kuyruk
+  b.add(Part.Body, box(0.56, 0.06, 0.62), 'team0Dark', [0.05, 1.36, 0], [0, 0, 0.12]); // eyer postu
+  for (const [part, x, z] of [
+    [Part.LegL, 0.52, -0.2],
+    [Part.LegR, -0.55, -0.2],
+    [Part.LegR, 0.52, 0.2],
+    [Part.LegL, -0.55, 0.2],
+  ] as const) {
+    const hip: V3 = [x, 0.92, z];
+    b.add(part, box(0.18, 0.84, 0.18), 'rockDark', [x, 0.44, z], [0, 0, 0], [1, 1, 1], hip);
+    b.add(part, box(0.24, 0.08, 0.2), 'sootBlack', [x + 0.04, 0.04, z], [0, 0, 0], [1, 1, 1], hip);
+  }
+  // Ork binici
+  b.add(Part.Body, box(0.32, 0.5, 0.4), 'orcSkin', [0, 1.7, 0], [0, 0, -0.2]);
+  b.add(Part.Body, box(0.34, 0.26, 0.42), 'rust', [0, 1.78, 0], [0, 0, -0.2]);
+  b.add(Part.Body, box(0.05, 0.5, 0.4), 'team0', [-0.2, 1.62, 0]); // pelerin
+  for (const z of [-0.28, 0.28])
+    b.add(Part.Body, box(0.36, 0.14, 0.13), 'leather', [0.12, 1.4, z], [0, 0, -0.5]);
+  const neck: V3 = [0.06, 1.98, 0];
+  b.add(Part.Head, box(0.2, 0.19, 0.2), 'orcSkin', [0.12, 2.06, 0], [0, 0, 0], [1, 1, 1], neck);
+  b.add(Part.Head, cyl(0.1, 0.15, 0.14, 5), 'iron', [0.1, 2.18, 0], [0, 0, 0], [1, 1, 1], neck);
+  b.add(Part.Head, new ConeGeometry(0.04, 0.18, 4), 'iron', [0.08, 2.32, 0], [0, 0, 0], [1, 1, 1], neck);
+  const shR: V3 = [0.02, 1.9, 0.24];
+  const shL: V3 = [0.02, 1.9, -0.24];
+  b.add(Part.ArmR, box(0.12, 0.48, 0.12), 'orcSkin', [0.02, 1.68, 0.24], [0, 0, 0], [1, 1, 1], shR);
+  b.add(Part.ArmR, box(0.7, 0.08, 0.04), 'iron', [0.3, 1.46, 0.28], [0, 0, 0.35], [1, 1, 1], shR); // pala
+  b.add(Part.ArmR, box(0.26, 0.1, 0.04), 'iron', [0.66, 1.62, 0.28], [0, 0, 0.8], [1, 1, 1], shR);
+  b.add(Part.ArmL, box(0.12, 0.44, 0.12), 'orcSkin', [0.06, 1.7, -0.24], [0, 0, -0.5], [1, 1, 1], shL); // dizgin
+  return b.build();
+};
+
+/**
+ * Mordor mağara trolü (BFME2): ~4 m, kambur, gri taşsı deri, küçük baş, uzun kollar,
+ * iri dikenli sopa, belde zincir ve bez. Takım rengi: bel bezi + kol bağı.
+ */
+export const caveTroll = (): BufferGeometry => {
+  const b = new ModelBuilder({ hip: 1.3, shoulder: 2.45, neck: 2.5, shoulderZ: 0.72, hipZ: 0.38 });
+  for (const [part, z] of [
+    [Part.LegL, -0.38],
+    [Part.LegR, 0.38],
+  ] as const) {
+    b.add(part, box(0.46, 0.8, 0.46), 'rock', [0, 0.92, z]); // kalın uyluk
+    b.add(part, box(0.4, 0.6, 0.4), 'rock', [0.02, 0.36, z]);
+    b.add(part, box(0.58, 0.14, 0.46), 'rockDark', [0.1, 0.07, z]); // geniş ayak
+  }
+  b.add(Part.Body, box(1.0, 0.62, 1.1), 'rock', [0, 1.5, 0]); // göbek
+  b.add(Part.Body, box(1.0, 0.9, 1.4), 'rock', [0.1, 2.1, 0], [0, 0, -0.3]); // öne yatık gövde
+  b.add(Part.Body, box(0.6, 0.5, 1.0), 'rockDark', [-0.3, 2.5, 0], [0, 0, -0.5]); // kambur sırt
+  b.add(Part.Body, box(1.06, 0.4, 1.16), 'team0Dark', [0, 1.26, 0]); // bel bezi
+  b.add(Part.Body, box(1.1, 0.08, 1.2), 'iron', [0, 1.48, 0]); // zincir kuşak
+  b.add(Part.Head, box(0.42, 0.38, 0.44), 'rock', [0.42, 2.58, 0]);
+  b.add(Part.Head, box(0.2, 0.16, 0.34), 'rockDark', [0.62, 2.48, 0]); // çene
+  b.add(Part.Head, box(0.06, 0.05, 0.28), 'eyeRed', [0.63, 2.64, 0]);
+  for (const z of [-0.2, 0.2])
+    b.add(Part.Head, new ConeGeometry(0.04, 0.12, 4), 'gondorWhite', [0.7, 2.5, z * 0.5], [0, 0, -1.2]); // diş
+  const armT = (part: PartId, z: number) => {
+    b.add(part, box(0.42, 0.72, 0.42), 'rock', [0, 2.06, z]);
+    b.add(part, box(0.36, 0.72, 0.36), 'rock', [0.04, 1.36, z]);
+    b.add(part, box(0.42, 0.3, 0.42), 'rockDark', [0.06, 0.88, z]); // iri el
+  };
+  armT(Part.ArmR, 0.72);
+  b.add(Part.ArmR, box(0.2, 0.12, 0.44), 'team0', [0, 2.22, 0.72]); // kol bağı
+  b.add(Part.ArmR, cyl(0.12, 0.22, 1.7, 6), 'woodDark', [0.7, 0.98, 0.76], [0, 0, -1.25]); // sopa
+  for (let k = 0; k < 3; k++)
+    b.add(
+      Part.ArmR,
+      new ConeGeometry(0.05, 0.18, 4),
+      'iron',
+      [1.2 + k * 0.16, 1.18 - k * 0.04, 0.76],
+      [0, 0, 0.3],
+    );
+  armT(Part.ArmL, -0.72);
+  return b.build();
+};
+
+/** Birim tipi id → model üreticisi (UNIT_DEFS ile aynı sıra). */
 export const UNIT_MODELS: Record<number, () => BufferGeometry> = {
   0: gondorSoldier,
   1: orcWarrior,
@@ -541,4 +663,7 @@ export const UNIT_MODELS: Record<number, () => BufferGeometry> = {
   9: rohirrim,
   // Ölüler Ordusu: Gondor askeri silueti, hayalet materyaliyle (UnitRenderer).
   10: gondorSoldier,
+  11: orcArcher,
+  12: wargRider,
+  13: caveTroll,
 };

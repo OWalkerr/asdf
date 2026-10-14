@@ -1,6 +1,7 @@
 import {
   BUILDING_DEFS,
   BUILDING_KINDS,
+  BUILDING_LEVEL,
   type BuildingKind,
   ECONOMY,
   FORTRESS_UPGRADES,
@@ -36,6 +37,9 @@ export const UNIT_LABELS: Record<number, string> = {
   8: 'Lórien Okçuları',
   9: 'Rohirrim',
   10: 'Ölüler Ordusu',
+  11: 'Ork Okçuları',
+  12: 'Warg Biniciler',
+  13: 'Mağara Trolü',
 };
 const UNIT_ICON: Record<number, string> = {
   0: 'sword',
@@ -49,6 +53,9 @@ const UNIT_ICON: Record<number, string> = {
   8: 'bow',
   9: 'horse',
   10: 'ghost',
+  11: 'bow',
+  12: 'wolf',
+  13: 'club',
 };
 const UNIT_DESC: Record<number, string> = {
   0: 'Kılıç ve kalkanlı çok yönlü piyade. Orklara karşı güçlü.',
@@ -68,6 +75,9 @@ const BUILD_DESC: Record<BuildingKind, string> = {
   catapult: 'Uzaktaki düşman kümelerine alan hasarlı taş atar; koçbaşı ve Uruk saflarına etkili.',
 };
 const UP_ICON = ['blade', 'armor', 'flame'];
+const ROMAN = ['', 'I', 'II', 'III'];
+/** Seviye çarpanı: taban × (100 + pct·(seviye−1)) / 100. */
+const lv = (base: number, pct: number, level: number) => Math.round((base * (100 + pct * (level - 1))) / 100);
 const FORT_ICON = ['wall', 'slits', 'catapult', 'banner', 'coin'];
 const SLOT_NAMES: Record<string, string> = {
   wall_socket: 'Sur Soketi',
@@ -249,7 +259,15 @@ export class HudController {
     if (!st || !kind) return this.idle();
     const b = BUILDING_DEFS[kind];
     const hp = st.hp / st.max;
-    const base = { portrait: BUILD_ICON[kind], title: b.name, hp };
+    const base = { portrait: BUILD_ICON[kind], title: `${b.name} ${ROMAN[st.level] ?? ''}`, hp };
+    if (st.upgrading >= 0)
+      return {
+        ...base,
+        key: `upg:${slot}:${Math.round(st.upgrading * 50)}`,
+        subtitle: `Seviye ${st.level}'e yükseltiliyor · %${Math.round(st.upgrading * 100)}`,
+        lines: ['Yükseltme süresince yapı devre dışıdır.'],
+        buttons: [this.sellButton(st.eid, st.level, kind)],
+      };
     if (st.built < 1)
       return {
         ...base,
@@ -263,15 +281,28 @@ export class HudController {
     if (kind === 'arrow_tower' || kind === 'catapult') {
       const fire = (upgrades & 4) !== 0 && kind === 'arrow_tower';
       const a = b.attack;
+      const L = st.level;
+      const tower = kind === 'arrow_tower';
+      const range = (a?.range ?? 0) + (tower ? BUILDING_LEVEL.towerRange * (L - 1) : 0);
+      const volley = (a?.volley ?? 1) + (tower ? BUILDING_LEVEL.towerVolley * (L - 1) : 0);
+      const dmg = lv(
+        a?.damage ?? 0,
+        tower ? BUILDING_LEVEL.towerDamagePercent : BUILDING_LEVEL.catapultDamagePercent,
+        L,
+      );
+      const interval = tower
+        ? (a?.interval ?? 1)
+        : Math.round((a?.interval ?? 1) * (100 - BUILDING_LEVEL.catapultIntervalPercent * (L - 1))) / 100;
+      const buttons = [this.upgradeButton(st.eid, L, kind), this.sellButton(st.eid, L, kind)];
       return {
         ...base,
-        key: `tower:${slot}:${st.hp}:${fire}`,
-        subtitle: `${st.hp} / ${st.max}`,
+        key: `tower:${slot}:${st.hp}:${fire}:${L}:${buttons.map((x) => x.state).join('')}`,
+        subtitle: `Seviye ${L} · ${st.hp} / ${st.max}`,
         lines: [
-          `Menzil ${a?.range} m · ${a?.volley} atış / ${a?.interval} sn${a?.aoe ? ` · alan ${a.aoe} m` : ''}`,
+          `Hasar ${dmg} · menzil ${range} m · ${volley} atış / ${interval} sn${a?.aoe ? ` · alan ${a.aoe} m` : ''}`,
           fire ? 'Ateşli Oklar etkin.' : BUILD_DESC[kind],
         ],
-        buttons: [],
+        buttons,
       };
     }
     if (kind === 'forge') {
@@ -290,6 +321,7 @@ export class HudController {
           run: () => this.d.scenario.research(st.eid, u),
         };
       });
+      buttons.push(this.sellButton(st.eid, st.level, kind));
       return {
         ...base,
         key: `forge:${slot}:${upgrades}:${researching}:${Math.round(st.queuePct * 40)}:${buttons.map((x) => x.state).join('')}`,
@@ -315,16 +347,66 @@ export class HudController {
         run: () => this.d.scenario.train(st.eid, u),
       };
     });
+    buttons.push(this.upgradeButton(st.eid, st.level, kind), this.sellButton(st.eid, st.level, kind));
     const queue =
       st.queueLen > 0
         ? `Kuyruk: ${st.queueLen} · ${UNIT_LABELS[st.queueUnit] ?? ''} %${Math.round(st.queuePct * 100)}`
         : 'Kuyruk boş';
     return {
       ...base,
-      key: `barracks:${slot}:${buttons.map((x) => x.state).join('')}:${st.queueLen}:${Math.round(st.queuePct * 40)}`,
-      subtitle: `${st.hp} / ${st.max}`,
-      lines: [queue, `Yetişen taburlar binanın önünde toplanır (kuyruk en fazla ${ECONOMY.queueMax}).`],
+      key: `barracks:${slot}:${buttons.map((x) => x.state).join('')}:${st.queueLen}:${Math.round(st.queuePct * 40)}:${st.level}`,
+      subtitle: `Seviye ${st.level} · ${st.hp} / ${st.max}`,
+      lines: [
+        queue,
+        st.level > 1
+          ? `Yetiştirme süresi −%${BUILDING_LEVEL.trainTimePercent * (st.level - 1)} · kuyruk en fazla ${ECONOMY.queueMax}.`
+          : `Yetişen taburlar binanın önünde toplanır (kuyruk en fazla ${ECONOMY.queueMax}).`,
+      ],
       buttons,
+    };
+  }
+
+  /** Bina seviye yükseltmesi düğmesi (BFME2: I → II → III). */
+  private upgradeButton(eid: number, level: number, kind: BuildingKind): CommandButton {
+    const cost = BUILDING_DEFS[kind].levelCosts?.[level - 1];
+    const max = cost === undefined || level >= BUILDING_LEVEL.max;
+    const what =
+      kind === 'arrow_tower'
+        ? `+%${BUILDING_LEVEL.towerDamagePercent} hasar, +${BUILDING_LEVEL.towerVolley} ok, +${BUILDING_LEVEL.towerRange} m menzil`
+        : kind === 'catapult'
+          ? `+%${BUILDING_LEVEL.catapultDamagePercent} hasar, −%${BUILDING_LEVEL.catapultIntervalPercent} atış aralığı`
+          : `−%${BUILDING_LEVEL.trainTimePercent} yetiştirme süresi`;
+    return {
+      icon: 'up',
+      label: max ? 'En üst seviye' : `Seviye ${level + 1}`,
+      state: max ? 'done' : this.gold >= cost ? 'ready' : 'off',
+      badge: max ? '✓' : `${cost}`,
+      tip: {
+        title: max ? 'En üst seviye' : `Seviye ${ROMAN[level + 1]}'e yükselt`,
+        meta: max ? '' : `◆ ${cost} · ${BUILDING_LEVEL.upgradeTime} sn`,
+        body: `${what}; +%${BUILDING_LEVEL.hpPercent} dayanıklılık. Yükseltme sırasında yapı çalışmaz.`,
+      },
+      run: () => this.d.scenario.upgradeBuilding(eid),
+    };
+  }
+
+  /** Satış düğmesi: yatırılan altının yarısı iade. */
+  private sellButton(eid: number, level: number, kind: BuildingKind): CommandButton {
+    const def = BUILDING_DEFS[kind];
+    const invested = def.cost + (def.levelCosts ?? []).slice(0, level - 1).reduce((a, c) => a + c, 0);
+    const refund = Math.floor((invested * BUILDING_LEVEL.sellRefundPercent) / 100);
+    return {
+      icon: 'coin',
+      label: 'Sat',
+      state: 'ready',
+      badge: `+${refund}`,
+      tip: {
+        title: 'Yapıyı sat',
+        meta: `◆ +${refund}`,
+        body: 'Yapı yıkılır, yatırılan altının yarısı geri döner; arsa yeniden inşaya açılır.',
+      },
+      // Arsa seçili kalır: panel inşa listesine döner.
+      run: () => this.d.scenario.sellBuilding(eid),
     };
   }
 

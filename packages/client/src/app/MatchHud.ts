@@ -41,11 +41,17 @@ export class MatchHud {
       const w = this.def.waves[waveIndex - 1];
       const ram = w?.groups.some((g) => g.unitType === 5);
       const boss = w?.groups.some((g) => g.unitType === 7);
+      const troll = w?.groups.some((g) => g.unitType === 13);
+      const warg = w?.groups.some((g) => g.unitType === 12);
       const warn = boss
         ? "<span>Lurtz savaşa katılıyor — Uruk'lar onun yanında daha sert vurur!</span>"
-        : ram
-          ? `<span>Koçbaşı geliyor — ${this.def.mode === 'TD' ? 'mancınıkla durdurun!' : 'piyadeyle kapıyı koruyun!'}</span>`
-          : '';
+        : troll
+          ? '<span>Mağara trolü geliyor — sopası saflarınızı yarar, mızrak ve okla karşılayın!</span>'
+          : warg
+            ? '<span>Warg binicileri hızla yaklaşıyor — okçularınızı koruyun!</span>'
+            : ram
+              ? `<span>Koçbaşı geliyor — ${this.def.mode === 'TD' ? 'mancınıkla durdurun!' : 'piyadeyle kapıyı koruyun!'}</span>`
+              : '';
       this.banner.innerHTML = `<small>Dalga ${waveIndex} / ${waveCount}</small><b>${w?.name ?? ''}</b>${warn}`;
       this.banner.classList.remove('show');
       void this.banner.offsetWidth; // animasyonu yeniden başlat

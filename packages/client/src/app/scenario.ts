@@ -67,6 +67,16 @@ export class Scenario {
     this.sim.send({ type: 'research', building, upgrade }, PLAYER);
   }
 
+  /** Bina seviyesini yükselt. */
+  upgradeBuilding(building: number): void {
+    this.sim.send({ type: 'upgradeBuilding', building }, PLAYER);
+  }
+
+  /** Binayı sat (%50 iade). */
+  sellBuilding(building: number): void {
+    this.sim.send({ type: 'sellBuilding', building }, PLAYER);
+  }
+
   /** Kapıyı onar (kapı indeksi). */
   repair(gate: number): void {
     this.sim.send({ type: 'repair', gate }, PLAYER);

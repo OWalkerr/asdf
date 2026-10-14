@@ -1,6 +1,7 @@
 import {
   BUILDING_DEFS,
   BUILDING_KINDS,
+  BUILDING_LEVEL,
   type MapDef,
   SNAP_STRUCT_INTS,
   type SnapshotFrame,
@@ -8,6 +9,7 @@ import {
   unpackQueuePct,
   unpackQueueUnit,
   unpackStructKind,
+  unpackStructLevel,
   unpackStructSlot,
 } from '@bulwark/shared';
 import { type BufferGeometry, InstancedMesh, Matrix4, Quaternion, type Texture, Vector3 } from 'three/webgpu';
@@ -25,6 +27,9 @@ export interface StructInfo {
   max: number;
   /** İnşa ilerlemesi [0, 1] (1 = tamam). */
   built: number;
+  /** Seviye (1–3) ve süren yükseltmenin ilerlemesi [0, 1) (−1 = yükseltme yok). */
+  level: number;
+  upgrading: number;
   queueLen: number;
   queueUnit: number;
   /** Baştaki birimin eğitim ilerlemesi [0, 1]. */
@@ -121,7 +126,11 @@ export class StructureRenderer {
       const [x, z] = slotDef.pos;
       const y = this.heightAt(x, z) + slotDef.elevation;
       const buildLeft = st[o + 4] as number;
-      const built = 1 - Math.min(1, buildLeft / (bdef.buildTime * 20));
+      const level = unpackStructLevel(kp);
+      // Seviye > 1 iken buildLeft yükseltme süresidir: bina tam boy kalır, iskele görünür.
+      const upgrading =
+        level > 1 && buildLeft > 0 ? 1 - Math.min(1, buildLeft / (BUILDING_LEVEL.upgradeTime * 20)) : -1;
+      const built = upgrading >= 0 ? 1 : 1 - Math.min(1, buildLeft / (bdef.buildTime * 20));
       const queue = st[o + 5] as number;
       const info: StructInfo = {
         eid: st[o] as number,
@@ -130,21 +139,25 @@ export class StructureRenderer {
         hp: st[o + 2] as number,
         max: st[o + 3] as number,
         built,
+        level,
+        upgrading,
         queueLen: unpackQueueLen(queue),
         queueUnit: unpackQueueUnit(queue),
         queuePct: unpackQueuePct(queue) / 100,
         x,
         y,
         z,
-        top: y + model.height * Math.max(0.15, built),
+        top: y + model.height * Math.max(0.15, built) * (1 + 0.09 * (level - 1)),
       };
       this.bySlot.set(slot, info);
       // Yükselme: alttan büyür; tamamlanınca hafif "oturma" yok, doğrudan tam boy.
       const rise = built >= 1 ? 1 : 0.08 + 0.92 * built;
-      this.m.compose(this.p.set(x, y, z), this.q.identity(), this.s.set(1, rise, 1));
+      // Seviye: her seviyede biraz daha iri ve yüksek (BFME2'de yükseltilen yapı büyür).
+      const grow = 1 + 0.09 * (level - 1);
+      this.m.compose(this.p.set(x, y, z), this.q.identity(), this.s.set(grow, rise * grow, grow));
       mesh.setMatrixAt(counts[kind] as number, this.m);
       counts[kind] = (counts[kind] as number) + 1;
-      if (built < 1) {
+      if (built < 1 || upgrading >= 0) {
         const [fx, fz] = model.footprint;
         this.m.compose(this.p.set(x, y, z), this.q.identity(), this.s.set(fx, model.height / 6, fz));
         this.scaffold.setMatrixAt(scaffolds++, this.m);

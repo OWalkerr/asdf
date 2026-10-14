@@ -45,7 +45,8 @@ export const fdWaves = (
     const t0 = first + w * gap;
     const groups: WaveGroupDef[] = [];
     spawns.forEach((spawn, k) => {
-      const orcs = 2 + Math.floor((w * 3) / 2) - (k === 0 ? 0 : 1);
+      // Yeni düşman türleri (2. dalgadan) Ork sayısının bir kısmının yerini alır.
+      const orcs = 2 + Math.floor((w * 3) / 2) - (k === 0 ? 0 : 1) - (w >= 2 ? 1 : 0);
       if (orcs > 0)
         groups.push({ atSec: t0 + k * 6, spawn, unitType: UnitTypeId.OrcWarrior, battalions: orcs });
       const uruks = w >= 1 ? Math.floor((w + k) / 2) : 0;
@@ -65,14 +66,14 @@ export const fdWaves = (
         atSec: t0 + 2,
         spawn: spawns[(w + 2) % spawns.length] as string,
         unitType: UnitTypeId.WargRider,
-        battalions: w >= 4 ? 2 : 1,
+        battalions: 1,
       });
     if (w >= 3)
       groups.push({
         atSec: t0 + 30,
         spawn: spawns[w % spawns.length] as string,
         unitType: UnitTypeId.CaveTroll,
-        battalions: w >= count - 2 ? 2 : 1,
+        battalions: 1,
       });
     if (w >= 2)
       groups.push({
@@ -105,15 +106,21 @@ export const tdWaves = (
       atSec: t0,
       spawn: s(0),
       unitType: UnitTypeId.OrcWarrior,
-      battalions: 1 + Math.floor(w / 2),
+      // Okçulu dalgalarda bir Ork taburu eksik (okçular yerini alır).
+      battalions: 1 + Math.floor(w / 2) - (w >= 2 && w % 2 === 0 ? 1 : 0),
     });
+    // İkinci grup: tek dalgalarda (5.'den) Warg akıncıları, diğerlerinde Ork.
     if (spawns.length > 1 && w >= 1)
-      groups.push({
-        atSec: t0 + 8,
-        spawn: s(1),
-        unitType: UnitTypeId.OrcWarrior,
-        battalions: 1 + Math.floor(w / 3),
-      });
+      groups.push(
+        w >= 4 && w % 2 === 1
+          ? { atSec: t0 + 4, spawn: s(1), unitType: UnitTypeId.WargRider, battalions: 1 }
+          : {
+              atSec: t0 + 8,
+              spawn: s(1),
+              unitType: UnitTypeId.OrcWarrior,
+              battalions: 1 + Math.floor(w / 3),
+            },
+      );
     if (w >= 3)
       groups.push({
         atSec: t0 + 14,
@@ -122,20 +129,8 @@ export const tdWaves = (
         battalions: Math.floor((w - 1) / 2),
       });
     if (w >= 2 && w % 2 === 0)
-      groups.push({
-        atSec: t0 + 10,
-        spawn: s(1),
-        unitType: UnitTypeId.OrcArcher,
-        battalions: 1 + Math.floor(w / 5),
-      });
-    if (w >= 4 && w % 2 === 1)
-      groups.push({
-        atSec: t0 + 4,
-        spawn: s(1),
-        unitType: UnitTypeId.WargRider,
-        battalions: 1 + Math.floor(w / 6),
-      });
-    if (w >= 6 && w % 3 === 1)
+      groups.push({ atSec: t0 + 10, spawn: s(1), unitType: UnitTypeId.OrcArcher, battalions: 1 });
+    if (w >= 7 && w % 3 === 1)
       groups.push({ atSec: t0 + 18, spawn: s(0), unitType: UnitTypeId.CaveTroll, battalions: 1 });
     if (w % 3 === 2 && w >= 5)
       groups.push({ atSec: t0 + 20, spawn: s(1), unitType: UnitTypeId.BatteringRam, battalions: 1 });

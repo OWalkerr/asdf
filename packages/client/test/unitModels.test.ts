@@ -3,16 +3,19 @@ import { describe, expect, it } from 'vitest';
 import {
   aragorn,
   batteringRam,
+  caveTroll,
   gondorArcher,
   gondorSoldier,
   lorienArcher,
   lurtz,
+  orcArcher,
   orcWarrior,
   Part,
   rohirrim,
   towerGuard,
   UNIT_MODELS,
   urukHai,
+  wargRider,
 } from '../src/render/units/models';
 
 /** GDD §3.2 poligon bütçeleri (LOD0): piyade ≤ 300, elit piyade ≤ 450, kahraman ≤ 450, kuşatma aracı ≤ 900 üçgen. */
@@ -27,6 +30,9 @@ const BUDGET: [string, () => import('three/webgpu').BufferGeometry, number][] = 
   ['Lurtz', lurtz, 450],
   ['Lórien Archer', lorienArcher, 300],
   ['Rohirrim', rohirrim, 600],
+  ['Ork okçusu', orcArcher, 300],
+  ['Warg binicisi', wargRider, 600],
+  ['Mağara trolü', caveTroll, 600],
 ];
 
 describe('birim modelleri', () => {
