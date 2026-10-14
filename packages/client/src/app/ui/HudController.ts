@@ -1,11 +1,12 @@
 import {
+  type AbilityDef,
   BUILDING_DEFS,
   BUILDING_KINDS,
   BUILDING_LEVEL,
   type BuildingKind,
   ECONOMY,
   FORTRESS_UPGRADES,
-  HERO_ABILITIES,
+  HEROES,
   type MapDef,
   type MatchInfo,
   SLOT_BUILDS,
@@ -41,6 +42,9 @@ export const UNIT_LABELS: Record<number, string> = {
   11: 'Ork Okçuları',
   12: 'Warg Biniciler',
   13: 'Mağara Trolü',
+  14: 'Gandalf',
+  15: 'Legolas',
+  16: 'Balrog',
 };
 const UNIT_ICON: Record<number, string> = {
   0: 'sword',
@@ -57,6 +61,23 @@ const UNIT_ICON: Record<number, string> = {
   11: 'bow',
   12: 'wolf',
   13: 'club',
+  14: 'staff',
+  15: 'bow',
+  16: 'flame',
+};
+const STAT_HERO = new Set(HEROES.map((h) => h.unitType));
+const ABILITY_ICON: Record<string, string> = {
+  elendil: 'blade',
+  athelas: 'leaf',
+  wizard_blast: 'blast',
+  word_of_power: 'power',
+  arrow_wind: 'volley',
+  train_archers: 'bow',
+};
+const HERO_DESC: Record<number, string> = {
+  6: "Aragorn: liderlik aurası, Elendil'in Kılıcı ve Athelas.",
+  14: 'Beyaz Gandalf: Asa Patlaması ve yıkıcı Kudret Sözü.',
+  15: 'Legolas: uzun menzilli elf okçusu; Ok Rüzgârı ve Okçu Eğitimi.',
 };
 const UNIT_DESC: Record<number, string> = {
   0: 'Kılıç ve kalkanlı çok yönlü piyade. Orklara karşı güçlü.',
@@ -107,7 +128,7 @@ export class HudController {
   private match: MatchInfo | null = null;
   private tick = 0;
   /** Kahraman yeteneği kullanıldı (görsel efekt). */
-  onAbility: ((ability: number) => void) | null = null;
+  onAbility: ((ability: AbilityDef['key'], hero: number) => void) | null = null;
 
   constructor(private readonly d: HudDeps) {}
 
@@ -198,16 +219,18 @@ export class HudController {
       cap += (UNIT_DEFS[t]?.battalionSize ?? 1) * c.battalions.size;
     }
     const hp = cap > 0 ? hpSum / cap : 1;
-    const hero = m && m.hero !== 0 && sel.has(m.hero) ? m.hero : 0;
     const buttons: CommandButton[] = [];
-    if (hero) {
-      const heroRank = counts.get(UnitTypeId.Aragorn)?.rank ?? 1;
-      HERO_ABILITIES.forEach((a, i) => {
-        const left = secs((m?.abilityReady[i] ?? 0) - this.tick);
+    // Seçili kahramanların yetenekleri (yuva sırasıyla).
+    HEROES.forEach((def, k) => {
+      const hero = m?.heroes[k] ?? 0;
+      if (hero === 0 || !sel.has(hero)) return;
+      const heroRank = counts.get(def.unitType)?.rank ?? 1;
+      def.abilities.forEach((a, i) => {
+        const left = secs((m?.abilityReady[k * 2 + i] ?? 0) - this.tick);
         const locked = heroRank < a.rank;
-        const active = i === 0 && (m?.elendilUntil ?? 0) > this.tick;
+        const active = a.key === 'elendil' && (m?.elendilUntil ?? 0) > this.tick;
         buttons.push({
-          icon: i === 0 ? 'blade' : 'leaf',
+          icon: ABILITY_ICON[a.key] ?? 'power',
           label: a.name,
           state: locked ? 'locked' : active ? 'busy' : left > 0 ? 'busy' : 'ready',
           badge: locked ? `R${a.rank}` : undefined,
@@ -215,16 +238,16 @@ export class HudController {
           cooldown: !locked && left > 0 ? left : undefined,
           tip: {
             title: a.name,
-            meta: `Bekleme ${a.cooldown} sn${locked ? ` · rütbe ${a.rank} gerekir` : ''}`,
+            meta: `${UNIT_LABELS[def.unitType] ?? ''} · bekleme ${a.cooldown} sn${locked ? ` · rütbe ${a.rank} gerekir` : ''}`,
             body: a.desc,
           },
           run: () => {
             this.d.scenario.ability(hero, i);
-            this.onAbility?.(i);
+            this.onAbility?.(a.key, hero);
           },
         });
       });
-    }
+    });
     buttons.push({
       icon: 'stop',
       label: 'Dur',
@@ -244,8 +267,8 @@ export class HudController {
       hp,
       rank: types.length === 1 ? mc?.rank : undefined,
       lines: [
-        hero
-          ? 'Liderlik: 20 m içindeki taburlara +%25 hasar.'
+        STAT_HERO.has(main)
+          ? 'Kahraman: liderlik aurası — 20 m içindeki taburlara +%25 hasar.'
           : (UNIT_DESC[main] ?? 'Sağ tık: yürü · düşmana sağ tık: saldır.'),
       ],
       buttons,
@@ -481,21 +504,25 @@ export class HudController {
         run: () => this.d.scenario.fortressUpgrade(i),
       };
     });
-    // Kahraman
-    const heroCost = UNIT_DEFS[UnitTypeId.Aragorn]?.cost ?? 0;
-    const heroWait = m ? secs(m.heroReady - this.tick) : 0;
-    buttons.push({
-      icon: 'hero',
-      label: 'Aragorn',
-      state: m?.hero ? 'done' : heroWait > 0 ? 'busy' : this.gold >= heroCost ? 'ready' : 'off',
-      badge: m?.hero ? '✓' : `${heroCost}`,
-      cooldown: !m?.hero && heroWait > 0 ? heroWait : undefined,
-      tip: {
-        title: "Aragorn'u çağır",
-        meta: `◆ ${heroCost}`,
-        body: "Kahraman kalenin kapısından çıkar. Liderlik aurası, Elendil'in Kılıcı ve Athelas. Ölürse 45 sn sonra yeniden çağrılabilir.",
-      },
-      run: () => this.d.scenario.summonHero(UnitTypeId.Aragorn),
+    // Kahramanlar
+    HEROES.forEach((def, k) => {
+      const unit = UNIT_DEFS[def.unitType];
+      const cost = unit?.cost ?? 0;
+      const alive = (m?.heroes[k] ?? 0) !== 0;
+      const wait = m ? secs((m.heroReady[k] ?? 0) - this.tick) : 0;
+      buttons.push({
+        icon: def.icon,
+        label: unit?.name ?? '',
+        state: alive ? 'done' : wait > 0 ? 'busy' : this.gold >= cost ? 'ready' : 'off',
+        badge: alive ? '✓' : `${cost}`,
+        cooldown: !alive && wait > 0 ? wait : undefined,
+        tip: {
+          title: `${unit?.name ?? ''} — çağır`,
+          meta: `◆ ${cost}`,
+          body: `${HERO_DESC[def.unitType] ?? ''} Kalenin kapısından çıkar; ölürse 45 sn sonra yeniden çağrılabilir.`,
+        },
+        run: () => this.d.scenario.summonHero(def.unitType),
+      });
     });
     // Kapı onarımı
     const repair = this.d.gateRepair();

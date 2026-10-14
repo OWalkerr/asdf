@@ -649,6 +649,117 @@ export const caveTroll = (): BufferGeometry => {
   return b.build();
 };
 
+/**
+ * Beyaz Gandalf (BFME2): yere kadar beyaz cüppe, uzun beyaz saç ve sakal, sol elde başı parlayan
+ * beyaz asa, sağ elde Glamdring. Siluet: konik cüppe eteği + uzun asa.
+ */
+export const gandalf = (): BufferGeometry => {
+  const b = new ModelBuilder();
+  // Cüppe eteği bacakları örter (bacaklar yine de yürüyüşte hafif görünür).
+  legs(b, 'gondorWhite', 'silver');
+  b.add(Part.Body, cyl(0.24, 0.42, 0.95, 7), 'gondorWhite', [0, 0.5, 0]);
+  b.add(Part.Body, box(0.36, 0.62, 0.48), 'gondorWhite', [0, 1.13, 0]);
+  b.add(Part.Body, box(0.4, 0.08, 0.52), 'silver', [0, 0.9, 0]); // kuşak
+  b.add(Part.Body, box(0.07, 1.3, 0.62), 'snow', [-0.22, 0.82, 0]); // pelerin
+  b.add(Part.Head, box(0.2, 0.22, 0.2), 'sand', [0.02, 1.61, 0]);
+  b.add(Part.Head, box(0.24, 0.24, 0.24), 'snow', [-0.04, 1.68, 0]); // beyaz saç
+  b.add(Part.Head, box(0.1, 0.42, 0.24), 'snow', [-0.1, 1.45, 0]); // omuza dökülen saç
+  b.add(Part.Head, box(0.08, 0.32, 0.16), 'snow', [0.12, 1.42, 0]); // uzun sakal
+  arm(b, Part.ArmR, 0.3, 'gondorWhite', 'sand');
+  b.add(Part.ArmR, box(0.08, 0.06, 0.22), 'gold', [0.06, 0.72, 0.3]);
+  b.add(Part.ArmR, box(0.9, 0.07, 0.04), 'magic', [0.55, 0.72, 0.3], [0, 0, 0.35]); // Glamdring
+  arm(b, Part.ArmL, -0.3, 'gondorWhite', 'sand');
+  b.add(Part.ArmL, cyl(0.035, 0.035, 2.0, 5), 'gondorWhite', [0.12, 1.1, -0.34]); // asa
+  b.add(Part.ArmL, new OctahedronGeometry(0.11, 0), 'magic', [0.12, 2.14, -0.34]); // asa başı
+  b.add(Part.ArmL, box(0.05, 0.22, 0.05), 'gondorWhite', [0.12, 2.0, -0.26], [0.5, 0, 0]);
+  b.add(Part.ArmL, box(0.05, 0.22, 0.05), 'gondorWhite', [0.12, 2.0, -0.42], [-0.5, 0, 0]);
+  return b.build(1.12);
+};
+
+/**
+ * Legolas (BFME2): ince ve uzun elf siluet, uzun sarı saç, yeşil-kahve tunik, sırtta sadak ve iki
+ * hançer, Galadhrim uzun yayı.
+ */
+export const legolas = (): BufferGeometry => {
+  const b = new ModelBuilder();
+  legs(b, 'woodDark', 'leather');
+  b.add(Part.Body, box(0.3, 0.62, 0.42), 'rohanGreen', [0, 1.14, 0]);
+  b.add(Part.Body, box(0.06, 0.44, 0.34), 'leather', [0.16, 1.18, 0]); // deri yelek
+  b.add(Part.Body, box(0.32, 0.34, 0.44), 'rohanGreen', [0, 0.8, 0]);
+  b.add(Part.Body, box(0.34, 0.07, 0.46), 'leather', [0, 0.97, 0]);
+  b.add(Part.Body, cyl(0.06, 0.06, 0.64, 5), 'leather', [-0.22, 1.32, 0.12], [0.35, 0, 0]); // sadak
+  b.add(Part.Body, box(0.08, 0.1, 0.08), 'silver', [-0.22, 1.7, 0.25], [0.35, 0, 0]);
+  for (const z of [-0.08, 0.08])
+    b.add(Part.Body, box(0.04, 0.42, 0.05), 'silver', [-0.22, 1.36, z], [z * 4, 0, 0]); // ikiz hançer
+  b.add(Part.Head, box(0.19, 0.21, 0.18), 'sand', [0.02, 1.62, 0]);
+  b.add(Part.Head, box(0.22, 0.1, 0.22), 'gold', [-0.01, 1.74, 0]);
+  b.add(Part.Head, box(0.08, 0.46, 0.2), 'gold', [-0.11, 1.48, 0]); // uzun sarı saç
+  arm(b, Part.ArmR, 0.28, 'rohanGreen', 'sand');
+  arm(b, Part.ArmL, -0.28, 'rohanGreen', 'sand');
+  const hx = 0.04;
+  const hy = 0.72;
+  const hz = -0.28;
+  b.add(Part.ArmL, box(0.84, 0.045, 0.035), 'wood', [hx + 0.02, hy, hz]);
+  b.add(Part.ArmL, box(0.7, 0.04, 0.035), 'wood', [hx + 0.75, hy - 0.13, hz], [0, 0, -0.4]);
+  b.add(Part.ArmL, box(0.7, 0.04, 0.035), 'wood', [hx - 0.71, hy - 0.13, hz], [0, 0, 0.4]);
+  b.add(Part.ArmL, box(2.0, 0.012, 0.012), 'silver', [hx + 0.02, hy - 0.28, hz]);
+  return b.build(1.06);
+};
+
+/**
+ * Balrog (BFME2, Moria): ~6 m kambur ateş iblisi — kömür karası gövde, kızgın çatlaklar, boynuzlar,
+ * alevli yele, geniş gölge kanatlar; sağ elde alev kılıcı, sol elde kırbaç.
+ */
+export const balrog = (): BufferGeometry => {
+  const b = new ModelBuilder({ hip: 2.0, shoulder: 3.7, neck: 3.8, shoulderZ: 1.05, hipZ: 0.5 });
+  for (const [part, z] of [
+    [Part.LegL, -0.5],
+    [Part.LegR, 0.5],
+  ] as const) {
+    b.add(part, box(0.6, 1.1, 0.6), 'sootBlack', [0, 1.45, z]);
+    b.add(part, box(0.5, 0.9, 0.5), 'sootBlack', [0.12, 0.5, z], [0, 0, 0.15]);
+    b.add(part, box(0.8, 0.16, 0.5), 'ember', [0.25, 0.08, z]); // kızgın pençe
+  }
+  b.add(Part.Body, box(1.2, 1.0, 1.4), 'sootBlack', [0, 2.3, 0]);
+  b.add(Part.Body, box(1.3, 1.2, 1.9), 'sootBlack', [0.2, 3.1, 0], [0, 0, -0.25]);
+  b.add(Part.Body, box(0.1, 0.9, 1.2), 'fire', [0.86, 3.0, 0], [0, 0, -0.25]); // göğüs çatlağı
+  b.add(Part.Body, box(0.08, 0.5, 0.2), 'ember', [0.6, 2.3, 0.3]);
+  b.add(Part.Body, box(0.08, 0.5, 0.2), 'ember', [0.6, 2.3, -0.3]);
+  // Gölge kanatlar
+  for (const sz of [-1, 1]) {
+    b.add(Part.Body, box(0.12, 1.6, 2.4), 'ironDark', [-0.6, 4.2, sz * 1.9], [sz * 0.5, 0, 0.3]);
+    b.add(Part.Body, box(0.1, 1.1, 1.6), 'sootBlack', [-0.9, 3.4, sz * 2.8], [sz * 0.8, 0, 0.3]);
+  }
+  // Baş, boynuzlar, alevli yele
+  b.add(Part.Head, box(0.6, 0.6, 0.62), 'sootBlack', [0.7, 3.95, 0]);
+  b.add(Part.Head, box(0.1, 0.1, 0.42), 'fire', [1.0, 4.02, 0]); // gözler
+  b.add(Part.Head, box(0.12, 0.16, 0.36), 'ember', [1.0, 3.72, 0]); // ağız
+  for (const z of [-0.26, 0.26]) {
+    b.add(Part.Head, new ConeGeometry(0.11, 0.9, 5), 'ironDark', [0.55, 4.5, z * 1.5], [z * 2, 0, -0.5]);
+  }
+  b.add(Part.Head, new ConeGeometry(0.45, 1.3, 6), 'fire', [0.2, 4.55, 0], [0, 0, 0.6]);
+  b.add(Part.Head, new ConeGeometry(0.3, 0.9, 5), 'ember', [-0.1, 4.4, 0], [0, 0, 0.9]);
+  // Kollar
+  const armB = (part: PartId, z: number) => {
+    b.add(part, box(0.5, 0.9, 0.5), 'sootBlack', [0, 3.2, z]);
+    b.add(part, box(0.42, 0.9, 0.42), 'sootBlack', [0.06, 2.35, z]);
+    b.add(part, box(0.46, 0.3, 0.46), 'ember', [0.08, 1.8, z]);
+  };
+  armB(Part.ArmR, 1.05);
+  b.add(Part.ArmR, box(2.4, 0.16, 0.08), 'fire', [1.1, 1.85, 1.1], [0, 0, 0.35]); // alev kılıcı
+  b.add(Part.ArmR, box(1.6, 0.3, 0.06), 'ember', [1.3, 2.0, 1.1], [0, 0, 0.35]);
+  armB(Part.ArmL, -1.05);
+  for (let k = 0; k < 4; k++)
+    b.add(
+      Part.ArmL,
+      box(0.6, 0.06, 0.06),
+      'fire',
+      [0.3 + k * 0.5, 1.7 - k * 0.32, -1.1],
+      [0, 0, -0.6 + k * 0.1],
+    ); // kırbaç
+  return b.build(1.15);
+};
+
 /** Birim tipi id → model üreticisi (UNIT_DEFS ile aynı sıra). */
 export const UNIT_MODELS: Record<number, () => BufferGeometry> = {
   0: gondorSoldier,
@@ -666,4 +777,7 @@ export const UNIT_MODELS: Record<number, () => BufferGeometry> = {
   11: orcArcher,
   12: wargRider,
   13: caveTroll,
+  14: gandalf,
+  15: legolas,
+  16: balrog,
 };

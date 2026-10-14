@@ -89,20 +89,20 @@ describe('kahraman', () => {
     sim.step();
     const heroes = battalionsOf(sim, 0, UnitTypeId.Aragorn);
     expect(heroes.length).toBe(1);
-    expect(sim.world.match.hero[0]).toBe(heroes[0]);
+    expect(sim.world.match.heroes[0]).toBe(heroes[0]);
     expect(sim.world.match.gold[0]).toBe(5000 - 1200 + 1);
     // Öldür.
     const H = sim.world.c.Health;
     for (const e of query(sim.world, [H])) if (sim.world.c.Soldier.battalion[e] === heroes[0]) H.hp[e] = 0;
     sim.step();
-    expect(sim.world.match.hero[0]).toBe(0);
+    expect(sim.world.match.heroes[0]).toBe(0);
     sim.schedule(stamp(sim.world.tick, { type: 'summonHero', unitType: UnitTypeId.Aragorn })); // bekleme
     sim.step();
-    expect(sim.world.match.hero[0]).toBe(0);
+    expect(sim.world.match.heroes[0]).toBe(0);
     for (let t = 0; t < HERO.reviveTime * 20; t++) sim.step();
     sim.schedule(stamp(sim.world.tick, { type: 'summonHero', unitType: UnitTypeId.Aragorn }));
     sim.step();
-    expect(sim.world.match.hero[0]).not.toBe(0);
+    expect(sim.world.match.heroes[0]).not.toBe(0);
   });
 
   it('liderlik aurası yakındaki dost taburu işaretler; Athelas rütbe 3 ister ve iyileştirir', () => {
@@ -110,7 +110,7 @@ describe('kahraman', () => {
     sim.world.match.gold[0] = 5000;
     sim.schedule(stamp(0, { type: 'summonHero', unitType: UnitTypeId.Aragorn }));
     sim.step();
-    const hero = sim.world.match.hero[0] as number;
+    const hero = sim.world.match.heroes[0] as number;
     const P = sim.world.c.Position;
     const hx = (P.x[hero] as number) / 65536;
     const hz = (P.z[hero] as number) / 65536;

@@ -137,7 +137,7 @@ describe('kale', () => {
     sim.world.match.gold[0] = 5000;
     sim.schedule(stamp(0, { type: 'summonHero', unitType: UnitTypeId.Aragorn }));
     sim.step();
-    const h = sim.world.match.hero[0] as number;
+    const h = sim.world.match.heroes[0] as number;
     const [dx, dz] = HELMS_DEEP.citadel.door as Vec2;
     expect(Math.abs((sim.world.c.Position.x[h] as number) / 65536 - dx)).toBeLessThan(3);
     expect(Math.abs((sim.world.c.Position.z[h] as number) / 65536 - dz)).toBeLessThan(3);

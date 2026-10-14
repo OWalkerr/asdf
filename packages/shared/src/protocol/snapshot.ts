@@ -1,10 +1,10 @@
 /**
- * Sim → render snapshot düzeni (GDD §13.3), sürüm 7.
+ * Sim → render snapshot düzeni (GDD §13.3), sürüm 8.
  *
  * Tek bir Int32Array (SharedArrayBuffer üzerinde veya fallback'te düz ArrayBuffer):
  *
  *   [global header: 4]  activeIndex, publishCount, capacity, projCapacity
- *   [buffer 0: header 48 + capacity × 6 + projCapacity × 7 + SNAP_MAX_STRUCTS × 6]
+ *   [buffer 0: header 64 + capacity × 6 + projCapacity × 7 + SNAP_MAX_STRUCTS × 6]
  *   [buffer 1: aynı]
  *
  * Buffer header: version (seqlock; tek = yazılıyor), tick, count, simMicros, projCount,
@@ -12,7 +12,8 @@
  *   gold (oyuncu 0), structCount, upgrades (bitler; araştırılanlar << 8), PP (onda bir),
  *   açık büyüler, büyü hazır tick'leri ×3, kahraman taburu, kahraman hazır tick'i,
  *   yetenek hazır tick'leri ×2, Elendil bitiş tick'i, Toplanma bitiş tick'i, büyü hazır ×8,
- *   uç bölgedeki düşman taburu (38), gateHp[0..3] (40), gateMax[0..3] (44)
+ *   uç bölgedeki düşman taburu (38), gateHp[0..3] (40), gateMax[0..3] (44),
+ *   kahraman taburları ×3 (48), yeniden çağırma tick'leri ×3 (51), yetenek hazır tick'leri ×6 (54)
  *
  * Birim kaydı (6 × int32):
  *   0 eid · 1 x (Q16.16) · 2 z (Q16.16) · 3 yaw:16|unitType:8|team:8
@@ -25,7 +26,7 @@
  * Konumlar ham Q16.16 olarak taşınır; float'a çeviri render tarafında (GDD §13.7).
  */
 export const SNAP_GLOBAL_INTS = 4;
-export const SNAP_HEADER_INTS = 48;
+export const SNAP_HEADER_INTS = 64;
 export const SNAP_UNIT_INTS = 6;
 export const SNAP_PROJ_INTS = 7;
 export const SNAP_STRUCT_INTS = 6;
@@ -68,11 +69,11 @@ export const H_LIVES = 23;
 /** Büyü i'nin hazır tick'i: H_SPELL_READY + i (30–37). */
 export const H_SPELL_READY = 30;
 export const SNAP_SPELLS = 8;
-/** Kahraman taburu eid'i (0 = yok) ve yeniden çağrılabileceği tick. */
-export const H_HERO = 24;
-export const H_HERO_READY = 25;
-/** Kahraman yetenekleri hazır tick'leri (26, 27). */
-export const H_ABILITY_READY = 26;
+/** Kahraman yuvası k'nın taburu (0 = yok), yeniden çağrılabileceği tick, yetenek hazır tick'leri (k × 2 + i). */
+export const SNAP_HEROES = 3;
+export const H_HEROES = 48;
+export const H_HERO_READY = 51;
+export const H_ABILITY_READY = 54;
 export const H_ELENDIL_UNTIL = 28;
 export const H_RALLY_UNTIL = 29;
 
@@ -167,8 +168,9 @@ export interface MatchInfo {
   pp: number;
   spells: number;
   spellReady: number[];
-  hero: number;
-  heroReady: number;
+  /** Kahraman yuvaları (HEROES sırası): tabur eid'i, yeniden çağırma tick'i, yetenek hazır tick'leri (k × 2 + i). */
+  heroes: number[];
+  heroReady: number[];
   abilityReady: number[];
   elendilUntil: number;
   rallyUntil: number;
@@ -219,9 +221,9 @@ export const createFrame = (capacity: number, projCapacity = 2048): SnapshotFram
     pp: 0,
     spells: 0,
     spellReady: [0, 0, 0, 0, 0, 0, 0, 0],
-    hero: 0,
-    heroReady: 0,
-    abilityReady: [0, 0],
+    heroes: [0, 0, 0],
+    heroReady: [0, 0, 0],
+    abilityReady: [0, 0, 0, 0, 0, 0],
     elendilUntil: 0,
     rallyUntil: 0,
     fortress: 0,
@@ -247,9 +249,11 @@ export const readMatchHeader = (view: Int32Array, base: number, out: MatchInfo):
   out.pp = view[base + H_PP] as number;
   out.spells = view[base + H_SPELLS] as number;
   for (let i = 0; i < SNAP_SPELLS; i++) out.spellReady[i] = view[base + H_SPELL_READY + i] as number;
-  out.hero = view[base + H_HERO] as number;
-  out.heroReady = view[base + H_HERO_READY] as number;
-  for (let i = 0; i < 2; i++) out.abilityReady[i] = view[base + H_ABILITY_READY + i] as number;
+  for (let k = 0; k < SNAP_HEROES; k++) {
+    out.heroes[k] = view[base + H_HEROES + k] as number;
+    out.heroReady[k] = view[base + H_HERO_READY + k] as number;
+  }
+  for (let i = 0; i < SNAP_HEROES * 2; i++) out.abilityReady[i] = view[base + H_ABILITY_READY + i] as number;
   out.elendilUntil = view[base + H_ELENDIL_UNTIL] as number;
   out.rallyUntil = view[base + H_RALLY_UNTIL] as number;
   out.fortress = view[base + H_FORTRESS] as number;

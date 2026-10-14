@@ -18,7 +18,7 @@ export const HERO = {
 } as const;
 
 export interface AbilityDef {
-  key: 'elendil' | 'athelas';
+  key: 'elendil' | 'athelas' | 'wizard_blast' | 'word_of_power' | 'arrow_wind' | 'train_archers';
   name: string;
   /** Açılması için gereken kahraman rütbesi. */
   rank: number;
@@ -26,22 +26,90 @@ export interface AbilityDef {
   desc: string;
 }
 
-export const HERO_ABILITIES: readonly AbilityDef[] = [
+/**
+ * Kahraman kadrosu (BFME2 İnsanlar/Elfler): kale panelinden ayrı ayrı çağrılır, kalenin kapısından
+ * çıkar; her birinin iki yeteneği vardır (ikincisi rütbe 3'te açılır). İndeks = kahraman yuvası.
+ */
+export interface HeroDef {
+  unitType: number;
+  /** Portre kısayolu (KeyboardEvent.code) ve ikon. */
+  key: string;
+  icon: string;
+  abilities: readonly AbilityDef[];
+}
+
+export const HEROES: readonly HeroDef[] = [
   {
-    key: 'elendil',
-    name: "Elendil'in Kılıcı",
-    rank: 1,
-    cooldown: 45,
-    desc: '10 sn boyunca Aragorn çift hasar verir.',
+    unitType: 6,
+    key: 'KeyF',
+    icon: 'hero',
+    abilities: [
+      {
+        key: 'elendil',
+        name: "Elendil'in Kılıcı",
+        rank: 1,
+        cooldown: 45,
+        desc: '10 sn boyunca Aragorn çift hasar verir.',
+      },
+      {
+        key: 'athelas',
+        name: 'Athelas',
+        rank: 3,
+        cooldown: 60,
+        desc: '15 m içindeki dost birimlerin canını %50 yeniler.',
+      },
+    ],
   },
   {
-    key: 'athelas',
-    name: 'Athelas',
-    rank: 3,
-    cooldown: 60,
-    desc: '15 m içindeki dost birimlerin canını %50 yeniler.',
+    unitType: 14,
+    key: 'KeyG',
+    icon: 'staff',
+    abilities: [
+      {
+        key: 'wizard_blast',
+        name: 'Asa Patlaması',
+        rank: 1,
+        cooldown: 40,
+        desc: "Gandalf'ın çevresindeki 10 m içindeki düşmanlara 160 büyü hasarı.",
+      },
+      {
+        key: 'word_of_power',
+        name: 'Kudret Sözü',
+        rank: 3,
+        cooldown: 120,
+        desc: '30 m içindeki bütün düşmanlara 450 büyü hasarı — dalgayı tek sözle kırar.',
+      },
+    ],
+  },
+  {
+    unitType: 15,
+    key: 'KeyJ',
+    icon: 'bow',
+    abilities: [
+      {
+        key: 'arrow_wind',
+        name: 'Ok Rüzgârı',
+        rank: 1,
+        cooldown: 35,
+        desc: '40 m içindeki düşmanlara hızla 30 ok yağdırır (ok başı 35 hasar).',
+      },
+      {
+        key: 'train_archers',
+        name: 'Okçu Eğitimi',
+        rank: 3,
+        cooldown: 60,
+        desc: '30 m içindeki dost okçu taburları bir rütbe atlar.',
+      },
+    ],
   },
 ];
+export const MAX_HEROES = 3;
+/** Aragorn'un yetenekleri (geriye uyum). */
+export const HERO_ABILITIES: readonly AbilityDef[] = (HEROES[0] as HeroDef).abilities;
+export const WIZARD_BLAST = { radius: 10, damage: 160 } as const;
+export const WORD_OF_POWER = { radius: 30, damage: 450 } as const;
+export const ARROW_WIND = { radius: 40, arrows: 30, damage: 35 } as const;
+export const TRAIN_ARCHERS_RADIUS = 30;
 export const ELENDIL_DURATION = 10;
 export const ATHELAS_RADIUS = 15;
 

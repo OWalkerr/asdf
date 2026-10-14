@@ -2,10 +2,13 @@ import { UNIT_DEFS } from '@bulwark/shared';
 import { describe, expect, it } from 'vitest';
 import {
   aragorn,
+  balrog,
   batteringRam,
   caveTroll,
+  gandalf,
   gondorArcher,
   gondorSoldier,
+  legolas,
   lorienArcher,
   lurtz,
   orcArcher,
@@ -33,6 +36,9 @@ const BUDGET: [string, () => import('three/webgpu').BufferGeometry, number][] = 
   ['Ork okçusu', orcArcher, 300],
   ['Warg binicisi', wargRider, 600],
   ['Mağara trolü', caveTroll, 600],
+  ['Gandalf', gandalf, 450],
+  ['Legolas', legolas, 450],
+  ['Balrog', balrog, 900],
 ];
 
 describe('birim modelleri', () => {

@@ -62,6 +62,8 @@ export interface UnitDef {
   cleave?: number;
   /** Okçu birliği yapılara da ok atar (yapılara karşı hasar tipi: ateşli ok). */
   siegeArcher?: boolean;
+  /** Ateş aurası (Balrog): her saniye `radius` içindeki düşmanlara `damage` ateş hasarı. */
+  fireAura?: { radius: number; damage: number };
 }
 
 export const UNIT_DEFS: readonly UnitDef[] = [
@@ -387,6 +389,80 @@ export const UNIT_DEFS: readonly UnitDef[] = [
     cleave: 2.8,
     stepRate: 1.1,
   },
+  {
+    // Beyaz Gandalf (BFME2): beyaz cüppe, asa ve Glamdring. Asa Patlaması, Kudret Sözü.
+    id: 14,
+    key: 'gandalf',
+    name: 'Gandalf',
+    faction: 'gondor',
+    speed: 5.2,
+    hp: 2000,
+    armor: 'heavy',
+    attackStyle: 'slash',
+    damage: 50,
+    damageType: 'magic',
+    attackInterval: 1.0,
+    range: 2.2,
+    ranged: false,
+    battalionSize: 1,
+    cost: 2000,
+    trainTime: 0,
+    files: 1,
+    spacing: 2,
+    jitter: 0,
+    hero: true,
+    cleave: 2,
+  },
+  {
+    // Legolas (BFME2): Düzgün Ormanı'nın elf prensi; uzun menzilli hızlı okçu. Ok Rüzgârı, Okçu Eğitimi.
+    id: 15,
+    key: 'legolas',
+    name: 'Legolas',
+    faction: 'gondor',
+    speed: 6,
+    hp: 1100,
+    armor: 'medium',
+    attackStyle: 'bow',
+    damage: 40,
+    damageType: 'pierce',
+    attackInterval: 0.7,
+    range: 40,
+    ranged: true,
+    battalionSize: 1,
+    cost: 1000,
+    trainTime: 0,
+    files: 1,
+    spacing: 2,
+    jitter: 0,
+    hero: true,
+  },
+  {
+    // Balrog (BFME2, Moria): alevli dev; kılıç ve kırbaç, çevresini yakan ateş aurası.
+    id: 16,
+    key: 'balrog',
+    name: 'Balrog',
+    faction: 'mordor',
+    speed: 3.6,
+    hp: 7000,
+    armor: 'monster',
+    attackStyle: 'slash',
+    damage: 140,
+    damageType: 'fire',
+    attackInterval: 2.4,
+    range: 3.6,
+    ranged: false,
+    battalionSize: 1,
+    cost: 3000,
+    trainTime: 0,
+    files: 1,
+    spacing: 6,
+    jitter: 0,
+    boss: true,
+    lifeCost: 15,
+    cleave: 5,
+    stepRate: 0.9,
+    fireAura: { radius: 7, damage: 15 },
+  },
 ];
 
 export const UnitTypeId = {
@@ -404,6 +480,9 @@ export const UnitTypeId = {
   OrcArcher: 11,
   WargRider: 12,
   CaveTroll: 13,
+  Gandalf: 14,
+  Legolas: 15,
+  Balrog: 16,
 } as const;
 
 export const unitDef = (id: number): UnitDef => {

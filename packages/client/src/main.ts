@@ -224,12 +224,22 @@ const boot = async () => {
         })
       : null;
   if (hudCtl)
-    hudCtl.onAbility = (i) => {
-      const hero = sim.frame.match.hero;
+    hudCtl.onAbility = (key, hero) => {
+      // Yetenek efekti: [yarıçap, renk, süre]
+      const fx: Record<string, [number, string, number]> = {
+        elendil: [4, '#9cc4ff', 0.8],
+        athelas: [15, '#7dffa0', 1.2],
+        wizard_blast: [10, '#e8f4ff', 0.9],
+        word_of_power: [30, '#ffffff', 1.6],
+        arrow_wind: [40, '#ffd27a', 1.0],
+        train_archers: [30, '#bff5d0', 1.0],
+      };
+      const [r, color, dur] = fx[key] ?? [6, '#ffffff', 1];
       units.forEach((x, y, z, b) => {
-        if (b === hero)
-          spellFx.pulse(x, y, z, i === 1 ? 15 : 4, i === 1 ? '#7dffa0' : '#9cc4ff', i === 1 ? 1.2 : 0.8);
+        if (b === hero) spellFx.pulse(x, y, z, r, color, dur);
       });
+      if (key === 'word_of_power' || key === 'wizard_blast') sfx.thunder();
+      else sfx.chime(true);
     };
   const powers = ui
     ? new PowersColumn({
@@ -328,7 +338,7 @@ const boot = async () => {
     if (gallery) updateGallery(units, now / 1000, ground.sample);
     else {
       const mi = sim.frame.match;
-      units.glowBattalion = mi.elendilUntil > sim.tick ? mi.hero : 0;
+      units.glowBattalion = mi.elendilUntil > sim.tick ? (mi.heroes[0] ?? 0) : 0;
       units.updateFromSim(sim, now);
       arrows.update(sim, now);
       structures?.update(sim.frame);
@@ -400,11 +410,17 @@ const boot = async () => {
       }
       info.textContent = lines.join('\n');
       hud?.update(sim.frame.match);
+      // Boss çubuğu: Balrog öncelikli, sonra Lurtz.
       let boss: number | null = null;
+      let bossType = -1;
       units.forEach((_x, _y, _z, b, _t, hp, type) => {
-        if (b !== 0 && type === UnitTypeId.Lurtz) boss = hp;
+        if (b === 0 || (type !== UnitTypeId.Lurtz && type !== UnitTypeId.Balrog)) return;
+        if (bossType !== UnitTypeId.Balrog || type === UnitTypeId.Balrog) {
+          boss = bossType === type && boss !== null ? Math.max(boss, hp) : hp;
+          bossType = type;
+        }
       });
-      hud?.setBoss(boss);
+      hud?.setBoss(boss, bossType);
       infoAccum = 0;
       frames = 0;
     }

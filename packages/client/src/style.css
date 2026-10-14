@@ -1360,3 +1360,7 @@ body.debug #hud {
     margin: -20px 0 0 -20px;
   }
 }
+#bossbar.balrog .bar i {
+  background: linear-gradient(90deg, #ff4a10, #ffb03a);
+  box-shadow: 0 0 10px rgba(255, 110, 30, 0.8);
+}

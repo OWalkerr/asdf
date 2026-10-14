@@ -68,8 +68,17 @@ altının %50'si); yıkılan veya satılan yapının yuvası yeniden inşaya aç
 gibi okçularla avlayın), hızlı **Warg Biniciler**, saflarınızı yarma vuruşuyla dağıtan dev **Mağara Trolü**,
 koçbaşı ve Lurtz. Kale haritalarında yakın dövüşçüler kapı yerine yakındaki arsa binalarınıza da saldırır.
 
-**Kahraman ve Güçler:** **F** ile Aragorn'u çağırın (1200; liderlik aurası, Elendil'in Kılıcı, rütbe 3'te
-Athelas). Düşman öldürmek ve dalga başları **Güç Puanı** verir; ekranın solundaki **Güçler** sütunundan (**1–6**)
+**Kahramanlar (BFME2 kadrosu):** sol üstteki portrelerden veya kale panelinden çağrılır, kalenin kapısından
+çıkar; hepsi liderlik aurası verir, ikinci yetenek rütbe 3'te açılır, ölünce 45 sn sonra geri çağrılır.
+**F Aragorn** (1200): Elendil'in Kılıcı, Athelas. **G Beyaz Gandalf** (2000): Asa Patlaması (10 m, 160 büyü
+hasarı), Kudret Sözü (30 m, 450). **J Legolas** (1000): uzun menzilli okçu; Ok Rüzgârı (30 ok), Okçu Eğitimi
+(yakın okçu taburları bir rütbe atlar).
+
+**Balrog:** Kule Savaşı'nın 28. dalgasında iki, Kale Savunması'nın final dalgasında bir Balrog gelir — dev, alev
+kılıçlı, yarma vuruşlu ve çevresini her saniye yakan ateş aurasıyla; ona yakın dövüşle değil Gandalf ve okçularla
+karşılık verin.
+
+**Güçler:** Düşman öldürmek ve dalga başları **Güç Puanı** verir; ekranın solundaki **Güçler** sütunundan (**1–6**)
 kademe kademe açılır: Şifa, Toplanma Çağrısı → Ok Yağmuru, Elf Müttefikleri → Rohirrim'i Çağır →
 Ölüler Ordusu. Taburlar öldürdükçe 5 rütbeye kadar yükselir. Son dalgada boss **Lurtz** gelir.
 

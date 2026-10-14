@@ -14,8 +14,8 @@ import {
   H_GATE_HP,
   H_GATE_MAX,
   H_GOLD,
-  H_HERO,
   H_HERO_READY,
+  H_HEROES,
   H_LIVES,
   H_MATCH_STATE,
   H_NEXT_WAVE_TICK,
@@ -40,6 +40,7 @@ import {
   packYawTypeTeam,
   projOffset,
   SNAP_HEADER_INTS,
+  SNAP_HEROES,
   SNAP_MAX_GATES,
   SNAP_MAX_STRUCTS,
   SNAP_PROJ_INTS,
@@ -149,9 +150,11 @@ export const writeSnapshot = (world: SimWorld, view: Int32Array, simMicros = 0):
   view[base + H_PP] = m.pp[0] as number;
   view[base + H_SPELLS] = m.spells[0] as number;
   for (let i = 0; i < SNAP_SPELLS; i++) view[base + H_SPELL_READY + i] = m.spellReady[i] as number;
-  view[base + H_HERO] = m.hero[0] as number;
-  view[base + H_HERO_READY] = m.heroReady[0] as number;
-  for (let i = 0; i < 2; i++) view[base + H_ABILITY_READY + i] = m.abilityReady[i] as number;
+  for (let k = 0; k < SNAP_HEROES; k++) {
+    view[base + H_HEROES + k] = m.heroes[k] as number;
+    view[base + H_HERO_READY + k] = m.heroReady[k] as number;
+  }
+  for (let i = 0; i < SNAP_HEROES * 2; i++) view[base + H_ABILITY_READY + i] = m.abilityReady[i] as number;
   view[base + H_ELENDIL_UNTIL] = m.elendilUntil[0] as number;
   view[base + H_RALLY_UNTIL] = m.rallyUntil[0] as number;
   view[base + H_UPGRADES] = (m.upgrades[0] as number) | ((m.researching[0] as number) << 8);

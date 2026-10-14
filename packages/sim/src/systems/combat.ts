@@ -196,7 +196,7 @@ export const fireStone = (
 };
 
 /** Alan hasarı: (x, z) çevresinde `radius` içindeki karşı takım birimleri (uzamsal hash). */
-const splash = (
+export const splash = (
   world: SimWorld,
   x: number,
   z: number,

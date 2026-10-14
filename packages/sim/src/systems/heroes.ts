@@ -1,4 +1,5 @@
 import {
+  ARROW_WIND,
   ATHELAS_RADIUS,
   DAMAGE_TYPES,
   ELENDIL_DURATION,
@@ -8,7 +9,8 @@ import {
   fxLen,
   fxMul,
   HERO,
-  HERO_ABILITIES,
+  HEROES,
+  MAX_HEROES,
   MAX_RANK,
   MAX_SPELLS,
   MatchState,
@@ -18,11 +20,14 @@ import {
   RANK_XP,
   SPELL_DEFS,
   SUMMONS,
+  TRAIN_ARCHERS_RADIUS,
   TRAMPLE,
   UNIT_DEFS,
   UnitTypeId,
   Upgrade,
   VOLLEY,
+  WIZARD_BLAST,
+  WORD_OF_POWER,
 } from '@bulwark/shared';
 import { entityExists, hasComponent, query, removeEntity } from 'bitecs';
 import { BattalionMode } from '../components';
@@ -30,7 +35,7 @@ import { SIM_HZ } from '../constants';
 import { cellAt } from '../nav/grid';
 import { STAT } from '../unitStats';
 import type { SimWorld } from '../world';
-import { applyDamage, arrowDmgType, fireProjectile, hasUpgrade } from './combat';
+import { applyDamage, arrowDmgType, fireProjectile, hasUpgrade, splash } from './combat';
 import { orderBattalions, spawnBattalion, spawnBattalionRow } from './commands';
 import { fortressDoor } from './fortress';
 
@@ -52,7 +57,12 @@ const TRAMPLE_R: Fx = fxFromFloat(TRAMPLE.radius);
 /** Ok Yağmuru okları hedefin kuzeyinden (savunucu tarafından), yüksekten gelir. */
 const VOLLEY_BACK: Fx = fxFromFloat(36);
 
-const isHeroType = (t: number) => STAT.hero[t] === 1;
+const DMG_MAGIC = DAMAGE_TYPES.indexOf('magic');
+const DMG_FIRE = DAMAGE_TYPES.indexOf('fire');
+
+/** Kahraman tipinin yuvası (HEROES indeksi; -1 = kahraman değil). */
+export const heroSlot = (unitType: number): number => HEROES.findIndex((h) => h.unitType === unitType);
+const isHeroType = (t: number) => STAT.hero[t] === 1 && heroSlot(t) >= 0;
 
 /** Saldıran tabura göre hasar yüzdesi: rütbe + aura + Toplanma + (yakın dövüşte) Dövme Kılıçlar; Elendil ×2. */
 export const attackPercent = (world: SimWorld, b: number, team: number, melee: boolean): number => {
@@ -65,7 +75,7 @@ export const attackPercent = (world: SimWorld, b: number, team: number, melee: b
   }
   if ((m.rallyUntil[team] as number) > world.tick) pct += RALLY_DAMAGE_PERCENT;
   if (melee && hasUpgrade(world, team, Upgrade.ForgedBlades)) pct += 25;
-  if (b !== 0 && b === m.hero[team] && (m.elendilUntil[team] as number) > world.tick) pct *= 2;
+  if (b !== 0 && b === m.heroes[team * MAX_HEROES] && (m.elendilUntil[team] as number) > world.tick) pct *= 2;
   return pct;
 };
 
@@ -90,9 +100,13 @@ export const awardXp = (world: SimWorld, b: number, xp: number): void => {
 /** Kahraman taburu silindiğinde (ölüm) çağrılır. */
 export const onBattalionRemoved = (world: SimWorld, b: number, team: number): void => {
   const m = world.match;
-  if (m.hero[team] === b) {
-    m.hero[team] = 0;
-    m.heroReady[team] = world.tick + ticks(HERO.reviveTime);
+  if (m.hero[team] === b) m.hero[team] = 0;
+  for (let k = 0; k < MAX_HEROES; k++) {
+    const i = team * MAX_HEROES + k;
+    if (m.heroes[i] === b) {
+      m.heroes[i] = 0;
+      m.heroReady[i] = world.tick + ticks(HERO.reviveTime);
+    }
   }
 };
 
@@ -100,14 +114,15 @@ export const summonHero = (world: SimWorld, team: number, unitType: number): boo
   const m = world.match;
   const map = world.map;
   if (!map || m.state !== MatchState.Playing || !isHeroType(unitType)) return false;
-  if ((m.hero[team] as number) !== 0 || world.tick < (m.heroReady[team] as number)) return false;
+  const i = team * MAX_HEROES + heroSlot(unitType);
+  if ((m.heroes[i] as number) !== 0 || world.tick < (m.heroReady[i] as number)) return false;
   const cost = UNIT_DEFS[unitType]?.cost ?? 0;
   if ((m.gold[team] as number) < cost) return false;
   m.gold[team] = (m.gold[team] as number) - cost;
   // Kahraman kalenin kapısından çıkar (GDD §8.1).
   const [dx, dz] = fortressDoor(world);
   const b = spawnBattalion(world, team, unitType, dx, dz, 16384);
-  m.hero[team] = b;
+  m.heroes[i] = b;
   return true;
 };
 
@@ -121,17 +136,69 @@ const healArea = (world: SimWorld, team: number, x: Fx, z: Fx, radius: Fx, perce
   }
 };
 
+/** (x, z) çevresinde `radius` içindeki canlı düşman askerleri. */
+const enemiesNear = (world: SimWorld, team: number, x: Fx, z: Fx, radius: Fx): number[] => {
+  const { Health, Position, Team, Dead, Soldier } = world.c;
+  const out: number[] = [];
+  for (const e of query(world, [Health, Position, Soldier])) {
+    if (Team.id[e] === team || Dead.at[e] !== 0) continue;
+    if (fxLen(((Position.x[e] as number) - x) | 0, ((Position.z[e] as number) - z) | 0) <= radius)
+      out.push(e);
+  }
+  return out;
+};
+
 export const useAbility = (world: SimWorld, team: number, unit: number, ability: number): boolean => {
   const m = world.match;
-  const { Battalion, Position } = world.c;
-  const def = HERO_ABILITIES[ability];
-  if (!def || m.state !== MatchState.Playing || unit !== m.hero[team] || unit === 0) return false;
-  if (!entityExists(world, unit) || (Battalion.rank[unit] as number) < def.rank) return false;
-  const slot = team * 2 + ability;
+  const { Battalion, Position, Team, UnitType } = world.c;
+  if (m.state !== MatchState.Playing || unit === 0 || !Number.isInteger(ability)) return false;
+  let k = -1;
+  for (let i = 0; i < MAX_HEROES; i++) if (m.heroes[team * MAX_HEROES + i] === unit) k = i;
+  const def = HEROES[k]?.abilities[ability];
+  if (!def || !entityExists(world, unit) || (Battalion.rank[unit] as number) < def.rank) return false;
+  const slot = (team * MAX_HEROES + k) * 2 + ability;
   if (world.tick < (m.abilityReady[slot] as number)) return false;
   m.abilityReady[slot] = world.tick + ticks(def.cooldown);
-  if (def.key === 'elendil') m.elendilUntil[team] = world.tick + ticks(ELENDIL_DURATION);
-  else healArea(world, team, Position.x[unit] as number, Position.z[unit] as number, ATHELAS_R, 50);
+  const x = Position.x[unit] as number;
+  const z = Position.z[unit] as number;
+  switch (def.key) {
+    case 'elendil':
+      m.elendilUntil[team] = world.tick + ticks(ELENDIL_DURATION);
+      break;
+    case 'athelas':
+      healArea(world, team, x, z, ATHELAS_R, 50);
+      break;
+    case 'wizard_blast':
+    case 'word_of_power': {
+      const p = def.key === 'wizard_blast' ? WIZARD_BLAST : WORD_OF_POWER;
+      for (const e of enemiesNear(world, team, x, z, fxFromFloat(p.radius)))
+        applyDamage(world, e, p.damage, DMG_MAGIC, unit);
+      break;
+    }
+    case 'arrow_wind': {
+      const targets = enemiesNear(world, team, x, z, fxFromFloat(ARROW_WIND.radius));
+      if (targets.length === 0) break;
+      const dmgType = arrowDmgType(world, team, DMG_PIERCE);
+      for (let i = 0; i < ARROW_WIND.arrows; i++) {
+        const t = targets[world.rng.nextInt(targets.length)] as number;
+        fireProjectile(world, x, z, t, ARROW_WIND.damage, dmgType, 180, unit);
+      }
+      break;
+    }
+    case 'train_archers': {
+      const r = fxFromFloat(TRAIN_ARCHERS_RADIUS);
+      for (const b of query(world, [Battalion, Position])) {
+        if (Team.id[b] !== team || b === unit || (Battalion.count[b] as number) === 0) continue;
+        const t = Battalion.unitType[b] as number;
+        if (STAT.ranged[t] !== 1 || STAT.hero[t] === 1) continue;
+        if (fxLen(((Position.x[b] as number) - x) | 0, ((Position.z[b] as number) - z) | 0) > r) continue;
+        const rank = Battalion.rank[b] as number;
+        if (rank >= MAX_RANK) continue;
+        awardXp(world, b, Math.max(1, (RANK_XP[rank + 1] as number) - (Battalion.xp[b] as number)));
+      }
+      break;
+    }
+  }
   return true;
 };
 
@@ -291,9 +358,11 @@ export const heroSystem = (world: SimWorld): void => {
   if (world.tick % 5 === 0) {
     for (const b of query(world, [Battalion, Position])) {
       const team = Team.id[b] as number;
-      const h = m.hero[team] as number;
       let inAura = 0;
-      if (h !== 0 && h !== b && entityExists(world, h)) {
+      // Liderler: takımın kahramanları ve (düşmanda) boss.
+      for (let k = -1; k < MAX_HEROES && !inAura; k++) {
+        const h = (k < 0 ? m.hero[team] : m.heroes[team * MAX_HEROES + k]) as number;
+        if (h === 0 || h === b || !entityExists(world, h)) continue;
         const d = fxLen(
           ((Position.x[h] as number) - (Position.x[b] as number)) | 0,
           ((Position.z[h] as number) - (Position.z[b] as number)) | 0,
@@ -303,6 +372,24 @@ export const heroSystem = (world: SimWorld): void => {
       Battalion.aura[b] = inAura;
     }
   }
+  // Ateş aurası (Balrog): her saniye çevresini yakar.
+  if (world.tick % SIM_HZ === 0)
+    for (const s of query(world, [Soldier, Position])) {
+      const t = world.c.UnitType.id[s] as number;
+      const r = STAT.fireAuraR[t] as number;
+      if (r === 0 || Dead.at[s] !== 0) continue;
+      splash(
+        world,
+        Position.x[s] as number,
+        Position.z[s] as number,
+        r,
+        Team.id[s] as number,
+        STAT.fireAuraDmg[t] as number,
+        DMG_FIRE,
+        0,
+        Soldier.battalion[s] as number,
+      );
+    }
   if (m.volleys.length === 0) return;
   const radiusOf = fxFromFloat(SPELL_DEFS.find((s) => s.key === 'arrow_volley')?.radius ?? 12);
   for (const v of m.volleys) {

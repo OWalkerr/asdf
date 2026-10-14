@@ -1,12 +1,4 @@
-import {
-  ECONOMY,
-  HERO,
-  type MapDef,
-  type MatchInfo,
-  MatchState,
-  UNIT_DEFS,
-  UnitTypeId,
-} from '@bulwark/shared';
+import { ECONOMY, HERO, HEROES, type MapDef, type MatchInfo, MatchState, UNIT_DEFS } from '@bulwark/shared';
 import type { RTSCamera } from '../../render/camera/RTSCamera';
 import type { StructureRenderer } from '../../render/structures/StructureRenderer';
 import type { UnitRenderer } from '../../render/units/UnitRenderer';
@@ -16,7 +8,8 @@ import { icon } from './icons';
 
 /**
  * Üst arayüz (GDD §11.1, BFME2 düzeni):
- *   sol üst  — kahraman portresi (çağır / seç / yeniden canlanma sayacı) ve kale düğmesi (K)
+ *   sol üst  — kahraman portreleri (Aragorn F, Gandalf G, Legolas J: çağır / seç / yeniden
+ *              canlanma sayacı) ve kale düğmesi (K)
  *   üst orta — dalga, geri sayım; FD: kale canı + kapı kalkanları, TD: kalan can
  *   sağ üst  — kaynaklar (altın, gelir, ordu)
  */
@@ -38,22 +31,23 @@ export interface TopHudDeps {
 
 export class TopHud {
   private readonly heroes: HTMLDivElement;
-  private readonly heroBtn: HTMLButtonElement;
+  private readonly heroBtns: HTMLButtonElement[] = [];
   private readonly fortBtn: HTMLButtonElement;
   private readonly status: HTMLDivElement;
   private readonly res: HTMLDivElement;
   private match: MatchInfo | null = null;
   private tick = 0;
-  private heroPos: { x: number; z: number } | null = null;
+  private heroPos: ({ x: number; z: number } | null)[] = [];
 
   constructor(private readonly d: TopHudDeps) {
     this.heroes = document.createElement('div');
     this.heroes.id = 'heroes';
-    this.heroes.innerHTML =
-      '<button type="button" class="portrait hero"></button><button type="button" class="portrait fort"></button>';
-    this.heroBtn = this.heroes.querySelector('.hero') as HTMLButtonElement;
+    this.heroes.innerHTML = `${HEROES.map(() => '<button type="button" class="portrait hero"></button>').join('')}<button type="button" class="portrait fort"></button>`;
+    this.heroes.querySelectorAll<HTMLButtonElement>('.hero').forEach((b, k) => {
+      this.heroBtns.push(b);
+      b.addEventListener('click', () => this.heroAction(k));
+    });
     this.fortBtn = this.heroes.querySelector('.fort') as HTMLButtonElement;
-    this.heroBtn.addEventListener('click', () => this.heroAction());
     this.fortBtn.addEventListener('click', () => this.fortAction());
     this.heroes.addEventListener('pointerdown', (e) => e.stopPropagation());
     this.status = document.createElement('div');
@@ -63,23 +57,27 @@ export class TopHud {
     document.body.append(this.heroes, this.status, this.res);
     window.addEventListener('keydown', (e) => {
       if (e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
-      if (e.code === 'KeyF') this.heroAction();
+      const k = HEROES.findIndex((h) => h.key === e.code);
+      if (k >= 0) this.heroAction(k);
       if (e.code === 'KeyK') this.fortAction();
     });
   }
 
-  private heroAction(): void {
+  private heroAction(k: number): void {
     const m = this.match;
-    if (!m || m.state !== MatchState.Playing) return;
-    if (m.hero !== 0) {
-      this.d.selectHero(m.hero);
-      if (this.heroPos) this.d.cam.lookAt(this.heroPos.x, this.heroPos.z);
+    const def = HEROES[k];
+    if (!m || !def || m.state !== MatchState.Playing) return;
+    const b = m.heroes[k] ?? 0;
+    if (b !== 0) {
+      this.d.selectHero(b);
+      const p = this.heroPos[k];
+      if (p) this.d.cam.lookAt(p.x, p.z);
       this.d.onClick?.();
       return;
     }
-    const cost = UNIT_DEFS[UnitTypeId.Aragorn]?.cost ?? 0;
-    if (this.tick >= m.heroReady && m.gold >= cost) {
-      this.d.scenario.summonHero(UnitTypeId.Aragorn);
+    const cost = UNIT_DEFS[def.unitType]?.cost ?? 0;
+    if (this.tick >= (m.heroReady[k] ?? 0) && m.gold >= cost) {
+      this.d.scenario.summonHero(def.unitType);
       this.d.onClick?.();
     }
   }
@@ -94,36 +92,41 @@ export class TopHud {
   update(m: MatchInfo, tick: number): void {
     this.match = m;
     this.tick = tick;
-    // Kahraman portresi
-    let hp = 1;
-    let rank = 1;
-    this.heroPos = null;
-    if (m.hero !== 0)
-      this.d.units.forEach((x, _y, z, b, _t, h, _type, r) => {
-        if (b === m.hero) {
-          this.heroPos = { x, z };
-          hp = h;
-          rank = r;
-        }
-      });
-    const cost = UNIT_DEFS[UnitTypeId.Aragorn]?.cost ?? 0;
-    const wait = m.hero === 0 && tick < m.heroReady ? fmt(m.heroReady - tick) : '';
-    const heroState = m.hero !== 0 ? 'alive' : wait ? 'dead' : m.gold >= cost ? 'ready' : 'off';
-    const heroHtml = `<span class="ring" style="--hp:${(m.hero ? hp : 0) * 360}deg"></span>${icon('hero')}<small>${
-      m.hero ? `${'★'.repeat(Math.max(0, rank - 1)) || 'Aragorn'}` : wait ? 'Düştü' : `◆${cost}`
-    }</small>${wait ? `<b class="cdn">${Math.ceil(((m.heroReady - tick) * SIM_TICK_MS) / 1000)}</b>` : ''}<kbd>F</kbd>`;
-    this.heroBtn.style.setProperty(
-      '--p',
-      `${m.hero === 0 && wait ? (1 - (m.heroReady - tick) / (HERO.reviveTime * 20)) * 360 : 360}deg`,
-    );
-    if (this.heroBtn.innerHTML !== heroHtml) this.heroBtn.innerHTML = heroHtml;
-    this.heroBtn.dataset.state = heroState;
-    this.heroBtn.title =
-      m.hero !== 0
-        ? 'Aragorn — seç ve kamerayı getir (F)'
-        : wait
-          ? `Aragorn düştü — ${wait} sonra yeniden çağrılabilir`
-          : `Aragorn'u çağır (F) — ◆${cost}. Kalenin kapısından çıkar.`;
+    // Kahraman portreleri
+    HEROES.forEach((def, k) => {
+      const btn = this.heroBtns[k] as HTMLButtonElement;
+      const b = m.heroes[k] ?? 0;
+      const ready = m.heroReady[k] ?? 0;
+      const name = UNIT_DEFS[def.unitType]?.name ?? '';
+      let hp = 1;
+      let rank = 1;
+      this.heroPos[k] = null;
+      if (b !== 0)
+        this.d.units.forEach((x, _y, z, ub, _t, h, _type, r) => {
+          if (ub === b) {
+            this.heroPos[k] = { x, z };
+            hp = h;
+            rank = r;
+          }
+        });
+      const cost = UNIT_DEFS[def.unitType]?.cost ?? 0;
+      const left = b === 0 && tick < ready ? ready - tick : 0;
+      const wait = left > 0 ? fmt(left) : '';
+      const state = b !== 0 ? 'alive' : wait ? 'dead' : m.gold >= cost ? 'ready' : 'off';
+      const key = def.key.slice(3);
+      const html = `<span class="ring" style="--hp:${(b ? hp : 0) * 360}deg"></span>${icon(def.icon)}<small>${
+        b ? `${'★'.repeat(Math.max(0, rank - 1)) || name}` : wait ? 'Düştü' : `◆${cost}`
+      }</small>${wait ? `<b class="cdn">${Math.ceil((left * SIM_TICK_MS) / 1000)}</b>` : ''}<kbd>${key}</kbd>`;
+      btn.style.setProperty('--p', `${wait ? (1 - left / (HERO.reviveTime * 20)) * 360 : 360}deg`);
+      if (btn.innerHTML !== html) btn.innerHTML = html;
+      btn.dataset.state = state;
+      btn.title =
+        b !== 0
+          ? `${name} — seç ve kamerayı getir (${key})`
+          : wait
+            ? `${name} düştü — ${wait} sonra yeniden çağrılabilir`
+            : `${name} — çağır (${key}) · ◆${cost}. Kalenin kapısından çıkar.`;
+    });
     const fs = this.d.structures?.fortress;
     const fhp = fs ? fs.hp / Math.max(1, fs.max) : 1;
     const fortHtml = `<span class="ring" style="--hp:${fhp * 360}deg"></span>${icon('castle')}<small>${

@@ -7,7 +7,7 @@ import { gateOps, pathOpens, wallBlocks } from './builders';
  * değil; bilinen kurallara sadık özgün yerleşim):
  *
  * - Kule Savaşı (Tower Wars): tek yol kuzeyden iner, çatalda dört şeride ayrılır ve güneydeki
- *   uç bölgede birleşir. 30 dalga, dalga başı gelir, 28. dalgada dört Trol Kralı. Uç bölgeye
+ *   uç bölgede birleşir. 30 dalga, dalga başı gelir, 28. dalgada iki Balrog. Uç bölgeye
  *   varan düşman hemen can götürmez: bölgede bekler, bölge güç vuruşuyla onları eritir; içeride
  *   kalan her tabur düzenli aralıkla can götürür (bölge 2–3 dalgayı tamponlar).
  * - Kale Savunması (Fortress Defence): kale yolun tam ortasında; dört yönden gelen yollar kare
@@ -67,7 +67,7 @@ const TW_NAMES = [
   'Alev okları',
   'Son dalgalar',
   'Kara ordu',
-  'Trol Kralları',
+  "Durin'in Belası",
   'Isengard yanıyor',
   'Lurtz',
 ];
@@ -92,8 +92,10 @@ export const towerWarWaves = (spawns: readonly string[], first = 30, gap = 38): 
     else if (wave === 15) add(UnitTypeId.CaveTroll, 3, 4);
     else if (wave === 25) add(UnitTypeId.OrcArcher, 6);
     else if (wave === 28) {
-      add(UnitTypeId.CaveTroll, 4, 6);
-      add(UnitTypeId.UrukHai, 3, 14);
+      // Kaliam'ın haritasındaki Balrog dalgası: iki Balrog, ardından troller.
+      add(UnitTypeId.Balrog, 2, 4);
+      add(UnitTypeId.CaveTroll, 2, 16);
+      add(UnitTypeId.UrukHai, 2, 20);
     } else if (wave === 30) {
       add(UnitTypeId.UrukHai, 5);
       add(UnitTypeId.CaveTroll, 2, 12);
@@ -124,7 +126,7 @@ export const TOWER_WARS: MapDef = {
   seed: 4242,
   lives: 40,
   blurb:
-    "Tower Wars: tek yol dört şeride ayrılır, 30 dalga. Dalga başı altın; uç bölgede bekleyen her tabur 4 sn'de 1 can götürür. 28. dalga: Trol Kralları.",
+    "Tower Wars: tek yol dört şeride ayrılır, 30 dalga. Dalga başı altın; uç bölgede bekleyen her tabur 4 sn'de 1 can götürür. 28. dalga: iki Balrog.",
   camera: { home: [0, -20], yaw: 0, distance: 185 },
   citadel: {
     id: 'tw_base',
@@ -135,7 +137,7 @@ export const TOWER_WARS: MapDef = {
     door: [0, 128],
     facing: 270,
   },
-  endZone: { radius: 16, strikeDamage: 60, strikePercent: 8, strikeEvery: 2, drainEvery: 4 },
+  endZone: { radius: 16, strikeDamage: 60, strikePercent: 12, strikeEvery: 2, drainEvery: 4 },
   waveGold: { base: 180, perWave: 12 },
   gates: [],
   walls: [],
@@ -283,7 +285,7 @@ const FD_NAMES = [
   'Kızıl gözler',
   'Son hazırlık',
   'Kara ordu',
-  "Lurtz'un hücumu",
+  'Lurtz ve Balrog',
 ];
 
 /** 20 dalga, her dalgada dört yönden; her 5. dalga özel. */
@@ -320,6 +322,7 @@ export const fortressDefenceWaves = (spawns: readonly string[], first = 35, gap 
         g(20 + k * 3, s, UnitTypeId.CaveTroll, 1);
       });
       g(24, side(0), UnitTypeId.Lurtz, 1);
+      g(30, side(2), UnitTypeId.Balrog, 1);
       g(26, side(1), UnitTypeId.BatteringRam, 2);
     }
     if (wave > 7 && wave % 5 !== 0 && wave % 2 === 0)
