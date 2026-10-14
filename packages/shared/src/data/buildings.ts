@@ -146,9 +146,9 @@ export const DIFFICULTIES: readonly DifficultyDef[] = [
   {
     key: 'hard',
     name: 'Zor',
-    enemyHpPercent: 130,
-    waveSizePercent: 125,
-    startGold: 550,
+    enemyHpPercent: 150,
+    waveSizePercent: 150,
+    startGold: 500,
     desc: 'Isengard tüm gücüyle gelir.',
   },
 ];

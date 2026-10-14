@@ -51,11 +51,17 @@ kılıca açıktır — piyadeyle kapının önüne çıkın. Hasar alan kapıy�
 (300 altın, 10 sn'de +%25) onarabilirsiniz. Sağ alttaki mini haritaya tıklayınca kamera oraya kayar.
 Sesler prosedürel olarak üretilir (ilk tıklamada açılır, **M** ile sessize alınır).
 
+**Zorluk ve boss:** Maç öncesi ekranda Kolay / Normal / Zor seçilir (düşman canı, dalga büyüklüğü, başlangıç
+altını; `?difficulty=hard` ekranı atlar). Son dalgada **Lurtz** gelir: yanındaki Uruk'lara liderlik aurası
+verir, ekranın üstünde can çubuğu görünür.
+
 **Kahraman ve Spellbook (Phase 3):** Panelin üstündeki çubuktan **Aragorn**'u çağırın (1200 altın, **F**).
 20 m içindeki taburlara +%25 hasar aurası verir; seçiliyken *Elendil'in Kılıcı* (10 sn çift hasar) ve
 rütbe 3'te *Athelas* (alan iyileştirme) yeteneklerini kullanır. Ölürse 45 sn sonra yeniden çağrılabilir.
-Düşman öldürmek ve dalga başları **Güç Puanı** verir: **1 2 3** ile *Şifa*, *Toplanma Çağrısı* ve
-*Ok Yağmuru* büyülerini açın/kullanın (alan büyülerinde zeminde hedef seçilir, Esc iptal). Taburlar
+Düşman öldürmek ve dalga başları **Güç Puanı** verir: **1–6** ile büyüleri açın/kullanın (hedefli büyülerde
+zeminde nokta seçilir, Esc iptal). Kademe 1: *Şifa*, *Toplanma Çağrısı*; kademe 2: *Ok Yağmuru*,
+*Elf Müttefikleri* (60 sn Lórien okçuları); kademe 3: *Rohirrim'i Çağır* (yoldaki düşmanı ezen süvari hücumu);
+kademe 4: *Ölüler Ordusu* (45 sn, hasar almayan hayalet taburlar). Üst kademe, bir alt kademe büyüsü ister. Taburlar
 öldürdükçe deneyim kazanır ve 5 rütbeye kadar yükselir (rütbe başına +%10 hasar ve dayanıklılık;
 rütbe 3'ten itibaren sancak altına döner).
 
