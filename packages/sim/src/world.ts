@@ -3,6 +3,7 @@ import { createWorld, query, type World } from 'bitecs';
 import { type Components, createComponents } from './components';
 import { SIM_HZ } from './constants';
 import { movementSystem } from './systems/movement';
+import { animStateSystem, moveToTargetSystem } from './systems/moveToTarget';
 
 export interface SimContext {
   c: Components;
@@ -27,13 +28,15 @@ export const createSimWorld = (seed: number): SimWorld =>
  * bitECS sorgu sırası (sparse set) aynı işlem dizisi için her istemcide aynıdır.
  */
 export const stepWorld = (world: SimWorld): void => {
+  moveToTargetSystem(world);
   movementSystem(world);
+  animStateSystem(world);
   world.tick++;
 };
 
 /** Desync tespiti için tüm simülasyon durumunun hash'i (GDD §13.6). */
 export const hashWorld = (world: SimWorld): number => {
-  const { Position, Velocity, Facing, Team } = world.c;
+  const { Position, Velocity, Facing, Team, MoveTarget, Health, Anim } = world.c;
   let h = hashInt(HASH_SEED, world.tick);
   for (const eid of query(world, [Position])) {
     h = hashInt(h, eid);
@@ -43,6 +46,11 @@ export const hashWorld = (world: SimWorld): number => {
     h = hashInt(h, Velocity.z[eid] as number);
     h = hashInt(h, Facing.angle[eid] as number);
     h = hashInt(h, Team.id[eid] as number);
+    h = hashInt(h, MoveTarget.x[eid] as number);
+    h = hashInt(h, MoveTarget.z[eid] as number);
+    h = hashInt(h, MoveTarget.active[eid] as number);
+    h = hashInt(h, Health.hp[eid] as number);
+    h = hashInt(h, Anim.state[eid] as number);
   }
   for (const s of world.rng.getState()) h = hashInt(h, s);
   return h;

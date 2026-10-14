@@ -51,7 +51,7 @@ if (action === 'zoom') {
   await page.waitForTimeout(800);
   await page.keyboard.up('KeyD');
 }
-await page.waitForTimeout(2500);
+await page.waitForTimeout(Number(process.env.WAIT_MS ?? 2500));
 await page.screenshot({ path: out });
 const info = await page.evaluate(() => ({
   boot: document.getElementById('boot')?.textContent,

@@ -19,16 +19,17 @@ Tasarım ve mimari: [`GDD.md`](GDD.md).
 | `pnpm shot <url> <png> [zoom\|rotate\|pan]` | Playwright ile ekran görüntüsü + konsol hata raporu |
 
 URL parametreleri: `?map=helms_deep` (varsayılan) veya `?map=lookdev`, `?webgl` WebGL2 backend'ini zorlar,
-`?debug=0` tweak panelini gizler. Debug panelindeki "Koridor/spawn katmanı" düşman rotalarını gösterir.
+`?debug=0` tweak panelini gizler, `?nosab` SharedArrayBuffer yerine postMessage yedek yolunu zorlar. Debug panelindeki "Koridor/spawn katmanı" düşman rotalarını gösterir.
 
 ## Paketler
 | Paket | İçerik |
 |---|---|
 | `packages/shared` | Q16.16 fixed-point matematik, deterministik RNG, durum hash'i, harita şeması + Helm's Deep verisi |
-| `packages/sim` | bitECS deterministik simülasyon (three.js import edemez) |
-| `packages/client` | Renderer, RTS kamera, toon shader, harita oluşturucular, BVH zemin/slot seçimi, debug paneli |
+| `packages/sim` | bitECS deterministik simülasyon: komut kuyruğu, sistemler, snapshot yazıcı (three.js import edemez) |
+| `packages/client` | Renderer, RTS kamera, toon shader, harita oluşturucular, BVH zemin/slot seçimi, sim worker köprüsü, debug paneli |
 
 ## Kamera kontrolleri
 WASD / ok tuşları / ekran kenarı: kaydır · Orta tuş sürükle: kaydır · Q/E veya Alt+sol sürükle: döndür ·
-Tekerlek: imlece doğru zoom · Space/Home: başlangıç görünümü · Sol tık: inşa slotu seç.
-Sağ tık birim emirleri için ayrılmıştır.
+Tekerlek: imlece doğru zoom · Space/Home: başlangıç görünümü · Sol tık: inşa slotu seç ·
+Sağ tık: (geçici) tüm Gondor birimlerini oraya yürüt. Debug panelindeki "Simülasyon" bölümünden
+sim hızı ve düşman grubu / stres testi tetiklenebilir.

@@ -15,6 +15,7 @@ export interface DebugHooks {
   flameIntensity: { value: number };
   /** Harita debug katmanı (koridorlar, spawn'lar). */
   overlay?: Object3D | undefined;
+  sim?: { speed: number; setSpeed(v: number): void; actions: Record<string, () => void> };
 }
 
 export const createDebugPanel = async (renderer: WebGPURenderer, hooks: DebugHooks) => {
@@ -55,6 +56,15 @@ export const createDebugPanel = async (renderer: WebGPURenderer, hooks: DebugHoo
   t.add(toon.rimStrength, 'value', 0, 1, 0.01).name('Rim gücü');
   t.add(toon.rimPower, 'value', 0.5, 8, 0.1).name('Rim keskinlik');
   t.addColor(toon.rimColor, 'value').name('Rim rengi');
+
+  if (hooks.sim) {
+    const simHooks = hooks.sim;
+    const sf = gui.addFolder('Simülasyon');
+    sf.add(simHooks, 'speed', 0.1, 4, 0.1)
+      .name('Hız ×')
+      .onChange((v: number) => simHooks.setSpeed(v));
+    for (const [label, fn] of Object.entries(simHooks.actions)) sf.add({ [label]: fn }, label);
+  }
 
   const c = gui.addFolder('Kamera');
   c.add(cam, 'panSpeed', 0.2, 3, 0.05).name('Kaydırma hızı');

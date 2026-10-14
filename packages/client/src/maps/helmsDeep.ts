@@ -261,6 +261,7 @@ export const buildHelmsDeep = (palette: Texture, params: ToonParams, def: MapDef
     root,
     heightAt,
     size: def.size,
+    terrainGrid: grid,
     collider,
     home: {
       x: def.camera.home[0],

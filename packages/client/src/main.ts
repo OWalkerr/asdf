@@ -1,21 +1,25 @@
 import type { SlotDef } from '@bulwark/shared';
 import { Scene, type Texture, Timer } from 'three/webgpu';
+import { Scenario } from './app/scenario';
 import { createDebugPanel } from './debug/DebugPanel';
 import { GroundPicker } from './input/GroundPicker';
 import { buildHelmsDeep } from './maps/helmsDeep';
 import { RTSCamera } from './render/camera/RTSCamera';
 import { PickCursor } from './render/fx/PickCursor';
 import { createLighting } from './render/lighting';
+import { HeightGrid } from './render/map/HeightGrid';
 import { buildLookdevScene } from './render/map/lookdev';
 import type { MapScene } from './render/map/MapScene';
 import { createToonParams, type ToonParams } from './render/materials/ToonMaterial';
 import { createPaletteTexture } from './render/palette';
 import { createRenderContext } from './render/renderer';
+import { PawnRenderer } from './render/units/PawnRenderer';
+import { SimHost } from './sim-host/SimHost';
 
 /**
  * Phase 1 giriş noktası: renderer + RTS kamera + harita + zemin/slot seçimi.
  * Harita `?map=helms_deep` (varsayılan) veya `?map=lookdev` ile seçilir.
- * Sim worker bağlantısı Adım 5'te eklenecek.
+ * Sim Web Worker'da çalışır (SimHost); birimler snapshot'tan ara değerlenerek çizilir.
  */
 const MAPS: Record<string, (palette: Texture, toon: ToonParams) => MapScene> = {
   helms_deep: buildHelmsDeep,
@@ -38,13 +42,14 @@ const boot = async () => {
   scene.add(world.root);
   subtitle.textContent = `· ${world.name}`;
 
+  const ground = new HeightGrid(world.terrainGrid, world.heightAt);
   const half = world.size / 2;
   const light = createLighting(scene, half);
 
   const cam = new RTSCamera(window.innerWidth / window.innerHeight, {
     bounds: { minX: -half + 20, maxX: half - 20, minZ: -half + 20, maxZ: half - 20 },
     maxDistance: Math.max(150, world.size * 0.55),
-    heightAt: world.heightAt,
+    heightAt: ground.sample,
   });
   cam.setHome(world.home.x, world.home.z, world.home.yaw, world.home.distance);
   cam.attach(canvas);
@@ -66,7 +71,20 @@ const boot = async () => {
     cursor.hide();
     world.slots?.setHovered(-1);
   });
+  // --- Simülasyon (Web Worker) --------------------------------------------------
+  const UNIT_CAPACITY = 8192;
+  const sim = await SimHost.start({ seed: world.def?.seed ?? 1, capacity: UNIT_CAPACITY });
+  const pawns = new PawnRenderer(UNIT_CAPACITY, palette, toon, ground.sample);
+  scene.add(pawns.mesh);
+  const scenario = new Scenario(sim, world.def);
+  scenario.start();
+
   canvas.addEventListener('pointerdown', (e) => {
+    if (e.button === 2) {
+      const hit = picker.pick(cam.camera, e.offsetX, e.offsetY, canvas.clientWidth, canvas.clientHeight);
+      if (hit) scenario.moveAll(hit.point.x, hit.point.z);
+      return;
+    }
     if (e.button !== 0 || e.altKey || !world.slots) return;
     const hit = picker.pick(cam.camera, e.offsetX, e.offsetY, canvas.clientWidth, canvas.clientHeight);
     world.slots.setSelected(hit ? world.slots.nearest(hit.point.x, hit.point.y, hit.point.z) : -1);
@@ -96,6 +114,16 @@ const boot = async () => {
     toon,
     flameIntensity: world.flameIntensity,
     overlay: world.debugOverlay,
+    sim: {
+      speed: 1,
+      setSpeed: (v: number) => sim.setSpeed(v),
+      actions: {
+        'Düşman grubu gönder (+240)': () => scenario.sendWave(240),
+        'Stres testi (+1000 düşman)': () => {
+          for (let i = 0; i < 4; i++) scenario.sendWave(250);
+        },
+      },
+    },
   });
 
   const resize = () => {
@@ -120,6 +148,8 @@ const boot = async () => {
     timer.update(now);
     const dt = Math.min(timer.getDelta(), 0.1);
     cam.update(dt);
+    sim.poll(now);
+    pawns.update(sim, now);
     updatePick();
     ctx.render();
     debug.update();
@@ -135,6 +165,8 @@ const boot = async () => {
         `statik   ${world.stats.instances} instance / ${world.stats.batches} batch`,
         `kamera   (${t.x.toFixed(0)}, ${t.z.toFixed(0)}) zoom ${(cam.zoom01 * 100).toFixed(0)}%`,
         `imleç    ${hoverText}`,
+        `sim      tick ${sim.tick} · ${sim.frame.count} birim · ${(sim.frame.simMicros / 1000).toFixed(2)} ms · ${sim.shared ? 'SAB' : 'postMessage'}`,
+        `hash     #${sim.lastHash.tick} ${sim.lastHash.hash.toString(16).padStart(8, '0')}`,
       ];
       if (world.slots) {
         lines.push(
@@ -150,7 +182,7 @@ const boot = async () => {
 
   bootEl.classList.add('done');
   // Playwright / debug erişimi için.
-  Object.assign(window, { __bulwark: { ctx, cam, scene, world, picker } });
+  Object.assign(window, { __bulwark: { ctx, cam, scene, world, picker, sim, scenario } });
 };
 
 boot().catch((err: unknown) => {

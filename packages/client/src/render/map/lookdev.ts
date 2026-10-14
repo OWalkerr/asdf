@@ -123,6 +123,7 @@ export const buildLookdevScene = (palette: Texture, params: ToonParams): MapScen
     root,
     heightAt,
     size: spec.size,
+    terrainGrid: { size: spec.size, segments: spec.segments },
     collider,
     home: { x: 0, z: 12, yaw: 0, distance: 120 },
     stats: { instances, batches: 2 },
