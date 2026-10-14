@@ -5,7 +5,7 @@ import { UnitTypeId } from './units';
  * İnşa edilebilir yapılar (GDD §4, §7.1, §7.5). Slot türüne göre izinli; maliyet altın,
  * süreler saniye. Okçu kulesi menzildeki düşman taburlarına ok atar; kışla tabur yetiştirir.
  */
-export type BuildingKind = 'arrow_tower' | 'barracks';
+export type BuildingKind = 'arrow_tower' | 'barracks' | 'forge';
 
 export interface BuildingDef {
   kind: BuildingKind;
@@ -17,6 +17,8 @@ export interface BuildingDef {
   attack?: { damage: number; damageType: DamageType; interval: number; range: number; volley: number };
   /** Yetiştirilebilen birimler (yalnızca barracks). */
   trains?: readonly number[];
+  /** Araştırılabilen yükseltmeler (UPGRADE_DEFS indeksleri; yalnızca forge). */
+  researches?: readonly number[];
 }
 
 export const BUILDING_DEFS: Readonly<Record<BuildingKind, BuildingDef>> = {
@@ -36,16 +38,64 @@ export const BUILDING_DEFS: Readonly<Record<BuildingKind, BuildingDef>> = {
     hp: 2500,
     trains: [UnitTypeId.GondorSoldier, UnitTypeId.GondorArcher, UnitTypeId.TowerGuard],
   },
+  forge: {
+    kind: 'forge',
+    name: 'Demirhane',
+    cost: 500,
+    buildTime: 15,
+    hp: 2500,
+    researches: [0, 1, 2],
+  },
 };
 
+/**
+ * Takım çapında yükseltmeler (GDD §5.2, §7.5 Forge). Bit = 1 << indeks.
+ * - Dövme Kılıçlar: yakın dövüş hasarı +%25.
+ * - Ağır Zırh: birliklerin aldığı hasar −%25.
+ * - Ateşli Oklar: okçu ve kule okları 'fire' hasar tipine geçer (zırhlı Uruk ve koçbaşına karşı).
+ */
+export interface UpgradeDef {
+  key: 'forged_blades' | 'heavy_armor' | 'fire_arrows';
+  name: string;
+  cost: number;
+  researchTime: number;
+  desc: string;
+}
+
+export const UPGRADE_DEFS: readonly UpgradeDef[] = [
+  {
+    key: 'forged_blades',
+    name: 'Dövme Kılıçlar',
+    cost: 600,
+    researchTime: 30,
+    desc: 'Yakın dövüş hasarı +%25.',
+  },
+  {
+    key: 'heavy_armor',
+    name: 'Ağır Zırh',
+    cost: 600,
+    researchTime: 30,
+    desc: 'Birlikler %25 daha az hasar alır.',
+  },
+  {
+    key: 'fire_arrows',
+    name: 'Ateşli Oklar',
+    cost: 500,
+    researchTime: 25,
+    desc: 'Okçu ve kule okları ateş hasarı verir: Uruk zırhını ve koçbaşını deler.',
+  },
+];
+
+export const Upgrade = { ForgedBlades: 0, HeavyArmor: 1, FireArrows: 2 } as const;
+
 /** Snapshot ve komutlarda yapı türü indeksi. */
-export const BUILDING_KINDS: readonly BuildingKind[] = ['arrow_tower', 'barracks'];
+export const BUILDING_KINDS: readonly BuildingKind[] = ['arrow_tower', 'barracks', 'forge'];
 
 /** Slot türü → inşa edilebilecek yapılar. */
 export const SLOT_BUILDS: Readonly<Record<string, readonly BuildingKind[]>> = {
   wall_socket: ['arrow_tower'],
   tower: ['arrow_tower'],
-  building: ['barracks'],
+  building: ['barracks', 'forge'],
 };
 
 /** Ekonomi (GDD §5.1). */
@@ -57,4 +107,8 @@ export const ECONOMY = {
   bountyRate: 0.35,
   /** Kışla kuyruğu en fazla. */
   queueMax: 5,
+  /** Kapı onarımı: maliyet, süre (s), onarılan oran (%). */
+  repairCost: 300,
+  repairTime: 10,
+  repairPercent: 25,
 } as const;

@@ -40,6 +40,9 @@ export interface MatchContext {
   enemiesAlive: number;
   /** Oyuncu başına altın (GDD §5.1). */
   gold: Int32Array;
+  /** Takım başına tamamlanmış (ve araştırılmakta olan) yükseltme bitleri (UPGRADE_DEFS). */
+  upgrades: Uint8Array;
+  researching: Uint8Array;
   /** MapDef.slots sırasıyla inşa edilmiş yapı eid'i (0 = boş). */
   slots: Int32Array;
 }
@@ -87,6 +90,8 @@ export const createSimWorld = (
       gates: [],
       enemiesAlive: 0,
       gold: new Int32Array(4),
+      upgrades: new Uint8Array(4),
+      researching: new Uint8Array(4),
       slots: new Int32Array(map?.slots.length ?? 0),
     },
     hashHead: new Int32Array(nav.cols * nav.rows),
@@ -176,6 +181,8 @@ export const hashWorld = (world: SimWorld): number => {
     h = hashInt(h, Structure.qProgress[eid] as number);
   }
   for (const g of world.match.gold) h = hashInt(h, g);
+  for (const u of world.match.upgrades) h = hashInt(h, u);
+  for (const u of world.match.researching) h = hashInt(h, u);
   h = hashInt(h, world.match.state);
   h = hashInt(h, world.match.nextGroup);
   for (const s of world.rng.getState()) h = hashInt(h, s);

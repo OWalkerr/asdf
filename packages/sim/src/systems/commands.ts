@@ -17,7 +17,7 @@ import { BattalionMode } from '../components';
 import { cellAt, cellCenterX, cellCenterZ, isBlockedAt, nearestOpenCell } from '../nav/grid';
 import { isUnitType, STAT } from '../unitStats';
 import type { SimWorld } from '../world';
-import { buildStructure, trainUnit } from './structures';
+import { buildStructure, repairGate, researchUpgrade, trainUnit } from './structures';
 
 /** Oyuncu → takım eşlemesi (Phase 1: oyuncu N = takım N). Co-op'ta lobi belirleyecek. */
 const teamOf = (player: number): number => player;
@@ -332,6 +332,14 @@ export const applyCommand = (world: SimWorld, sc: StampedCommand): void => {
     }
     case 'train': {
       trainUnit(world, team, cmd.building, cmd.unitType);
+      break;
+    }
+    case 'research': {
+      researchUpgrade(world, team, cmd.building, cmd.upgrade);
+      break;
+    }
+    case 'repair': {
+      repairGate(world, team, cmd.gate);
       break;
     }
     case 'stop': {

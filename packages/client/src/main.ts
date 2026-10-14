@@ -204,7 +204,7 @@ const boot = async () => {
         structures?.bySlot.values() ?? [],
         world.slots?.selectedIndex ?? -1,
       );
-    panel?.update(sim.frame.match.gold);
+    panel?.update(sim.frame.match);
     marker.update(now);
     input.update();
     ctx.render();

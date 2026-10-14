@@ -113,6 +113,12 @@ export const engagementSystem = (world: SimWorld): void => {
         nearest = o;
       }
     }
+    // Kuşatma aracı birliklerle çatışmaz: yalnızca hedef yapısına yürür ve vurur.
+    if (STAT.siegeOnly[type] === 1) {
+      Battalion.enemy[b] = 0;
+      Battalion.engaged[b] = 0;
+      continue;
+    }
     const mode = Battalion.mode[b] as number;
     if (mode === BattalionMode.Attack) {
       const t = Battalion.targetBattalion[b] as number;

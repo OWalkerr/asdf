@@ -374,3 +374,14 @@ body.debug #hud {
     display: none;
   }
 }
+#cmdpanel .cmd em.done,
+#cmdpanel em.fire {
+  color: #ffa24a;
+  font-style: normal;
+}
+#cmdpanel .cmd em.done::before {
+  content: "";
+}
+#cmdpanel .cmd.done {
+  border-color: #ffa24a;
+}

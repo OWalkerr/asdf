@@ -9,14 +9,14 @@
  *
  * Buffer header: version (seqlock; tek = yazılıyor), tick, count, simMicros, projCount,
  *   matchState, waveIndex, waveCount, nextWaveTick, enemiesAlive, gateHp[0..2], gateMax[0..2],
- *   gold (oyuncu 0), structCount
+ *   gold (oyuncu 0), structCount, upgrades (bitler; araştırılanlar << 8)
  *
  * Birim kaydı (6 × int32):
  *   0 eid · 1 x (Q16.16) · 2 z (Q16.16) · 3 yaw:16|unitType:8|team:8
  *   4 anim:8|flags:8|hp8:8|animTick:8 · 5 tabur eid'i (0 = yok/ölü)
  * Ok kaydı (7 × int32):
  *   0 eid · 1 fromX · 2 fromZ · 3 toX · 4 toZ · 5 fireTick:20|flightTicks:12 · 6 çıkış yüksekliği (cm, zeminden)
- * Yapı kaydı (6 × int32):
+ * Yapı kaydı (6 × int32) — kapılar da (kind 0, slot = kapı indeksi, 4 = kalan onarım tick'i):
  *   0 eid · 1 kind:8|slot:8|team:8 · 2 hp · 3 max · 4 kalan inşa tick'i · 5 kuyruk (packQueue)
  *
  * Konumlar ham Q16.16 olarak taşınır; float'a çeviri render tarafında (GDD §13.7).
@@ -50,6 +50,8 @@ export const H_GATE_HP = 10; // 10, 11, 12
 export const H_GATE_MAX = 13; // 13, 14, 15
 export const H_GOLD = 16;
 export const H_STRUCT_COUNT = 17;
+/** Oyuncu 0'ın tamamlanmış yükseltmeleri (bit maskesi) ve araştırılanlar (<< 8). */
+export const H_UPGRADES = 18;
 
 /** Birim kaydı flags biti: son birkaç tick içinde hasar aldı (vurulma parıltısı). */
 export const FLAG_HIT = 1;
@@ -127,6 +129,10 @@ export interface MatchInfo {
   gateHp: number[];
   gateMax: number[];
   gold: number;
+  /** Tamamlanmış yükseltme bitleri. */
+  upgrades: number;
+  /** Araştırılmakta olan yükseltme bitleri. */
+  researching: number;
 }
 
 /** Okunan tek bir snapshot (render tarafının kendi kopyası). */
@@ -161,6 +167,8 @@ export const createFrame = (capacity: number, projCapacity = 2048): SnapshotFram
     gateHp: [],
     gateMax: [],
     gold: 0,
+    upgrades: 0,
+    researching: 0,
   },
 });
 
@@ -172,6 +180,9 @@ export const readMatchHeader = (view: Int32Array, base: number, out: MatchInfo):
   out.nextWaveTick = view[base + H_NEXT_WAVE_TICK] as number;
   out.enemiesAlive = view[base + H_ENEMIES_ALIVE] as number;
   out.gold = view[base + H_GOLD] as number;
+  const up = view[base + H_UPGRADES] as number;
+  out.upgrades = up & 0xff;
+  out.researching = (up >>> 8) & 0xff;
   out.gateHp.length = 0;
   out.gateMax.length = 0;
   for (let g = 0; g < SNAP_MAX_GATES; g++) {

@@ -16,6 +16,7 @@ import {
   H_SIM_MICROS,
   H_STRUCT_COUNT,
   H_TICK,
+  H_UPGRADES,
   H_VERSION,
   H_WAVE_COUNT,
   H_WAVE_INDEX,
@@ -32,9 +33,11 @@ import {
   SNAP_STRUCT_INTS,
   SNAP_UNIT_INTS,
   structOffset,
+  UPGRADE_DEFS,
 } from '@bulwark/shared';
 import { query } from 'bitecs';
-import { QUEUE_STRIDE } from './components';
+import { QUEUE_STRIDE, StructureKind } from './components';
+import { SIM_HZ } from './constants';
 import { nextWaveTick } from './systems/match';
 import { STAT } from './unitStats';
 import type { SimWorld } from './world';
@@ -93,16 +96,24 @@ export const writeSnapshot = (world: SimWorld, view: Int32Array, simMicros = 0):
   let structCount = 0;
   for (const eid of query(world, [Structure, Position, Team])) {
     const kind = Structure.kind[eid] as number;
-    if (kind === 0 || structCount >= SNAP_MAX_STRUCTS) continue;
+    if (structCount >= SNAP_MAX_STRUCTS) continue;
     const qLen = Structure.qLen[eid] as number;
     const head = Structure.queue[eid * QUEUE_STRIDE] as number;
-    const total = qLen > 0 ? (STAT.trainTicks[head] as number) : 1;
+    const total =
+      qLen === 0
+        ? 1
+        : kind === StructureKind.Forge
+          ? Math.round((UPGRADE_DEFS[head]?.researchTime ?? 1) * SIM_HZ)
+          : (STAT.trainTicks[head] as number);
     const pct =
       qLen > 0
         ? Math.min(100, Math.max(0, (100 - ((Structure.qProgress[eid] as number) * 100) / total) | 0))
         : 0;
     view[s] = eid;
-    view[s + 1] = packStructKind(kind, Structure.slot[eid] as number, Team.id[eid] as number);
+    // Kapılarda slot alanı kapı indeksini taşır.
+    const slot =
+      kind === StructureKind.Gate ? (Structure.gateIndex[eid] as number) : (Structure.slot[eid] as number);
+    view[s + 1] = packStructKind(kind, slot, Team.id[eid] as number);
     view[s + 2] = Structure.hp[eid] as number;
     view[s + 3] = Structure.max[eid] as number;
     view[s + 4] = Structure.buildLeft[eid] as number;
@@ -113,6 +124,7 @@ export const writeSnapshot = (world: SimWorld, view: Int32Array, simMicros = 0):
   const m = world.match;
   view[base + H_STRUCT_COUNT] = structCount;
   view[base + H_GOLD] = m.gold[0] as number;
+  view[base + H_UPGRADES] = (m.upgrades[0] as number) | ((m.researching[0] as number) << 8);
   view[base + H_TICK] = world.tick;
   view[base + H_COUNT] = count;
   view[base + H_SIM_MICROS] = simMicros | 0;

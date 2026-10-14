@@ -142,3 +142,114 @@ describe('ekonomi', () => {
     expect(run()).toBe(run());
   });
 });
+
+describe('demirhane ve yükseltmeler', () => {
+  const FORGE = 2;
+  const readyForge = (sim: Simulation) => {
+    sim.world.match.gold[0] = 5000;
+    sim.schedule(stamp(sim.world.tick, { type: 'build', slot: PLOT, kind: FORGE }));
+    sim.step();
+    const forge = sim.world.match.slots[PLOT] as number;
+    while ((sim.world.c.Structure.buildLeft[forge] as number) > 0) sim.step();
+    return forge;
+  };
+
+  it('araştırma altını düşer, süre sonunda biti açar; tekrar ve eşzamanlı ikinci iş reddedilir', () => {
+    const sim = newSim();
+    const forge = readyForge(sim);
+    const t = sim.world.tick;
+    const g0 = gold(sim);
+    sim.schedule(stamp(t, { type: 'research', building: forge, upgrade: 0 }));
+    sim.schedule(stamp(t, { type: 'research', building: forge, upgrade: 1 })); // kuyruk dolu
+    sim.step();
+    expect(gold(sim)).toBeLessThanOrEqual(g0 - 600 + 1);
+    expect(sim.world.match.researching[0]).toBe(1);
+    for (let i = 0; i < 30 * 20 + 2; i++) sim.step();
+    expect(sim.world.match.upgrades[0]).toBe(1);
+    expect(sim.world.match.researching[0]).toBe(0);
+    const g1 = gold(sim);
+    sim.schedule(stamp(sim.world.tick, { type: 'research', building: forge, upgrade: 0 })); // zaten var
+    sim.step();
+    expect(gold(sim)).toBeGreaterThanOrEqual(g1);
+    expect(sim.world.match.upgrades[0]).toBe(1);
+  });
+
+  it('Ağır Zırh alınan hasarı azaltır', () => {
+    const run = (armor: boolean) => {
+      const sim = newSim();
+      if (armor) sim.world.match.upgrades[0] = 1 << 1;
+      sim.schedule(
+        stamp(0, {
+          type: 'spawnBattalion',
+          team: 0,
+          unitType: UnitTypeId.GondorSoldier,
+          x: F(0),
+          z: F(40),
+          count: 1,
+          facing: 0,
+        }),
+      );
+      sim.schedule(
+        stamp(0, {
+          type: 'spawnBattalion',
+          team: 1,
+          unitType: UnitTypeId.UrukHai,
+          x: F(8),
+          z: F(40),
+          count: 1,
+          facing: 32768,
+        }),
+      );
+      for (let i = 0; i < 200; i++) sim.step();
+      const H = sim.world.c.Health;
+      return [...query(sim.world, [H])]
+        .filter((e) => sim.world.c.Team.id[e] === 0)
+        .reduce((sum, e) => sum + Math.max(0, H.hp[e] as number), 0);
+    };
+    expect(run(true)).toBeGreaterThan(run(false));
+  });
+});
+
+describe('kapı onarımı ve koçbaşı', () => {
+  it('onarım altın karşılığı kapı canını süre boyunca %25 artırır; tam canlı kapı onarılmaz', () => {
+    const sim = newSim();
+    const gate = sim.world.match.gates[0] as number;
+    const S = sim.world.c.Structure;
+    sim.schedule(stamp(0, { type: 'repair', gate: 0 })); // tam can: reddedilir
+    sim.step();
+    expect(gold(sim)).toBe(ECONOMY.startGold + 1);
+    S.hp[gate] = 1000;
+    sim.schedule(stamp(1, { type: 'repair', gate: 0 }));
+    for (let i = 0; i < ECONOMY.repairTime * 20 + 3; i++) sim.step();
+    expect(S.hp[gate]).toBe(1000 + ((S.max[gate] as number) * ECONOMY.repairPercent) / 100);
+    expect(gold(sim)).toBeLessThan(ECONOMY.startGold + 60 - ECONOMY.repairCost + 1);
+  });
+
+  it('koçbaşı birliklerle çatışmaz, kapıya ulaşıp ağır hasar verir', () => {
+    const sim = newSim();
+    const gate = sim.world.match.gates[0] as number;
+    const S = sim.world.c.Structure;
+    const lane = HELMS_DEEP.lanes.find((l) => l.id === 'causeway');
+    const [ex, ez] = lane?.points[lane.points.length - 2] ?? [0, 0];
+    sim.schedule(
+      stamp(0, {
+        type: 'spawnBattalion',
+        team: 1,
+        unitType: UnitTypeId.BatteringRam,
+        x: F(ex),
+        z: F(ez),
+        count: 1,
+        facing: 0,
+      }),
+    );
+    sim.step();
+    const ram = battalionsOf(sim, 1)[0] as number;
+    const [gx, gz] = lane?.points[lane.points.length - 1] ?? [0, 0];
+    sim.world.c.Battalion.targetStructure[ram] = gate;
+    sim.schedule(stamp(1, { type: 'move', units: [ram], x: F(gx), z: F(gz), spacing: F(1.5) }));
+    // `move` yalnızca oyuncu birimleri için; yapay zekâ adımı boşta kalan koçbaşını kapıya yollar.
+    for (let i = 0; i < 90 * 20 && (S.hp[gate] as number) === (S.max[gate] as number); i++) sim.step();
+    expect(S.hp[gate]).toBeLessThan(S.max[gate] as number);
+    expect(sim.world.c.Battalion.engaged[ram]).toBe(0);
+  });
+});

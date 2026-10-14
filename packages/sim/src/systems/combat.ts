@@ -1,4 +1,15 @@
-import { AnimState, FX_HALF, type Fx, fxAtan2, fxDiv, fxFromFloat, fxLen, fxMul } from '@bulwark/shared';
+import {
+  AnimState,
+  DAMAGE_TYPES,
+  FX_HALF,
+  type Fx,
+  fxAtan2,
+  fxDiv,
+  fxFromFloat,
+  fxLen,
+  fxMul,
+  Upgrade,
+} from '@bulwark/shared';
 import { addComponent, addEntity, entityExists, hasComponent, query, removeEntity } from 'bitecs';
 import { cellAt } from '../nav/grid';
 import { ARMOR_STRUCTURE, PERCENT } from '../unitStats';
@@ -14,6 +25,7 @@ import { forEachMember } from './spatial';
  * - Kapıya yönelmiş düşman taburları, birim hedefi yokken erişimdeki kapıya vurur.
  * Tümü tamsayı; rastgelelik yalnızca world.rng (deterministik sıra).
  */
+const DMG_FIRE = DAMAGE_TYPES.indexOf('fire');
 const ACQUIRE: Fx = fxFromFloat(6);
 const ACQUIRE_CELLS = 3;
 /** Askerin sancaktan bu kadar uzaklaşınca hedefi bırakıp formasyona döndüğü mesafe. */
@@ -30,6 +42,13 @@ export const ATTACK_ANIM_TICKS = 14;
 const alive = (world: SimWorld, e: number): boolean =>
   e > 0 && entityExists(world, e) && hasComponent(world, e, world.c.Health) && world.c.Dead.at[e] === 0;
 
+export const hasUpgrade = (world: SimWorld, team: number, upgrade: number): boolean =>
+  ((world.match.upgrades[team] ?? 0) & (1 << upgrade)) !== 0;
+
+/** Ok hasar tipi: Ateşli Oklar yükseltmesiyle 'fire'. */
+export const arrowDmgType = (world: SimWorld, team: number, base: number): number =>
+  hasUpgrade(world, team, Upgrade.FireArrows) ? DMG_FIRE : base;
+
 /** Hasar uygular (GDD §6.2 çarpanı, en az 1). Birim veya yapı. */
 export const applyDamage = (world: SimWorld, target: number, damage: number, dmgType: number): void => {
   const { Structure, Health, Combat } = world.c;
@@ -41,7 +60,9 @@ export const applyDamage = (world: SimWorld, target: number, damage: number, dmg
     );
     return;
   }
-  const pct = PERCENT[dmgType]?.[Combat.armor[target] as number] ?? 100;
+  let pct = PERCENT[dmgType]?.[Combat.armor[target] as number] ?? 100;
+  // Ağır Zırh yükseltmesi: alınan hasar −%25.
+  if (hasUpgrade(world, world.c.Team.id[target] as number, Upgrade.HeavyArmor)) pct = (pct * 3) >> 2;
   Health.hp[target] = (Health.hp[target] as number) - Math.max(1, ((damage * pct) / 100) | 0);
   Health.lastHit[target] = world.tick + 1;
 };
@@ -121,14 +142,14 @@ export const fireProjectile = (
 };
 
 const fireArrow = (world: SimWorld, s: number, target: number): void => {
-  const { Position, Combat } = world.c;
+  const { Position, Combat, Team } = world.c;
   fireProjectile(
     world,
     Position.x[s] as number,
     Position.z[s] as number,
     target,
     Combat.damage[s] as number,
-    Combat.dmgType[s] as number,
+    arrowDmgType(world, Team.id[s] as number, Combat.dmgType[s] as number),
     150,
   );
 };
@@ -196,7 +217,10 @@ export const combatSystem = (world: SimWorld): void => {
         Velocity.z[s] = 0;
         face(world, s, tx, tz);
         if ((Combat.cooldown[s] as number) === 0) {
-          applyDamage(world, t, Combat.damage[s] as number, Combat.dmgType[s] as number);
+          // Dövme Kılıçlar: yakın dövüş hasarı +%25.
+          const base = Combat.damage[s] as number;
+          const dmg = hasUpgrade(world, team, Upgrade.ForgedBlades) ? (base * 5) >> 2 : base;
+          applyDamage(world, t, dmg, Combat.dmgType[s] as number);
           Combat.cooldown[s] = Combat.interval[s] as number;
           startAttackAnim(world, s);
         }

@@ -1,6 +1,7 @@
 import { UNIT_DEFS } from '@bulwark/shared';
 import { describe, expect, it } from 'vitest';
 import {
+  batteringRam,
   gondorArcher,
   gondorSoldier,
   orcWarrior,
@@ -10,13 +11,14 @@ import {
   urukHai,
 } from '../src/render/units/models';
 
-/** GDD §3.2 poligon bütçeleri (LOD0): piyade ≤ 300, elit piyade ≤ 450 üçgen. */
+/** GDD §3.2 poligon bütçeleri (LOD0): piyade ≤ 300, elit piyade ≤ 450, kuşatma aracı ≤ 900 üçgen. */
 const BUDGET: [string, () => import('three/webgpu').BufferGeometry, number][] = [
   ['Gondor Soldier', gondorSoldier, 300],
   ['Orc Warrior', orcWarrior, 300],
   ['Tower Guard', towerGuard, 450],
   ['Uruk-hai', urukHai, 450],
   ['Gondor Archer', gondorArcher, 300],
+  ['Battering Ram', batteringRam, 900],
 ];
 
 describe('birim modelleri', () => {

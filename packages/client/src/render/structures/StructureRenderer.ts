@@ -12,7 +12,7 @@ import {
 } from '@bulwark/shared';
 import { type BufferGeometry, InstancedMesh, Matrix4, Quaternion, type Texture, Vector3 } from 'three/webgpu';
 import { createToonMaterial, type ToonParams } from '../materials/ToonMaterial';
-import { arrowTowerModel, barracksModel, scaffoldModel } from './buildingModels';
+import { arrowTowerModel, barracksModel, forgeModel, scaffoldModel } from './buildingModels';
 
 /** Snapshot'tan çözülmüş yapı durumu (komut paneli ve can çubukları için). */
 export interface StructInfo {
@@ -38,6 +38,7 @@ export interface StructInfo {
 const MODELS: Record<string, { build: () => BufferGeometry; height: number; footprint: [number, number] }> = {
   arrow_tower: { build: arrowTowerModel, height: 12.5, footprint: [2.2, 2.2] },
   barracks: { build: barracksModel, height: 8.2, footprint: [5.4, 4.2] },
+  forge: { build: forgeModel, height: 7.5, footprint: [4.6, 3.6] },
 };
 
 /**
@@ -48,6 +49,8 @@ export class StructureRenderer {
   readonly meshes: InstancedMesh[] = [];
   /** slot indeksi → yapı (son snapshot). */
   readonly bySlot = new Map<number, StructInfo>();
+  /** Kapı indeksi → kalan onarım tick'i (0 = onarılmıyor). */
+  readonly gateRepair: number[] = [];
   private readonly kindMeshes: InstancedMesh[] = [];
   private readonly scaffold: InstancedMesh;
   private readonly m = new Matrix4();
@@ -91,11 +94,16 @@ export class StructureRenderer {
     const counts = this.kindMeshes.map(() => 0);
     let scaffolds = 0;
     const st = frame.structures;
+    this.gateRepair.length = 0;
     for (let i = 0; i < frame.structCount; i++) {
       const o = i * SNAP_STRUCT_INTS;
       const kp = st[o + 1] as number;
       const kind = unpackStructKind(kp) - 1;
       const slot = unpackStructSlot(kp);
+      if (kind < 0) {
+        this.gateRepair[slot] = st[o + 4] as number;
+        continue;
+      }
       const kindKey = BUILDING_KINDS[kind];
       const slotDef = this.def.slots[slot];
       const mesh = this.kindMeshes[kind];

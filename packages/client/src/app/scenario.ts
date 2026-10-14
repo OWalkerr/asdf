@@ -73,6 +73,16 @@ export class Scenario {
     this.sim.send({ type: 'train', building, unitType }, PLAYER);
   }
 
+  /** Demirhanede yükseltme araştır. */
+  research(building: number, upgrade: number): void {
+    this.sim.send({ type: 'research', building, upgrade }, PLAYER);
+  }
+
+  /** Kapıyı onar (kapı indeksi). */
+  repair(gate: number): void {
+    this.sim.send({ type: 'repair', gate }, PLAYER);
+  }
+
   /** Seçili taburları durdur. */
   stop(battalions: Iterable<number>): void {
     const units = [...battalions];

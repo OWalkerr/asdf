@@ -4,8 +4,10 @@ import {
   type BuildingKind,
   ECONOMY,
   type MapDef,
+  type MatchInfo,
   SLOT_BUILDS,
   UNIT_DEFS,
+  UPGRADE_DEFS,
 } from '@bulwark/shared';
 import type { SlotMarkers } from '../render/map/SlotMarkers';
 import type { StructureRenderer } from '../render/structures/StructureRenderer';
@@ -35,12 +37,18 @@ const ICONS: Record<string, string> = {
   tower: '<path d="M7 22V9H5V3h3v2h2V3h4v2h2V3h3v6h-2v13zM11 14h2v3h-2z" fill="currentColor"/>',
   hall: '<path d="M2 11l10-7 10 7v2H2zM4 13h16v9H4zM10 16h4v6h-4z" fill="currentColor"/>',
   stop: '<rect x="5" y="5" width="14" height="14" rx="2" fill="currentColor"/>',
+  anvil: '<path d="M3 7h13c0 3 2 4 5 4v2h-6l-2 3h2v3H7v-3h2l-2-3c-2 0-4-2-4-6z" fill="currentColor"/>',
+  blade: '<path d="M18 2l4 0 0 4-10 10-3-3zM5 15l4 4-2 2-1-1-2 2-2-2 2-2-1-1z" fill="currentColor"/>',
+  armor: '<path d="M12 2l8 3v6c0 5-3.5 9-8 11-4.5-2-8-6-8-11V5z" fill="currentColor"/>',
+  flame:
+    '<path d="M12 2c1 4 6 6 6 12a6 6 0 0 1-12 0c0-3 2-5 3-7 0 3 1 4 2 4 0-3-1-6 1-9z" fill="currentColor"/>',
 };
 const UNIT_ICON: Record<number, string> = { 0: 'sword', 1: 'sword', 2: 'spear', 3: 'sword', 4: 'bow' };
-const BUILD_ICON: Record<BuildingKind, string> = { arrow_tower: 'tower', barracks: 'hall' };
+const BUILD_ICON: Record<BuildingKind, string> = { arrow_tower: 'tower', barracks: 'hall', forge: 'anvil' };
 const BUILD_DESC: Record<BuildingKind, string> = {
   arrow_tower: 'Menzildeki düşman taburlarına 3 oklu yaylım atar.',
   barracks: 'Gondor piyadesi, okçu ve Kule Muhafızı yetiştirir.',
+  forge: 'Takım çapında yükseltmeler: kılıç, zırh, ateşli ok.',
 };
 const SLOT_NAMES: Record<string, string> = {
   wall_socket: 'Sur soketi',
@@ -75,6 +83,7 @@ export class CommandPanel {
   private stopFn: (() => void) | null = null;
   private key = '';
   private gold = 0;
+  private match: MatchInfo | null = null;
 
   constructor(private readonly d: CommandPanelDeps) {
     this.root = document.createElement('div');
@@ -107,8 +116,10 @@ export class CommandPanel {
     });
   }
 
-  update(gold: number): void {
+  update(match: MatchInfo): void {
+    const gold = match.gold;
     this.gold = gold;
+    this.match = match;
     this.goldEl.innerHTML = `<b>${gold}</b><span>altın · +${ECONOMY.income}/sn</span>`;
     const { selected, slots, structures } = this.d;
     if (selected.size > 0) {
@@ -238,14 +249,54 @@ export class CommandPanel {
       });
       return;
     }
+    const upgrades = this.match?.upgrades ?? 0;
+    const researching = this.match?.researching ?? 0;
     if (kind === 'arrow_tower') {
-      this.render(`tower:${slot}:${hpTxt}`, () => {
+      const fire = (upgrades & 4) !== 0;
+      this.render(`tower:${slot}:${hpTxt}:${fire}`, () => {
         this.buttons = [];
         this.stopFn = null;
         const a = b.attack;
         return `<div class="title">${b.name}</div><div class="row"><div class="unitcard">${icon('tower')}<div><b>${hpTxt}</b>
-          <span>Menzil ${a?.range} m · ${a?.volley} ok / ${a?.interval} sn</span></div></div></div>
-          <div class="hint">${BUILD_DESC.arrow_tower}</div>`;
+          <span>Menzil ${a?.range} m · ${a?.volley} ok / ${a?.interval} sn${fire ? ' · <em class="fire">ateşli oklar</em>' : ''}</span></div></div></div>
+          <div class="hint">${BUILD_DESC.arrow_tower}${fire ? '' : ' Demirhanede Ateşli Oklar araştırın.'}</div>`;
+      });
+      return;
+    }
+    if (kind === 'forge') {
+      const busy = st.queueLen > 0;
+      const key = `forge:${slot}:${upgrades}:${researching}:${busy ? Math.round(st.queuePct * 40) : -1}:${UPGRADE_DEFS.map((u) => (this.gold >= u.cost ? 1 : 0)).join('')}`;
+      this.render(key, () => {
+        this.buttons = [];
+        this.stopFn = null;
+        const UP_ICON = ['blade', 'armor', 'flame'];
+        const btns = (b.researches ?? [])
+          .map((u, i) => {
+            const def = UPGRADE_DEFS[u];
+            if (!def) return '';
+            const done = (upgrades & (1 << u)) !== 0;
+            const running = (researching & (1 << u)) !== 0;
+            const ok = !done && !running && !busy && this.gold >= def.cost;
+            const tail = done
+              ? '<em class="done">✓</em>'
+              : running
+                ? `<em>%${Math.round(st.queuePct * 100)}</em>`
+                : `<em>${def.cost}</em>`;
+            return this.button(
+              i,
+              ok,
+              () => {
+                this.d.scenario.research(st.eid, u);
+                this.key = '';
+              },
+              `${icon(UP_ICON[u] ?? 'anvil')}<span>${def.name}</span>${tail}`,
+              `${def.name} — ${def.cost} altın, ${def.researchTime} sn. ${def.desc}`,
+              `wide${done ? ' done' : ''}`,
+            );
+          })
+          .join('');
+        return `<div class="title">${b.name} · ${hpTxt}</div><div class="row">${btns}</div>
+          <div class="hint">Yükseltmeler tüm birliklerinize ve kulelerinize uygulanır; demirhane aynı anda tek araştırma yapar.</div>`;
       });
       return;
     }

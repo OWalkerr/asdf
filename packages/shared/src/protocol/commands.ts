@@ -24,7 +24,11 @@ export type Command =
   /** Haritanın `slot` indeksli inşa yerine yapı kur (BUILDING_KINDS indeksi). */
   | { type: 'build'; slot: number; kind: number }
   /** Kışlada birim yetiştir (kuyruğa ekle). building = yapı eid'i. */
-  | { type: 'train'; building: number; unitType: number };
+  | { type: 'train'; building: number; unitType: number }
+  /** Demirhanede yükseltme araştır (UPGRADE_DEFS indeksi). */
+  | { type: 'research'; building: number; upgrade: number }
+  /** Kapıyı onar (haritadaki kapı indeksi). */
+  | { type: 'repair'; gate: number };
 
 export interface StampedCommand {
   /** Uygulanacağı sim tick'i. */

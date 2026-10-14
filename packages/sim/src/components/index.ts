@@ -117,7 +117,7 @@ export const createComponents = (capacity = MAX_ENTITIES) => ({
 /** Kışla kuyruğu dilim boyu (Structure.queue[eid * QUEUE_STRIDE + i]). */
 export const QUEUE_STRIDE = 8;
 /** Structure.kind: 0 kapı, sonra BUILDING_KINDS sırası + 1. */
-export const StructureKind = { Gate: 0, ArrowTower: 1, Barracks: 2 } as const;
+export const StructureKind = { Gate: 0, ArrowTower: 1, Barracks: 2, Forge: 3 } as const;
 
 export type Components = ReturnType<typeof createComponents>;
 

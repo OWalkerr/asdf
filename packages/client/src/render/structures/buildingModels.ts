@@ -104,3 +104,38 @@ export const scaffoldModel = (): BufferGeometry => {
   parts.push(paint(place(new BoxGeometry(0.8, 0.5, 0.6), 1.5, 0.25, 1.4, 0.4), 'gondorStone'));
   return merge(parts);
 };
+
+/**
+ * Demirhane: alçak taş atölye, ahşap sundurma, tüten baca ve önünde örs; ocak ağzı
+ * kor rengindedir (emissive değil — sade). Taban ≈ 8 × 6 m.
+ */
+export const forgeModel = (): BufferGeometry => {
+  const parts: BufferGeometry[] = [
+    paint(place(new BoxGeometry(8.6, 0.6, 6.6), 0, 0.3, 0), 'gondorStone'),
+    paint(place(new BoxGeometry(6.2, 3.4, 5.2), -0.9, 2.3, -0.4), 'helmStone'),
+    paint(place(new ConeGeometry(4.3, 2.4, 4), -0.9, 5.2, -0.4, Math.PI / 4, 1, 1, 0.85), 'gondorRoof'),
+    // Baca
+    paint(place(new BoxGeometry(1.1, 5.2, 1.1), -2.8, 4.6, -1.8), 'helmStoneDark'),
+    paint(place(new BoxGeometry(1.3, 0.3, 1.3), -2.8, 7.3, -1.8), 'rockDark'),
+    // Ocak ağzı
+    paint(place(new BoxGeometry(1.4, 1.2, 0.2), -0.9, 1.3, 2.25), 'fire'),
+    paint(place(new BoxGeometry(1.8, 0.25, 0.3), -0.9, 2.05, 2.3), 'ironDark'),
+    // Sundurma (ön sağ)
+    paint(place(new BoxGeometry(3.0, 0.12, 3.0), 2.9, 3.0, 1.2, 0, 1, 1, 1), 'wood'),
+    // Örs + kütük
+    paint(place(new CylinderGeometry(0.35, 0.4, 0.7, 6), 2.6, 0.95, 1.4), 'woodDark'),
+    paint(place(new BoxGeometry(0.9, 0.3, 0.4), 2.6, 1.45, 1.4), 'iron'),
+    paint(place(new BoxGeometry(0.3, 0.2, 0.3), 3.1, 1.45, 1.4), 'iron'),
+    // Silah rafı
+    paint(place(new BoxGeometry(1.6, 0.1, 0.3), 3.4, 1.6, -1.2), 'woodDark'),
+    ...[3.0, 3.4, 3.8].map((x) => paint(place(new BoxGeometry(0.06, 1.3, 0.12), x, 1.3, -1.05), 'steel')),
+  ];
+  for (const [x, z] of [
+    [1.5, -0.2],
+    [4.3, -0.2],
+    [1.5, 2.6],
+    [4.3, 2.6],
+  ] as const)
+    parts.push(paint(place(new BoxGeometry(0.18, 2.5, 0.18), x, 1.85, z), 'wood'));
+  return verticalShade(merge(parts), 0.7, 1.0);
+};

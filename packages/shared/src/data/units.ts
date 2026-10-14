@@ -7,7 +7,7 @@
  * Phase 1: Helm's Deep çekirdek kadrosu.
  */
 export type Faction = 'gondor' | 'rohan' | 'isengard' | 'mordor';
-export type ArmorClass = 'light' | 'medium' | 'heavy' | 'cavalry' | 'monster' | 'structure';
+export type ArmorClass = 'light' | 'medium' | 'heavy' | 'cavalry' | 'monster' | 'structure' | 'siege';
 export type DamageType = 'slash' | 'pierce' | 'spear' | 'crush' | 'siege' | 'fire' | 'magic';
 /** Saldırı animasyon stili: kılıç savurma, mızrak dürtme, yay germe. */
 export type AttackStyle = 'slash' | 'thrust' | 'bow';
@@ -42,6 +42,8 @@ export interface UnitDef {
   spacing: number;
   /** Yuva sapması (m): Orc sürüleri düzensiz, Uruk/Gondor disiplinli (GDD §3.3). */
   jitter: number;
+  /** Kuşatma aracı: yalnızca kapı/yapı hedefler, birliklerle çatışmaya girmez. */
+  siegeOnly?: boolean;
 }
 
 export const UNIT_DEFS: readonly UnitDef[] = [
@@ -150,6 +152,30 @@ export const UNIT_DEFS: readonly UnitDef[] = [
     spacing: 1.4,
     jitter: 0.06,
   },
+  {
+    // Isengard koçbaşı (GDD §7.4): Uruk taşıyıcılı kurt başlı kütük. Oklara dayanıklı,
+    // kılıca açık — durdurmak için piyadeyle kapı önüne çıkmak gerekir.
+    id: 5,
+    key: 'battering_ram',
+    name: 'Battering Ram',
+    faction: 'isengard',
+    speed: 2.6,
+    hp: 1600,
+    armor: 'siege',
+    attackStyle: 'thrust',
+    damage: 120,
+    damageType: 'siege',
+    attackInterval: 3.0,
+    range: 3,
+    ranged: false,
+    battalionSize: 1,
+    cost: 500,
+    trainTime: 30,
+    files: 1,
+    spacing: 4,
+    jitter: 0,
+    siegeOnly: true,
+  },
 ];
 
 export const UnitTypeId = {
@@ -158,6 +184,7 @@ export const UnitTypeId = {
   TowerGuard: 2,
   UrukHai: 3,
   GondorArcher: 4,
+  BatteringRam: 5,
 } as const;
 
 export const unitDef = (id: number): UnitDef => {
@@ -171,13 +198,13 @@ export const unitDef = (id: number): UnitDef => {
  * Tamsayı yüzde → sim'de `hasar * yüzde / 100` tamsayı aritmetiği.
  */
 export const DAMAGE_PERCENT: Readonly<Record<DamageType, Readonly<Record<ArmorClass, number>>>> = {
-  slash: { light: 125, medium: 100, heavy: 75, cavalry: 100, monster: 50, structure: 25 },
-  pierce: { light: 150, medium: 100, heavy: 50, cavalry: 100, monster: 60, structure: 10 },
-  spear: { light: 100, medium: 100, heavy: 90, cavalry: 300, monster: 100, structure: 25 },
-  crush: { light: 125, medium: 125, heavy: 100, cavalry: 100, monster: 100, structure: 150 },
-  siege: { light: 75, medium: 75, heavy: 75, cavalry: 75, monster: 100, structure: 400 },
-  fire: { light: 150, medium: 125, heavy: 75, cavalry: 100, monster: 100, structure: 150 },
-  magic: { light: 100, medium: 100, heavy: 100, cavalry: 100, monster: 100, structure: 50 },
+  slash: { light: 125, medium: 100, heavy: 75, cavalry: 100, monster: 50, structure: 25, siege: 100 },
+  pierce: { light: 150, medium: 100, heavy: 50, cavalry: 100, monster: 60, structure: 10, siege: 15 },
+  spear: { light: 100, medium: 100, heavy: 90, cavalry: 300, monster: 100, structure: 25, siege: 75 },
+  crush: { light: 125, medium: 125, heavy: 100, cavalry: 100, monster: 100, structure: 150, siege: 150 },
+  siege: { light: 75, medium: 75, heavy: 75, cavalry: 75, monster: 100, structure: 400, siege: 150 },
+  fire: { light: 150, medium: 125, heavy: 75, cavalry: 100, monster: 100, structure: 150, siege: 200 },
+  magic: { light: 100, medium: 100, heavy: 100, cavalry: 100, monster: 100, structure: 50, siege: 100 },
 };
 
 export const DAMAGE_TYPES: readonly DamageType[] = [
@@ -196,4 +223,5 @@ export const ARMOR_CLASSES: readonly ArmorClass[] = [
   'cavalry',
   'monster',
   'structure',
+  'siege',
 ];

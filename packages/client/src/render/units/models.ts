@@ -67,6 +67,7 @@ class ModelBuilder {
     pos: V3,
     rot: V3 = [0, 0, 0],
     scale: V3 = [1, 1, 1],
+    pivotOverride?: V3,
   ): this {
     geo.applyMatrix4(
       new Matrix4()
@@ -76,7 +77,7 @@ class ModelBuilder {
     );
     const g = paint(geo, swatch);
     const n = g.getAttribute('position').count;
-    const [px, py, pz] = pivotOf(this.rig, part);
+    const [px, py, pz] = pivotOverride ?? pivotOf(this.rig, part);
     const pivot = new Float32Array(n * 3);
     for (let i = 0; i < n; i++) pivot.set([px, py, pz], i * 3);
     g.setAttribute('aPart', new BufferAttribute(new Float32Array(n).fill(part), 1));
@@ -273,10 +274,114 @@ export const gondorArcher = (): BufferGeometry => {
 };
 
 /** Birim tipi id → model üreticisi (UNIT_DEFS ile aynı sıra). */
+/**
+ * Isengard koçbaşı (GDD §7.4, Helm's Deep): demir kurt başlı kalın kütük, Uruk taşıyıcılar ve
+ * üstte deri kaplı koruma çatısı. SPA: kütük = sağ kol (dürtme animasyonu ileri vurur),
+ * taşıyıcı bacakları kendi kalçalarında döner (pivot override), kollar = sol kol.
+ */
+export const batteringRam = (): BufferGeometry => {
+  const b = new ModelBuilder();
+  const logY = 1.05;
+  // Kütük + demir başlık
+  b.add(
+    Part.ArmR,
+    cyl(0.32, 0.36, 5.6, 7),
+    'woodDark',
+    [0.4, logY, 0],
+    [0, 0, Math.PI / 2],
+    [1, 1, 1],
+    [0, logY, 0],
+  );
+  b.add(Part.ArmR, box(0.7, 0.62, 0.62), 'iron', [3.35, logY, 0], [0, 0, 0], [1, 1, 1], [0, logY, 0]);
+  b.add(
+    Part.ArmR,
+    new ConeGeometry(0.3, 0.7, 5),
+    'ironDark',
+    [3.95, logY, 0],
+    [0, 0, -Math.PI / 2],
+    [1, 1, 1],
+    [0, logY, 0],
+  );
+  for (const z of [-0.22, 0.22])
+    b.add(
+      Part.ArmR,
+      new ConeGeometry(0.07, 0.4, 4),
+      'iron',
+      [3.3, logY + 0.42, z],
+      [0, 0, -0.5],
+      [1, 1, 1],
+      [0, logY, 0],
+    );
+  for (const x of [-1.6, 0.2, 1.8])
+    b.add(
+      Part.ArmR,
+      cyl(0.38, 0.38, 0.14, 7),
+      'iron',
+      [x, logY, 0],
+      [0, 0, Math.PI / 2],
+      [1, 1, 1],
+      [0, logY, 0],
+    );
+  // Koruma çatısı: dört direk + iki eğimli deri panel (Body)
+  for (const x of [-1.6, 1.6])
+    for (const z of [-1.0, 1.0]) b.add(Part.Body, box(0.12, 2.1, 0.12), 'wood', [x, 1.25, z]);
+  for (const side of [-1, 1])
+    b.add(Part.Body, box(3.8, 0.08, 1.25), 'leather', [0, 2.45, side * 0.55], [side * 0.45, 0, 0]);
+  b.add(Part.Body, box(3.9, 0.1, 0.12), 'woodDark', [0, 2.72, 0]);
+  // Ak El sancağı (Head: başlık sallanması küçük bir dalgalanma verir)
+  b.add(Part.Head, cyl(0.04, 0.04, 1.2, 4), 'wood', [-1.7, 3.2, 0], [0, 0, 0], [1, 1, 1], [-1.7, 2.6, 0]);
+  b.add(Part.Head, box(0.5, 0.6, 0.03), 'sootBlack', [-1.45, 3.45, 0], [0, 0, 0], [1, 1, 1], [-1.7, 2.6, 0]);
+  b.add(
+    Part.Head,
+    box(0.16, 0.2, 0.035),
+    'whiteHand',
+    [-1.45, 3.45, 0],
+    [0, 0, 0],
+    [1, 1, 1],
+    [-1.7, 2.6, 0],
+  );
+  // Uruk taşıyıcılar: iki yanda ikişer
+  for (const cx of [-0.9, 1.1]) {
+    for (const side of [-1, 1]) {
+      const cz = side * 0.62;
+      b.add(Part.Body, box(0.36, 0.55, 0.4), 'urukSkin', [cx, 1.12, cz]);
+      b.add(Part.Body, box(0.3, 0.32, 0.44), 'sootBlack', [cx, 0.86, cz]);
+      b.add(Part.Body, box(0.22, 0.22, 0.22), 'urukSkin', [cx + 0.06, 1.5, cz]);
+      b.add(Part.Body, box(0.24, 0.12, 0.24), 'sootBlack', [cx + 0.04, 1.63, cz]);
+      // Kütüğe uzanan kol
+      b.add(
+        Part.ArmL,
+        box(0.13, 0.13, 0.42),
+        'urukSkin',
+        [cx + 0.15, 1.1, cz - side * 0.3],
+        [0, 0, 0],
+        [1, 1, 1],
+        [cx, 1.25, cz],
+      );
+      for (const [part, dz] of [
+        [Part.LegL, -0.1],
+        [Part.LegR, 0.1],
+      ] as const) {
+        b.add(
+          part,
+          box(0.15, 0.7, 0.15),
+          'sootBlack',
+          [cx, 0.38, cz + dz],
+          [0, 0, 0],
+          [1, 1, 1],
+          [cx, 0.72, cz + dz],
+        );
+      }
+    }
+  }
+  return b.build();
+};
+
 export const UNIT_MODELS: Record<number, () => BufferGeometry> = {
   0: gondorSoldier,
   1: orcWarrior,
   2: towerGuard,
   3: urukHai,
   4: gondorArcher,
+  5: batteringRam,
 };
