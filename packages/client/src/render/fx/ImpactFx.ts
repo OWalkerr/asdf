@@ -124,7 +124,7 @@ export class ImpactFx {
     );
     sparkMesh.name = 'fx-sparks';
     const dustMesh = new InstancedMesh(
-      paint(new DodecahedronGeometry(0.5, 0), 'rockLight', 0.9),
+      paint(new DodecahedronGeometry(0.5, 0), 'dirt', 0.85),
       createToonMaterial(palette, params),
       512,
     );
@@ -179,8 +179,8 @@ export class ImpactFx {
               Math.cos(a) * 1.4,
               0.6 + Math.random() * 0.6,
               Math.sin(a) * 1.4,
-              0.5 + Math.random() * 0.3,
-              0.3 + Math.random() * 0.25,
+              0.4 + Math.random() * 0.25,
+              0.22 + Math.random() * 0.15,
             );
           }
         }

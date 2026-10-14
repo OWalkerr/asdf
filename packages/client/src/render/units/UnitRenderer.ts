@@ -5,8 +5,10 @@ import {
   UNIT_DEFS,
   unpackAnimState,
   unpackAnimTick,
+  unpackBattalion,
   unpackFlags,
   unpackHp8,
+  unpackRank,
   unpackTeam,
   unpackUnitType,
   unpackYaw,
@@ -38,6 +40,8 @@ interface Bucket {
   team: Uint8Array;
   /** Can (0–255, snapshot hp8). */
   hp: Uint8Array;
+  /** Tabur rütbesi (1–5; 0 = bilinmiyor). */
+  rank: Uint8Array;
   count: number;
 }
 
@@ -45,6 +49,8 @@ export class UnitRenderer {
   private readonly buckets: Bucket[] = [];
   /** Toplam çizilen birim (son kare). */
   drawn = 0;
+  /** Bu taburun askerleri parlar (ör. Elendil'in Kılıcı etkinken kahraman). */
+  glowBattalion = 0;
 
   constructor(
     readonly capacityPerType: number,
@@ -80,6 +86,7 @@ export class UnitRenderer {
         battalion: new Int32Array(capacityPerType),
         team: new Uint8Array(capacityPerType),
         hp: new Uint8Array(capacityPerType),
+        rank: new Uint8Array(capacityPerType),
         count: 0,
       };
     }
@@ -87,7 +94,16 @@ export class UnitRenderer {
 
   /** Son karede çizilen tüm instance'ları gezer (seçim, halka, picking için). */
   forEach(
-    cb: (x: number, y: number, z: number, battalion: number, team: number, hp: number, type: number) => void,
+    cb: (
+      x: number,
+      y: number,
+      z: number,
+      battalion: number,
+      team: number,
+      hp: number,
+      type: number,
+      rank: number,
+    ) => void,
   ): void {
     for (let type = 0; type < this.buckets.length; type++) {
       const b = this.buckets[type] as Bucket;
@@ -101,6 +117,7 @@ export class UnitRenderer {
           b.team[i] as number,
           (b.hp[i] as number) / 255,
           type,
+          b.rank[i] as number,
         );
       }
     }
@@ -127,12 +144,14 @@ export class UnitRenderer {
     team: number,
     battalion = 0,
     hp8 = 255,
+    rank = 0,
   ): void {
     const b = this.buckets[type];
     if (!b || b.count >= this.capacityPerType) return;
     b.battalion[b.count] = battalion;
     b.team[b.count] = team;
     b.hp[b.count] = hp8;
+    b.rank[b.count] = rank;
     const o = b.count * 4;
     b.pose[o] = x;
     b.pose[o + 1] = y;
@@ -199,10 +218,15 @@ export class UnitRenderer {
         yaw * ANGLE_TO_RAD,
         state,
         t,
-        unpackFlags(animPacked) & FLAG_HIT ? 1 : 0,
+        unpackFlags(animPacked) & FLAG_HIT
+          ? 1
+          : this.glowBattalion !== 0 && unpackBattalion(u[o + 5] as number) === this.glowBattalion
+            ? 0.45
+            : 0,
         unpackTeam(packed),
-        u[o + 5] as number,
+        unpackBattalion(u[o + 5] as number),
         unpackHp8(animPacked),
+        unpackRank(u[o + 5] as number),
       );
     }
     this.end();

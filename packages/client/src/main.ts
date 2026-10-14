@@ -5,6 +5,7 @@ import { CommandPanel } from './app/CommandPanel';
 import { GALLERY_CENTER, updateGallery } from './app/gallery';
 import { MatchHud } from './app/MatchHud';
 import { Minimap } from './app/Minimap';
+import { SpellBar } from './app/SpellBar';
 import { PLAYER, Scenario } from './app/scenario';
 import { AudioEngine } from './audio/AudioEngine';
 import { GameAudio } from './audio/GameAudio';
@@ -22,6 +23,7 @@ import { OrderMarker } from './render/fx/OrderMarker';
 import { PickCursor } from './render/fx/PickCursor';
 import { ProjectileRenderer } from './render/fx/ProjectileRenderer';
 import { SelectionRings } from './render/fx/SelectionRings';
+import { SpellFx } from './render/fx/SpellFx';
 import { BattalionHud } from './render/hud/BattalionHud';
 import { createLighting, FOG_COLOR } from './render/lighting';
 import { HeightGrid } from './render/map/HeightGrid';
@@ -156,6 +158,32 @@ const boot = async () => {
       return st ? (st.top - st.y) * 0.5 : 0;
     },
   });
+  // --- Kahraman + Spellbook ----------------------------------------------------------
+  const spellFx = new SpellFx();
+  scene.add(...spellFx.meshes);
+  input.onTargetHover = (x, y, z, r) => spellFx.showTarget(x, y, z, r);
+  input.onTargetEnd = () => spellFx.hideTarget();
+  const spellBar =
+    world.def && !gallery
+      ? new SpellBar({
+          scenario,
+          input,
+          fx: spellFx,
+          cam,
+          selection,
+          units,
+          groundY: ground.sample,
+          onClick: () => sfx.click(),
+        })
+      : null;
+  if (panel)
+    panel.onAbility = (i) => {
+      const hero = sim.frame.match.hero;
+      units.forEach((x, y, z, b) => {
+        if (b === hero)
+          spellFx.pulse(x, y, z, i === 1 ? 15 : 4, i === 1 ? '#7dffa0' : '#9cc4ff', i === 1 ? 1.2 : 0.8);
+      });
+    };
   // Nav ızgarası debug katmanı (sim'in kullandığı ızgaranın aynısı).
   const navOverlay = buildNavOverlay(
     world.def ? buildNavGrid(world.def) : createOpenGrid(world.size),
@@ -204,6 +232,8 @@ const boot = async () => {
     sim.poll(now);
     if (gallery) updateGallery(units, now / 1000, ground.sample);
     else {
+      const mi = sim.frame.match;
+      units.glowBattalion = mi.elendilUntil > sim.tick ? mi.hero : 0;
       units.updateFromSim(sim, now);
       arrows.update(sim, now);
       structures?.update(sim.frame);
@@ -222,7 +252,9 @@ const boot = async () => {
         structures?.bySlot.values() ?? [],
         world.slots?.selectedIndex ?? -1,
       );
-    panel?.update(sim.frame.match);
+    panel?.update(sim.frame.match, sim.tick);
+    spellBar?.update(sim.frame.match, sim.tick);
+    spellFx.update(dt);
     if (!gallery && world.def) {
       sfx.setListener(cam.target.x, cam.target.z, cam.zoom01);
       sfx.updateFromFrame(sim.frame, world.def.gates);

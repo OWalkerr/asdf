@@ -44,6 +44,8 @@ export interface UnitDef {
   jitter: number;
   /** Kuşatma aracı: yalnızca kapı/yapı hedefler, birliklerle çatışmaya girmez. */
   siegeOnly?: boolean;
+  /** Kahraman (GDD §8): tek kişilik tabur, liderlik aurası ve yetenekler. */
+  hero?: boolean;
 }
 
 export const UNIT_DEFS: readonly UnitDef[] = [
@@ -176,6 +178,29 @@ export const UNIT_DEFS: readonly UnitDef[] = [
     jitter: 0,
     siegeOnly: true,
   },
+  {
+    // Aragorn (GDD §8.2): korucu pelerini, Andúril. Liderlik: 20 m içindeki dost taburlara +%25 hasar.
+    id: 6,
+    key: 'aragorn',
+    name: 'Aragorn',
+    faction: 'gondor',
+    speed: 5.4,
+    hp: 1800,
+    armor: 'heavy',
+    attackStyle: 'slash',
+    damage: 55,
+    damageType: 'slash',
+    attackInterval: 0.8,
+    range: 1.9,
+    ranged: false,
+    battalionSize: 1,
+    cost: 1200,
+    trainTime: 0,
+    files: 1,
+    spacing: 2,
+    jitter: 0,
+    hero: true,
+  },
 ];
 
 export const UnitTypeId = {
@@ -185,6 +210,7 @@ export const UnitTypeId = {
   UrukHai: 3,
   GondorArcher: 4,
   BatteringRam: 5,
+  Aragorn: 6,
 } as const;
 
 export const unitDef = (id: number): UnitDef => {

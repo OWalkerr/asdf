@@ -2,6 +2,7 @@ import { AnimState } from '@bulwark/shared';
 import { entityExists, query, removeEntity } from 'bitecs';
 import { STAT } from '../unitStats';
 import type { SimWorld } from '../world';
+import { awardXp, onBattalionRemoved } from './heroes';
 import { ENEMY_TEAM } from './match';
 
 /** Cesetlerin sahnede kaldığı süre (tick; ölüm animasyonu + yere batma). */
@@ -33,11 +34,16 @@ export const deathSystem = (world: SimWorld): void => {
     Velocity.z[e] = 0;
     Combat.target[e] = 0;
     MoveTarget.active[e] = 0;
-    // Ödül (GDD §5.1): saldıran takımın her kaybı savunan oyuncuya altın kazandırır.
+    const type = UnitType.id[e] as number;
+    // Ödül (GDD §5.1): saldıran takımın her kaybı savunan oyuncuya altın ve Güç Puanı kazandırır.
     if (world.map && Team.id[e] === ENEMY_TEAM) {
-      world.match.gold[0] =
-        (world.match.gold[0] as number) + (STAT.bounty[UnitType.id[e] as number] as number);
+      world.match.gold[0] = (world.match.gold[0] as number) + (STAT.bounty[type] as number);
+      world.match.pp[0] = (world.match.pp[0] as number) + (STAT.ppValue[type] as number);
     }
+    // XP: son vuran tabur (karşı takımdan) ölenin değeri kadar deneyim kazanır.
+    const killer = Health.lastBy[e] as number;
+    if (killer !== 0 && entityExists(world, killer) && Team.id[killer] !== Team.id[e])
+      awardXp(world, killer, STAT.xpValue[type] as number);
     const b = Soldier.battalion[e] as number;
     if (b !== 0) {
       Soldier.battalion[e] = 0;
@@ -50,6 +56,7 @@ export const deathSystem = (world: SimWorld): void => {
   for (const b of affected) {
     if (!entityExists(world, b)) continue;
     if ((Battalion.count[b] as number) === 0) {
+      onBattalionRemoved(world, b, Team.id[b] as number);
       removeEntity(world, b);
       continue;
     }

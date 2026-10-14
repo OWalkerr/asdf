@@ -5,15 +5,23 @@ import {
   G_CAPACITY,
   G_PROJ_CAPACITY,
   G_PUBLISH,
+  H_ABILITY_READY,
   H_COUNT,
+  H_ELENDIL_UNTIL,
   H_ENEMIES_ALIVE,
   H_GATE_HP,
   H_GATE_MAX,
   H_GOLD,
+  H_HERO,
+  H_HERO_READY,
   H_MATCH_STATE,
   H_NEXT_WAVE_TICK,
+  H_PP,
   H_PROJ_COUNT,
+  H_RALLY_UNTIL,
   H_SIM_MICROS,
+  H_SPELL_READY,
+  H_SPELLS,
   H_STRUCT_COUNT,
   H_TICK,
   H_UPGRADES,
@@ -21,6 +29,7 @@ import {
   H_WAVE_COUNT,
   H_WAVE_INDEX,
   packAnim,
+  packBattalionRank,
   packFlight,
   packQueue,
   packStructKind,
@@ -50,7 +59,8 @@ const HIT_FLASH_TICKS = 3;
  * Birimler (canlı + ceset), oklar ve maç durumu tek seferde yazılır.
  */
 export const writeSnapshot = (world: SimWorld, view: Int32Array, simMicros = 0): number => {
-  const { Position, Facing, Team, UnitType, Health, Anim, Soldier, Projectile, Structure } = world.c;
+  const { Position, Facing, Team, UnitType, Health, Anim, Soldier, Projectile, Structure, Battalion } =
+    world.c;
   const capacity = view[G_CAPACITY] as number;
   const projCapacity = view[G_PROJ_CAPACITY] as number;
   const index = 1 - Atomics.load(view, G_ACTIVE);
@@ -74,7 +84,8 @@ export const writeSnapshot = (world: SimWorld, view: Int32Array, simMicros = 0):
       Team.id[eid] as number,
     );
     view[o + 4] = packAnim(Anim.state[eid] as number, flags, hp8, animTick);
-    view[o + 5] = Soldier.battalion[eid] as number;
+    const bat = Soldier.battalion[eid] as number;
+    view[o + 5] = packBattalionRank(bat, bat !== 0 ? (Battalion.rank[bat] as number) : 0);
     o += SNAP_UNIT_INTS;
     count++;
   }
@@ -124,6 +135,14 @@ export const writeSnapshot = (world: SimWorld, view: Int32Array, simMicros = 0):
   const m = world.match;
   view[base + H_STRUCT_COUNT] = structCount;
   view[base + H_GOLD] = m.gold[0] as number;
+  view[base + H_PP] = m.pp[0] as number;
+  view[base + H_SPELLS] = m.spells[0] as number;
+  for (let i = 0; i < 3; i++) view[base + H_SPELL_READY + i] = m.spellReady[i] as number;
+  view[base + H_HERO] = m.hero[0] as number;
+  view[base + H_HERO_READY] = m.heroReady[0] as number;
+  for (let i = 0; i < 2; i++) view[base + H_ABILITY_READY + i] = m.abilityReady[i] as number;
+  view[base + H_ELENDIL_UNTIL] = m.elendilUntil[0] as number;
+  view[base + H_RALLY_UNTIL] = m.rallyUntil[0] as number;
   view[base + H_UPGRADES] = (m.upgrades[0] as number) | ((m.researching[0] as number) << 8);
   view[base + H_TICK] = world.tick;
   view[base + H_COUNT] = count;

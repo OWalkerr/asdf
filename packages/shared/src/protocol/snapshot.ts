@@ -1,19 +1,21 @@
 /**
- * Sim → render snapshot düzeni (GDD §13.3), sürüm 4.
+ * Sim → render snapshot düzeni (GDD §13.3), sürüm 5.
  *
  * Tek bir Int32Array (SharedArrayBuffer üzerinde veya fallback'te düz ArrayBuffer):
  *
  *   [global header: 4]  activeIndex, publishCount, capacity, projCapacity
- *   [buffer 0: header 24 + capacity × 6 + projCapacity × 7 + SNAP_MAX_STRUCTS × 6]
+ *   [buffer 0: header 32 + capacity × 6 + projCapacity × 7 + SNAP_MAX_STRUCTS × 6]
  *   [buffer 1: aynı]
  *
  * Buffer header: version (seqlock; tek = yazılıyor), tick, count, simMicros, projCount,
  *   matchState, waveIndex, waveCount, nextWaveTick, enemiesAlive, gateHp[0..2], gateMax[0..2],
- *   gold (oyuncu 0), structCount, upgrades (bitler; araştırılanlar << 8)
+ *   gold (oyuncu 0), structCount, upgrades (bitler; araştırılanlar << 8), PP (onda bir),
+ *   açık büyüler, büyü hazır tick'leri ×3, kahraman taburu, kahraman hazır tick'i,
+ *   yetenek hazır tick'leri ×2, Elendil bitiş tick'i, Toplanma bitiş tick'i
  *
  * Birim kaydı (6 × int32):
  *   0 eid · 1 x (Q16.16) · 2 z (Q16.16) · 3 yaw:16|unitType:8|team:8
- *   4 anim:8|flags:8|hp8:8|animTick:8 · 5 tabur eid'i (0 = yok/ölü)
+ *   4 anim:8|flags:8|hp8:8|animTick:8 · 5 tabur eid'i:24|rütbe:8 (0 = yok/ölü)
  * Ok kaydı (7 × int32):
  *   0 eid · 1 fromX · 2 fromZ · 3 toX · 4 toZ · 5 fireTick:20|flightTicks:12 · 6 çıkış yüksekliği (cm, zeminden)
  * Yapı kaydı (6 × int32) — kapılar da (kind 0, slot = kapı indeksi, 4 = kalan onarım tick'i):
@@ -22,7 +24,7 @@
  * Konumlar ham Q16.16 olarak taşınır; float'a çeviri render tarafında (GDD §13.7).
  */
 export const SNAP_GLOBAL_INTS = 4;
-export const SNAP_HEADER_INTS = 24;
+export const SNAP_HEADER_INTS = 32;
 export const SNAP_UNIT_INTS = 6;
 export const SNAP_PROJ_INTS = 7;
 export const SNAP_STRUCT_INTS = 6;
@@ -52,6 +54,19 @@ export const H_GOLD = 16;
 export const H_STRUCT_COUNT = 17;
 /** Oyuncu 0'ın tamamlanmış yükseltmeleri (bit maskesi) ve araştırılanlar (<< 8). */
 export const H_UPGRADES = 18;
+/** Güç Puanı ×10 (oyuncu 0). */
+export const H_PP = 19;
+/** Açık büyü bitleri (SPELL_DEFS). */
+export const H_SPELLS = 20;
+/** Büyü i'nin tekrar kullanılabileceği tick (21, 22, 23). */
+export const H_SPELL_READY = 21;
+/** Kahraman taburu eid'i (0 = yok) ve yeniden çağrılabileceği tick. */
+export const H_HERO = 24;
+export const H_HERO_READY = 25;
+/** Kahraman yetenekleri hazır tick'leri (26, 27). */
+export const H_ABILITY_READY = 26;
+export const H_ELENDIL_UNTIL = 28;
+export const H_RALLY_UNTIL = 29;
 
 /** Birim kaydı flags biti: son birkaç tick içinde hasar aldı (vurulma parıltısı). */
 export const FLAG_HIT = 1;
@@ -86,6 +101,12 @@ export const packQueue = (len: number, unit: number, pct: number): number =>
 export const unpackQueueLen = (v: number): number => v & 0xf;
 export const unpackQueueUnit = (v: number): number => (v >>> 4) & 0xff;
 export const unpackQueuePct = (v: number): number => (v >>> 12) & 0x7f;
+
+/** Birim kaydı alan 5: tabur eid'i (24 bit) + rütbe (8 bit). */
+export const packBattalionRank = (battalion: number, rank: number): number =>
+  (battalion & 0xffffff) | ((rank & 0xff) << 24);
+export const unpackBattalion = (v: number): number => v & 0xffffff;
+export const unpackRank = (v: number): number => (v >>> 24) & 0xff;
 
 export const packStructKind = (kind: number, slot: number, team: number): number =>
   ((kind & 0xff) << 16) | ((slot & 0xff) << 8) | (team & 0xff);
@@ -133,6 +154,15 @@ export interface MatchInfo {
   upgrades: number;
   /** Araştırılmakta olan yükseltme bitleri. */
   researching: number;
+  /** Güç Puanı ×10. */
+  pp: number;
+  spells: number;
+  spellReady: number[];
+  hero: number;
+  heroReady: number;
+  abilityReady: number[];
+  elendilUntil: number;
+  rallyUntil: number;
 }
 
 /** Okunan tek bir snapshot (render tarafının kendi kopyası). */
@@ -169,6 +199,14 @@ export const createFrame = (capacity: number, projCapacity = 2048): SnapshotFram
     gold: 0,
     upgrades: 0,
     researching: 0,
+    pp: 0,
+    spells: 0,
+    spellReady: [0, 0, 0],
+    hero: 0,
+    heroReady: 0,
+    abilityReady: [0, 0],
+    elendilUntil: 0,
+    rallyUntil: 0,
   },
 });
 
@@ -183,6 +221,14 @@ export const readMatchHeader = (view: Int32Array, base: number, out: MatchInfo):
   const up = view[base + H_UPGRADES] as number;
   out.upgrades = up & 0xff;
   out.researching = (up >>> 8) & 0xff;
+  out.pp = view[base + H_PP] as number;
+  out.spells = view[base + H_SPELLS] as number;
+  for (let i = 0; i < 3; i++) out.spellReady[i] = view[base + H_SPELL_READY + i] as number;
+  out.hero = view[base + H_HERO] as number;
+  out.heroReady = view[base + H_HERO_READY] as number;
+  for (let i = 0; i < 2; i++) out.abilityReady[i] = view[base + H_ABILITY_READY + i] as number;
+  out.elendilUntil = view[base + H_ELENDIL_UNTIL] as number;
+  out.rallyUntil = view[base + H_RALLY_UNTIL] as number;
   out.gateHp.length = 0;
   out.gateMax.length = 0;
   for (let g = 0; g < SNAP_MAX_GATES; g++) {

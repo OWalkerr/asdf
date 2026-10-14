@@ -23,6 +23,7 @@ import { BarRenderer, healthColor } from './BarRenderer';
 const MAX_BATTALIONS = 1024;
 const TEAM_COLORS = ['#3a6fc4', '#b8322a', '#3a8f4a', '#c9a23a'].map((c) => new Color(c));
 const BUILD_COLOR = new Color('#5aa6e8');
+const GOLD = new Color('#ffd34d');
 
 interface Agg {
   x: number;
@@ -33,6 +34,7 @@ interface Agg {
   hp: number;
   team: number;
   type: number;
+  rank: number;
 }
 
 export class BattalionHud {
@@ -82,15 +84,16 @@ export class BattalionHud {
   ): void {
     for (const a of this.agg.values()) this.pool.push(a);
     this.agg.clear();
-    units.forEach((x, y, z, battalion, team, hp, type) => {
+    units.forEach((x, y, z, battalion, team, hp, type, rank) => {
       if (battalion === 0) return;
       let a = this.agg.get(battalion);
       if (!a) {
-        a = this.pool.pop() ?? { x: 0, y: 0, z: 0, maxY: 0, n: 0, hp: 0, team: 0, type: 0 };
+        a = this.pool.pop() ?? { x: 0, y: 0, z: 0, maxY: 0, n: 0, hp: 0, team: 0, type: 0, rank: 1 };
         a.x = a.y = a.z = a.hp = a.n = 0;
         a.maxY = -1e9;
         a.team = team;
         a.type = type;
+        a.rank = rank;
         this.agg.set(battalion, a);
       }
       a.x += x;
@@ -120,7 +123,10 @@ export class BattalionHud {
       this.m.setPosition(cx, cy + 2.6, cz);
       this.pole.setMatrixAt(i, this.m);
       this.flag.setMatrixAt(i, this.m);
-      this.flag.setColorAt(i, TEAM_COLORS[a.team] ?? (TEAM_COLORS[0] as Color));
+      // Rütbe 3+: sancak altına döner (GDD §5.2), rütbe 5'te parlak altın.
+      const base = TEAM_COLORS[a.team] ?? (TEAM_COLORS[0] as Color);
+      const gold = a.rank >= 5 ? 1 : a.rank >= 3 ? 0.55 : 0;
+      this.flag.setColorAt(i, gold > 0 ? this.c.copy(base).lerp(GOLD, gold) : base);
       i++;
       const ratio = a.hp / size;
       if (sel || this.showAllBars || ratio < 0.999)

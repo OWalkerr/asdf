@@ -377,6 +377,32 @@ export const batteringRam = (): BufferGeometry => {
   return b.build();
 };
 
+/**
+ * Aragorn (GDD §8.2): miğfersiz, uzun koyu saç ve sakal, eskimiş yeşil-kahve korucu pelerini,
+ * deri yelek, uzun Andúril (parlak çelik + altın balçak). Kalkan yok; sol el boş/hançer.
+ * Kahraman okunurluğu için %12 büyük.
+ */
+export const aragorn = (): BufferGeometry => {
+  const b = new ModelBuilder();
+  legs(b, 'woodDark', 'sootBlack');
+  b.add(Part.Body, box(0.36, 0.62, 0.48), 'leather', [0, 1.13, 0]);
+  b.add(Part.Body, box(0.06, 0.5, 0.4), 'woodDark', [0.18, 1.18, 0]); // yelek
+  b.add(Part.Body, box(0.4, 0.1, 0.52), 'sootBlack', [0, 0.86, 0]); // kemer
+  b.add(Part.Body, box(0.07, 1.25, 0.6), 'rohanGreen', [-0.22, 0.86, 0]); // uzun pelerin
+  b.add(Part.Body, box(0.3, 0.14, 0.62), 'rohanGreen', [-0.05, 1.42, 0]); // pelerin omzu
+  b.add(Part.Body, box(0.36, 0.38, 0.5), 'leather', [-0.02, 0.66, 0]); // palto eteği
+  b.add(Part.Head, box(0.2, 0.22, 0.2), 'sand', [0.02, 1.61, 0]);
+  b.add(Part.Head, box(0.24, 0.26, 0.24), 'urukSkin', [-0.04, 1.66, 0]); // koyu saç
+  b.add(Part.Head, box(0.1, 0.32, 0.22), 'urukSkin', [-0.1, 1.48, 0]); // omuza dökülen saç
+  b.add(Part.Head, box(0.05, 0.08, 0.16), 'urukSkin', [0.12, 1.53, 0]); // sakal
+  arm(b, Part.ArmR, 0.3, 'leather', 'sand');
+  b.add(Part.ArmR, box(0.08, 0.06, 0.24), 'gold', [0.06, 0.72, 0.3]); // balçak
+  b.add(Part.ArmR, box(1.02, 0.07, 0.04), 'silver', [0.6, 0.72, 0.3], [0, 0, 0.35]); // Andúril
+  arm(b, Part.ArmL, -0.3, 'leather', 'sand');
+  b.add(Part.ArmL, box(0.32, 0.05, 0.03), 'steel', [0.16, 0.68, -0.3], [0, 0, 0.3]); // hançer
+  return b.build(1.12);
+};
+
 export const UNIT_MODELS: Record<number, () => BufferGeometry> = {
   0: gondorSoldier,
   1: orcWarrior,
@@ -384,4 +410,5 @@ export const UNIT_MODELS: Record<number, () => BufferGeometry> = {
   3: urukHai,
   4: gondorArcher,
   5: batteringRam,
+  6: aragorn,
 };

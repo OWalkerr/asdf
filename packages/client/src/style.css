@@ -481,3 +481,112 @@ body.debug #hud {
     display: none;
   }
 }
+#cmdpanel em.rank {
+  color: #f0c95a;
+  font-style: normal;
+  font-size: 11px;
+}
+
+/* --- Kahraman + Spellbook çubuğu (komut panelinin üstü) -------------------------- */
+#spellbar {
+  position: fixed;
+  left: 50%;
+  bottom: 132px;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+  align-items: stretch;
+  width: max-content;
+  max-width: calc(100vw - 24px);
+  user-select: none;
+}
+#spellbar button {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 12px 5px 7px;
+  background: linear-gradient(180deg, rgba(40, 35, 27, 0.94), rgba(20, 17, 13, 0.94));
+  border: 1px solid rgba(201, 162, 58, 0.6);
+  border-radius: 6px;
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+#spellbar button:hover {
+  border-color: #f0c95a;
+}
+#spellbar svg {
+  width: 24px;
+  height: 24px;
+  flex: none;
+}
+#spellbar b {
+  display: block;
+  font-size: 12px;
+  font-weight: normal;
+}
+#spellbar small {
+  display: block;
+  font-size: 11px;
+  color: var(--ink-dim);
+}
+#spellbar kbd {
+  position: absolute;
+  top: -7px;
+  right: -5px;
+  font:
+    10px / 14px ui-monospace,
+    monospace;
+  padding: 0 4px;
+  background: #15120e;
+  border: 1px solid rgba(201, 162, 58, 0.6);
+  border-radius: 3px;
+  color: var(--gold);
+}
+#spellbar button.hero {
+  border-color: #c9d6ea;
+}
+#spellbar button.hero.alive svg {
+  color: #c9e0ff;
+  filter: drop-shadow(0 0 4px #9cc4ff);
+}
+#spellbar button.off,
+#spellbar button[data-state="locked"],
+#spellbar button[data-state="cd"] {
+  opacity: 0.5;
+}
+#spellbar button[data-state="locked"] svg,
+#spellbar button[data-state="open"] svg {
+  color: #8a8172;
+}
+#spellbar button[data-state="open"] {
+  border-style: dashed;
+}
+#spellbar button[data-state="open"] small {
+  color: #f0c95a;
+}
+#spellbar button[data-state="ready"] svg {
+  color: #f0c95a;
+}
+#spellbar button.active {
+  box-shadow: 0 0 12px rgba(240, 201, 90, 0.7);
+}
+#spellbar .pp {
+  display: grid;
+  place-content: center;
+  text-align: center;
+  padding: 0 10px;
+  background: rgba(20, 17, 13, 0.9);
+  border: 1px solid rgba(160, 190, 255, 0.45);
+  border-radius: 6px;
+}
+#spellbar .pp b {
+  font-size: 18px;
+  color: #b9d3ff;
+}
+#spellbar .pp span {
+  font-size: 10px;
+  color: var(--ink-dim);
+}

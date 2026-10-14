@@ -15,6 +15,7 @@ import { cellAt } from '../nav/grid';
 import { ARMOR_STRUCTURE, PERCENT } from '../unitStats';
 import type { SimWorld } from '../world';
 import { clearLine } from './battalion';
+import { attackPercent, defensePercent } from './heroes';
 import { forEachMember } from './spatial';
 
 /**
@@ -50,7 +51,13 @@ export const arrowDmgType = (world: SimWorld, team: number, base: number): numbe
   hasUpgrade(world, team, Upgrade.FireArrows) ? DMG_FIRE : base;
 
 /** Hasar uygular (GDD §6.2 çarpanı, en az 1). Birim veya yapı. */
-export const applyDamage = (world: SimWorld, target: number, damage: number, dmgType: number): void => {
+export const applyDamage = (
+  world: SimWorld,
+  target: number,
+  damage: number,
+  dmgType: number,
+  source = 0,
+): void => {
   const { Structure, Health, Combat } = world.c;
   if (hasComponent(world, target, Structure)) {
     const pct = PERCENT[dmgType]?.[ARMOR_STRUCTURE] ?? 100;
@@ -63,6 +70,9 @@ export const applyDamage = (world: SimWorld, target: number, damage: number, dmg
   let pct = PERCENT[dmgType]?.[Combat.armor[target] as number] ?? 100;
   // Ağır Zırh yükseltmesi: alınan hasar −%25.
   if (hasUpgrade(world, world.c.Team.id[target] as number, Upgrade.HeavyArmor)) pct = (pct * 3) >> 2;
+  // Tabur rütbesi dayanıklılığı.
+  pct = ((pct * defensePercent(world, target)) / 100) | 0;
+  Health.lastBy[target] = source;
   Health.hp[target] = (Health.hp[target] as number) - Math.max(1, ((damage * pct) / 100) | 0);
   Health.lastHit[target] = world.tick + 1;
 };
@@ -122,6 +132,7 @@ export const fireProjectile = (
   damage: number,
   dmgType: number,
   height: number,
+  source = 0,
 ): void => {
   const { Position, Projectile } = world.c;
   const tx = (Position.x[target] as number) + fxMul(world.rng.nextFx() - FX_HALF, ARROW_SPREAD);
@@ -139,18 +150,22 @@ export const fireProjectile = (
   Projectile.damage[p] = damage;
   Projectile.dmgType[p] = dmgType;
   Projectile.height[p] = height;
+  Projectile.source[p] = source;
 };
 
 const fireArrow = (world: SimWorld, s: number, target: number): void => {
-  const { Position, Combat, Team } = world.c;
+  const { Position, Combat, Team, Soldier } = world.c;
+  const team = Team.id[s] as number;
+  const b = Soldier.battalion[s] as number;
   fireProjectile(
     world,
     Position.x[s] as number,
     Position.z[s] as number,
     target,
-    Combat.damage[s] as number,
-    arrowDmgType(world, Team.id[s] as number, Combat.dmgType[s] as number),
+    (((Combat.damage[s] as number) * attackPercent(world, b, team, false)) / 100) | 0,
+    arrowDmgType(world, team, Combat.dmgType[s] as number),
     150,
+    b,
   );
 };
 
@@ -217,10 +232,9 @@ export const combatSystem = (world: SimWorld): void => {
         Velocity.z[s] = 0;
         face(world, s, tx, tz);
         if ((Combat.cooldown[s] as number) === 0) {
-          // Dövme Kılıçlar: yakın dövüş hasarı +%25.
-          const base = Combat.damage[s] as number;
-          const dmg = hasUpgrade(world, team, Upgrade.ForgedBlades) ? (base * 5) >> 2 : base;
-          applyDamage(world, t, dmg, Combat.dmgType[s] as number);
+          // Rütbe, aura, Toplanma, Dövme Kılıçlar, Elendil.
+          const dmg = (((Combat.damage[s] as number) * attackPercent(world, b, team, true)) / 100) | 0;
+          applyDamage(world, t, dmg, Combat.dmgType[s] as number, b);
           Combat.cooldown[s] = Combat.interval[s] as number;
           startAttackAnim(world, s);
         }
@@ -260,7 +274,13 @@ export const projectileSystem = (world: SimWorld): void => {
         ((Position.z[t] as number) - (Projectile.toZ[p] as number)) | 0,
       );
       if (d <= ARROW_HIT_RADIUS)
-        applyDamage(world, t, Projectile.damage[p] as number, Projectile.dmgType[p] as number);
+        applyDamage(
+          world,
+          t,
+          Projectile.damage[p] as number,
+          Projectile.dmgType[p] as number,
+          Projectile.source[p] as number,
+        );
     }
     removeEntity(world, p);
   }

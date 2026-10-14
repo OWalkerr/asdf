@@ -12,6 +12,7 @@ import {
 } from './systems/battalion';
 import { combatSystem, projectileSystem } from './systems/combat';
 import { deathSystem } from './systems/death';
+import { heroSystem } from './systems/heroes';
 import { enemyAiSystem, matchSystem, setupMatch, waveSystem } from './systems/match';
 import { movementSystem } from './systems/movement';
 import { animStateSystem, moveToTargetSystem } from './systems/moveToTarget';
@@ -43,6 +44,18 @@ export interface MatchContext {
   /** Takım başına tamamlanmış (ve araştırılmakta olan) yükseltme bitleri (UPGRADE_DEFS). */
   upgrades: Uint8Array;
   researching: Uint8Array;
+  /** Güç Puanı ×10, açık büyü bitleri, büyü hazır tick'leri (takım × 4 + büyü). */
+  pp: Int32Array;
+  spells: Uint8Array;
+  spellReady: Int32Array;
+  rallyUntil: Int32Array;
+  /** Takım başına kahraman taburu (0 = yok), yeniden çağırma tick'i, yetenek hazır tick'leri (takım × 2). */
+  hero: Int32Array;
+  heroReady: Int32Array;
+  abilityReady: Int32Array;
+  elendilUntil: Int32Array;
+  /** Bekleyen Ok Yağmuru dalgaları. */
+  volleys: { x: number; z: number; team: number; next: number; left: number }[];
   /** MapDef.slots sırasıyla inşa edilmiş yapı eid'i (0 = boş). */
   slots: Int32Array;
 }
@@ -92,6 +105,15 @@ export const createSimWorld = (
       gold: new Int32Array(4),
       upgrades: new Uint8Array(4),
       researching: new Uint8Array(4),
+      pp: new Int32Array(4),
+      spells: new Uint8Array(4),
+      spellReady: new Int32Array(16),
+      rallyUntil: new Int32Array(4),
+      hero: new Int32Array(4),
+      heroReady: new Int32Array(4),
+      abilityReady: new Int32Array(8),
+      elendilUntil: new Int32Array(4),
+      volleys: [],
       slots: new Int32Array(map?.slots.length ?? 0),
     },
     hashHead: new Int32Array(nav.cols * nav.rows),
@@ -118,6 +140,7 @@ export const stepWorld = (world: SimWorld): void => {
   formationSystem(world);
   combatSystem(world);
   structureSystem(world);
+  heroSystem(world);
   moveToTargetSystem(world);
   separationSystem(world);
   movementSystem(world);
@@ -167,6 +190,9 @@ export const hashWorld = (world: SimWorld): number => {
     h = hashInt(h, Battalion.count[eid] as number);
     h = hashInt(h, Battalion.mode[eid] as number);
     h = hashInt(h, Battalion.engaged[eid] as number);
+    h = hashInt(h, Battalion.xp[eid] as number);
+    h = hashInt(h, Battalion.rank[eid] as number);
+    h = hashInt(h, Battalion.aura[eid] as number);
   }
   for (const eid of query(world, [Soldier])) {
     h = hashInt(h, Soldier.battalion[eid] as number);
@@ -183,6 +209,24 @@ export const hashWorld = (world: SimWorld): number => {
   for (const g of world.match.gold) h = hashInt(h, g);
   for (const u of world.match.upgrades) h = hashInt(h, u);
   for (const u of world.match.researching) h = hashInt(h, u);
+  const m = world.match;
+  for (const arr of [
+    m.pp,
+    m.spells,
+    m.spellReady,
+    m.rallyUntil,
+    m.hero,
+    m.heroReady,
+    m.abilityReady,
+    m.elendilUntil,
+  ])
+    for (const v of arr) h = hashInt(h, v);
+  for (const v of m.volleys) {
+    h = hashInt(h, v.x);
+    h = hashInt(h, v.z);
+    h = hashInt(h, v.next);
+    h = hashInt(h, v.left);
+  }
   h = hashInt(h, world.match.state);
   h = hashInt(h, world.match.nextGroup);
   for (const s of world.rng.getState()) h = hashInt(h, s);

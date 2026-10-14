@@ -83,6 +83,22 @@ export class Scenario {
     this.sim.send({ type: 'repair', gate }, PLAYER);
   }
 
+  summonHero(unitType: number): void {
+    this.sim.send({ type: 'summonHero', unitType }, PLAYER);
+  }
+
+  ability(unit: number, ability: number): void {
+    this.sim.send({ type: 'ability', unit, ability }, PLAYER);
+  }
+
+  unlockSpell(spell: number): void {
+    this.sim.send({ type: 'unlockSpell', spell }, PLAYER);
+  }
+
+  castSpell(spell: number, x: number, z: number): void {
+    this.sim.send({ type: 'castSpell', spell, x: fxFromFloat(x), z: fxFromFloat(z) }, PLAYER);
+  }
+
   /** Seçili taburları durdur. */
   stop(battalions: Iterable<number>): void {
     const units = [...battalions];

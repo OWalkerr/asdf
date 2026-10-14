@@ -17,6 +17,7 @@ import { BattalionMode } from '../components';
 import { cellAt, cellCenterX, cellCenterZ, isBlockedAt, nearestOpenCell } from '../nav/grid';
 import { isUnitType, STAT } from '../unitStats';
 import type { SimWorld } from '../world';
+import { castSpell, summonHero, unlockSpell, useAbility } from './heroes';
 import { buildStructure, repairGate, researchUpgrade, trainUnit } from './structures';
 
 /** Oyuncu → takım eşlemesi (Phase 1: oyuncu N = takım N). Co-op'ta lobi belirleyecek. */
@@ -58,6 +59,7 @@ export const spawnUnit = (world: SimWorld, team: number, unitType: number, x: Fx
   Health.hp[eid] = STAT.hp[unitType] as number;
   Health.max[eid] = STAT.hp[unitType] as number;
   Health.lastHit[eid] = 0;
+  Health.lastBy[eid] = 0;
   Anim.state[eid] = 0;
   Anim.startTick[eid] = world.tick;
   Combat.target[eid] = 0;
@@ -122,6 +124,9 @@ export const spawnBattalion = (
   Battalion.targetStructure[b] = 0;
   Battalion.engaged[b] = 0;
   Battalion.enemy[b] = 0;
+  Battalion.xp[b] = 0;
+  Battalion.rank[b] = 1;
+  Battalion.aura[b] = 0;
   const c = fxCos(facing);
   const sn = fxSin(facing);
   Battalion.cos[b] = c;
@@ -340,6 +345,22 @@ export const applyCommand = (world: SimWorld, sc: StampedCommand): void => {
     }
     case 'repair': {
       repairGate(world, team, cmd.gate);
+      break;
+    }
+    case 'summonHero': {
+      summonHero(world, team, cmd.unitType);
+      break;
+    }
+    case 'ability': {
+      useAbility(world, team, cmd.unit, cmd.ability);
+      break;
+    }
+    case 'unlockSpell': {
+      unlockSpell(world, team, cmd.spell);
+      break;
+    }
+    case 'castSpell': {
+      castSpell(world, team, cmd.spell, cmd.x, cmd.z);
       break;
     }
     case 'stop': {

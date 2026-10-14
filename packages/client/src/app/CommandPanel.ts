@@ -3,10 +3,12 @@ import {
   BUILDING_KINDS,
   type BuildingKind,
   ECONOMY,
+  HERO_ABILITIES,
   type MapDef,
   type MatchInfo,
   SLOT_BUILDS,
   UNIT_DEFS,
+  UnitTypeId,
   UPGRADE_DEFS,
 } from '@bulwark/shared';
 import type { SlotMarkers } from '../render/map/SlotMarkers';
@@ -28,6 +30,8 @@ export const UNIT_LABELS: Record<number, string> = {
   2: 'Kule Muhafızları',
   3: 'Uruk-hai',
   4: 'Gondor Okçuları',
+  5: 'Koçbaşı',
+  6: 'Aragorn',
 };
 
 const ICONS: Record<string, string> = {
@@ -43,7 +47,15 @@ const ICONS: Record<string, string> = {
   flame:
     '<path d="M12 2c1 4 6 6 6 12a6 6 0 0 1-12 0c0-3 2-5 3-7 0 3 1 4 2 4 0-3-1-6 1-9z" fill="currentColor"/>',
 };
-const UNIT_ICON: Record<number, string> = { 0: 'sword', 1: 'sword', 2: 'spear', 3: 'sword', 4: 'bow' };
+const UNIT_ICON: Record<number, string> = {
+  0: 'sword',
+  1: 'sword',
+  2: 'spear',
+  3: 'sword',
+  4: 'bow',
+  5: 'hall',
+  6: 'blade',
+};
 const BUILD_ICON: Record<BuildingKind, string> = { arrow_tower: 'tower', barracks: 'hall', forge: 'anvil' };
 const BUILD_DESC: Record<BuildingKind, string> = {
   arrow_tower: 'Menzildeki düşman taburlarına 3 oklu yaylım atar.',
@@ -84,6 +96,9 @@ export class CommandPanel {
   private key = '';
   private gold = 0;
   private match: MatchInfo | null = null;
+  private tick = 0;
+  /** Kahraman yeteneği kullanıldı (görsel efekt için). */
+  onAbility: ((ability: number) => void) | null = null;
   /** Düğmeye basıldı (arayüz sesi). */
   onClick: (() => void) | null = null;
 
@@ -121,7 +136,8 @@ export class CommandPanel {
     });
   }
 
-  update(match: MatchInfo): void {
+  update(match: MatchInfo, tick = 0): void {
+    this.tick = tick;
     const gold = match.gold;
     this.gold = gold;
     this.match = match;
@@ -167,17 +183,25 @@ export class CommandPanel {
   }
 
   private showBattalions(): void {
-    const counts = new Map<number, { battalions: Set<number>; men: number; hp: number }>();
-    this.d.units.forEach((_x, _y, _z, b, _team, hp, type) => {
+    const counts = new Map<number, { battalions: Set<number>; men: number; hp: number; rank: number }>();
+    this.d.units.forEach((_x, _y, _z, b, _team, hp, type, rank) => {
       if (!this.d.selected.has(b)) return;
       let c = counts.get(type);
       if (!c) {
-        c = { battalions: new Set(), men: 0, hp: 0 };
+        c = { battalions: new Set(), men: 0, hp: 0, rank: 0 };
         counts.set(type, c);
       }
       c.battalions.add(b);
       c.men++;
       c.hp += hp;
+      c.rank = Math.max(c.rank, rank);
+    });
+    const m = this.match;
+    const hero = m && m.hero !== 0 && this.d.selected.has(m.hero) ? m.hero : 0;
+    const heroRank = counts.get(UnitTypeId.Aragorn)?.rank ?? 1;
+    const abil = HERO_ABILITIES.map((a, i) => {
+      const left = Math.max(0, Math.ceil((((m?.abilityReady[i] ?? 0) - this.tick) * 50) / 1000));
+      return { a, i, left, locked: heroRank < a.rank };
     });
     const parts = [...counts].map(([type, c]) => {
       const size = UNIT_DEFS[type]?.battalionSize ?? 1;
@@ -188,20 +212,43 @@ export class CommandPanel {
         hp: Math.round((c.hp / (size * c.battalions.size)) * 100),
       };
     });
-    const key = `bat:${parts.map((p) => `${p.type}.${p.n}.${p.men}.${Math.round(p.hp / 5)}`).join(',')}`;
+    const elendil = (m?.elendilUntil ?? 0) > this.tick;
+    const key = `bat:${parts.map((p) => `${p.type}.${p.n}.${p.men}.${Math.round(p.hp / 5)}.${counts.get(p.type)?.rank}`).join(',')}:${hero}:${abil.map((x) => `${x.left}${x.locked}`).join(',')}:${elendil}`;
     this.render(key, () => {
       this.buttons = [];
       const sel = this.d.selected;
       this.stopFn = () => this.d.scenario.stop(sel);
       const cards = parts
-        .map(
-          (
-            p,
-          ) => `<div class="unitcard">${icon(UNIT_ICON[p.type] ?? 'sword')}<div><b>${UNIT_LABELS[p.type] ?? '?'}</b>
-            <span>${p.n} tabur · ${p.men} asker</span><i class="hpbar"><i style="width:${p.hp}%"></i></i></div></div>`,
-        )
+        .map((p) => {
+          const rank = counts.get(p.type)?.rank ?? 1;
+          const stars = rank > 1 ? ` <em class="rank">${'★'.repeat(rank - 1)}</em>` : '';
+          const sub =
+            p.type === UnitTypeId.Aragorn
+              ? `Rütbe ${rank}${elendil ? ' · Andúril parlıyor' : ''}`
+              : `${p.n} tabur · ${p.men} asker`;
+          return `<div class="unitcard">${icon(UNIT_ICON[p.type] ?? 'sword')}<div><b>${UNIT_LABELS[p.type] ?? '?'}${stars}</b>
+            <span>${sub}</span><i class="hpbar"><i style="width:${p.hp}%"></i></i></div></div>`;
+        })
         .join('');
-      return `<div class="title">${sel.size} tabur seçili</div><div class="row">${cards}
+      const abilities = hero
+        ? abil
+            .map(({ a, i, left, locked }) =>
+              this.button(
+                i,
+                !locked && left === 0,
+                () => {
+                  this.d.scenario.ability(hero, i);
+                  this.onAbility?.(i);
+                  this.key = '';
+                },
+                `${icon(i === 0 ? 'blade' : 'heal')}<span>${a.name}</span><em>${locked ? `R${a.rank}` : left > 0 ? `${left} sn` : 'hazır'}</em>`,
+                `${a.name} — ${a.desc} Bekleme ${a.cooldown} sn${locked ? ` (rütbe ${a.rank} gerekir)` : ''}.`,
+                'wide',
+              ),
+            )
+            .join('')
+        : '';
+      return `<div class="title">${sel.size} tabur seçili</div><div class="row">${cards}${abilities}
         <button type="button" class="cmd stop" data-stop title="Dur (H)">${icon('stop')}<span>Dur</span><kbd>H</kbd></button></div>
         <div class="hint">Sağ tık: yürü · düşmana sağ tık: saldır</div>`;
     });

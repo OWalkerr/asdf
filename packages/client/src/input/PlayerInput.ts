@@ -30,8 +30,20 @@ export interface PlayerInputDeps {
   slotLift?: (slot: number) => number;
 }
 
+/** Alan büyüsü hedefleme: halka yarıçapı ve seçilen noktayla çağrılacak işlev. */
+export interface Targeting {
+  radius: number;
+  onPick: (x: number, z: number) => void;
+  onCancel?: () => void;
+}
+
 export class PlayerInput {
   hoverText = '—';
+  /** Aktif hedefleme (büyü); varken sol tık hedef seçer, sağ tık/Esc iptal eder. */
+  targeting: Targeting | null = null;
+  /** Hedefleme halkası çizimi (main bağlar). */
+  onTargetHover: ((x: number, y: number, z: number, radius: number) => void) | null = null;
+  onTargetEnd: (() => void) | null = null;
   private pointer = { x: 0, y: 0, inside: false };
   private drag: { x0: number; y0: number; active: boolean } | null = null;
 
@@ -43,6 +55,10 @@ export class PlayerInput {
     window.addEventListener('pointerup', this.onUp);
     window.addEventListener('keydown', (e) => {
       if (e.code === 'Escape') {
+        if (this.targeting) {
+          this.cancelTargeting();
+          return;
+        }
         d.selection.click(0, false);
         d.slots?.setSelected(-1);
       }
@@ -63,6 +79,12 @@ export class PlayerInput {
       cursor.hide();
       slots?.setHovered(-1);
       this.hoverText = '—';
+      return;
+    }
+    if (this.targeting) {
+      slots?.setHovered(-1);
+      cursor.hide();
+      this.onTargetHover?.(hit.point.x, hit.point.y, hit.point.z, this.targeting.radius);
       return;
     }
     const slot = slots ? slots.nearest(hit.point.x, hit.point.y, hit.point.z) : -1;
@@ -96,7 +118,36 @@ export class PlayerInput {
     this.d.slots?.setHovered(-1);
   };
 
+  beginTargeting(t: Targeting): void {
+    this.cancelTargeting();
+    this.targeting = t;
+    this.d.canvas.style.cursor = 'crosshair';
+  }
+
+  cancelTargeting(): void {
+    const t = this.targeting;
+    if (!t) return;
+    this.targeting = null;
+    this.d.canvas.style.cursor = '';
+    this.onTargetEnd?.();
+    t.onCancel?.();
+  }
+
   private onDown = (e: PointerEvent): void => {
+    if (this.targeting) {
+      if (e.button === 0) {
+        const { w, h } = this.size;
+        const hit = this.d.picker.pick(this.d.cam.camera, e.offsetX, e.offsetY, w, h);
+        if (hit) {
+          const t = this.targeting;
+          this.targeting = null;
+          this.d.canvas.style.cursor = '';
+          this.onTargetEnd?.();
+          t.onPick(hit.point.x, hit.point.z);
+        }
+      } else if (e.button === 2) this.cancelTargeting();
+      return;
+    }
     if (e.button === 2) {
       this.order(e.offsetX, e.offsetY);
       return;

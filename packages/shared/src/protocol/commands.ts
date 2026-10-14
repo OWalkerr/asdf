@@ -28,7 +28,14 @@ export type Command =
   /** Demirhanede yükseltme araştır (UPGRADE_DEFS indeksi). */
   | { type: 'research'; building: number; upgrade: number }
   /** Kapıyı onar (haritadaki kapı indeksi). */
-  | { type: 'repair'; gate: number };
+  | { type: 'repair'; gate: number }
+  /** Kahramanı çağır (veya ölmüşse yeniden canlandır). */
+  | { type: 'summonHero'; unitType: number }
+  /** Kahraman yeteneği (HERO_ABILITIES indeksi). unit = kahraman taburu. */
+  | { type: 'ability'; unit: number; ability: number }
+  /** Spellbook: büyüyü PP ile aç; açık büyüyü (x, z) hedefine kullan. */
+  | { type: 'unlockSpell'; spell: number }
+  | { type: 'castSpell'; spell: number; x: number; z: number };
 
 export interface StampedCommand {
   /** Uygulanacağı sim tick'i. */

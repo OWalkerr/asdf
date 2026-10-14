@@ -1,4 +1,13 @@
-import { ECONOMY, fxAtan2, fxFromFloat, fxLen, type MapDef, MatchState, type Vec2 } from '@bulwark/shared';
+import {
+  ECONOMY,
+  fxAtan2,
+  fxFromFloat,
+  fxLen,
+  type MapDef,
+  MatchState,
+  PP,
+  type Vec2,
+} from '@bulwark/shared';
 import { addComponent, addEntity, query } from 'bitecs';
 import { BattalionMode } from '../components';
 import { SIM_HZ } from '../constants';
@@ -66,6 +75,8 @@ export const waveSystem = (world: SimWorld): void => {
     const gateIndex = map.gates.findIndex((gate) => gate.id === lane.target);
     const structure = gateIndex >= 0 ? (m.gates[gateIndex] as number) : 0;
     for (const b of battalions) world.c.Battalion.targetStructure[b] = structure;
+    // Dalga başı Güç Puanı bonusu (GDD §9.1).
+    if (g.wave > m.waveIndex) m.pp[0] = (m.pp[0] as number) + PP.waveBonus * 10;
     m.waveIndex = Math.max(m.waveIndex, g.wave);
   }
 };

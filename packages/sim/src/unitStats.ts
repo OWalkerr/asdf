@@ -5,6 +5,7 @@ import {
   ECONOMY,
   type Fx,
   fxFromFloat,
+  PP,
   UNIT_DEFS,
 } from '@bulwark/shared';
 import { SIM_HZ } from './constants';
@@ -25,6 +26,12 @@ export const STAT = {
   range: UNIT_DEFS.map((d) => fxFromFloat(d.range)) as readonly Fx[],
   ranged: UNIT_DEFS.map((d) => (d.ranged ? 1 : 0)) as readonly number[],
   siegeOnly: UNIT_DEFS.map((d) => (d.siegeOnly ? 1 : 0)) as readonly number[],
+  hero: UNIT_DEFS.map((d) => (d.hero ? 1 : 0)) as readonly number[],
+  /** Öldürülünce verilen XP (asker başı değer) ve Güç Puanı ×10 (değer / PP.perValue). */
+  xpValue: UNIT_DEFS.map((d) => Math.max(1, Math.round(d.cost / d.battalionSize))) as readonly number[],
+  ppValue: UNIT_DEFS.map((d) =>
+    Math.max(1, Math.round((d.cost / d.battalionSize / PP.perValue) * 10)),
+  ) as readonly number[],
   cost: UNIT_DEFS.map((d) => d.cost) as readonly number[],
   trainTicks: UNIT_DEFS.map((d) => Math.round(d.trainTime * SIM_HZ)) as readonly number[],
   /** Öldürülen asker başına ödül (altın). */

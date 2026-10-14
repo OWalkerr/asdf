@@ -17,7 +17,13 @@ export const createComponents = (capacity = MAX_ENTITIES) => ({
   /** Aktif hareket hedefi (serbest birimler). */
   MoveTarget: { x: new Int32Array(capacity), z: new Int32Array(capacity), active: new Uint8Array(capacity) },
   /** Can; lastHit = son hasar tick'i + 1 (0 = hiç). */
-  Health: { hp: new Int32Array(capacity), max: new Int32Array(capacity), lastHit: new Uint32Array(capacity) },
+  /** lastBy = son hasarı veren tabur (XP için; 0 = kule/büyü). */
+  Health: {
+    hp: new Int32Array(capacity),
+    max: new Int32Array(capacity),
+    lastHit: new Uint32Array(capacity),
+    lastBy: new Int32Array(capacity),
+  },
   /** Animasyon durumu ve başladığı tick (render faz hesabı için). */
   Anim: { state: new Uint8Array(capacity), startTick: new Uint32Array(capacity) },
   /**
@@ -71,6 +77,10 @@ export const createComponents = (capacity = MAX_ENTITIES) => ({
     /** Çatışmada mı (sancak durur, askerler hedef seçer) ve en yakın/ilgili düşman taburu. */
     engaged: new Uint8Array(capacity),
     enemy: new Int32Array(capacity),
+    /** Deneyim ve rütbe (GDD §5.2, 1–5); kahraman aurası içinde mi. */
+    xp: new Int32Array(capacity),
+    rank: new Uint8Array(capacity),
+    aura: new Uint8Array(capacity),
   },
   /** Tabur askeri: hangi tabur, hangi yuva, yuva sapması (Fx). */
   Soldier: {
@@ -111,6 +121,8 @@ export const createComponents = (capacity = MAX_ENTITIES) => ({
     dmgType: new Uint8Array(capacity),
     /** Çıkış yüksekliği (cm, zeminden). */
     height: new Uint16Array(capacity),
+    /** Atan tabur (XP için; 0 = kule/büyü). */
+    source: new Int32Array(capacity),
   },
 });
 
