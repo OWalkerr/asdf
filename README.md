@@ -42,7 +42,14 @@ saldıranları dağıtın. Okçular ve kuleler menzildeki düşmana kendiliğind
 **Ekonomi ve inşa:** 700 altınla başlarsınız, saniyede +5 gelir ve öldürülen her düşman için ödül alırsınız.
 Altın halkalı alana tıklayın: sur soketlerine ve Hornburg platformlarına **Okçu Kulesi** (250), vadideki
 arsalara **Kışla** (400) kurulur. Kışlayı seçip Gondor Askerleri, Okçuları ve Kule Muhafızları yetiştirin
-(kuyruk en fazla 5). Alt paneldeki düğmeler Z X C V kısayollarıyla da çalışır.
+(kuyruk en fazla 5). Arsalara **Demirhane** (500) kurup takım çapında yükseltme araştırın: Dövme Kılıçlar
+(+%25 yakın dövüş), Ağır Zırh (−%25 alınan hasar), Ateşli Oklar (okçu ve kule okları ateş hasarı verir).
+Alt paneldeki düğmeler Z X C V kısayollarıyla da çalışır.
+
+**Koçbaşı:** 3. dalgadan itibaren Isengard koçbaşıları kapılara yürür. Oklara dayanıklıdır (Ateşli Oklar hariç),
+kılıca açıktır — piyadeyle kapının önüne çıkın. Hasar alan kapıyı üst şeritteki **Onar** düğmesiyle
+(300 altın, 10 sn'de +%25) onarabilirsiniz. Sağ alttaki mini haritaya tıklayınca kamera oraya kayar.
+Sesler prosedürel olarak üretilir (ilk tıklamada açılır, **M** ile sessize alınır).
 
 ## Birim kontrolleri
 Sol tık: tabur seç (Shift ile ekle/çıkar) · Sol sürükle: kutu seçimi · Sağ tık: seçili taburları yürüt
