@@ -33,6 +33,9 @@ export const UNIT_LABELS: Record<number, string> = {
   5: 'Koçbaşı',
   6: 'Aragorn',
   7: 'Lurtz',
+  8: 'Lórien Okçuları',
+  9: 'Rohirrim',
+  10: 'Ölüler Ordusu',
 };
 
 const ICONS: Record<string, string> = {

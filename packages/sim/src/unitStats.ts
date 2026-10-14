@@ -28,6 +28,9 @@ export const STAT = {
   siegeOnly: UNIT_DEFS.map((d) => (d.siegeOnly ? 1 : 0)) as readonly number[],
   hero: UNIT_DEFS.map((d) => (d.hero ? 1 : 0)) as readonly number[],
   boss: UNIT_DEFS.map((d) => (d.boss ? 1 : 0)) as readonly number[],
+  summoned: UNIT_DEFS.map((d) => (d.summoned ? 1 : 0)) as readonly number[],
+  charger: UNIT_DEFS.map((d) => (d.charger ? 1 : 0)) as readonly number[],
+  invulnerable: UNIT_DEFS.map((d) => (d.invulnerable ? 1 : 0)) as readonly number[],
   /** Öldürülünce verilen XP (asker başı değer) ve Güç Puanı ×10 (değer / PP.perValue). */
   xpValue: UNIT_DEFS.map((d) => Math.max(1, Math.round(d.cost / d.battalionSize))) as readonly number[],
   ppValue: UNIT_DEFS.map((d) =>

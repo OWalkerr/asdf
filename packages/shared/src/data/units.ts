@@ -48,6 +48,14 @@ export interface UnitDef {
   hero?: boolean;
   /** Düşman boss'u (dalgayla gelir): kendi takımına liderlik aurası verir, oyuncu çağıramaz. */
   boss?: boolean;
+  /** Büyüyle çağrılan geçici birlik (kışlada yetiştirilmez, ödül/XP vermez). */
+  summoned?: boolean;
+  /** Süvari hücumu: çatışmaya girmez, geçtiği yoldaki düşmanları çiğner (trample). */
+  charger?: boolean;
+  /** Hasar almaz (Ölüler Ordusu). */
+  invulnerable?: boolean;
+  /** Yürüme/dörtnal adım frekansı (Hz, render). */
+  stepRate?: number;
 }
 
 export const UNIT_DEFS: readonly UnitDef[] = [
@@ -227,6 +235,78 @@ export const UNIT_DEFS: readonly UnitDef[] = [
     jitter: 0,
     boss: true,
   },
+  {
+    // Elf Müttefikleri (GDD §9.2): Lórien okçuları — altın saç, gri-yeşil pelerin, uzun yay.
+    id: 8,
+    key: 'lorien_archer',
+    name: 'Lothlórien Archers',
+    faction: 'gondor',
+    speed: 5.2,
+    hp: 90,
+    armor: 'light',
+    attackStyle: 'bow',
+    damage: 14,
+    damageType: 'pierce',
+    attackInterval: 1.3,
+    range: 38,
+    ranged: true,
+    battalionSize: 12,
+    cost: 0,
+    trainTime: 0,
+    files: 4,
+    spacing: 1.4,
+    jitter: 0.04,
+    summoned: true,
+  },
+  {
+    // Rohirrim'i Çağır (GDD §9.2): mızraklı süvari hattı; yoldaki düşmanı ezip geçer.
+    id: 9,
+    key: 'rohirrim',
+    name: 'Rohirrim',
+    faction: 'rohan',
+    speed: 13,
+    hp: 320,
+    armor: 'cavalry',
+    attackStyle: 'thrust',
+    damage: 40,
+    damageType: 'crush',
+    attackInterval: 0.1,
+    range: 1.8,
+    ranged: false,
+    battalionSize: 8,
+    cost: 0,
+    trainTime: 0,
+    files: 8,
+    spacing: 3,
+    jitter: 0.2,
+    summoned: true,
+    charger: true,
+    stepRate: 2.8,
+  },
+  {
+    // Ölüler Ordusu (GDD §9.2): Dunharrow'un yeminli ölüleri — hayalet yeşili, hasar almaz.
+    id: 10,
+    key: 'dead_army',
+    name: 'Army of the Dead',
+    faction: 'gondor',
+    speed: 5,
+    hp: 100,
+    armor: 'monster',
+    attackStyle: 'slash',
+    damage: 28,
+    damageType: 'magic',
+    attackInterval: 0.9,
+    range: 1.7,
+    ranged: false,
+    battalionSize: 20,
+    cost: 0,
+    trainTime: 0,
+    files: 5,
+    spacing: 1.3,
+    jitter: 0.25,
+    summoned: true,
+    invulnerable: true,
+  },
 ];
 
 export const UnitTypeId = {
@@ -238,6 +318,9 @@ export const UnitTypeId = {
   BatteringRam: 5,
   Aragorn: 6,
   Lurtz: 7,
+  LorienArcher: 8,
+  Rohirrim: 9,
+  DeadArmy: 10,
 } as const;
 
 export const unitDef = (id: number): UnitDef => {

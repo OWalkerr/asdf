@@ -5,6 +5,7 @@ import {
   fxDiv,
   HASH_SEED,
   hashInt,
+  MAX_SPELLS,
   type MapDef,
   MatchState,
   Rng,
@@ -22,7 +23,7 @@ import {
 } from './systems/battalion';
 import { combatSystem, projectileSystem } from './systems/combat';
 import { deathSystem } from './systems/death';
-import { heroSystem } from './systems/heroes';
+import { expireSystem, heroSystem, trampleSystem } from './systems/heroes';
 import { enemyAiSystem, matchSystem, setupMatch, waveSystem } from './systems/match';
 import { movementSystem } from './systems/movement';
 import { animStateSystem, moveToTargetSystem } from './systems/moveToTarget';
@@ -121,7 +122,7 @@ export const createSimWorld = (
       researching: new Uint8Array(4),
       pp: new Int32Array(4),
       spells: new Uint8Array(4),
-      spellReady: new Int32Array(16),
+      spellReady: new Int32Array(4 * MAX_SPELLS),
       rallyUntil: new Int32Array(4),
       hero: new Int32Array(4),
       heroReady: new Int32Array(4),
@@ -158,8 +159,10 @@ export const stepWorld = (world: SimWorld): void => {
   moveToTargetSystem(world);
   separationSystem(world);
   movementSystem(world);
+  trampleSystem(world);
   projectileSystem(world);
   deathSystem(world);
+  expireSystem(world);
   animStateSystem(world);
   matchSystem(world);
   world.tick++;
@@ -207,6 +210,7 @@ export const hashWorld = (world: SimWorld): number => {
     h = hashInt(h, Battalion.xp[eid] as number);
     h = hashInt(h, Battalion.rank[eid] as number);
     h = hashInt(h, Battalion.aura[eid] as number);
+    h = hashInt(h, Battalion.expires[eid] as number);
   }
   for (const eid of query(world, [Soldier])) {
     h = hashInt(h, Soldier.battalion[eid] as number);

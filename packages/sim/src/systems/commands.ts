@@ -131,6 +131,7 @@ export const spawnBattalion = (
   Battalion.xp[b] = 0;
   Battalion.rank[b] = 1;
   Battalion.aura[b] = 0;
+  Battalion.expires[b] = 0;
   const c = fxCos(facing);
   const sn = fxSin(facing);
   Battalion.cos[b] = c;

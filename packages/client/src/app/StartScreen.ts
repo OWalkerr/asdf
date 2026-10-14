@@ -3,17 +3,18 @@ import { DEFAULT_DIFFICULTY, DIFFICULTIES } from '@bulwark/shared';
 /**
  * Maç öncesi ekran (GDD §4.4, §11): harita adı, kısa görev metni ve zorluk seçimi.
  * Seçim yapılınca çözülür; sim seçilen zorlukla başlatılır. `?difficulty=easy|normal|hard`
- * veya otomasyon (navigator.webdriver) ekranı atlar.
+ * veya otomasyon (navigator.webdriver; `?intro` ile yine gösterilir) ekranı atlar.
  */
 export const chooseDifficulty = (mapName: string): Promise<number> => {
   const params = new URLSearchParams(location.search);
   const fromUrl = DIFFICULTIES.findIndex((d) => d.key === params.get('difficulty'));
   if (fromUrl >= 0) return Promise.resolve(fromUrl);
-  if (navigator.webdriver) return Promise.resolve(DEFAULT_DIFFICULTY);
+  if (navigator.webdriver && !params.has('intro')) return Promise.resolve(DEFAULT_DIFFICULTY);
   let saved = DEFAULT_DIFFICULTY;
   try {
-    const v = Number(localStorage.getItem('bulwark.difficulty'));
-    if (DIFFICULTIES[v]) saved = v;
+    const raw = localStorage.getItem('bulwark.difficulty');
+    const v = raw === null ? Number.NaN : Number(raw);
+    if (Number.isInteger(v) && DIFFICULTIES[v]) saved = v;
   } catch {
     /* depolama yok */
   }
@@ -35,7 +36,7 @@ export const chooseDifficulty = (mapName: string): Promise<number> => {
           ).join('')}
         </div>
         <button type="button" class="go">Savunmayı başlat</button>
-        <p class="keys">Sol tık: seç · Sağ tık: yürü/saldır · WASD/Q/E: kamera · F: Aragorn · 1 2 3 4 5 6: büyüler · M: ses</p>
+        <p class="keys">Sol tık: seç · Sağ tık: yürü/saldır · WASD/Q/E: kamera · F: Aragorn · 1–6: büyüler · M: ses</p>
       </div>`;
     document.body.appendChild(root);
     let pick = saved;

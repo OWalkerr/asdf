@@ -63,6 +63,8 @@ export interface UnitMaterialOptions {
   attackStyle: number;
   /** Yürüme adım frekansı (Hz). */
   stepRate?: number;
+  /** Hayalet (Ölüler Ordusu): yarı saydam, yeşil parıltılı. */
+  ghost?: boolean;
 }
 
 /** a ≈ v ise 1, değilse 0 (bool yerine float maske; dallanmasız shader). */
@@ -172,12 +174,19 @@ export const createUnitMaterial = (
   const team = varying(iAnim.w);
   const baseUv = uv();
   const inTeamRow = step(12 * row, baseUv.y).mul(step(baseUv.y, 13 * row));
-  mat.colorNode = texture(palette, baseUv.add(vec2(0, team.mul(row).mul(inTeamRow))));
+  const baseColor = texture(palette, baseUv.add(vec2(0, team.mul(row).mul(inTeamRow))));
+  mat.colorNode = opts.ghost ? mix(baseColor.rgb, vec3(0.55, 1.0, 0.72), 0.75) : baseColor;
 
   // --- Emissive: rim (toon materyalle aynı parametreler) + vurulma parıltısı ------------
   const facing = saturate(dot(normalView, positionViewDirection));
   const rim = params.rimColor.mul(pow(float(1).sub(facing), params.rimPower)).mul(params.rimStrength);
   const flash = varying(clamp(iAnim.z, 0, 1));
-  setEmissiveNode(mat, rim.add(vec3(1, 0.92, 0.75).mul(flash).mul(0.9)));
+  const glow = opts.ghost ? vec3(0.25, 0.9, 0.5).mul(0.55) : vec3(0, 0, 0);
+  setEmissiveNode(mat, rim.add(vec3(1, 0.92, 0.75).mul(flash).mul(0.9)).add(glow));
+  if (opts.ghost) {
+    mat.transparent = true;
+    mat.opacity = 0.55;
+    mat.depthWrite = false;
+  }
   return mat;
 };

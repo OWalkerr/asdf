@@ -39,6 +39,7 @@ import {
   SNAP_MAX_GATES,
   SNAP_MAX_STRUCTS,
   SNAP_PROJ_INTS,
+  SNAP_SPELLS,
   SNAP_STRUCT_INTS,
   SNAP_UNIT_INTS,
   structOffset,
@@ -137,7 +138,7 @@ export const writeSnapshot = (world: SimWorld, view: Int32Array, simMicros = 0):
   view[base + H_GOLD] = m.gold[0] as number;
   view[base + H_PP] = m.pp[0] as number;
   view[base + H_SPELLS] = m.spells[0] as number;
-  for (let i = 0; i < 3; i++) view[base + H_SPELL_READY + i] = m.spellReady[i] as number;
+  for (let i = 0; i < SNAP_SPELLS; i++) view[base + H_SPELL_READY + i] = m.spellReady[i] as number;
   view[base + H_HERO] = m.hero[0] as number;
   view[base + H_HERO_READY] = m.heroReady[0] as number;
   for (let i = 0; i < 2; i++) view[base + H_ABILITY_READY + i] = m.abilityReady[i] as number;

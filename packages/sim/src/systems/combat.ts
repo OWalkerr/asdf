@@ -12,7 +12,7 @@ import {
 } from '@bulwark/shared';
 import { addComponent, addEntity, entityExists, hasComponent, query, removeEntity } from 'bitecs';
 import { cellAt } from '../nav/grid';
-import { ARMOR_STRUCTURE, PERCENT } from '../unitStats';
+import { ARMOR_STRUCTURE, PERCENT, STAT } from '../unitStats';
 import type { SimWorld } from '../world';
 import { clearLine } from './battalion';
 import { attackPercent, defensePercent } from './heroes';
@@ -67,6 +67,7 @@ export const applyDamage = (
     );
     return;
   }
+  if (STAT.invulnerable[world.c.UnitType.id[target] as number] === 1) return;
   let pct = PERCENT[dmgType]?.[Combat.armor[target] as number] ?? 100;
   // Ağır Zırh yükseltmesi: alınan hasar −%25.
   if (hasUpgrade(world, world.c.Team.id[target] as number, Upgrade.HeavyArmor)) pct = (pct * 3) >> 2;

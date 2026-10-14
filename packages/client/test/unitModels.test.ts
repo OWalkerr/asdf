@@ -5,9 +5,11 @@ import {
   batteringRam,
   gondorArcher,
   gondorSoldier,
+  lorienArcher,
   lurtz,
   orcWarrior,
   Part,
+  rohirrim,
   towerGuard,
   UNIT_MODELS,
   urukHai,
@@ -23,6 +25,8 @@ const BUDGET: [string, () => import('three/webgpu').BufferGeometry, number][] = 
   ['Battering Ram', batteringRam, 900],
   ['Aragorn', aragorn, 450],
   ['Lurtz', lurtz, 450],
+  ['Lórien Archer', lorienArcher, 300],
+  ['Rohirrim', rohirrim, 600],
 ];
 
 describe('birim modelleri', () => {

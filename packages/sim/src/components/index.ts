@@ -81,6 +81,8 @@ export const createComponents = (capacity = MAX_ENTITIES) => ({
     xp: new Int32Array(capacity),
     rank: new Uint8Array(capacity),
     aura: new Uint8Array(capacity),
+    /** Çağrılan birliğin yok olacağı tick (0 = kalıcı). */
+    expires: new Uint32Array(capacity),
   },
   /** Tabur askeri: hangi tabur, hangi yuva, yuva sapması (Fx). */
   Soldier: {

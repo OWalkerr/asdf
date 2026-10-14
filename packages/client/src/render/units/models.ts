@@ -431,6 +431,103 @@ export const lurtz = (): BufferGeometry => {
   return b.build(1.25);
 };
 
+/**
+ * Lothlórien okçusu (GDD §7.2): miğfersiz, uzun altın saç, gri-yeşil elf pelerini, gümüş
+ * tunik, insan yayından uzun zarif yay. Gondor okçusundan ince ve uzun siluet.
+ */
+export const lorienArcher = (): BufferGeometry => {
+  const b = new ModelBuilder();
+  legs(b, 'rohanGreen', 'leather');
+  b.add(Part.Body, box(0.3, 0.62, 0.44), 'silver', [0, 1.14, 0]);
+  b.add(Part.Body, box(0.06, 0.4, 0.36), 'steel', [0.16, 1.2, 0]);
+  b.add(Part.Body, box(0.32, 0.36, 0.46), 'rohanGreen', [0, 0.8, 0]);
+  b.add(Part.Body, box(0.05, 1.05, 0.52), 'rohanGreen', [-0.2, 0.95, 0]); // uzun pelerin
+  b.add(Part.Body, cyl(0.06, 0.06, 0.62, 5), 'leather', [-0.23, 1.32, 0.12], [0.35, 0, 0]); // sadak
+  b.add(Part.Body, box(0.08, 0.1, 0.08), 'silver', [-0.23, 1.68, 0.24], [0.35, 0, 0]);
+  b.add(Part.Head, box(0.19, 0.21, 0.18), 'sand', [0.02, 1.62, 0]);
+  b.add(Part.Head, box(0.22, 0.12, 0.22), 'gold', [-0.01, 1.74, 0]); // altın saç
+  b.add(Part.Head, box(0.08, 0.36, 0.2), 'gold', [-0.1, 1.52, 0]); // omuza dökülen saç
+  arm(b, Part.ArmR, 0.28, 'silver', 'sand');
+  arm(b, Part.ArmL, -0.28, 'silver', 'sand');
+  const hx = 0.04;
+  const hy = 0.72;
+  const hz = -0.28;
+  b.add(Part.ArmL, box(0.8, 0.045, 0.035), 'wood', [hx + 0.02, hy, hz]);
+  b.add(Part.ArmL, box(0.66, 0.04, 0.035), 'wood', [hx + 0.72, hy - 0.12, hz], [0, 0, -0.38]);
+  b.add(Part.ArmL, box(0.66, 0.04, 0.035), 'wood', [hx - 0.68, hy - 0.12, hz], [0, 0, 0.38]);
+  b.add(Part.ArmL, box(1.9, 0.012, 0.012), 'silver', [hx + 0.02, hy - 0.26, hz]);
+  return b.build(1.04);
+};
+
+/**
+ * Rohirrim (GDD §7.1): kahverengi at, siyah yele; üstünde yeşil tunikli, zincir zırhlı, at kılı
+ * sorguçlu miğferli süvari, uzun mızrak ve yeşil yuvarlak kalkan. Atın çapraz bacak çiftleri
+ * LegL/LegR olarak kendi omuz/kalçalarında döner (dörtnal); mızrak sağ kol (dürtme).
+ */
+export const rohirrim = (): BufferGeometry => {
+  const b = new ModelBuilder();
+  // At gövdesi, boyun, baş, kuyruk
+  b.add(Part.Body, box(1.9, 0.72, 0.56), 'woodDark', [0, 1.38, 0]);
+  b.add(Part.Body, box(0.5, 0.95, 0.36), 'woodDark', [0.95, 1.8, 0], [0, 0, -0.55]);
+  b.add(Part.Body, box(0.62, 0.3, 0.3), 'woodDark', [1.42, 2.08, 0], [0, 0, 0.35]);
+  b.add(Part.Body, box(0.5, 0.18, 0.1), 'sootBlack', [0.88, 2.05, 0], [0, 0, -0.55]); // yele
+  b.add(Part.Body, box(0.18, 0.7, 0.14), 'sootBlack', [-1.05, 1.2, 0], [0, 0, 0.35]); // kuyruk
+  b.add(Part.Body, box(0.7, 0.08, 0.64), 'team0', [-0.05, 1.76, 0]); // eyer örtüsü
+  // Atın bacakları: ön-sol + arka-sağ = LegL, ön-sağ + arka-sol = LegR
+  for (const [part, x, z] of [
+    [Part.LegL, 0.72, -0.18],
+    [Part.LegR, -0.72, -0.18],
+    [Part.LegR, 0.72, 0.18],
+    [Part.LegL, -0.72, 0.18],
+  ] as const) {
+    b.add(part, box(0.16, 1.05, 0.16), 'woodDark', [x, 0.55, z], [0, 0, 0], [1, 1, 1], [x, 1.1, z]);
+    b.add(part, box(0.2, 0.1, 0.2), 'sootBlack', [x, 0.05, z], [0, 0, 0], [1, 1, 1], [x, 1.1, z]);
+  }
+  // Süvari
+  b.add(Part.Body, box(0.34, 0.58, 0.42), 'rohanGreen', [-0.05, 2.2, 0]);
+  b.add(Part.Body, box(0.36, 0.3, 0.44), 'steel', [-0.05, 2.32, 0]); // zincir zırh
+  b.add(Part.Body, box(0.05, 0.75, 0.44), 'team0', [-0.24, 2.05, 0]); // pelerin
+  for (const z of [-0.3, 0.3])
+    b.add(Part.Body, box(0.4, 0.16, 0.14), 'leather', [0.1, 1.85, z], [0, 0, -0.4]); // bacaklar
+  const neck: V3 = [-0.05, 2.5, 0];
+  b.add(Part.Head, box(0.2, 0.2, 0.2), 'sand', [-0.03, 2.62, 0], [0, 0, 0], [1, 1, 1], neck);
+  b.add(Part.Head, cyl(0.12, 0.15, 0.2, 6), 'silver', [-0.05, 2.76, 0], [0, 0, 0], [1, 1, 1], neck);
+  b.add(Part.Head, box(0.36, 0.08, 0.06), 'sand', [-0.24, 2.84, 0], [0, 0, 0.5], [1, 1, 1], neck); // at kılı sorguç
+  const shR: V3 = [-0.05, 2.42, 0.26];
+  const shL: V3 = [-0.05, 2.42, -0.26];
+  b.add(Part.ArmR, box(0.13, 0.5, 0.13), 'rohanGreen', [0, 2.2, 0.26], [0, 0, 0], [1, 1, 1], shR);
+  b.add(Part.ArmR, cyl(0.03, 0.03, 3.2, 5), 'wood', [0.75, 2.05, 0.3], [0, 0, -1.45], [1, 1, 1], shR); // mızrak
+  b.add(
+    Part.ArmR,
+    new ConeGeometry(0.06, 0.32, 4),
+    'silver',
+    [2.36, 2.1, 0.3],
+    [0, 0, -1.45],
+    [1, 1, 1],
+    shR,
+  );
+  b.add(Part.ArmL, box(0.13, 0.5, 0.13), 'rohanGreen', [0, 2.2, -0.26], [0, 0, 0], [1, 1, 1], shL);
+  b.add(
+    Part.ArmL,
+    cyl(0.3, 0.3, 0.05, 7),
+    'rohanGreen',
+    [0.05, 2.15, -0.4],
+    [Math.PI / 2, 0, 0],
+    [1, 1, 1],
+    shL,
+  );
+  b.add(
+    Part.ArmL,
+    cyl(0.08, 0.08, 0.07, 6),
+    'gold',
+    [0.05, 2.15, -0.43],
+    [Math.PI / 2, 0, 0],
+    [1, 1, 1],
+    shL,
+  );
+  return b.build();
+};
+
 export const UNIT_MODELS: Record<number, () => BufferGeometry> = {
   0: gondorSoldier,
   1: orcWarrior,
@@ -440,4 +537,8 @@ export const UNIT_MODELS: Record<number, () => BufferGeometry> = {
   5: batteringRam,
   6: aragorn,
   7: lurtz,
+  8: lorienArcher,
+  9: rohirrim,
+  // Ölüler Ordusu: Gondor askeri silueti, hayalet materyaliyle (UnitRenderer).
+  10: gondorSoldier,
 };

@@ -10,11 +10,17 @@ import type { Scenario } from './scenario';
 /**
  * Kahraman + Spellbook çubuğu (GDD §8, §9, §11.1): komut panelinin üstünde.
  *   F      → Aragorn'u çağır / seç ve kameraya getir
- *   1 2 3  → büyüyü aç (PP) veya kullan; alan büyüsünde zeminde hedef seçilir
+ *   1–6    → büyüyü aç (PP) veya kullan; hedefli büyülerde zeminde nokta seçilir
  */
 const SPELL_ICON: Record<string, string> = {
   heal: '<path d="M10 3h4v7h7v4h-7v7h-4v-7H3v-4h7z" fill="currentColor"/>',
   rally: '<path d="M5 2h2v20H5zM8 3h11l-3 4 3 4H8z" fill="currentColor"/>',
+  elven_allies:
+    '<path d="M12 2c3 4 6 8 6 12a6 6 0 0 1-12 0c0-4 3-8 6-12zm0 5c-1.5 2.5-3 5-3 7a3 3 0 0 0 6 0c0-2-1.5-4.5-3-7z" fill="currentColor"/>',
+  rohirrim:
+    '<path d="M4 20l3-7 2-1 1-4 4-3 3 1 3 4-2 1-2-2-2 3 1 3-2 1v4h-2v-4l-3-1-2 5z" fill="currentColor"/>',
+  army_of_dead:
+    '<path d="M12 2a7 7 0 0 0-7 7v11l2-2 2 2 2-2 2 2 2-2 2 2 2-2V9a7 7 0 0 0-7-7zM9 8a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zm6 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3z" fill="currentColor"/>',
   arrow_volley:
     '<path d="M3 21l7-7M7 21l7-7M11 21l7-7" stroke="currentColor" stroke-width="2"/><path d="M10 14l1-5 4 3zM14 14l1-5 4 3zM18 14l1-5 4 3z" fill="currentColor"/>',
 };
@@ -74,7 +80,7 @@ export class SpellBar {
     window.addEventListener('keydown', (e) => {
       if (e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
       if (e.code === 'KeyF') this.heroAction();
-      const i = ['Digit1', 'Digit2', 'Digit3'].indexOf(e.code);
+      const i = ['Digit1', 'Digit2', 'Digit3', 'Digit4', 'Digit5', 'Digit6'].indexOf(e.code);
       if (i >= 0) this.spellAction(i);
     });
   }
@@ -114,7 +120,14 @@ export class SpellBar {
         radius: def.radius,
         onPick: (x, z) => {
           this.d.scenario.castSpell(i, x, z);
-          this.d.fx.pulse(x, this.d.groundY(x, z), z, def.radius, def.key === 'heal' ? '#7dffa0' : '#ffd27a');
+          const color: Record<string, string> = {
+            heal: '#7dffa0',
+            arrow_volley: '#ffd27a',
+            elven_allies: '#bff5d0',
+            rohirrim: '#ffe08a',
+            army_of_dead: '#5dffa8',
+          };
+          this.d.fx.pulse(x, this.d.groundY(x, z), z, def.radius, color[def.key] ?? '#ffd27a');
         },
       });
     } else {
@@ -174,7 +187,7 @@ export class SpellBar {
       const rallyOn = def.key === 'rally' && match.rallyUntil > tick;
       const state = !unlocked ? (this.canUnlock(i) ? 'open' : 'locked') : cd > 0 ? 'cd' : 'ready';
       const label = !unlocked ? `${def.cost} PP` : cd > 0 ? `${cd} sn` : 'hazır';
-      const h = `${svg(SPELL_ICON[def.key] ?? '')}<span><b>${def.name}</b><small>${label}</small></span><kbd>${i + 1}</kbd>`;
+      const h = `${svg(SPELL_ICON[def.key] ?? '')}<small>${label}</small><kbd>${i + 1}</kbd>`;
       if (b.innerHTML !== h) b.innerHTML = h;
       b.dataset.state = state;
       b.classList.toggle('active', rallyOn);

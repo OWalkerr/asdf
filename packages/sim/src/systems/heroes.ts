@@ -10,22 +10,28 @@ import {
   HERO,
   HERO_ABILITIES,
   MAX_RANK,
+  MAX_SPELLS,
   MatchState,
   RALLY_DAMAGE_PERCENT,
   RALLY_DURATION,
   RANK_BONUS_PERCENT,
   RANK_XP,
   SPELL_DEFS,
+  SUMMONS,
+  TRAMPLE,
   UNIT_DEFS,
+  UnitTypeId,
   Upgrade,
   VOLLEY,
 } from '@bulwark/shared';
-import { entityExists, hasComponent, query } from 'bitecs';
+import { entityExists, hasComponent, query, removeEntity } from 'bitecs';
+import { BattalionMode } from '../components';
 import { SIM_HZ } from '../constants';
+import { cellAt } from '../nav/grid';
 import { STAT } from '../unitStats';
 import type { SimWorld } from '../world';
-import { arrowDmgType, fireProjectile, hasUpgrade } from './combat';
-import { spawnBattalion } from './commands';
+import { applyDamage, arrowDmgType, fireProjectile, hasUpgrade } from './combat';
+import { orderBattalions, spawnBattalion, spawnBattalionRow } from './commands';
 
 /**
  * Phase 3 derinliği (GDD §5.2, §8, §9):
@@ -40,6 +46,8 @@ const AURA_R: Fx = fxFromFloat(HERO.auraRadius);
 const ATHELAS_R: Fx = fxFromFloat(ATHELAS_RADIUS);
 const ticks = (s: number) => Math.round(s * SIM_HZ);
 const DMG_PIERCE = DAMAGE_TYPES.indexOf('pierce');
+const DMG_CRUSH = DAMAGE_TYPES.indexOf('crush');
+const TRAMPLE_R: Fx = fxFromFloat(TRAMPLE.radius);
 /** Ok Yağmuru okları hedefin kuzeyinden (savunucu tarafından), yüksekten gelir. */
 const VOLLEY_BACK: Fx = fxFromFloat(36);
 
@@ -145,13 +153,134 @@ export const castSpell = (world: SimWorld, team: number, spell: number, x: numbe
   const def = SPELL_DEFS[spell];
   if (!def || m.state !== MatchState.Playing || !Number.isInteger(x) || !Number.isInteger(z)) return false;
   if (!((m.spells[team] as number) & (1 << spell))) return false;
-  const slot = team * 4 + spell;
+  const slot = team * MAX_SPELLS + spell;
   if (world.tick < (m.spellReady[slot] as number)) return false;
   m.spellReady[slot] = world.tick + ticks(def.cooldown);
-  if (def.key === 'heal') healArea(world, team, x, z, fxFromFloat(def.radius), 60);
-  else if (def.key === 'rally') m.rallyUntil[team] = world.tick + ticks(RALLY_DURATION);
-  else m.volleys.push({ x, z, team, next: world.tick + 4, left: VOLLEY.waves });
+  switch (def.key) {
+    case 'heal':
+      healArea(world, team, x, z, fxFromFloat(def.radius), 60);
+      break;
+    case 'rally':
+      m.rallyUntil[team] = world.tick + ticks(RALLY_DURATION);
+      break;
+    case 'arrow_volley':
+      m.volleys.push({ x, z, team, next: world.tick + 4, left: VOLLEY.waves });
+      break;
+    case 'elven_allies':
+      summonAt(
+        world,
+        team,
+        UnitTypeId.LorienArcher,
+        x,
+        z,
+        SUMMONS.elvenAllies.battalions,
+        SUMMONS.elvenAllies.duration,
+        16384,
+      );
+      break;
+    case 'army_of_dead':
+      summonAt(
+        world,
+        team,
+        UnitTypeId.DeadArmy,
+        x,
+        z,
+        SUMMONS.armyOfDead.battalions,
+        SUMMONS.armyOfDead.duration,
+        16384,
+      );
+      break;
+    case 'rohirrim': {
+      // Doğudan batıya hat halinde dörtnal: hedefin `distance` doğusunda belirir, batısına geçer.
+      const d = fxFromFloat(SUMMONS.rohirrim.distance);
+      const half = fxFromFloat((world.map?.size ?? 384) / 2 - 12);
+      const sx = Math.min(half, x + d) | 0;
+      const gx = Math.max(-half, x - d) | 0;
+      const bs = summonAt(
+        world,
+        team,
+        UnitTypeId.Rohirrim,
+        sx,
+        z,
+        SUMMONS.rohirrim.battalions,
+        SUMMONS.rohirrim.duration,
+        32768,
+      );
+      orderBattalions(world, bs, gx, z, team, BattalionMode.Move);
+      break;
+    }
+  }
   return true;
+};
+
+/** Hedef noktaya yan yana `count` tabur çağırır; `duration` sn sonra yok olurlar. */
+const summonAt = (
+  world: SimWorld,
+  team: number,
+  unitType: number,
+  x: Fx,
+  z: Fx,
+  count: number,
+  duration: number,
+  facing: number,
+): number[] => {
+  const bs = spawnBattalionRow(world, team, unitType, x, z, count, facing);
+  for (const b of bs) world.c.Battalion.expires[b] = world.tick + ticks(duration);
+  return bs;
+};
+
+/** Süresi dolan (veya hücumunu bitiren süvari) çağrılmış taburları sahneden kaldırır. */
+export const expireSystem = (world: SimWorld): void => {
+  const { Battalion, Soldier } = world.c;
+  const gone: number[] = [];
+  for (const b of query(world, [Battalion])) {
+    const exp = Battalion.expires[b] as number;
+    if (exp === 0) continue;
+    const chargeDone = STAT.charger[Battalion.unitType[b] as number] === 1 && Battalion.active[b] === 0;
+    if (world.tick >= exp || chargeDone) gone.push(b);
+  }
+  if (gone.length === 0) return;
+  for (const s of query(world, [Soldier])) {
+    const b = Soldier.battalion[s] as number;
+    if (b !== 0 && gone.includes(b)) removeEntity(world, s);
+  }
+  for (const b of gone) removeEntity(world, b);
+};
+
+/** Süvari çiğnemesi: hareket eden her atlı, aralıkla yarıçapındaki düşmanlara ezme hasarı verir. */
+export const trampleSystem = (world: SimWorld): void => {
+  const { Soldier, Position, Team, UnitType, Dead, Health } = world.c;
+  const grid = world.nav;
+  for (const s of query(world, [Soldier, Position, Health])) {
+    if (STAT.charger[UnitType.id[s] as number] !== 1 || Dead.at[s] !== 0) continue;
+    if ((s + world.tick) % TRAMPLE.interval !== 0) continue;
+    const b = Soldier.battalion[s] as number;
+    if (b === 0) continue;
+    const team = Team.id[s] as number;
+    const sx = Position.x[s] as number;
+    const sz = Position.z[s] as number;
+    const c = cellAt(grid, sx, sz);
+    if (c < 0) continue;
+    const c0 = c % grid.cols;
+    const r0 = (c / grid.cols) | 0;
+    for (let dr = -2; dr <= 2; dr++) {
+      const r = r0 + dr;
+      if (r < 0 || r >= grid.rows) continue;
+      for (let dc = -2; dc <= 2; dc++) {
+        const cc = c0 + dc;
+        if (cc < 0 || cc >= grid.cols) continue;
+        for (
+          let o = world.hashHead[r * grid.cols + cc] as number;
+          o !== -1;
+          o = world.hashNext[o] as number
+        ) {
+          if (Team.id[o] === team || Dead.at[o] !== 0) continue;
+          const d = fxLen(((Position.x[o] as number) - sx) | 0, ((Position.z[o] as number) - sz) | 0);
+          if (d <= TRAMPLE_R) applyDamage(world, o, TRAMPLE.damage, DMG_CRUSH, b);
+        }
+      }
+    }
+  }
 };
 
 /** Kahraman aurası (her 5 tick) ve Ok Yağmuru dalgaları. */

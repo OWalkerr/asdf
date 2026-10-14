@@ -494,6 +494,8 @@ body.debug #hud {
   bottom: 132px;
   transform: translateX(-50%);
   display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 6px;
   align-items: stretch;
   width: max-content;
@@ -504,8 +506,8 @@ body.debug #hud {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 7px;
-  padding: 5px 12px 5px 7px;
+  gap: 6px;
+  padding: 4px 9px 4px 6px;
   background: linear-gradient(180deg, rgba(40, 35, 27, 0.94), rgba(20, 17, 13, 0.94));
   border: 1px solid rgba(201, 162, 58, 0.6);
   border-radius: 6px;
@@ -547,6 +549,16 @@ body.debug #hud {
 }
 #spellbar button.hero {
   border-color: #c9d6ea;
+}
+#spellbar button.spell {
+  flex-direction: column;
+  gap: 1px;
+  min-width: 58px;
+  padding: 5px 6px 3px;
+  text-align: center;
+}
+#spellbar button.spell small {
+  font-size: 10px;
 }
 #spellbar button.hero.alive svg {
   color: #c9e0ff;

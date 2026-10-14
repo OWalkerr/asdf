@@ -46,7 +46,7 @@ export const ELENDIL_DURATION = 10;
 export const ATHELAS_RADIUS = 15;
 
 export interface SpellDef {
-  key: 'heal' | 'rally' | 'arrow_volley';
+  key: 'heal' | 'rally' | 'arrow_volley' | 'elven_allies' | 'rohirrim' | 'army_of_dead';
   name: string;
   tier: number;
   /** Açma maliyeti (PP). */
@@ -85,7 +85,44 @@ export const SPELL_DEFS: readonly SpellDef[] = [
     radius: 12,
     desc: 'Hedef alana üç dalga ok yağdırır. Bir 1. kademe büyü gerektirir.',
   },
+  {
+    key: 'elven_allies',
+    name: 'Elf Müttefikleri',
+    tier: 2,
+    cost: 10,
+    cooldown: 150,
+    radius: 6,
+    desc: 'Hedef noktada 60 sn kalan iki tabur Lórien okçusu belirir.',
+  },
+  {
+    key: 'rohirrim',
+    name: "Rohirrim'i Çağır",
+    tier: 3,
+    cost: 15,
+    cooldown: 200,
+    radius: 8,
+    desc: 'Rohan süvarileri doğudan hedef noktanın üzerinden batıya dörtnala geçer, yoldaki düşmanı ezer.',
+  },
+  {
+    key: 'army_of_dead',
+    name: 'Ölüler Ordusu',
+    tier: 4,
+    cost: 25,
+    cooldown: 300,
+    radius: 10,
+    desc: 'Hedefte 45 sn savaşan, hasar almayan dört tabur hayalet asker belirir.',
+  },
 ];
+/** Çağrılan birliklerin süreleri (s) ve tabur sayıları. */
+export const SUMMONS = {
+  elvenAllies: { battalions: 2, duration: 60 },
+  rohirrim: { battalions: 2, duration: 25, distance: 75 },
+  armyOfDead: { battalions: 4, duration: 45 },
+} as const;
+/** Süvari çiğneme: rider başına vuruş aralığı (tick), yarıçap (m), hasar. */
+export const TRAMPLE = { interval: 3, radius: 2.2, damage: 45 } as const;
+/** Spellbook büyü sayısı üst sınırı (snapshot/hazır tick dizileri). */
+export const MAX_SPELLS = 8;
 export const RALLY_DURATION = 30;
 export const RALLY_DAMAGE_PERCENT = 25;
 /** Ok Yağmuru: dalga sayısı, dalga arası (s), dalga başına ok, ok hasarı. */

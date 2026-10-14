@@ -69,13 +69,18 @@ export class UnitRenderer {
       geo.setAttribute('iPose', poseAttr);
       geo.setAttribute('iAnim', animAttr);
       const style = def.attackStyle === 'thrust' ? 1 : def.attackStyle === 'bow' ? 2 : 0;
-      const mat = createUnitMaterial(palette, params, { attackStyle: style });
+      const ghost = def.invulnerable === true;
+      const mat = createUnitMaterial(palette, params, {
+        attackStyle: style,
+        ghost,
+        ...(def.stepRate !== undefined ? { stepRate: def.stepRate } : {}),
+      });
       const mesh = new InstancedMesh(geo, mat, capacityPerType);
       mesh.name = `units:${def.key}`;
       // Konum shader'da hesaplandığı için CPU frustum testi anlamsız; GPU culling Phase 2'de.
       mesh.frustumCulled = false;
-      mesh.castShadow = true;
-      mesh.receiveShadow = true;
+      mesh.castShadow = !ghost;
+      mesh.receiveShadow = !ghost;
       mesh.count = 0;
       this.buckets[def.id] = {
         mesh,

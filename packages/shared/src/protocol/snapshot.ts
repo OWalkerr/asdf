@@ -1,10 +1,10 @@
 /**
- * Sim → render snapshot düzeni (GDD §13.3), sürüm 5.
+ * Sim → render snapshot düzeni (GDD §13.3), sürüm 6.
  *
  * Tek bir Int32Array (SharedArrayBuffer üzerinde veya fallback'te düz ArrayBuffer):
  *
  *   [global header: 4]  activeIndex, publishCount, capacity, projCapacity
- *   [buffer 0: header 32 + capacity × 6 + projCapacity × 7 + SNAP_MAX_STRUCTS × 6]
+ *   [buffer 0: header 40 + capacity × 6 + projCapacity × 7 + SNAP_MAX_STRUCTS × 6]
  *   [buffer 1: aynı]
  *
  * Buffer header: version (seqlock; tek = yazılıyor), tick, count, simMicros, projCount,
@@ -24,7 +24,7 @@
  * Konumlar ham Q16.16 olarak taşınır; float'a çeviri render tarafında (GDD §13.7).
  */
 export const SNAP_GLOBAL_INTS = 4;
-export const SNAP_HEADER_INTS = 32;
+export const SNAP_HEADER_INTS = 40;
 export const SNAP_UNIT_INTS = 6;
 export const SNAP_PROJ_INTS = 7;
 export const SNAP_STRUCT_INTS = 6;
@@ -58,8 +58,9 @@ export const H_UPGRADES = 18;
 export const H_PP = 19;
 /** Açık büyü bitleri (SPELL_DEFS). */
 export const H_SPELLS = 20;
-/** Büyü i'nin tekrar kullanılabileceği tick (21, 22, 23). */
-export const H_SPELL_READY = 21;
+/** 21–23 ayrılmış (eski büyü hazır alanları). Büyü i'nin hazır tick'i: H_SPELL_READY + i (30–37). */
+export const H_SPELL_READY = 30;
+export const SNAP_SPELLS = 8;
 /** Kahraman taburu eid'i (0 = yok) ve yeniden çağrılabileceği tick. */
 export const H_HERO = 24;
 export const H_HERO_READY = 25;
@@ -201,7 +202,7 @@ export const createFrame = (capacity: number, projCapacity = 2048): SnapshotFram
     researching: 0,
     pp: 0,
     spells: 0,
-    spellReady: [0, 0, 0],
+    spellReady: [0, 0, 0, 0, 0, 0, 0, 0],
     hero: 0,
     heroReady: 0,
     abilityReady: [0, 0],
@@ -223,7 +224,7 @@ export const readMatchHeader = (view: Int32Array, base: number, out: MatchInfo):
   out.researching = (up >>> 8) & 0xff;
   out.pp = view[base + H_PP] as number;
   out.spells = view[base + H_SPELLS] as number;
-  for (let i = 0; i < 3; i++) out.spellReady[i] = view[base + H_SPELL_READY + i] as number;
+  for (let i = 0; i < SNAP_SPELLS; i++) out.spellReady[i] = view[base + H_SPELL_READY + i] as number;
   out.hero = view[base + H_HERO] as number;
   out.heroReady = view[base + H_HERO_READY] as number;
   for (let i = 0; i < 2; i++) out.abilityReady[i] = view[base + H_ABILITY_READY + i] as number;

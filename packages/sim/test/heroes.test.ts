@@ -191,6 +191,70 @@ describe('Spellbook', () => {
     expect(sim.world.match.volleys.length).toBe(0);
   });
 
+  const ELVES = SPELL_DEFS.findIndex((s) => s.key === 'elven_allies');
+  const ROHAN = SPELL_DEFS.findIndex((s) => s.key === 'rohirrim');
+  const DEAD = SPELL_DEFS.findIndex((s) => s.key === 'army_of_dead');
+
+  it('Elf Müttefikleri hedefte belirir ve süre sonunda kaybolur', () => {
+    const sim = newSim();
+    sim.world.match.spells[0] = 1 << ELVES;
+    sim.schedule(stamp(0, { type: 'castSpell', spell: ELVES, x: F(10), z: F(-60) }));
+    sim.step();
+    const elves = battalionsOf(sim, 0, UnitTypeId.LorienArcher);
+    expect(elves.length).toBe(2);
+    for (let t = 0; t < 60 * 20 + 2; t++) sim.step();
+    expect(battalionsOf(sim, 0, UnitTypeId.LorienArcher).length).toBe(0);
+    expect(
+      [...query(sim.world, [sim.world.c.Soldier])].filter(
+        (s) => sim.world.c.UnitType.id[s] === UnitTypeId.LorienArcher,
+      ).length,
+    ).toBe(0);
+  });
+
+  it('Rohirrim hattı yoldaki düşmanı çiğner ve hücum bitince ayrılır', () => {
+    const sim = new Simulation(11, createOpenGrid(260), QUIET);
+    spawn(sim, 1, UnitTypeId.OrcWarrior, 0, 0);
+    sim.step();
+    sim.world.match.spells[0] = 1 << ROHAN;
+    const H = sim.world.c.Health;
+    const orcHp = () =>
+      [...query(sim.world, [H])]
+        .filter((e) => sim.world.c.Team.id[e] === 1 && sim.world.c.Dead.at[e] === 0)
+        .reduce((a, e) => a + Math.max(0, H.hp[e] as number), 0);
+    const before = orcHp();
+    sim.schedule(stamp(sim.world.tick, { type: 'castSpell', spell: ROHAN, x: 0, z: 0 }));
+    sim.step();
+    expect(battalionsOf(sim, 0, UnitTypeId.Rohirrim).length).toBe(2);
+    for (let t = 0; t < 25 * 20 && battalionsOf(sim, 0, UnitTypeId.Rohirrim).length > 0; t++) sim.step();
+    expect(orcHp()).toBeLessThan(before * 0.7);
+    expect(battalionsOf(sim, 0, UnitTypeId.Rohirrim).length).toBe(0);
+  });
+
+  it('Ölüler Ordusu hasar almaz; kademe 4 için kademe 3 gerekir', () => {
+    const sim = new Simulation(12, createOpenGrid(200), QUIET);
+    sim.world.match.pp[0] = 1000;
+    sim.schedule(stamp(0, { type: 'unlockSpell', spell: DEAD })); // kademe 3 yok
+    sim.step();
+    expect((sim.world.match.spells[0] as number) & (1 << DEAD)).toBe(0);
+    sim.world.match.spells[0] = 1 << ROHAN;
+    sim.schedule(stamp(1, { type: 'unlockSpell', spell: DEAD }));
+    sim.step();
+    expect((sim.world.match.spells[0] as number) & (1 << DEAD)).not.toBe(0);
+    spawn(sim, 1, UnitTypeId.UrukHai, 6, 0);
+    sim.schedule(stamp(sim.world.tick, { type: 'castSpell', spell: DEAD, x: F(-4), z: 0 }));
+    for (let t = 0; t < 200; t++) sim.step();
+    const H = sim.world.c.Health;
+    const ghosts = [...query(sim.world, [H])].filter(
+      (e) => sim.world.c.UnitType.id[e] === UnitTypeId.DeadArmy,
+    );
+    expect(ghosts.length).toBe(80);
+    expect(ghosts.every((e) => H.hp[e] === H.max[e])).toBe(true);
+    const uruksAlive = [...query(sim.world, [H])].filter(
+      (e) => sim.world.c.Team.id[e] === 1 && sim.world.c.Dead.at[e] === 0,
+    ).length;
+    expect(uruksAlive).toBeLessThan(10);
+  });
+
   it('kahraman + büyüler deterministik', () => {
     const run = () => {
       const sim = new Simulation(13, buildNavGrid(HELMS_DEEP), HELMS_DEEP);
