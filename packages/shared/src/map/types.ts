@@ -185,6 +185,21 @@ export interface MapDef {
   citadel: CitadelDef;
   /** TD: sızan düşman başına can kaybı sayacı (başlangıç canı). */
   lives?: number;
+  /**
+   * TD uç bölgesi (Tower Wars): çıkışa varan düşman yok olmaz, bölgede bekler. Bölge her
+   * `strikeEvery` saniyede güç vuruşuyla içindekilere max(strikeDamage, azami canın
+   * strikePercent'i) hasar verir; içeride kalan her tabur her `drainEvery` saniyede 1 can
+   * götürür. Yoksa çıkışa varan tabur anında (lifeCost) can götürüp kaybolur.
+   */
+  endZone?: {
+    radius: number;
+    strikeDamage: number;
+    strikePercent: number;
+    strikeEvery: number;
+    drainEvery: number;
+  };
+  /** Her dalga başında verilen altın: base + perWave × (dalga − 1). */
+  waveGold?: { base: number; perWave: number };
   /** Harita seçim ekranı için kısa açıklama. */
   blurb?: string;
   /** Başlangıç garnizonu (oyuncu tabakları; istemci maç başında spawn komutu yollar). */

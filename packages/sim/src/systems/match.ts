@@ -94,7 +94,12 @@ export const waveSystem = (world: SimWorld): void => {
     // Boss: takımının liderlik kaynağı (aura) olur.
     if (STAT.boss[g.unitType] === 1 && battalions[0] !== undefined) m.hero[ENEMY_TEAM] = battalions[0];
     // Dalga başı Güç Puanı bonusu (GDD §9.1).
-    if (g.wave > m.waveIndex) m.pp[0] = (m.pp[0] as number) + PP.waveBonus * 10;
+    if (g.wave > m.waveIndex) {
+      m.pp[0] = (m.pp[0] as number) + PP.waveBonus * 10;
+      // Tower Wars: dalga başı gelir.
+      if (map.waveGold)
+        m.gold[0] = (m.gold[0] as number) + map.waveGold.base + map.waveGold.perWave * (g.wave - 1);
+    }
     m.waveIndex = Math.max(m.waveIndex, g.wave);
   }
 };

@@ -15,7 +15,7 @@ import { SIM_HZ } from '../constants';
 import { shapeContains } from '../nav/grid';
 import { STAT } from '../unitStats';
 import type { SimWorld } from '../world';
-import { arrowDmgType, fireProjectile, fireStone } from './combat';
+import { applyDamage, arrowDmgType, fireProjectile, fireStone } from './combat';
 import { forEachMember } from './spatial';
 
 /**
@@ -35,6 +35,7 @@ const DMG_PIERCE = DAMAGE_TYPES.indexOf('pierce');
 const DMG_CRUSH = DAMAGE_TYPES.indexOf('crush');
 /** TD: çıkış noktasına bu kadar yaklaşan düşman taburu sızmış sayılır. */
 const EXIT_R: Fx = fxFromFloat(7);
+const DMG_MAGIC = DAMAGE_TYPES.indexOf('magic');
 
 const has = (world: SimWorld, team: number, up: number) =>
   ((world.match.fortressUp[team] as number) & (1 << up)) !== 0;
@@ -231,7 +232,35 @@ export const tdExitSystem = (world: SimWorld): void => {
   const map = world.map;
   const m = world.match;
   if (!map || map.mode !== 'TD' || m.state !== MatchState.Playing || world.tick % 5 !== 0) return;
-  const { Battalion, Position, Team, Soldier } = world.c;
+  const { Battalion, Position, Team, Soldier, Health } = world.c;
+  const zone = map.endZone;
+  if (zone) {
+    // Uç bölge (Tower Wars): varan taburlar bekler; bölge vurur, içeridekiler can götürür.
+    const r = fxFromFloat(zone.radius);
+    const strike = world.tick % Math.max(5, Math.round(zone.strikeEvery * SIM_HZ)) === 0;
+    const drain = world.tick % Math.max(5, Math.round(zone.drainEvery * SIM_HZ)) === 0;
+    let inside = 0;
+    for (const b of query(world, [Battalion, Position])) {
+      if (Team.id[b] === 0 || (Battalion.count[b] as number) === 0) continue;
+      const lane = map.lanes[(Battalion.lane[b] as number) - 1];
+      if (!lane) continue;
+      const [ex, ez] = fxv(lane.points[lane.points.length - 1] as Vec2);
+      if (fxLen(((Position.x[b] as number) - ex) | 0, ((Position.z[b] as number) - ez) | 0) > r) continue;
+      inside++;
+      if (drain) m.lives = Math.max(0, m.lives - 1);
+      if (strike)
+        forEachMember(world, b, (s) =>
+          applyDamage(
+            world,
+            s,
+            Math.max(zone.strikeDamage, (((Health.max[s] as number) * zone.strikePercent) / 100) | 0),
+            DMG_MAGIC,
+          ),
+        );
+    }
+    m.zone = inside;
+    return;
+  }
   const gone: number[] = [];
   for (const b of query(world, [Battalion, Position])) {
     if (Team.id[b] === 0) continue;

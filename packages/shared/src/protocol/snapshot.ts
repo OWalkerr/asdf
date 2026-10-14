@@ -1,17 +1,18 @@
 /**
- * Sim → render snapshot düzeni (GDD §13.3), sürüm 6.
+ * Sim → render snapshot düzeni (GDD §13.3), sürüm 7.
  *
  * Tek bir Int32Array (SharedArrayBuffer üzerinde veya fallback'te düz ArrayBuffer):
  *
  *   [global header: 4]  activeIndex, publishCount, capacity, projCapacity
- *   [buffer 0: header 40 + capacity × 6 + projCapacity × 7 + SNAP_MAX_STRUCTS × 6]
+ *   [buffer 0: header 48 + capacity × 6 + projCapacity × 7 + SNAP_MAX_STRUCTS × 6]
  *   [buffer 1: aynı]
  *
  * Buffer header: version (seqlock; tek = yazılıyor), tick, count, simMicros, projCount,
- *   matchState, waveIndex, waveCount, nextWaveTick, enemiesAlive, gateHp[0..2], gateMax[0..2],
+ *   matchState, waveIndex, waveCount, nextWaveTick, enemiesAlive, (10–15 boş),
  *   gold (oyuncu 0), structCount, upgrades (bitler; araştırılanlar << 8), PP (onda bir),
  *   açık büyüler, büyü hazır tick'leri ×3, kahraman taburu, kahraman hazır tick'i,
- *   yetenek hazır tick'leri ×2, Elendil bitiş tick'i, Toplanma bitiş tick'i
+ *   yetenek hazır tick'leri ×2, Elendil bitiş tick'i, Toplanma bitiş tick'i, büyü hazır ×8,
+ *   uç bölgedeki düşman taburu (38), gateHp[0..3] (40), gateMax[0..3] (44)
  *
  * Birim kaydı (6 × int32):
  *   0 eid · 1 x (Q16.16) · 2 z (Q16.16) · 3 yaw:16|unitType:8|team:8
@@ -24,14 +25,14 @@
  * Konumlar ham Q16.16 olarak taşınır; float'a çeviri render tarafında (GDD §13.7).
  */
 export const SNAP_GLOBAL_INTS = 4;
-export const SNAP_HEADER_INTS = 40;
+export const SNAP_HEADER_INTS = 48;
 export const SNAP_UNIT_INTS = 6;
 export const SNAP_PROJ_INTS = 7;
 export const SNAP_STRUCT_INTS = 6;
 /** Snapshot'ta taşınan en fazla inşa edilmiş yapı. */
 export const SNAP_MAX_STRUCTS = 48;
 /** Snapshot'ta taşınan en fazla kapı sayısı. */
-export const SNAP_MAX_GATES = 3;
+export const SNAP_MAX_GATES = 4;
 
 export const G_ACTIVE = 0;
 export const G_PUBLISH = 1;
@@ -48,8 +49,10 @@ export const H_WAVE_INDEX = 6;
 export const H_WAVE_COUNT = 7;
 export const H_NEXT_WAVE_TICK = 8;
 export const H_ENEMIES_ALIVE = 9;
-export const H_GATE_HP = 10; // 10, 11, 12
-export const H_GATE_MAX = 13; // 13, 14, 15
+export const H_GATE_HP = 40; // 40–43
+export const H_GATE_MAX = 44; // 44–47
+/** TD uç bölgesindeki düşman taburu sayısı. */
+export const H_ZONE = 38;
 export const H_GOLD = 16;
 export const H_STRUCT_COUNT = 17;
 /** Oyuncu 0'ın tamamlanmış yükseltmeleri (bit maskesi) ve araştırılanlar (<< 8). */
@@ -175,6 +178,8 @@ export interface MatchInfo {
   fortResearch: number;
   fortPct: number;
   lives: number;
+  /** TD uç bölgesinde bekleyen düşman taburu. */
+  zone: number;
 }
 
 /** Okunan tek bir snapshot (render tarafının kendi kopyası). */
@@ -224,6 +229,7 @@ export const createFrame = (capacity: number, projCapacity = 2048): SnapshotFram
     fortResearch: -1,
     fortPct: 0,
     lives: 0,
+    zone: 0,
   },
 });
 
@@ -252,6 +258,7 @@ export const readMatchHeader = (view: Int32Array, base: number, out: MatchInfo):
   out.fortResearch = ((fu >>> 8) & 0xff) - 1;
   out.fortPct = ((fu >>> 16) & 0x7f) / 100;
   out.lives = view[base + H_LIVES] as number;
+  out.zone = view[base + H_ZONE] as number;
   out.gateHp.length = 0;
   out.gateMax.length = 0;
   for (let g = 0; g < SNAP_MAX_GATES; g++) {

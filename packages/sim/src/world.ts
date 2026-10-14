@@ -53,6 +53,8 @@ export interface MatchContext {
   breached: number;
   /** TD: kalan can. */
   lives: number;
+  /** TD uç bölgesindeki düşman taburu (görüntü). */
+  zone: number;
   state: number;
   /** Başlamış son dalga (1 tabanlı; 0 = henüz yok). */
   waveIndex: number;
@@ -127,6 +129,7 @@ export const createSimWorld = (
       fortProgress: new Int32Array(4),
       breached: 0,
       lives: 0,
+      zone: 0,
       waveIndex: 0,
       waveCount: 0,
       schedule: [],
@@ -250,6 +253,7 @@ export const hashWorld = (world: SimWorld): number => {
   for (const v of world.match.fortProgress) h = hashInt(h, v);
   h = hashInt(h, world.match.breached);
   h = hashInt(h, world.match.lives);
+  h = hashInt(h, world.match.zone);
   for (const u of world.match.upgrades) h = hashInt(h, u);
   for (const u of world.match.researching) h = hashInt(h, u);
   const m = world.match;

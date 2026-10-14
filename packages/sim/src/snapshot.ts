@@ -31,6 +31,7 @@ import {
   H_VERSION,
   H_WAVE_COUNT,
   H_WAVE_INDEX,
+  H_ZONE,
   packAnim,
   packBattalionRank,
   packFlight,
@@ -144,6 +145,7 @@ export const writeSnapshot = (world: SimWorld, view: Int32Array, simMicros = 0):
   view[base + H_FORT_UP] =
     (m.fortressUp[0] as number) | (((m.fortResearch[0] as number) + 1) << 8) | (fortressPct(world) << 16);
   view[base + H_LIVES] = m.lives;
+  view[base + H_ZONE] = m.zone;
   view[base + H_PP] = m.pp[0] as number;
   view[base + H_SPELLS] = m.spells[0] as number;
   for (let i = 0; i < SNAP_SPELLS; i++) view[base + H_SPELL_READY + i] = m.spellReady[i] as number;
