@@ -12,6 +12,10 @@ import { icon } from './ui/icons';
  */
 const SIZE = 196;
 const TEAM = ['#6fa8ff', '#ff5a4a', '#5ad16a', '#f0c95a'];
+/** Oyuncu tarafının mini harita rengi (Rohan: yeşil). */
+export const setPlayerMinimapColor = (hex: string): void => {
+  TEAM[0] = hex;
+};
 
 export class Minimap {
   private readonly canvas: HTMLCanvasElement;

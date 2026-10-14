@@ -1,6 +1,7 @@
 import {
   DEFAULT_DIFFICULTY,
   DIFFICULTIES,
+  FACTIONS,
   FX_ONE,
   fxDiv,
   HASH_SEED,
@@ -47,6 +48,8 @@ export interface ScheduledGroup {
 export interface MatchContext {
   /** DIFFICULTIES indeksi. */
   difficulty: number;
+  /** Oyuncunun tarafı (FACTIONS indeksi). */
+  faction: number;
   /** Kale yapısı eid'i (0 = yok), yükseltme bitleri, araştırılan (−1 = yok) ve kalan tick. */
   fortress: number;
   fortressUp: Uint8Array;
@@ -91,7 +94,8 @@ export interface MatchContext {
   heroes: Int32Array;
   heroReady: Int32Array;
   abilityReady: Int32Array;
-  elendilUntil: Int32Array;
+  /** Kahraman yuvası başına çift hasar güçlendirmesinin bitiş tick'i (Elendil, Kalkan Kızı). */
+  heroBuff: Int32Array;
   /** Bekleyen Ok Yağmuru dalgaları. */
   volleys: { x: number; z: number; team: number; next: number; left: number }[];
   /** MapDef.slots sırasıyla inşa edilmiş yapı eid'i (0 = boş). */
@@ -126,6 +130,7 @@ export const createSimWorld = (
   nav: NavGrid = createOpenGrid(512),
   map: MapDef | null = null,
   difficulty = DEFAULT_DIFFICULTY,
+  faction = 0,
 ): SimWorld => {
   const world = createWorld<SimContext>({
     c: createComponents(),
@@ -139,6 +144,7 @@ export const createSimWorld = (
     match: {
       state: MatchState.Playing,
       difficulty: DIFFICULTIES[difficulty] ? difficulty : DEFAULT_DIFFICULTY,
+      faction: FACTIONS[faction] ? faction : 0,
       fortress: 0,
       fortressUp: new Uint8Array(4),
       fortResearch: new Int8Array(4).fill(-1),
@@ -166,7 +172,7 @@ export const createSimWorld = (
       heroes: new Int32Array(4 * MAX_HEROES),
       heroReady: new Int32Array(4 * MAX_HEROES),
       abilityReady: new Int32Array(4 * MAX_HEROES * 2),
-      elendilUntil: new Int32Array(4),
+      heroBuff: new Int32Array(4 * MAX_HEROES),
       volleys: [],
       slots: new Int32Array(map?.slots.length ?? 0),
     },
@@ -277,6 +283,7 @@ export const hashWorld = (world: SimWorld): number => {
   for (const v of world.match.laneLadders) h = hashInt(h, v);
   for (const v of world.match.ladderSeq) h = hashInt(h, v);
   h = hashInt(h, world.match.lives);
+  h = hashInt(h, world.match.faction);
   h = hashInt(h, world.match.zone);
   for (const u of world.match.upgrades) h = hashInt(h, u);
   for (const u of world.match.researching) h = hashInt(h, u);
@@ -290,7 +297,7 @@ export const hashWorld = (world: SimWorld): number => {
     m.heroes,
     m.heroReady,
     m.abilityReady,
-    m.elendilUntil,
+    m.heroBuff,
   ])
     for (const v of arr) h = hashInt(h, v);
   for (const v of m.volleys) {

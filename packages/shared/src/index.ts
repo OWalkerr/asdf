@@ -1,4 +1,5 @@
 export * from './data/buildings';
+export * from './data/factions';
 export * from './data/maps/helmsDeep';
 export * from './data/maps/index';
 export * from './data/spells';

@@ -1,9 +1,9 @@
-import { MAP_DEFS, type SlotDef, UnitTypeId } from '@bulwark/shared';
+import { factionDef, MAP_DEFS, type SlotDef, UnitTypeId } from '@bulwark/shared';
 import { buildNavGrid, createOpenGrid } from '@bulwark/sim';
 import { Scene, type Texture, Timer, Vector3 } from 'three/webgpu';
 import { GALLERY_CENTER, updateGallery } from './app/gallery';
 import { MatchHud } from './app/MatchHud';
-import { Minimap } from './app/Minimap';
+import { Minimap, setPlayerMinimapColor } from './app/Minimap';
 import { chooseMatch } from './app/StartScreen';
 import { PLAYER, Scenario } from './app/scenario';
 import { CommandBar } from './app/ui/CommandBar';
@@ -30,14 +30,14 @@ import { PickCursor } from './render/fx/PickCursor';
 import { ProjectileRenderer } from './render/fx/ProjectileRenderer';
 import { SelectionRings } from './render/fx/SelectionRings';
 import { SpellFx } from './render/fx/SpellFx';
-import { BattalionHud } from './render/hud/BattalionHud';
+import { BattalionHud, setPlayerBannerColor } from './render/hud/BattalionHud';
 import { createLighting, FOG_COLOR } from './render/lighting';
 import { HeightGrid } from './render/map/HeightGrid';
 import { buildLookdevScene } from './render/map/lookdev';
 import type { MapScene } from './render/map/MapScene';
 import { buildNavOverlay } from './render/map/NavOverlay';
 import { createToonParams, type ToonParams } from './render/materials/ToonMaterial';
-import { createPaletteTexture } from './render/palette';
+import { createPaletteTexture, setTeamColor } from './render/palette';
 import { createRenderContext } from './render/renderer';
 import { FortressRenderer } from './render/structures/FortressRenderer';
 import { GateRenderer } from './render/structures/GateRenderer';
@@ -51,12 +51,12 @@ import { SimHost } from './sim-host/SimHost';
  * Harita `?map=helms_deep` (varsayılan) veya `?map=lookdev` ile seçilir.
  * Sim Web Worker'da çalışır (SimHost); birimler snapshot'tan ara değerlenerek çizilir.
  */
-const buildMap = (mapId: string, palette: Texture, toon: ToonParams): MapScene => {
+const buildMap = (mapId: string, palette: Texture, toon: ToonParams, faction = 0): MapScene => {
   if (mapId === 'lookdev') return buildLookdevScene(palette, toon);
   if (mapId === 'helms_deep') return buildHelmsDeep(palette, toon);
   const def = MAP_DEFS[mapId];
   if (!def) throw new Error(`Bilinmeyen harita: ${mapId} (seçenekler: ${Object.keys(MAP_DEFS).join(', ')})`);
-  return buildGenericMap(palette, toon, def);
+  return buildGenericMap(palette, toon, def, faction);
 };
 
 const boot = async () => {
@@ -75,10 +75,15 @@ const boot = async () => {
   if (debugMode) document.body.classList.add('debug');
   // Maç öncesi ekran: harita + zorluk (galeri / look-dev'de yok).
   const lookdev = gallery || params.get('map') === 'lookdev';
-  const choice = lookdev ? { mapId: 'lookdev', difficulty: 1 } : await chooseMatch();
+  const choice = lookdev ? { mapId: 'lookdev', difficulty: 1, faction: 0 } : await chooseMatch();
+  const faction = choice.faction;
+  // Takım rengi: tarafın sancak rengi (Gondor mavi, Rohan yeşil).
+  setTeamColor(palette, factionDef(faction).color);
+  setPlayerBannerColor(factionDef(faction).color.main);
+  if (faction === 1) setPlayerMinimapColor('#8be07a');
   const mapId = choice.mapId;
   const difficulty = choice.difficulty;
-  const world = buildMap(mapId, palette, toon);
+  const world = buildMap(mapId, palette, toon, faction);
   scene.add(world.root);
   subtitle.textContent = `· ${world.name}`;
 
@@ -107,6 +112,7 @@ const boot = async () => {
   const UNIT_CAPACITY = 8192;
   const sim = await SimHost.start({
     difficulty,
+    faction,
     seed: world.def?.seed ?? 1,
     capacity: UNIT_CAPACITY,
     mapId: world.def?.id ?? null,
@@ -118,7 +124,7 @@ const boot = async () => {
     ladders ? ground.sample(x, z) + ladders.climb(x, z) : ground.sample(x, z),
   );
   for (const m of units.meshes) scene.add(m);
-  const scenario = new Scenario(sim, world.def);
+  const scenario = new Scenario(sim, world.def, faction);
   if (!gallery) scenario.start();
 
   // --- Girdi: zemin/slot seçimi (BVH), tabur seçimi, emirler ----------------------
@@ -222,6 +228,7 @@ const boot = async () => {
     ui && bar && world.def && structures && world.slots
       ? new HudController({
           def: world.def,
+          faction,
           scenario,
           units,
           structures,
@@ -268,6 +275,7 @@ const boot = async () => {
     ui && world.def
       ? new TopHud({
           def: world.def,
+          faction,
           scenario,
           units,
           structures,
@@ -351,7 +359,8 @@ const boot = async () => {
     if (gallery) updateGallery(units, now / 1000, ground.sample);
     else {
       const mi = sim.frame.match;
-      units.glowBattalion = mi.elendilUntil > sim.tick ? (mi.heroes[0] ?? 0) : 0;
+      const buffed = mi.heroBuff.findIndex((t) => t > sim.tick);
+      units.glowBattalion = buffed >= 0 ? (mi.heroes[buffed] ?? 0) : 0;
       units.updateFromSim(sim, now);
       arrows.update(sim, now);
       structures?.update(sim.frame);

@@ -83,6 +83,20 @@ export const swatchUV = (name: Swatch): [number, number] => {
   return [(col + 0.5) / PALETTE_SIZE, (row + 0.5) / PALETTE_SIZE];
 };
 
+/** Oyuncu takım satırını (team0, team0Dark, team0Accent) verilen renklerle yeniden boyar. */
+export const setTeamColor = (tex: DataTexture, c: { main: string; dark: string; accent: string }): void => {
+  const data = tex.image.data as Uint8Array;
+  const put = (name: Swatch, hex: string) => {
+    const [col, row] = SWATCHES[name];
+    const n = Number.parseInt(hex.slice(1), 16);
+    data.set([(n >> 16) & 255, (n >> 8) & 255, n & 255, 255], (row * PALETTE_SIZE + col) * 4);
+  };
+  put('team0', c.main);
+  put('team0Dark', c.dark);
+  put('team0Accent', c.accent);
+  tex.needsUpdate = true;
+};
+
 export const createPaletteTexture = (): DataTexture => {
   const data = new Uint8Array(PALETTE_SIZE * PALETTE_SIZE * 4);
   // Boş hücreler magenta: yanlış UV hemen göze çarpar.

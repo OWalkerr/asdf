@@ -6,7 +6,7 @@ import {
   type BuildingKind,
   ECONOMY,
   FORTRESS_UPGRADES,
-  HEROES,
+  factionDef,
   type MapDef,
   type MatchInfo,
   SLOT_BUILDS,
@@ -49,6 +49,11 @@ export const UNIT_LABELS: Record<number, string> = {
   18: 'Su Gözcüsü',
   19: 'Ateş Ejderi',
   20: 'Kuşatma Kulesi',
+  21: 'Rohan Mızrakçıları',
+  22: 'Rohan Okçuları',
+  23: 'Théoden',
+  24: 'Éowyn',
+  25: 'Rohirrim',
 };
 const UNIT_ICON: Record<number, string> = {
   0: 'sword',
@@ -72,8 +77,13 @@ const UNIT_ICON: Record<number, string> = {
   18: 'eye',
   19: 'flame',
   20: 'tower',
+  21: 'spear',
+  22: 'bow',
+  23: 'crown',
+  24: 'blade',
+  25: 'horse',
 };
-const STAT_HERO = new Set(HEROES.map((h) => h.unitType));
+const STAT_HERO = new Set(UNIT_DEFS.filter((u) => u.hero).map((u) => u.id));
 const ABILITY_ICON: Record<string, string> = {
   elendil: 'blade',
   athelas: 'leaf',
@@ -81,16 +91,25 @@ const ABILITY_ICON: Record<string, string> = {
   word_of_power: 'power',
   arrow_wind: 'volley',
   train_archers: 'bow',
+  kings_glory: 'rally',
+  eored: 'horse',
+  shieldmaiden: 'armor',
+  slayer: 'blade',
 };
 const HERO_DESC: Record<number, string> = {
   6: "Aragorn: liderlik aurası, Elendil'in Kılıcı ve Athelas.",
   14: 'Beyaz Gandalf: Asa Patlaması ve yıkıcı Kudret Sözü.',
   15: 'Legolas: uzun menzilli elf okçusu; Ok Rüzgârı ve Okçu Eğitimi.',
+  23: 'Kral Théoden: Kralın Şanı (ordu +%25 hasar) ve Éored Çağır.',
+  24: 'Éowyn: Kalkan Kızı (çift hasar, iyileşme) ve boss avcısı "Ben Erkek Değilim!".',
 };
 const UNIT_DESC: Record<number, string> = {
   0: 'Kılıç ve kalkanlı çok yönlü piyade. Orklara karşı güçlü.',
   2: 'Ağır zırhlı mızrakçılar; süvari ve Uruk hücumunu karşılar.',
   4: 'Uzun menzilli okçular; zırhsız düşmana etkili.',
+  21: 'Mızraklı Rohan piyadesi; süvari ve wargları karşılar, ucuz ve hızlı yetişir.',
+  22: 'Hızlı ateş eden Rohan okçuları; zırhsız düşmana etkili.',
+  25: 'Ezen süvari: hücumda yoldaki düşmanı çiğner; Ork sürülerine karşı yıkıcı.',
 };
 const BUILD_ICON: Record<BuildingKind, string> = {
   arrow_tower: 'tower',
@@ -118,6 +137,8 @@ const secs = (ticks: number) => Math.max(0, Math.ceil((ticks * SIM_TICK_MS) / 10
 
 export interface HudDeps {
   def: MapDef;
+  /** FACTIONS indeksi: kahraman kadrosu ve kışla birimleri. */
+  faction: number;
   scenario: Scenario;
   units: UnitRenderer;
   structures: StructureRenderer;
@@ -229,14 +250,14 @@ export class HudController {
     const hp = cap > 0 ? hpSum / cap : 1;
     const buttons: CommandButton[] = [];
     // Seçili kahramanların yetenekleri (yuva sırasıyla).
-    HEROES.forEach((def, k) => {
+    factionDef(this.d.faction).heroes.forEach((def, k) => {
       const hero = m?.heroes[k] ?? 0;
       if (hero === 0 || !sel.has(hero)) return;
       const heroRank = counts.get(def.unitType)?.rank ?? 1;
       def.abilities.forEach((a, i) => {
         const left = secs((m?.abilityReady[k * 2 + i] ?? 0) - this.tick);
         const locked = heroRank < a.rank;
-        const active = a.key === 'elendil' && (m?.elendilUntil ?? 0) > this.tick;
+        const active = (m?.heroBuff[k] ?? 0) > this.tick;
         buttons.push({
           icon: ABILITY_ICON[a.key] ?? 'power',
           label: a.name,
@@ -411,7 +432,7 @@ export class HudController {
     }
     // Kışla
     const full = st.queueLen >= ECONOMY.queueMax;
-    const buttons: CommandButton[] = (b.trains ?? []).map((u) => {
+    const buttons: CommandButton[] = factionDef(this.d.faction).trains.map((u) => {
       const def = UNIT_DEFS[u];
       const head = st.queueLen > 0 && st.queueUnit === u;
       const train = ((def?.trainTime ?? 0) * (100 - BUILDING_LEVEL.trainTimePercent * (st.level - 1))) / 100;
@@ -513,7 +534,7 @@ export class HudController {
       };
     });
     // Kahramanlar
-    HEROES.forEach((def, k) => {
+    factionDef(this.d.faction).heroes.forEach((def, k) => {
       const unit = UNIT_DEFS[def.unitType];
       const cost = unit?.cost ?? 0;
       const alive = (m?.heroes[k] ?? 0) !== 0;

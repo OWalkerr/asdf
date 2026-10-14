@@ -1,4 +1,4 @@
-import { fxFromFloat, type MapDef, UnitTypeId } from '@bulwark/shared';
+import { factionDef, fxFromFloat, type MapDef, UnitTypeId } from '@bulwark/shared';
 import type { SimHost } from '../sim-host/SimHost';
 
 /**
@@ -15,6 +15,7 @@ export class Scenario {
   constructor(
     private readonly sim: SimHost,
     private readonly def: MapDef | undefined,
+    private readonly faction = 0,
   ) {}
 
   private spawn(unitType: number, x: number, z: number, count: number) {
@@ -39,7 +40,10 @@ export class Scenario {
       this.spawn(UnitTypeId.GondorArcher, 0, 52, 2);
       return;
     }
-    for (const g of this.def.garrison ?? []) this.spawn(g.unitType, g.pos[0], g.pos[1], g.count);
+    // Garnizon Gondor birimleriyle tanımlı; taraf karşılığına çevrilir (Rohan: mızrakçı, okçu).
+    const map = factionDef(this.faction).garrison;
+    for (const g of this.def.garrison ?? [])
+      this.spawn(map[g.unitType] ?? g.unitType, g.pos[0], g.pos[1], g.count);
   }
 
   /** Seçili taburlara hareket emri. */

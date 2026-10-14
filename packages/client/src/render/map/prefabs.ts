@@ -343,6 +343,59 @@ export const fortressKeep = (): BufferGeometry => {
   return verticalShade(merge(parts), 0.7, 1.0);
 };
 
+/**
+ * Rohan kalesi (Meduseld / Altın Salon): taş kaide üstünde ahşap salon, sazdan altın çatı, at
+ * başlı çatı süsleri, dört köşede ahşap gözcü kulesi. fortressKeep ile aynı ölçüler (köşe kuleleri
+ * ±7.5, teras 11.6) — kale yükseltme parçaları iki tarafta da oturur.
+ */
+export const rohanKeep = (): BufferGeometry => {
+  const parts: BufferGeometry[] = [
+    paint(place(new BoxGeometry(19, 1.4, 19), 0, 0.7, 0), 'helmStone'),
+    paint(place(new BoxGeometry(15, 10, 15), 0, 6.2, 0), 'wood'),
+    paint(place(new BoxGeometry(15.4, 0.8, 15.4), 0, 11.2, 0), 'woodDark'),
+    // Uzun salon: beşik çatı (iki eğik saz panel) + alın duvarları
+    paint(place(new BoxGeometry(8, 6, 13), 0, 14.6, 0), 'wood'),
+    paint(place(new BoxGeometry(0.6, 0.6, 14.4), 0, 21.6, 0), 'woodDark'), // mahya
+    // Kapı + saçak
+    paint(place(new BoxGeometry(4.2, 5.2, 0.6), 0, 3.8, 7.6), 'woodDark'),
+    paint(place(new BoxGeometry(6, 0.6, 2.2), 0, 7.2, 8.4), 'gold'),
+    paint(place(new BoxGeometry(0.4, 4, 0.4), -2.6, 5, 9.2), 'woodDark'),
+    paint(place(new BoxGeometry(0.4, 4, 0.4), 2.6, 5, 9.2), 'woodDark'),
+  ];
+  // Beşik çatı panelleri (iki yana eğik)
+  for (const side of [-1, 1]) {
+    const roof = new BoxGeometry(5.4, 0.45, 14.2);
+    roof.rotateZ(side * 0.62);
+    roof.translate(side * 2.2, 19.6, 0);
+    parts.push(paint(roof, 'gold'));
+  }
+  // At başlı çatı süsleri (iki alın, çapraz boynuzlar)
+  for (const z of [-7.2, 7.2])
+    for (const side of [-1, 1]) {
+      const horn = new BoxGeometry(0.3, 2.4, 0.3);
+      horn.rotateZ(side * 0.55);
+      horn.translate(side * 0.6, 22.4, z);
+      parts.push(paint(horn, 'gold'));
+    }
+  // Köşe gözcü kuleleri (ahşap, saz külah)
+  for (const [x, z] of [
+    [-7.5, -7.5],
+    [7.5, -7.5],
+    [-7.5, 7.5],
+    [7.5, 7.5],
+  ] as const) {
+    parts.push(paint(place(new CylinderGeometry(2.4, 2.8, 15, 8), x, 7.5, z), 'wood'));
+    parts.push(paint(place(new CylinderGeometry(3, 2.4, 0.8, 8), x, 15.4, z), 'woodDark'));
+    parts.push(paint(place(new ConeGeometry(2.9, 4.6, 8), x, 18.1, z), 'grassDry'));
+  }
+  // Yeşil-altın sancaklar ve ön pencereler
+  for (const x of [-6, 6]) parts.push(paint(place(new BoxGeometry(0.06, 3.4, 1.6), x, 8.2, 7.9), 'team0'));
+  for (const x of [-4, 4]) parts.push(paint(place(new BoxGeometry(1, 2, 0.2), x, 8, 7.55), 'woodDark'));
+  parts.push(paint(place(new CylinderGeometry(0.1, 0.1, 4, 4), 0, 24.4, 0), 'wood'));
+  parts.push(paint(place(new BoxGeometry(0.08, 1.6, 2.6), 0, 25.4, 1.3), 'team0'));
+  return verticalShade(merge(parts), 0.7, 1.0);
+};
+
 /** Mancınık (kule yuvası + kale yükseltmesi): ahşap şasi, karşı ağırlıklı kol, taş sepeti. */
 export const catapultModel = (): BufferGeometry =>
   verticalShade(

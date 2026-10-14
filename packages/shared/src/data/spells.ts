@@ -18,7 +18,17 @@ export const HERO = {
 } as const;
 
 export interface AbilityDef {
-  key: 'elendil' | 'athelas' | 'wizard_blast' | 'word_of_power' | 'arrow_wind' | 'train_archers';
+  key:
+    | 'elendil'
+    | 'athelas'
+    | 'wizard_blast'
+    | 'word_of_power'
+    | 'arrow_wind'
+    | 'train_archers'
+    | 'kings_glory'
+    | 'eored'
+    | 'shieldmaiden'
+    | 'slayer';
   name: string;
   /** Açılması için gereken kahraman rütbesi. */
   rank: number;
@@ -104,6 +114,63 @@ export const HEROES: readonly HeroDef[] = [
   },
 ];
 export const MAX_HEROES = 3;
+
+/** Rohan kahramanları (Théoden F, Éowyn G, Gandalf J). */
+export const ROHAN_HEROES: readonly HeroDef[] = [
+  {
+    unitType: 23,
+    key: 'KeyF',
+    icon: 'crown',
+    abilities: [
+      {
+        key: 'kings_glory',
+        name: 'Kralın Şanı',
+        rank: 1,
+        cooldown: 60,
+        desc: 'Théoden savaş naraları atar: 15 sn boyunca bütün ordunuz +%25 hasar verir.',
+      },
+      {
+        key: 'eored',
+        name: 'Éored Çağır',
+        rank: 3,
+        cooldown: 90,
+        desc: "Théoden'in yanına 40 sn için bir Rohirrim süvari bölüğü gelir.",
+      },
+    ],
+  },
+  {
+    unitType: 24,
+    key: 'KeyG',
+    icon: 'blade',
+    abilities: [
+      {
+        key: 'shieldmaiden',
+        name: 'Kalkan Kızı',
+        rank: 1,
+        cooldown: 45,
+        desc: "Éowyn 10 sn boyunca çift hasar verir ve canının %30'unu yeniler.",
+      },
+      {
+        key: 'slayer',
+        name: 'Ben Erkek Değilim!',
+        rank: 3,
+        cooldown: 90,
+        desc: '15 m içindeki en güçlü düşmana (önce boss) 700 büyü hasarı.',
+      },
+    ],
+  },
+  {
+    // Gandalf her iki tarafta da (BFME2 Rohan kahramanı).
+    unitType: 14,
+    key: 'KeyJ',
+    icon: 'staff',
+    abilities: (HEROES[1] as HeroDef).abilities,
+  },
+];
+export const SLAYER = { radius: 15, damage: 700 } as const;
+export const EORED = { duration: 40 } as const;
+export const KINGS_GLORY_DURATION = 15;
+export const SHIELDMAIDEN = { duration: 10, healPercent: 30 } as const;
 /** Aragorn'un yetenekleri (geriye uyum). */
 export const HERO_ABILITIES: readonly AbilityDef[] = (HEROES[0] as HeroDef).abilities;
 export const WIZARD_BLAST = { radius: 10, damage: 160 } as const;

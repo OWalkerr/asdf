@@ -12,6 +12,8 @@ export type ToWorker =
       mapSize: number;
       /** DIFFICULTIES indeksi. */
       difficulty: number;
+      /** FACTIONS indeksi (0 Gondor, 1 Rohan). */
+      faction: number;
     }
   | { type: 'commands'; commands: StampedCommand[] }
   | { type: 'speed'; value: number };

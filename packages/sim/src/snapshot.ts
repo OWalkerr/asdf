@@ -14,6 +14,7 @@ import {
   H_GATE_HP,
   H_GATE_MAX,
   H_GOLD,
+  H_HERO_BUFF,
   H_HERO_READY,
   H_HEROES,
   H_LIVES,
@@ -155,7 +156,9 @@ export const writeSnapshot = (world: SimWorld, view: Int32Array, simMicros = 0):
     view[base + H_HERO_READY + k] = m.heroReady[k] as number;
   }
   for (let i = 0; i < SNAP_HEROES * 2; i++) view[base + H_ABILITY_READY + i] = m.abilityReady[i] as number;
-  view[base + H_ELENDIL_UNTIL] = m.elendilUntil[0] as number;
+  view[base + H_ELENDIL_UNTIL] = m.heroBuff[0] as number;
+  view[base + H_HERO_BUFF] = m.heroBuff[1] as number;
+  view[base + H_HERO_BUFF + 1] = m.heroBuff[2] as number;
   view[base + H_RALLY_UNTIL] = m.rallyUntil[0] as number;
   view[base + H_UPGRADES] = (m.upgrades[0] as number) | ((m.researching[0] as number) << 8);
   view[base + H_TICK] = world.tick;

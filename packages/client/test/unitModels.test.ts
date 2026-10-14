@@ -5,6 +5,7 @@ import {
   balrog,
   batteringRam,
   caveTroll,
+  eowyn,
   gandalf,
   gondorArcher,
   gondorSoldier,
@@ -15,8 +16,11 @@ import {
   orcArcher,
   orcWarrior,
   Part,
+  rohanArcher,
+  rohanSpearman,
   rohirrim,
   siegeTower,
+  theoden,
   towerGuard,
   UNIT_MODELS,
   urukHai,
@@ -47,6 +51,10 @@ const BUDGET: [string, () => import('three/webgpu').BufferGeometry, number][] = 
   ['Su Gözcüsü', watcher, 900],
   ['Ateş Ejderi', wyrm, 900],
   ['Kuşatma kulesi', siegeTower, 900],
+  ['Rohan mızrakçısı', rohanSpearman, 300],
+  ['Rohan okçusu', rohanArcher, 300],
+  ['Théoden', theoden, 450],
+  ['Éowyn', eowyn, 450],
 ];
 
 describe('birim modelleri', () => {

@@ -70,6 +70,12 @@ altının %50'si); yıkılan veya satılan yapının yuvası yeniden inşaya aç
 gibi okçularla avlayın), hızlı **Warg Biniciler**, saflarınızı yarma vuruşuyla dağıtan dev **Mağara Trolü**,
 koçbaşı ve Lurtz. Kale haritalarında yakın dövüşçüler kapı yerine yakındaki arsa binalarınıza da saldırır.
 
+**Taraflar:** başlangıç ekranında **Gondor** veya **Rohan** seçilir (`?faction=rohan`). Rohan'ın kışlası
+**Rohan Mızrakçıları**, **Rohan Okçuları** ve ezen **Rohirrim** süvarisi yetiştirir; kalesi taş kaide üstünde
+ahşap Altın Salon'dur, sancakları yeşildir. Rohan kahramanları: **F Kral Théoden** (1100; Kralın Şanı — 15 sn ordu
++%25 hasar, rütbe 3'te Éored Çağır — 40 sn Rohirrim bölüğü), **G Éowyn** (900; Kalkan Kızı — çift hasar ve
+iyileşme, rütbe 3'te "Ben Erkek Değilim!" — yakındaki en güçlü düşmana, önce boss'a 700 hasar), **J Gandalf**.
+
 **Kahramanlar (BFME2 kadrosu):** sol üstteki portrelerden veya kale panelinden çağrılır, kalenin kapısından
 çıkar; hepsi liderlik aurası verir, ikinci yetenek rütbe 3'te açılır, ölünce 45 sn sonra geri çağrılır.
 **F Aragorn** (1200): Elendil'in Kılıcı, Athelas. **G Beyaz Gandalf** (2000): Asa Patlaması (10 m, 160 büyü

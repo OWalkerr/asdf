@@ -74,7 +74,7 @@ self.onmessage = (e: MessageEvent<ToWorker>) => {
         {
           const def = msg.mapId ? MAP_DEFS[msg.mapId] : undefined;
           const nav = def ? buildNavGrid(def) : createOpenGrid(msg.mapSize);
-          sim = new Simulation(msg.seed, nav, def, msg.difficulty);
+          sim = new Simulation(msg.seed, nav, def, msg.difficulty, msg.faction);
         }
         shared = msg.view !== null;
         view = msg.view ?? createSnapshotView(msg.capacity, false);

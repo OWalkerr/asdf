@@ -133,7 +133,7 @@ const createGenericPaint = (def: MapDef): PaintFn => {
   };
 };
 
-export const buildGenericMap = (palette: Texture, params: ToonParams, def: MapDef): MapScene => {
+export const buildGenericMap = (palette: Texture, params: ToonParams, def: MapDef, faction = 0): MapScene => {
   const heightAt = createGenericHeight(def);
   const rng = new Rng(def.seed);
   const rand = () => rng.nextU32() / 4294967296;
@@ -242,7 +242,9 @@ export const buildGenericMap = (palette: Texture, params: ToonParams, def: MapDe
   const c = def.citadel;
   const keepRot = Math.PI / 2 - (c.facing ?? 90) * DEG;
   const keepY = heightAt(c.pos[0], c.pos[1]) + (c.elevation ?? 0) - 0.4;
-  solid.add(P.fortressKeep(), at(c.pos[0], c.pos[1], keepRot, def.mode === 'TD' ? 0.7 : 1, keepY), true);
+  // Kale: Gondor taş kalesi veya Rohan'ın Altın Salonu (taraf seçimi).
+  const keep = faction === 1 ? P.rohanKeep() : P.fortressKeep();
+  solid.add(keep, at(c.pos[0], c.pos[1], keepRot, def.mode === 'TD' ? 0.7 : 1, keepY), true);
   if (c.door) {
     for (const side of [-1, 1]) {
       const dx = Math.cos((c.facing ?? 90) * DEG);

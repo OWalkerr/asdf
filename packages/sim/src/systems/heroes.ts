@@ -3,13 +3,15 @@ import {
   ATHELAS_RADIUS,
   DAMAGE_TYPES,
   ELENDIL_DURATION,
+  EORED,
   FX_HALF,
   type Fx,
+  factionDef,
   fxFromFloat,
   fxLen,
   fxMul,
   HERO,
-  HEROES,
+  KINGS_GLORY_DURATION,
   MAX_HEROES,
   MAX_RANK,
   MAX_SPELLS,
@@ -18,6 +20,8 @@ import {
   RALLY_DURATION,
   RANK_BONUS_PERCENT,
   RANK_XP,
+  SHIELDMAIDEN,
+  SLAYER,
   SPELL_DEFS,
   SUMMONS,
   TRAIN_ARCHERS_RADIUS,
@@ -38,6 +42,7 @@ import type { SimWorld } from '../world';
 import { applyDamage, arrowDmgType, fireProjectile, hasUpgrade, splash } from './combat';
 import { orderBattalions, spawnBattalion, spawnBattalionRow } from './commands';
 import { fortressDoor } from './fortress';
+import { forEachMember } from './spatial';
 
 /**
  * Phase 3 derinliği (GDD §5.2, §8, §9):
@@ -60,9 +65,12 @@ const VOLLEY_BACK: Fx = fxFromFloat(36);
 const DMG_MAGIC = DAMAGE_TYPES.indexOf('magic');
 const DMG_FIRE = DAMAGE_TYPES.indexOf('fire');
 
-/** Kahraman tipinin yuvası (HEROES indeksi; -1 = kahraman değil). */
-export const heroSlot = (unitType: number): number => HEROES.findIndex((h) => h.unitType === unitType);
-const isHeroType = (t: number) => STAT.hero[t] === 1 && heroSlot(t) >= 0;
+/** Oyuncu tarafının kahraman kadrosu. */
+const heroesOf = (world: SimWorld) => factionDef(world.match.faction).heroes;
+/** Kahraman tipinin yuvası (taraf kadrosu indeksi; -1 = bu tarafın kahramanı değil). */
+export const heroSlot = (world: SimWorld, unitType: number): number =>
+  heroesOf(world).findIndex((h) => h.unitType === unitType);
+const isHeroType = (world: SimWorld, t: number) => STAT.hero[t] === 1 && heroSlot(world, t) >= 0;
 
 /** Saldıran tabura göre hasar yüzdesi: rütbe + aura + Toplanma + (yakın dövüşte) Dövme Kılıçlar; Elendil ×2. */
 export const attackPercent = (world: SimWorld, b: number, team: number, melee: boolean): number => {
@@ -75,7 +83,12 @@ export const attackPercent = (world: SimWorld, b: number, team: number, melee: b
   }
   if ((m.rallyUntil[team] as number) > world.tick) pct += RALLY_DAMAGE_PERCENT;
   if (melee && hasUpgrade(world, team, Upgrade.ForgedBlades)) pct += 25;
-  if (b !== 0 && b === m.heroes[team * MAX_HEROES] && (m.elendilUntil[team] as number) > world.tick) pct *= 2;
+  // Kahraman güçlendirmesi (Elendil'in Kılıcı, Kalkan Kızı): ×2.
+  if (b !== 0)
+    for (let k = 0; k < MAX_HEROES; k++) {
+      const i = team * MAX_HEROES + k;
+      if (b === m.heroes[i] && (m.heroBuff[i] as number) > world.tick) pct *= 2;
+    }
   return pct;
 };
 
@@ -113,8 +126,8 @@ export const onBattalionRemoved = (world: SimWorld, b: number, team: number): vo
 export const summonHero = (world: SimWorld, team: number, unitType: number): boolean => {
   const m = world.match;
   const map = world.map;
-  if (!map || m.state !== MatchState.Playing || !isHeroType(unitType)) return false;
-  const i = team * MAX_HEROES + heroSlot(unitType);
+  if (!map || m.state !== MatchState.Playing || !isHeroType(world, unitType)) return false;
+  const i = team * MAX_HEROES + heroSlot(world, unitType);
   if ((m.heroes[i] as number) !== 0 || world.tick < (m.heroReady[i] as number)) return false;
   const cost = UNIT_DEFS[unitType]?.cost ?? 0;
   if ((m.gold[team] as number) < cost) return false;
@@ -154,7 +167,7 @@ export const useAbility = (world: SimWorld, team: number, unit: number, ability:
   if (m.state !== MatchState.Playing || unit === 0 || !Number.isInteger(ability)) return false;
   let k = -1;
   for (let i = 0; i < MAX_HEROES; i++) if (m.heroes[team * MAX_HEROES + i] === unit) k = i;
-  const def = HEROES[k]?.abilities[ability];
+  const def = heroesOf(world)[k]?.abilities[ability];
   if (!def || !entityExists(world, unit) || (Battalion.rank[unit] as number) < def.rank) return false;
   const slot = (team * MAX_HEROES + k) * 2 + ability;
   if (world.tick < (m.abilityReady[slot] as number)) return false;
@@ -163,8 +176,41 @@ export const useAbility = (world: SimWorld, team: number, unit: number, ability:
   const z = Position.z[unit] as number;
   switch (def.key) {
     case 'elendil':
-      m.elendilUntil[team] = world.tick + ticks(ELENDIL_DURATION);
+      m.heroBuff[team * MAX_HEROES + k] = world.tick + ticks(ELENDIL_DURATION);
       break;
+    case 'shieldmaiden': {
+      m.heroBuff[team * MAX_HEROES + k] = world.tick + ticks(SHIELDMAIDEN.duration);
+      const { Health } = world.c;
+      forEachMember(world, unit, (s) => {
+        const max = Health.max[s] as number;
+        Health.hp[s] = Math.min(
+          max,
+          (Health.hp[s] as number) + (((max * SHIELDMAIDEN.healPercent) / 100) | 0),
+        );
+      });
+      break;
+    }
+    case 'kings_glory':
+      m.rallyUntil[team] = Math.max(m.rallyUntil[team] as number, world.tick + ticks(KINGS_GLORY_DURATION));
+      break;
+    case 'eored':
+      summonAt(world, team, UnitTypeId.RohanRiders, x, (z + fxFromFloat(6)) | 0, 1, EORED.duration, 16384);
+      break;
+    case 'slayer': {
+      // En güçlü düşman: önce boss, sonra en yüksek azami can.
+      let best = 0;
+      let score = -1;
+      for (const e of enemiesNear(world, team, x, z, fxFromFloat(SLAYER.radius))) {
+        const t = UnitType.id[e] as number;
+        const v = (STAT.boss[t] === 1 ? 1_000_000 : 0) + (world.c.Health.max[e] as number);
+        if (v > score) {
+          score = v;
+          best = e;
+        }
+      }
+      if (best !== 0) applyDamage(world, best, SLAYER.damage, DMG_MAGIC, unit);
+      break;
+    }
     case 'athelas':
       healArea(world, team, x, z, ATHELAS_R, 50);
       break;
@@ -304,7 +350,9 @@ export const expireSystem = (world: SimWorld): void => {
   for (const b of query(world, [Battalion])) {
     const exp = Battalion.expires[b] as number;
     if (exp === 0) continue;
-    const chargeDone = STAT.charger[Battalion.unitType[b] as number] === 1 && Battalion.active[b] === 0;
+    const t = Battalion.unitType[b] as number;
+    // Hücum eden çağrılmış süvari (Rohirrim büyüsü) hücumu bitince çekilir.
+    const chargeDone = STAT.charger[t] === 1 && STAT.summoned[t] === 1 && Battalion.active[b] === 0;
     if (world.tick >= exp || chargeDone) gone.push(b);
   }
   if (gone.length === 0) return;

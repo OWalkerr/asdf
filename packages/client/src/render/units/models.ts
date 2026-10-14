@@ -965,6 +965,103 @@ export const siegeTower = (): BufferGeometry => {
   return b.build();
 };
 
+/**
+ * Rohan mızrakçısı (BFME2): yeşil tunik, zincir zırh, burun korumalı konik miğfer ve at kılı
+ * sorguç, yuvarlak yeşil kalkanda altın at, uzun mızrak. Takım rengi: tunik + kalkan.
+ */
+export const rohanSpearman = (): BufferGeometry => {
+  const b = new ModelBuilder();
+  legs(b, 'leather', 'woodDark');
+  b.add(Part.Body, box(0.34, 0.6, 0.48), 'steel', [0, 1.13, 0]); // zincir zırh
+  b.add(Part.Body, box(0.36, 0.42, 0.5), 'team0', [0, 0.84, 0]); // tunik eteği
+  b.add(Part.Body, box(0.38, 0.07, 0.52), 'leather', [0, 1.0, 0]);
+  b.add(Part.Body, box(0.05, 0.7, 0.44), 'team0Dark', [-0.2, 1.05, 0]); // pelerin
+  b.add(Part.Head, box(0.2, 0.2, 0.2), 'sand', [0.02, 1.6, 0]);
+  b.add(Part.Head, new ConeGeometry(0.16, 0.3, 6), 'silver', [0, 1.8, 0]); // konik miğfer
+  b.add(Part.Head, box(0.04, 0.14, 0.04), 'silver', [0.13, 1.62, 0]); // burun koruması
+  b.add(Part.Head, box(0.3, 0.06, 0.06), 'sand', [-0.16, 1.88, 0], [0, 0, 0.6]); // at kılı sorguç
+  arm(b, Part.ArmR, 0.3, 'steel', 'leather');
+  b.add(Part.ArmR, cyl(0.025, 0.025, 2.4, 4), 'wood', [0.45, 0.85, 0.3], [0, 0, -1.25]); // mızrak
+  b.add(Part.ArmR, new ConeGeometry(0.05, 0.25, 4), 'silver', [1.6, 1.2, 0.3], [0, 0, -1.25]);
+  arm(b, Part.ArmL, -0.3, 'steel', 'leather');
+  b.add(Part.ArmL, cyl(0.32, 0.32, 0.05, 8), 'team0', [0.2, 0.95, -0.38], [0, 0, Math.PI / 2]);
+  b.add(Part.ArmL, box(0.02, 0.22, 0.12), 'gold', [0.23, 0.97, -0.38]); // altın at
+  b.add(Part.ArmL, box(0.02, 0.06, 0.2), 'gold', [0.23, 1.08, -0.42]);
+  return b.build();
+};
+
+/** Rohan okçusu: yeşil kukuletalı pelerin, deri yelek, sırtta sadak, uzun yay. */
+export const rohanArcher = (): BufferGeometry => {
+  const b = new ModelBuilder();
+  legs(b, 'leather', 'woodDark');
+  b.add(Part.Body, box(0.32, 0.6, 0.46), 'leather', [0, 1.13, 0]);
+  b.add(Part.Body, box(0.34, 0.4, 0.48), 'team0', [0, 0.82, 0]);
+  b.add(Part.Body, box(0.05, 0.9, 0.5), 'team0Dark', [-0.2, 1.0, 0]); // pelerin
+  b.add(Part.Body, cyl(0.06, 0.06, 0.6, 5), 'leather', [-0.23, 1.3, 0.12], [0.35, 0, 0]);
+  b.add(Part.Body, box(0.08, 0.1, 0.08), 'sand', [-0.23, 1.66, 0.24], [0.35, 0, 0]);
+  b.add(Part.Head, box(0.2, 0.2, 0.2), 'sand', [0.02, 1.6, 0]);
+  b.add(Part.Head, box(0.26, 0.24, 0.26), 'team0Dark', [-0.03, 1.66, 0]); // kukuleta
+  b.add(Part.Head, box(0.06, 0.2, 0.18), 'gold', [-0.12, 1.5, 0]); // sarı saç
+  arm(b, Part.ArmR, 0.28, 'leather', 'sand');
+  arm(b, Part.ArmL, -0.28, 'leather', 'sand');
+  const hx = 0.04;
+  const hy = 0.72;
+  const hz = -0.28;
+  b.add(Part.ArmL, box(0.72, 0.05, 0.04), 'woodDark', [hx + 0.02, hy, hz]);
+  b.add(Part.ArmL, box(0.56, 0.045, 0.04), 'woodDark', [hx + 0.64, hy - 0.09, hz], [0, 0, -0.32]);
+  b.add(Part.ArmL, box(0.56, 0.045, 0.04), 'woodDark', [hx - 0.6, hy - 0.09, hz], [0, 0, 0.32]);
+  b.add(Part.ArmL, box(1.65, 0.012, 0.012), 'sand', [hx + 0.02, hy - 0.21, hz]);
+  return b.build();
+};
+
+/**
+ * Kral Théoden (BFME2): altın işlemeli pul zırh, yeşil pelerin, at kılı sorguçlu altın taç-miğfer,
+ * gri sakal, Herugrim kılıcı ve yeşil-altın kalkan. Kahraman okunurluğu için %12 büyük.
+ */
+export const theoden = (): BufferGeometry => {
+  const b = new ModelBuilder();
+  legs(b, 'woodDark', 'leather');
+  b.add(Part.Body, box(0.36, 0.62, 0.5), 'gold', [0, 1.13, 0]); // altın pul zırh
+  b.add(Part.Body, box(0.06, 0.44, 0.4), 'steel', [0.18, 1.18, 0]);
+  b.add(Part.Body, box(0.38, 0.4, 0.52), 'team0', [0, 0.82, 0]);
+  b.add(Part.Body, box(0.07, 1.2, 0.62), 'team0Dark', [-0.22, 0.88, 0]); // kraliyet pelerini
+  b.add(Part.Body, box(0.3, 0.14, 0.64), 'gold', [-0.05, 1.42, 0]);
+  b.add(Part.Head, box(0.2, 0.22, 0.2), 'sand', [0.02, 1.61, 0]);
+  b.add(Part.Head, box(0.06, 0.2, 0.16), 'rockLight', [0.12, 1.5, 0]); // gri sakal
+  b.add(Part.Head, cyl(0.14, 0.17, 0.18, 6), 'gold', [0, 1.75, 0]); // taç-miğfer
+  b.add(Part.Head, box(0.42, 0.08, 0.06), 'snow', [-0.2, 1.88, 0], [0, 0, 0.5]); // beyaz sorguç
+  arm(b, Part.ArmR, 0.3, 'gold', 'sand');
+  b.add(Part.ArmR, box(0.08, 0.06, 0.22), 'gold', [0.06, 0.72, 0.3]);
+  b.add(Part.ArmR, box(0.95, 0.07, 0.04), 'silver', [0.55, 0.72, 0.3], [0, 0, 0.35]); // Herugrim
+  arm(b, Part.ArmL, -0.3, 'gold', 'sand');
+  b.add(Part.ArmL, cyl(0.3, 0.3, 0.05, 8), 'team0', [0.2, 0.95, -0.38], [0, 0, Math.PI / 2]);
+  b.add(Part.ArmL, cyl(0.1, 0.1, 0.06, 6), 'gold', [0.23, 0.95, -0.4], [0, 0, Math.PI / 2]);
+  return b.build(1.12);
+};
+
+/**
+ * Éowyn (BFME2): uzun sarı saç, zincir zırh üstüne yeşil-beyaz giysi, miğfer yok, yuvarlak kalkan
+ * ve ince kılıç. İnce, Rohan askerinden belirgin siluet.
+ */
+export const eowyn = (): BufferGeometry => {
+  const b = new ModelBuilder();
+  legs(b, 'leather', 'woodDark');
+  b.add(Part.Body, box(0.3, 0.6, 0.42), 'steel', [0, 1.14, 0]);
+  b.add(Part.Body, box(0.06, 0.44, 0.34), 'snow', [0.15, 1.16, 0]);
+  b.add(Part.Body, box(0.34, 0.46, 0.46), 'team0', [0, 0.8, 0]);
+  b.add(Part.Body, box(0.05, 0.95, 0.5), 'team0Dark', [-0.2, 0.98, 0]);
+  b.add(Part.Head, box(0.19, 0.21, 0.18), 'sand', [0.02, 1.62, 0]);
+  b.add(Part.Head, box(0.22, 0.12, 0.22), 'gold', [-0.01, 1.74, 0]);
+  b.add(Part.Head, box(0.08, 0.56, 0.22), 'gold', [-0.11, 1.44, 0]); // uzun sarı saç
+  arm(b, Part.ArmR, 0.28, 'steel', 'sand');
+  b.add(Part.ArmR, box(0.08, 0.06, 0.2), 'gold', [0.06, 0.72, 0.28]);
+  b.add(Part.ArmR, box(0.8, 0.06, 0.035), 'silver', [0.48, 0.72, 0.28], [0, 0, 0.35]);
+  arm(b, Part.ArmL, -0.28, 'steel', 'sand');
+  b.add(Part.ArmL, cyl(0.28, 0.28, 0.05, 8), 'team0', [0.2, 0.95, -0.36], [0, 0, Math.PI / 2]);
+  b.add(Part.ArmL, box(0.02, 0.2, 0.1), 'gold', [0.23, 0.97, -0.36]);
+  return b.build(1.06);
+};
+
 /** Birim tipi id → model üreticisi (UNIT_DEFS ile aynı sıra). */
 export const UNIT_MODELS: Record<number, () => BufferGeometry> = {
   0: gondorSoldier,
@@ -989,4 +1086,10 @@ export const UNIT_MODELS: Record<number, () => BufferGeometry> = {
   18: watcher,
   19: wyrm,
   20: siegeTower,
+  21: rohanSpearman,
+  22: rohanArcher,
+  23: theoden,
+  24: eowyn,
+  // Kışladan yetişen Rohirrim: çağrılan Rohirrim ile aynı siluet.
+  25: rohirrim,
 };

@@ -1073,6 +1073,23 @@ body.debug #hud {
   margin: 0 auto 16px;
 }
 #startscreen .maps,
+#startscreen .factions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+#startscreen .factions button {
+  grid-template-columns: 26px 1fr;
+  column-gap: 10px;
+}
+#startscreen .factions i {
+  grid-row: span 2;
+  width: 26px;
+  height: 34px;
+  border-radius: 3px 3px 13px 13px;
+  border: 1px solid var(--gold-hi);
+}
 #startscreen .diffs {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -1080,6 +1097,7 @@ body.debug #hud {
   margin-bottom: 14px;
 }
 #startscreen .maps button,
+#startscreen .factions button,
 #startscreen .diffs button {
   display: grid;
   align-content: start;
@@ -1093,6 +1111,7 @@ body.debug #hud {
   cursor: pointer;
 }
 #startscreen .maps button.sel,
+#startscreen .factions button.sel,
 #startscreen .diffs button.sel {
   border-color: var(--gold-hi);
   box-shadow:
@@ -1100,6 +1119,7 @@ body.debug #hud {
     0 0 18px rgba(240, 201, 90, 0.22);
 }
 #startscreen .maps b,
+#startscreen .factions b,
 #startscreen .diffs b {
   font-family: var(--title);
   font-size: 16px;
@@ -1107,6 +1127,7 @@ body.debug #hud {
   color: var(--gold-hi);
 }
 #startscreen .maps span,
+#startscreen .factions span,
 #startscreen .diffs span {
   font-size: 12px;
   line-height: 1.4;

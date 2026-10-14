@@ -1,4 +1,4 @@
-import { DEFAULT_DIFFICULTY, DIFFICULTIES, MAP_DEFS } from '@bulwark/shared';
+import { DEFAULT_DIFFICULTY, DIFFICULTIES, FACTIONS, MAP_DEFS } from '@bulwark/shared';
 
 /**
  * Maç öncesi ekran (GDD §4.4, §11): harita (FD / TD) ve zorluk seçimi. Seçim yapılınca çözülür;
@@ -8,6 +8,8 @@ import { DEFAULT_DIFFICULTY, DIFFICULTIES, MAP_DEFS } from '@bulwark/shared';
 export interface MatchChoice {
   mapId: string;
   difficulty: number;
+  /** FACTIONS indeksi (0 Gondor, 1 Rohan). */
+  faction: number;
 }
 
 const MAP_IDS = Object.keys(MAP_DEFS);
@@ -17,6 +19,15 @@ export const chooseMatch = (): Promise<MatchChoice> => {
   const params = new URLSearchParams(location.search);
   const urlMap = params.get('map');
   const fromUrl = DIFFICULTIES.findIndex((d) => d.key === params.get('difficulty'));
+  const urlFaction = FACTIONS.findIndex((f) => f.key === params.get('faction'));
+  let faction = urlFaction >= 0 ? urlFaction : 0;
+  if (urlFaction < 0)
+    try {
+      const f = Number(localStorage.getItem('bulwark.faction'));
+      if (Number.isInteger(f) && FACTIONS[f]) faction = f;
+    } catch {
+      /* depolama yok */
+    }
   let mapPick = urlMap && MAP_DEFS[urlMap] ? urlMap : DEFAULT_MAP;
   if (!urlMap)
     try {
@@ -25,11 +36,12 @@ export const chooseMatch = (): Promise<MatchChoice> => {
     } catch {
       /* depolama yok */
     }
-  if (fromUrl >= 0 && urlMap) return Promise.resolve({ mapId: mapPick, difficulty: fromUrl });
+  if (fromUrl >= 0 && urlMap) return Promise.resolve({ mapId: mapPick, difficulty: fromUrl, faction });
   if (navigator.webdriver && !params.has('intro'))
     return Promise.resolve({
       mapId: urlMap && MAP_DEFS[urlMap] ? urlMap : 'helms_deep',
       difficulty: fromUrl >= 0 ? fromUrl : DEFAULT_DIFFICULTY,
+      faction,
     });
   let saved = DEFAULT_DIFFICULTY;
   try {
@@ -59,6 +71,13 @@ export const chooseMatch = (): Promise<MatchChoice> => {
             </button>`;
           }).join('')}
         </div>
+        <div class="factions">
+          ${FACTIONS.map(
+            (f, i) => `<button type="button" data-f="${i}" class="${f.key} ${i === faction ? 'sel' : ''}">
+              <i style="background:${f.color.main}"></i><b>${f.name}</b><span>${f.desc}</span>
+            </button>`,
+          ).join('')}
+        </div>
         <div class="diffs">
           ${DIFFICULTIES.map(
             (d, i) => `<button type="button" data-i="${i}" class="${i === saved ? 'sel' : ''}">
@@ -68,7 +87,7 @@ export const chooseMatch = (): Promise<MatchChoice> => {
           ).join('')}
         </div>
         <button type="button" class="go">Savunmayı başlat</button>
-        <p class="keys">Sol tık: seç · Sağ tık: yürü/saldır · WASD/Q/E: kamera · F: Aragorn · 1–6: büyüler · M: ses</p>
+        <p class="keys">Sol tık: seç · Sağ tık: yürü/saldır · WASD/Q/E: kamera · F/G/J: kahramanlar · P: duraklat · 1–6: büyüler · M: ses</p>
       </div>`;
     document.body.appendChild(root);
     let pick = fromUrl >= 0 ? fromUrl : saved;
@@ -80,6 +99,14 @@ export const chooseMatch = (): Promise<MatchChoice> => {
         });
       });
       b.addEventListener('dblclick', () => go());
+    });
+    root.querySelectorAll<HTMLButtonElement>('.factions button').forEach((b) => {
+      b.addEventListener('click', () => {
+        faction = Number(b.dataset.f);
+        root.querySelectorAll('.factions button').forEach((x) => {
+          x.classList.toggle('sel', x === b);
+        });
+      });
     });
     root.querySelectorAll<HTMLButtonElement>('.diffs button').forEach((b) => {
       b.addEventListener('click', () => {
@@ -94,12 +121,13 @@ export const chooseMatch = (): Promise<MatchChoice> => {
       try {
         localStorage.setItem('bulwark.difficulty', String(pick));
         localStorage.setItem('bulwark.map', mapPick);
+        localStorage.setItem('bulwark.faction', String(faction));
       } catch {
         /* depolama yok */
       }
       root.classList.add('out');
       setTimeout(() => root.remove(), 400);
-      resolve({ mapId: mapPick, difficulty: pick });
+      resolve({ mapId: mapPick, difficulty: pick, faction });
     };
     root.querySelector('.go')?.addEventListener('click', go);
   });

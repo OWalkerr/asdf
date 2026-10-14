@@ -1,4 +1,13 @@
-import { ECONOMY, HERO, HEROES, type MapDef, type MatchInfo, MatchState, UNIT_DEFS } from '@bulwark/shared';
+import {
+  ECONOMY,
+  factionDef,
+  HERO,
+  type HeroDef,
+  type MapDef,
+  type MatchInfo,
+  MatchState,
+  UNIT_DEFS,
+} from '@bulwark/shared';
 import type { RTSCamera } from '../../render/camera/RTSCamera';
 import type { StructureRenderer } from '../../render/structures/StructureRenderer';
 import type { UnitRenderer } from '../../render/units/UnitRenderer';
@@ -20,6 +29,8 @@ const fmt = (ticks: number) => {
 
 export interface TopHudDeps {
   def: MapDef;
+  /** FACTIONS indeksi (kahraman kadrosu). */
+  faction: number;
   scenario: Scenario;
   units: UnitRenderer;
   structures: StructureRenderer | null;
@@ -32,6 +43,7 @@ export interface TopHudDeps {
 export class TopHud {
   private readonly heroes: HTMLDivElement;
   private readonly heroBtns: HTMLButtonElement[] = [];
+  private readonly heroDefs: readonly HeroDef[];
   private readonly fortBtn: HTMLButtonElement;
   private readonly status: HTMLDivElement;
   private readonly res: HTMLDivElement;
@@ -40,9 +52,10 @@ export class TopHud {
   private heroPos: ({ x: number; z: number } | null)[] = [];
 
   constructor(private readonly d: TopHudDeps) {
+    this.heroDefs = factionDef(d.faction).heroes;
     this.heroes = document.createElement('div');
     this.heroes.id = 'heroes';
-    this.heroes.innerHTML = `${HEROES.map(() => '<button type="button" class="portrait hero"></button>').join('')}<button type="button" class="portrait fort"></button>`;
+    this.heroes.innerHTML = `${this.heroDefs.map(() => '<button type="button" class="portrait hero"></button>').join('')}<button type="button" class="portrait fort"></button>`;
     this.heroes.querySelectorAll<HTMLButtonElement>('.hero').forEach((b, k) => {
       this.heroBtns.push(b);
       b.addEventListener('click', () => this.heroAction(k));
@@ -57,7 +70,7 @@ export class TopHud {
     document.body.append(this.heroes, this.status, this.res);
     window.addEventListener('keydown', (e) => {
       if (e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
-      const k = HEROES.findIndex((h) => h.key === e.code);
+      const k = this.heroDefs.findIndex((h) => h.key === e.code);
       if (k >= 0) this.heroAction(k);
       if (e.code === 'KeyK') this.fortAction();
     });
@@ -65,7 +78,7 @@ export class TopHud {
 
   private heroAction(k: number): void {
     const m = this.match;
-    const def = HEROES[k];
+    const def = this.heroDefs[k];
     if (!m || !def || m.state !== MatchState.Playing) return;
     const b = m.heroes[k] ?? 0;
     if (b !== 0) {
@@ -93,7 +106,7 @@ export class TopHud {
     this.match = m;
     this.tick = tick;
     // Kahraman portreleri
-    HEROES.forEach((def, k) => {
+    this.heroDefs.forEach((def, k) => {
       const btn = this.heroBtns[k] as HTMLButtonElement;
       const b = m.heroes[k] ?? 0;
       const ready = m.heroReady[k] ?? 0;

@@ -25,6 +25,7 @@ export interface SimHostOptions {
   mapSize: number;
   /** DIFFICULTIES indeksi (varsayılan Normal). */
   difficulty?: number;
+  faction?: number;
   /** Komutun uygulanacağı tick = son görülen tick + inputDelay (lockstep'te ≥ 2). */
   inputDelay?: number;
 }
@@ -79,6 +80,7 @@ export class SimHost {
         mapId: opts.mapId,
         mapSize: opts.mapSize,
         difficulty: opts.difficulty ?? 1,
+        faction: opts.faction ?? 0,
       });
     });
     return host;

@@ -22,6 +22,11 @@ import { BarRenderer, healthColor } from './BarRenderer';
  */
 const MAX_BATTALIONS = 1024;
 const TEAM_COLORS = ['#3a6fc4', '#b8322a', '#3a8f4a', '#c9a23a'].map((c) => new Color(c));
+
+/** Oyuncu tarafının sancak rengi (Gondor mavi, Rohan yeşil). */
+export const setPlayerBannerColor = (hex: string): void => {
+  (TEAM_COLORS[0] as Color).set(hex);
+};
 const BUILD_COLOR = new Color('#5aa6e8');
 const GOLD = new Color('#ffd34d');
 

@@ -5,6 +5,7 @@ import {
   DAMAGE_TYPES,
   ECONOMY,
   type Fx,
+  factionDef,
   fxFromFloat,
   fxLen,
   MatchState,
@@ -220,7 +221,7 @@ export const trainUnit = (world: SimWorld, team: number, building: number, unitT
   if (!hasComponent(world, building, Structure) || Team.id[building] !== team) return false;
   if (Structure.kind[building] !== StructureKind.Barracks || (Structure.buildLeft[building] as number) > 0)
     return false;
-  if (!(BUILDING_DEFS.barracks.trains ?? []).includes(unitType)) return false;
+  if (!factionDef(world.match.faction).trains.includes(unitType)) return false;
   const len = Structure.qLen[building] as number;
   const cost = STAT.cost[unitType] as number;
   if (len >= ECONOMY.queueMax || (world.match.gold[team] as number) < cost) return false;

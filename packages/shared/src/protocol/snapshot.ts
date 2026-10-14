@@ -74,7 +74,9 @@ export const SNAP_HEROES = 3;
 export const H_HEROES = 48;
 export const H_HERO_READY = 51;
 export const H_ABILITY_READY = 54;
+/** Kahraman yuvası 0'ın güçlendirme bitişi (28); yuva 1–2: H_HERO_BUFF (60, 61). */
 export const H_ELENDIL_UNTIL = 28;
+export const H_HERO_BUFF = 60;
 export const H_RALLY_UNTIL = 29;
 
 /** Birim kaydı flags biti: son birkaç tick içinde hasar aldı (vurulma parıltısı). */
@@ -172,7 +174,8 @@ export interface MatchInfo {
   heroes: number[];
   heroReady: number[];
   abilityReady: number[];
-  elendilUntil: number;
+  /** Kahraman yuvası başına çift hasar güçlendirmesinin bitiş tick'i. */
+  heroBuff: number[];
   rallyUntil: number;
   fortress: number;
   fortUp: number;
@@ -224,7 +227,7 @@ export const createFrame = (capacity: number, projCapacity = 2048): SnapshotFram
     heroes: [0, 0, 0],
     heroReady: [0, 0, 0],
     abilityReady: [0, 0, 0, 0, 0, 0],
-    elendilUntil: 0,
+    heroBuff: [0, 0, 0],
     rallyUntil: 0,
     fortress: 0,
     fortUp: 0,
@@ -254,7 +257,9 @@ export const readMatchHeader = (view: Int32Array, base: number, out: MatchInfo):
     out.heroReady[k] = view[base + H_HERO_READY + k] as number;
   }
   for (let i = 0; i < SNAP_HEROES * 2; i++) out.abilityReady[i] = view[base + H_ABILITY_READY + i] as number;
-  out.elendilUntil = view[base + H_ELENDIL_UNTIL] as number;
+  out.heroBuff[0] = view[base + H_ELENDIL_UNTIL] as number;
+  out.heroBuff[1] = view[base + H_HERO_BUFF] as number;
+  out.heroBuff[2] = view[base + H_HERO_BUFF + 1] as number;
   out.rallyUntil = view[base + H_RALLY_UNTIL] as number;
   out.fortress = view[base + H_FORTRESS] as number;
   const fu = view[base + H_FORT_UP] as number;
