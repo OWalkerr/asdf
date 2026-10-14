@@ -13,7 +13,7 @@ import type { StructureRenderer } from '../../render/structures/StructureRendere
 import type { UnitRenderer } from '../../render/units/UnitRenderer';
 import { SIM_TICK_MS } from '../../sim-host/protocol';
 import type { Scenario } from '../scenario';
-import { icon } from './icons';
+import { icon, richIcon } from './icons';
 
 /**
  * Üst arayüz (GDD §11.1, BFME2 düzeni):
@@ -38,6 +38,8 @@ export interface TopHudDeps {
   selectHero: (hero: number) => void;
   selectFortress: () => void;
   onClick?: () => void;
+  /** Render edilmiş kahraman portreleri (yoksa ikon). */
+  portrait?: (unitType: number) => string | undefined;
 }
 
 export class TopHud {
@@ -127,7 +129,9 @@ export class TopHud {
       const wait = left > 0 ? fmt(left) : '';
       const state = b !== 0 ? 'alive' : wait ? 'dead' : m.gold >= cost ? 'ready' : 'off';
       const key = def.key.slice(3);
-      const html = `<span class="ring" style="--hp:${(b ? hp : 0) * 360}deg"></span>${icon(def.icon)}<small>${
+      const pic = this.d.portrait?.(def.unitType);
+      const face = pic ? `<img class="pt" src="${pic}" alt="">` : richIcon(def.icon);
+      const html = `<span class="ring" style="--hp:${(b ? hp : 0) * 360}deg"></span>${face}<small>${
         b ? `${'★'.repeat(Math.max(0, rank - 1)) || name}` : wait ? 'Düştü' : `◆${cost}`
       }</small>${wait ? `<b class="cdn">${Math.ceil((left * SIM_TICK_MS) / 1000)}</b>` : ''}<kbd>${key}</kbd>`;
       btn.style.setProperty('--p', `${wait ? (1 - left / (HERO.reviveTime * 20)) * 360 : 360}deg`);
@@ -142,7 +146,7 @@ export class TopHud {
     });
     const fs = this.d.structures?.fortress;
     const fhp = fs ? fs.hp / Math.max(1, fs.max) : 1;
-    const fortHtml = `<span class="ring" style="--hp:${fhp * 360}deg"></span>${icon('castle')}<small>${
+    const fortHtml = `<span class="ring" style="--hp:${fhp * 360}deg"></span>${richIcon('castle')}<small>${
       m.fortResearch >= 0 ? `%${Math.round(m.fortPct * 100)}` : 'Kale'
     }</small><kbd>K</kbd>`;
     if (this.fortBtn.innerHTML !== fortHtml) this.fortBtn.innerHTML = fortHtml;

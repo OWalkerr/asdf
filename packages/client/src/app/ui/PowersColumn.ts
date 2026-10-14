@@ -4,7 +4,7 @@ import type { RTSCamera } from '../../render/camera/RTSCamera';
 import type { SpellFx } from '../../render/fx/SpellFx';
 import { SIM_TICK_MS } from '../../sim-host/protocol';
 import type { Scenario } from '../scenario';
-import { icon } from './icons';
+import { icon, richIcon } from './icons';
 
 /**
  * Güçler (Spellbook, GDD §9) — ekranın solunda dikey sütun: kademe başlıkları (I–IV), yuvarlak
@@ -139,7 +139,7 @@ export class PowersColumn {
       const state = !unlocked ? (this.canUnlock(i) ? 'open' : 'locked') : cd > 0 ? 'cd' : 'ready';
       const prog = cd > 0 ? 1 - left / (def.cooldown * 20) : 1;
       const label = !unlocked ? `${def.cost}` : '';
-      const h = `${icon(SPELL_ICON[def.key] ?? 'power')}${!unlocked ? `<i class="lock">${icon('lock')}</i>` : ''}${label ? `<small>${label}</small>` : ''}${cd > 0 ? `<b class="cdn">${cd}</b>` : ''}<kbd>${i + 1}</kbd>`;
+      const h = `${richIcon(SPELL_ICON[def.key] ?? 'power')}${!unlocked ? `<i class="lock">${icon('lock')}</i>` : ''}${label ? `<small>${label}</small>` : ''}${cd > 0 ? `<b class="cdn">${cd}</b>` : ''}<kbd>${i + 1}</kbd>`;
       if (b.innerHTML !== h) b.innerHTML = h;
       b.dataset.state = state;
       b.style.setProperty('--p', `${prog * 360}deg`);

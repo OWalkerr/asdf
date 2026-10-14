@@ -141,7 +141,21 @@ export const gondorSoldier = (): BufferGeometry => {
   arm(b, Part.ArmL, -0.3, 'sootBlack', 'leather');
   b.add(Part.ArmL, box(0.06, 0.78, 0.5), 'team0Dark', [0.27, 1.02, -0.36]); // kalkan kenarı
   b.add(Part.ArmL, box(0.05, 0.68, 0.42), 'sootBlack', [0.3, 1.04, -0.36]);
-  b.add(Part.ArmL, box(0.02, 0.26, 0.06), 'gondorWhite', [0.33, 1.06, -0.36]);
+  // Beyaz Ağaç arması: gövde, iki çift dal ve üstte taç.
+  b.add(Part.ArmL, box(0.02, 0.26, 0.05), 'gondorWhite', [0.33, 1.04, -0.36]);
+  for (const [y, w, ang] of [
+    [1.12, 0.13, 0.55],
+    [1.04, 0.1, 0.5],
+  ] as const)
+    for (const sz of [-1, 1])
+      b.add(
+        Part.ArmL,
+        box(0.02, 0.025, w),
+        'gondorWhite',
+        [0.33, y, -0.36 + sz * w * 0.45],
+        [sz * ang, 0, 0],
+      );
+  b.add(Part.ArmL, box(0.02, 0.05, 0.1), 'gondorWhite', [0.33, 1.25, -0.36]);
   b.add(Part.ArmL, box(0.08, 0.36, 0.3), 'sootBlack', [0.28, 0.62, -0.36], [0.785, 0, 0], [1, 0.7, 0.7]); // damla ucu
   return b.build();
 };
@@ -206,7 +220,10 @@ export const orcWarrior = (): BufferGeometry => {
   arm(b, Part.ArmL, -0.32, 'orcSkin', 'orcSkin', 0.7);
   b.add(Part.ArmL, cyl(0.31, 0.31, 0.05, 7), 'team0Dark', [0.24, 0.92, -0.38], [0, 0, Math.PI / 2]);
   b.add(Part.ArmL, cyl(0.26, 0.26, 0.06, 7), 'woodDark', [0.26, 0.92, -0.38], [0, 0, Math.PI / 2]);
-  b.add(Part.ArmL, new OctahedronGeometry(0.06, 0), 'iron', [0.3, 0.92, -0.38]);
+  // Sauron'un Gözü arması: kızıl badem göz, kor bebek.
+  b.add(Part.ArmL, box(0.02, 0.1, 0.26), 'eyeRed', [0.3, 0.98, -0.38]);
+  b.add(Part.ArmL, box(0.025, 0.16, 0.05), 'ember', [0.31, 0.98, -0.38]);
+  b.add(Part.ArmL, box(0.03, 0.12, 0.02), 'sootBlack', [0.32, 0.98, -0.38]);
   return b.build(0.9);
 };
 

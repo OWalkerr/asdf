@@ -43,6 +43,7 @@ import { FortressRenderer } from './render/structures/FortressRenderer';
 import { GateRenderer } from './render/structures/GateRenderer';
 import { LadderRenderer } from './render/structures/LadderRenderer';
 import { StructureRenderer } from './render/structures/StructureRenderer';
+import { Portraits } from './render/units/Portraits';
 import { UnitRenderer } from './render/units/UnitRenderer';
 import { SimHost } from './sim-host/SimHost';
 
@@ -230,6 +231,7 @@ const boot = async () => {
   const ui = world.def && structures && world.slots && !gallery;
   const bar = ui ? new CommandBar() : null;
   if (bar) bar.onClick = () => sfx.click();
+  const portraits = new Portraits();
   const radial = ui ? new RadialMenu(cam.camera) : null;
   if (radial) radial.onClick = () => sfx.click();
   const hudCtl =
@@ -247,6 +249,7 @@ const boot = async () => {
           gateRepair: () => structures.gateRepair,
           radial: radial ?? undefined,
           groundY: (x, z) => ground.sample(x, z),
+          portrait: (t) => portraits.get(t),
         })
       : null;
   if (hudCtl)
@@ -284,6 +287,7 @@ const boot = async () => {
       ? new TopHud({
           def: world.def,
           faction,
+          portrait: (t) => portraits.get(t),
           scenario,
           units,
           structures,
@@ -326,6 +330,23 @@ const boot = async () => {
   scene.add(navOverlay);
 
   const ctx = await createRenderContext(canvas, scene, cam.camera);
+  // BFME2 tarzı portreler: birim modelleri bir kez render edilir (asenkron).
+  if (!gallery)
+    portraits.onProgress = () => {
+      bar?.invalidate();
+      radial?.invalidate();
+    };
+  if (!gallery)
+    void portraits
+      .build(ctx.renderer, palette, toon, [
+        ...factionDef(faction).heroes.map((h) => h.unitType),
+        ...factionDef(faction).trains,
+      ])
+      .then(() => {
+        bar?.invalidate();
+        radial?.invalidate();
+      })
+      .catch((e) => console.warn('Portreler üretilemedi:', e));
   const debug = await createDebugPanel(ctx.renderer, {
     ctx,
     cam,
@@ -482,6 +503,7 @@ const boot = async () => {
       fortress: fortressFx,
       ladders,
       hud,
+      portraits,
     },
   });
 };

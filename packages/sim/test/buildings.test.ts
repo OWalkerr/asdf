@@ -226,3 +226,24 @@ describe('maç istatistikleri', () => {
     expect(sim.world.match.goldEarned).toBeGreaterThan(g0);
   });
 });
+
+describe('çiftlik', () => {
+  it('çiftlik seviye başına saniyede altın üretir', () => {
+    const a = newSim();
+    const b = newSim();
+    const farm = built(b, PLOT, 4);
+    a.world.match.gold[0] = b.world.match.gold[0] as number;
+    run(a, 1);
+    const ga = a.world.match.gold[0] as number;
+    const gb = b.world.match.gold[0] as number;
+    run(a, 200);
+    run(b, 200);
+    expect(
+      (b.world.match.gold[0] as number) - gb - ((a.world.match.gold[0] as number) - ga),
+    ).toBeGreaterThanOrEqual(9);
+    b.world.c.Structure.level[farm] = 3;
+    const g3 = b.world.match.gold[0] as number;
+    run(b, 200);
+    expect((b.world.match.gold[0] as number) - g3).toBeGreaterThanOrEqual(30 + 45);
+  });
+});

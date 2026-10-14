@@ -139,3 +139,29 @@ export const forgeModel = (): BufferGeometry => {
     parts.push(paint(place(new BoxGeometry(0.18, 2.5, 0.18), x, 1.85, z), 'wood'));
   return verticalShade(merge(parts), 0.7, 1.0);
 };
+
+/** Çiftlik (BFME2 kaynak binası): ahşap ambar, saz çatı, buğday tarlaları, çit ve yel değirmeni. */
+export const farmModel = (): BufferGeometry => {
+  const parts: BufferGeometry[] = [
+    paint(place(new BoxGeometry(9, 0.3, 8), 0, 0.15, 0), 'dirt'),
+    // Ambar
+    paint(place(new BoxGeometry(4, 2.8, 3.2), -1.8, 1.7, -1.6), 'wood'),
+    paint(place(new ConeGeometry(3.2, 2.0, 4), -1.8, 4.1, -1.6, Math.PI / 4, 1, 1, 0.8), 'grassDry'),
+    paint(place(new BoxGeometry(1.2, 1.8, 0.15), -1.8, 1.2, 0.05), 'woodDark'),
+    // Değirmen kulesi + kanatlar
+    paint(place(new CylinderGeometry(0.6, 0.9, 4.4, 6), 2.6, 2.5, -2.4), 'gondorStone'),
+    paint(place(new ConeGeometry(0.9, 1.2, 6), 2.6, 5.3, -2.4), 'woodDark'),
+    paint(place(new BoxGeometry(0.15, 4.2, 0.5), 2.6, 4.6, -1.6).rotateZ(0), 'wood'),
+    paint(place(new BoxGeometry(0.15, 0.5, 4.2), 2.6, 4.6, -1.6), 'wood'),
+  ];
+  // Buğday tarlaları (sıra sıra)
+  for (let r = 0; r < 4; r++)
+    parts.push(
+      paint(place(new BoxGeometry(4.2, 0.5, 0.45), 1.6, 0.55, 0.8 + r * 0.8), r % 2 ? 'gold' : 'grassDry'),
+    );
+  // Çit
+  for (const x of [-4.3, 4.3])
+    parts.push(paint(place(new BoxGeometry(0.12, 0.7, 7.6), x, 0.6, 0), 'woodDark'));
+  parts.push(paint(place(new BoxGeometry(8.6, 0.12, 0.12), 0, 0.85, 3.8), 'woodDark'));
+  return verticalShade(merge(parts), 0.72, 1.05);
+};

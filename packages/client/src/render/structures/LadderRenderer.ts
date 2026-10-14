@@ -25,8 +25,8 @@ import { createToonMaterial, type ToonParams } from '../materials/ToonMaterial';
  * ayaktan sur tepesine eğik. `climb(x, z)`: merdiven geçidindeki birimin ek yüksekliği (dış
  * ayaktan sur tepesine tırmanır, içeride iner) — UnitRenderer zemin yüksekliğine eklenir.
  */
-const LADDER_KIND = 5;
-const TOWER_KIND = 6;
+const LADDER_KIND = 7;
+const TOWER_KIND = 8;
 
 const ladderGeometry = (): BufferGeometry => {
   // Yerel: +x boyunca uzunluk 1 (ölçekle uzar), z genişlik.

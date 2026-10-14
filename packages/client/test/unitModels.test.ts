@@ -32,19 +32,19 @@ import {
   wyrm,
 } from '../src/render/units/models';
 
-/** GDD §3.2 poligon bütçeleri (LOD0): piyade ≤ 300, elit piyade ≤ 450, kahraman ≤ 450, kuşatma aracı ≤ 900 üçgen. */
+/** GDD §3.2 poligon bütçeleri (LOD0): piyade ≤ 400 (arma detayları), elit piyade ≤ 450, kahraman ≤ 450, kuşatma aracı ≤ 900 üçgen. */
 const BUDGET: [string, () => import('three/webgpu').BufferGeometry, number][] = [
-  ['Gondor Soldier', gondorSoldier, 300],
-  ['Orc Warrior', orcWarrior, 300],
+  ['Gondor Soldier', gondorSoldier, 400],
+  ['Orc Warrior', orcWarrior, 400],
   ['Tower Guard', towerGuard, 450],
   ['Uruk-hai', urukHai, 450],
-  ['Gondor Archer', gondorArcher, 300],
+  ['Gondor Archer', gondorArcher, 400],
   ['Battering Ram', batteringRam, 900],
   ['Aragorn', aragorn, 450],
   ['Lurtz', lurtz, 450],
-  ['Lórien Archer', lorienArcher, 300],
+  ['Lórien Archer', lorienArcher, 400],
   ['Rohirrim', rohirrim, 600],
-  ['Ork okçusu', orcArcher, 300],
+  ['Ork okçusu', orcArcher, 400],
   ['Warg binicisi', wargRider, 600],
   ['Mağara trolü', caveTroll, 600],
   ['Gandalf', gandalf, 450],
@@ -54,11 +54,11 @@ const BUDGET: [string, () => import('three/webgpu').BufferGeometry, number][] = 
   ['Su Gözcüsü', watcher, 900],
   ['Ateş Ejderi', wyrm, 900],
   ['Kuşatma kulesi', siegeTower, 900],
-  ['Rohan mızrakçısı', rohanSpearman, 300],
-  ['Rohan okçusu', rohanArcher, 300],
+  ['Rohan mızrakçısı', rohanSpearman, 400],
+  ['Rohan okçusu', rohanArcher, 400],
   ['Théoden', theoden, 450],
   ['Éowyn', eowyn, 450],
-  ['Galadhrim', galadhrim, 300],
+  ['Galadhrim', galadhrim, 400],
   ['Haldir', haldir, 450],
   ['Elrond', elrond, 450],
 ];

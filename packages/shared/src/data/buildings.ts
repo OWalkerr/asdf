@@ -5,7 +5,7 @@ import { UnitTypeId } from './units';
  * İnşa edilebilir yapılar (GDD §4, §7.1, §7.5). Slot türüne göre izinli; maliyet altın,
  * süreler saniye. Okçu kulesi menzildeki düşman taburlarına ok atar; kışla tabur yetiştirir.
  */
-export type BuildingKind = 'arrow_tower' | 'barracks' | 'forge' | 'catapult';
+export type BuildingKind = 'arrow_tower' | 'barracks' | 'forge' | 'catapult' | 'farm';
 
 export interface BuildingDef {
   kind: BuildingKind;
@@ -29,6 +29,8 @@ export interface BuildingDef {
   researches?: readonly number[];
   /** Seviye yükseltme maliyetleri (seviye 2, 3); yoksa seviye atlamaz (BFME2 bina seviyeleri). */
   levelCosts?: readonly number[];
+  /** Kaynak binası: seviye başına saniyede altın. */
+  income?: number;
 }
 
 export const BUILDING_DEFS: Readonly<Record<BuildingKind, BuildingDef>> = {
@@ -66,6 +68,17 @@ export const BUILDING_DEFS: Readonly<Record<BuildingKind, BuildingDef>> = {
     hp: 1500,
     levelCosts: [400, 600],
     attack: { damage: 55, damageType: 'crush', interval: 5, range: 72, volley: 1, aoe: 5 },
+  },
+  farm: {
+    // BFME2 kaynak binası: tarlalar ve ambar; seviye başına saniyede +1 altın. Düşmanın ilk
+    // hedeflerinden biridir — korunması gerekir.
+    kind: 'farm',
+    name: 'Çiftlik',
+    cost: 300,
+    buildTime: 12,
+    hp: 1200,
+    levelCosts: [250, 350],
+    income: 1,
   },
 };
 
@@ -110,13 +123,19 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
 export const Upgrade = { ForgedBlades: 0, HeavyArmor: 1, FireArrows: 2 } as const;
 
 /** Snapshot ve komutlarda yapı türü indeksi. */
-export const BUILDING_KINDS: readonly BuildingKind[] = ['arrow_tower', 'barracks', 'forge', 'catapult'];
+export const BUILDING_KINDS: readonly BuildingKind[] = [
+  'arrow_tower',
+  'barracks',
+  'forge',
+  'catapult',
+  'farm',
+];
 
 /** Slot türü → inşa edilebilecek yapılar. */
 export const SLOT_BUILDS: Readonly<Record<string, readonly BuildingKind[]>> = {
   wall_socket: ['arrow_tower', 'catapult'],
   tower: ['arrow_tower', 'catapult'],
-  building: ['barracks', 'forge'],
+  building: ['barracks', 'forge', 'farm'],
 };
 
 /** Ekonomi (GDD §5.1). */

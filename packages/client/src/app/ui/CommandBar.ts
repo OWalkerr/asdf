@@ -1,5 +1,5 @@
-import { icon } from './icons';
-import { buttonClass, cooldownHtml, cooldownStyle } from './RadialMenu';
+import { richIcon } from './icons';
+import { buttonClass, buttonFace, cooldownHtml, cooldownStyle } from './RadialMenu';
 
 /**
  * BFME2 tarzı alt komut çubuğu (GDD §11.1): solda can halkalı madalyon portre, ortada seçimin
@@ -23,6 +23,8 @@ export interface CommandButton {
   progress?: number;
   /** Kalan bekleme / süre (sn): düğmede karanlık dilim + ortada sayaç. */
   cooldown?: number;
+  /** Portre (birim/kahraman düğmeleri); yoksa renkli ikon. */
+  img?: string;
   tip: CommandTip;
   run?: () => void;
 }
@@ -31,6 +33,8 @@ export interface CommandContext {
   /** Bağlam anahtarı + değişen değerler: aynıysa DOM dokunulmaz. */
   key: string;
   portrait: string;
+  /** Madalyon portresi (render edilmiş birim); yoksa ikon. */
+  portraitImg?: string;
   title: string;
   subtitle: string;
   /** Can oranı [0, 1] (madalyon halkası); undefined = halka yok. */
@@ -106,6 +110,11 @@ export class CommandBar {
     this.key = '';
   }
 
+  /** DOM'u bir sonraki render'da yeniden kur (ör. portreler hazır olunca). */
+  invalidate(): void {
+    this.key = '';
+  }
+
   render(ctx: CommandContext): void {
     this.ctx = ctx;
     if (ctx.key === this.key) return;
@@ -115,7 +124,7 @@ export class CommandBar {
       hp === undefined
         ? ''
         : `style="--hp:${Math.max(0, Math.min(1, hp)) * 360}deg;--hpc:${hp > 0.5 ? '#7fd05a' : hp > 0.25 ? '#e8c440' : '#e0442e'}"`;
-    this.medal.innerHTML = `<div class="ring ${hp === undefined ? 'none' : ''}" ${ring}></div><div class="face">${icon(ctx.portrait)}</div>${
+    this.medal.innerHTML = `<div class="ring ${hp === undefined ? 'none' : ''}" ${ring}></div><div class="face">${ctx.portraitImg ? `<img class="pt" src="${ctx.portraitImg}" alt="">` : richIcon(ctx.portrait)}</div>${
       ctx.rank && ctx.rank > 1 ? `<div class="stars">${'★'.repeat(ctx.rank - 1)}</div>` : ''
     }`;
     this.info.innerHTML = `<h3>${ctx.title}</h3><div class="sub">${ctx.subtitle}</div>${(ctx.lines ?? []).map((l) => `<div class="line">${l}</div>`).join('')}`;
@@ -124,7 +133,7 @@ export class CommandBar {
       if (!b) return '<span class="slot"></span>';
       const cd = b.cooldown !== undefined && b.cooldown > 0;
       return `<button type="button" class="${buttonClass(b)}" data-i="${i}" aria-label="${b.label}" ${cooldownStyle(b)}>
-        ${icon(b.icon)}${b.badge && !cd ? `<small>${b.badge}</small>` : ''}${cooldownHtml(b)}${i < 6 ? `<kbd>${HOTKEY_LABEL[i]}</kbd>` : ''}</button>`;
+        ${buttonFace(b)}${b.badge && !cd ? `<small>${b.badge}</small>` : ''}${cooldownHtml(b)}${i < 6 ? `<kbd>${HOTKEY_LABEL[i]}</kbd>` : ''}</button>`;
     }).join('');
     this.showTip();
   }

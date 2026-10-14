@@ -128,12 +128,14 @@ const BUILD_ICON: Record<BuildingKind, string> = {
   barracks: 'hall',
   forge: 'anvil',
   catapult: 'catapult',
+  farm: 'wheat',
 };
 const BUILD_DESC: Record<BuildingKind, string> = {
   arrow_tower: 'Menzildeki düşman taburlarına 3 oklu yaylım atar.',
   barracks: 'Gondor piyadesi, okçu ve Kule Muhafızı yetiştirir.',
   forge: 'Takım çapında yükseltmeler: kılıç, zırh, ateşli ok.',
   catapult: 'Uzaktaki düşman kümelerine alan hasarlı taş atar; koçbaşı ve Uruk saflarına etkili.',
+  farm: 'Kaynak binası: saniyede +1 altın (seviye başına). Düşman onu hedef alır — koruyun.',
 };
 const UP_ICON = ['blade', 'armor', 'flame'];
 const ROMAN = ['', 'I', 'II', 'III'];
@@ -163,6 +165,8 @@ export interface HudDeps {
   /** BFME tarzı halka menü (yapı/yuva/kale seçiliyken). */
   radial?: RadialMenu;
   groundY: (x: number, z: number) => number;
+  /** Render edilmiş birim portreleri (yoksa ikon). */
+  portrait?: (unitType: number) => string | undefined;
 }
 
 export class HudController {
@@ -303,6 +307,7 @@ export class HudController {
     return {
       key: `bat:${[...sel].join(',')}:${Math.round(hp * 40)}:${mc?.rank}:${buttons.map((b) => `${b.state}${b.badge}${b.cooldown ?? ''}`).join(',')}`,
       portrait: UNIT_ICON[main] ?? 'sword',
+      portraitImg: this.d.portrait?.(main),
       title: single ?? '?',
       subtitle: types.length === 1 ? `${mc?.battalions.size ?? 0} tabur · ${men} asker` : summary,
       hp,
@@ -442,6 +447,17 @@ export class HudController {
         buttons,
       };
     }
+    if (kind === 'farm') {
+      const L = st.level;
+      const buttons = [this.upgradeButton(st.eid, L, kind), this.sellButton(st.eid, L, kind)];
+      return {
+        ...base,
+        key: `farm:${slot}:${st.hp}:${L}:${buttons.map((x) => x.state).join('')}`,
+        subtitle: `Seviye ${L} · ${st.hp} / ${st.max}`,
+        lines: [`Gelir: saniyede +${(b.income ?? 1) * L} altın`, BUILD_DESC[kind]],
+        buttons,
+      };
+    }
     // Kışla
     const full = st.queueLen >= ECONOMY.queueMax;
     const buttons: CommandButton[] = factionDef(this.d.faction).trains.map((u) => {
@@ -450,6 +466,7 @@ export class HudController {
       const train = ((def?.trainTime ?? 0) * (100 - BUILDING_LEVEL.trainTimePercent * (st.level - 1))) / 100;
       return {
         icon: UNIT_ICON[u] ?? 'sword',
+        img: this.d.portrait?.(u),
         label: UNIT_LABELS[u] ?? '',
         state: !full && this.gold >= (def?.cost ?? 0) ? 'ready' : 'off',
         badge: `${def?.cost}`,
@@ -491,7 +508,9 @@ export class HudController {
         ? `+%${BUILDING_LEVEL.towerDamagePercent} hasar, +${BUILDING_LEVEL.towerVolley} ok, +${BUILDING_LEVEL.towerRange} m menzil`
         : kind === 'catapult'
           ? `+%${BUILDING_LEVEL.catapultDamagePercent} hasar, −%${BUILDING_LEVEL.catapultIntervalPercent} atış aralığı`
-          : `−%${BUILDING_LEVEL.trainTimePercent} yetiştirme süresi`;
+          : kind === 'farm'
+            ? `+${BUILDING_DEFS.farm.income ?? 1} altın/sn`
+            : `−%${BUILDING_LEVEL.trainTimePercent} yetiştirme süresi`;
     return {
       icon: 'up',
       label: max ? 'En üst seviye' : `Seviye ${level + 1}`,
@@ -553,6 +572,7 @@ export class HudController {
       const wait = m ? secs((m.heroReady[k] ?? 0) - this.tick) : 0;
       buttons.push({
         icon: def.icon,
+        img: this.d.portrait?.(def.unitType),
         label: unit?.name ?? '',
         state: alive ? 'done' : wait > 0 ? 'busy' : this.gold >= cost ? 'ready' : 'off',
         badge: alive ? '✓' : `${cost}`,

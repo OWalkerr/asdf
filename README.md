@@ -61,6 +61,14 @@ ulaşan her tabur **can** götürür (Uruk 2, koçbaşı 3, trol 3, Lurtz 10). Y
 kulesi veya mancınık, arsalara **Kışla** (400) ve **Demirhane** (500: Dövme Kılıçlar, Ağır Zırh, Ateşli Oklar).
 Koçbaşları oklara dayanıklıdır — mancınık, Ateşli Oklar veya piyadeyle durdurun.
 
+**Çiftlik (kaynak binası):** arsalara kurulur (300), seviye başına saniyede +1 altın üretir (3 seviye). BFME2'deki
+gibi düşman onu hedef alır — koruyun.
+
+**Portreler ve ikonlar:** kahraman portreleri, komut çubuğu madalyonu ve eğitim düğmeleri birimlerin 3B
+modellerinden render edilen portreleri kullanır; güç, yetenek, yükseltme ve bina düğmeleri renkli disk üzerinde
+parlak, konturlu BFME2 tarzı ikonlardır. Kalkanlarda armalar: Gondor'un Beyaz Ağacı, Mordor'un Gözü, Isengard'ın
+Ak Eli, Rohan'ın atı.
+
 **Bina seviyeleri ve satış:** okçu kulesi, mancınık ve kışla **3 seviyeye** kadar yükseltilir (seviye başına
 +%25 dayanıklılık; kule +%40 hasar, +1 ok, +4 m menzil; mancınık +%40 hasar, −%15 atış aralığı; kışla −%20
 yetiştirme süresi). Yükseltme 8 sn sürer ve bu sırada bina çalışmaz. Her yapı **satılabilir** (yatırılan
@@ -128,3 +136,20 @@ Sol tık: tabur seç (Shift ile ekle/çıkar) · Sol sürükle: kutu seçimi · 
 Esc: seçimi temizle · H: seçili taburları durdur · Asker olmayan yere sol tık: inşa slotu / yapı seç. Taburlar akış alanıyla (flow field)
 engellerin etrafından dolaşır, dar geçitte formasyonu daraltır. `?debug` panelinde "Nav ızgarası sınırı"
 ve sim hızı ayarı var.
+
+## BFME2 ile karşılaştırma (yol haritası)
+
+**Var:** Kale (FD) ve Kule (TD) savunması, klasik Tower Wars / Fortress Defence haritaları, işlevsel ve gelişen kale,
+kale yükseltmeleri, bina seviyeleri ve satış, çiftlik, kışla / demirhane, 3 iyi taraf (Gondor, Rohan, Lothlórien) ve
+9 kahraman, 4 kademeli 6 güç, rütbe sistemi, kuşatma (koçbaşı, merdiven, kule), boss'lar (Lurtz, Balrog, Su Gözcüsü,
+Ateş Ejderi), halka menü, bekleme sayaçları, palantír mini harita, portreler, oyun hızı, istatistik ve rekorlar.
+
+**Eksik (BFME2'de olup henüz olmayan):**
+1. Kötü tarafların oynanabilir olması (Mordor, Isengard, Goblinler) ve çok oyunculu / PvP (deterministik lockstep
+   altyapısı hazır, ağ katmanı yok).
+2. Güç kitabının tamamı (BFME2'de ~15 güç: Kartallar, Sel, Deprem, Tom Bombadil…); burada 6.
+3. Tabur duruşları (saldırgan / savunmacı / yerini koru), tabur başına yükseltmeler (sancaktar, dövme kılıç),
+   sürü (horde) bonusları.
+4. Kahramanların 10 seviyeye kadar gelişmesi ve 4–5 yeteneği, Kahraman Yarat (Create-a-Hero), binekli kahramanlar.
+5. Serbest inşa ve sur inşası, komuta noktası (nüfus) sınırı, deniz birimleri.
+6. Seslendirme (birim cevapları) ve müzik; War of the Ring kampanya modu; harita editörü.

@@ -144,7 +144,7 @@ describe('kuşatma merdivenleri', () => {
     const m = sim.world.match;
     expect(m.ladders.length).toBe(1);
     const l = m.ladders[0] as (typeof m.ladders)[number];
-    expect(Structure.kind[l.eid]).toBe(6);
+    expect(Structure.kind[l.eid]).toBe(8);
     const uruks = [...query(sim.world, [Battalion])].filter(
       (e) => Team.id[e] === 1 && Battalion.unitType[e] === UnitTypeId.UrukHai,
     );

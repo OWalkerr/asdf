@@ -1,6 +1,6 @@
 import { type Camera, Vector3 } from 'three/webgpu';
 import type { CommandButton, CommandContext } from './CommandBar';
-import { icon } from './icons';
+import { richIcon } from './icons';
 
 /**
  * BFME tarzı halka menü: bir yapıya, inşa yuvasına veya kaleye tıklanınca, seçilenin ekran
@@ -19,6 +19,10 @@ export const cooldownHtml = (b: Pick<CommandButton, 'cooldown'>): string =>
 
 export const cooldownStyle = (b: Pick<CommandButton, 'progress' | 'cooldown'>): string =>
   b.progress !== undefined ? `style="--p:${Math.max(0, Math.min(1, b.progress)) * 360}deg"` : '';
+
+/** Düğme yüzü: portre varsa resim, yoksa renkli ikon. */
+export const buttonFace = (b: Pick<CommandButton, 'img' | 'icon'>): string =>
+  b.img ? `<img class="pt" src="${b.img}" alt="">` : richIcon(b.icon);
 
 export const buttonClass = (b: CommandButton): string =>
   `cmd ${b.state}${b.progress !== undefined ? ' prog' : ''}${b.cooldown !== undefined && b.cooldown > 0 ? ' cd' : ''}`;
@@ -64,6 +68,10 @@ export class RadialMenu {
     });
   }
 
+  invalidate(): void {
+    this.key = '';
+  }
+
   /** Bağlamı göster (null = kapat). Konum her karede `place` ile güncellenir. */
   render(ctx: CommandContext | null, anchor: RadialAnchor | null): void {
     this.ctx = ctx;
@@ -84,7 +92,7 @@ export class RadialMenu {
     this.ring.innerHTML = ctx.buttons
       .map((b, i) => {
         return `<button type="button" class="${buttonClass(b)}" data-i="${i}" aria-label="${b.label}" ${cooldownStyle(b)}
-          >${icon(b.icon)}${
+          >${buttonFace(b)}${
             b.badge && !(b.cooldown && b.cooldown > 0) ? `<small>${b.badge}</small>` : ''
           }${cooldownHtml(b)}</button>`;
       })

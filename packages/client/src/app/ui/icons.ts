@@ -16,6 +16,8 @@ const P: Record<string, string> = {
   staff: '<path d="M15 2l2 2-1 1 1 3-2 1-1-3-9 15-2-1L12 5l-1-1 2-2z"/><circle cx="16" cy="4" r="2.2"/>',
   blast: '<path d="M12 2l2 6 6-3-3 6 6 2-6 2 3 6-6-3-2 6-2-6-6 3 3-6-6-2 6-2-3-6 6 3z"/>',
   ladder: '<path d="M7 2h2v3h6V2h2v20h-2v-3H9v3H7zm2 5v3h6V7zm0 5v3h6v-3z"/>',
+  wheat:
+    '<path d="M11 22V12h2v10zM12 2c2 2 2 4 0 6-2-2-2-4 0-6zM7 6c2.5.5 4 2 4 4.5C8.5 10 7 8.5 7 6zm10 0c0 2.5-1.5 4-4 4.5 0-2.5 1.5-4 4-4.5zM7 11c2.5.5 4 2 4 4.5C8.5 15 7 13.5 7 11zm10 0c0 2.5-1.5 4-4 4.5 0-2.5 1.5-4 4-4.5z"/>',
   stop: '<rect x="5" y="5" width="14" height="14" rx="2"/>',
   blade: '<path d="M18 2l4 0 0 4-10 10-3-3zM5 15l4 4-2 2-1-1-2 2-2-2 2-2-1-1z"/>',
   armor: '<path d="M12 2l8 3v6c0 5-3.5 9-8 11-4.5-2-8-6-8-11V5z"/>',
@@ -48,3 +50,61 @@ const P: Record<string, string> = {
 
 export const icon = (name: string): string =>
   `<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">${P[name] ?? P.power}</svg>`;
+
+/**
+ * BFME2 tarzı renkli ikon: temaya göre renkli degrade disk, üstünde açık renkten temaya doğru
+ * degrade dolgulu, koyu konturlu sembol ve üstten parlama. Güçler, yetenekler, yükseltmeler ve
+ * bina düğmelerinde kullanılır.
+ */
+const THEME: Record<string, [string, string, string]> = {
+  // [disk açık, disk koyu, sembol rengi]
+  heal: ['#3fa36a', '#0e3320', '#d8ffe4'],
+  leaf: ['#5fae5a', '#173a1a', '#f2ffd8'],
+  rally: ['#c9782e', '#3e1d08', '#ffe9c0'],
+  volley: ['#b89a3a', '#3a2c0c', '#fff3c4'],
+  horse: ['#b07a3a', '#3a220c', '#fff0d4'],
+  ghost: ['#3fbf8a', '#0b2e22', '#d8fff0'],
+  blade: ['#6f8fc0', '#121e36', '#eef4ff'],
+  armor: ['#7d8a9a', '#1a2028', '#f0f4f8'],
+  flame: ['#e0662a', '#3a1206', '#ffe2a0'],
+  blast: ['#8fb8ff', '#16224a', '#ffffff'],
+  power: ['#b48cff', '#22124a', '#fff4ff'],
+  staff: ['#d8dde6', '#2a2e38', '#ffffff'],
+  bow: ['#7ea64a', '#1e2c10', '#f4ffd8'],
+  crown: ['#d6b04a', '#3a2a08', '#fff6cc'],
+  hero: ['#c9a23a', '#3a2a08', '#fff6cc'],
+  wall: ['#9a8e7a', '#2a241a', '#f4ecdc'],
+  slits: ['#8a7a5a', '#241c10', '#f4ecdc'],
+  catapult: ['#9a6a3a', '#2a1808', '#ffe8c8'],
+  banner: ['#4fa080', '#0e2a20', '#e8fff4'],
+  coin: ['#e0b43a', '#3a2a06', '#fff6c8'],
+  wheat: ['#d0a83a', '#3a2c08', '#fff4c0'],
+  up: ['#5aa0d0', '#0e2438', '#e8f6ff'],
+  repair: ['#9a9aa6', '#22222a', '#f4f4fa'],
+  tower: ['#8a96a8', '#1c2230', '#f2f6fc'],
+  hall: ['#a07a50', '#2a1a0c', '#fff0dc'],
+  anvil: ['#7a7f88', '#1a1c20', '#f0f2f6'],
+  spear: ['#8a9ab0', '#1c2230', '#f2f6fc'],
+  sword: ['#8a9ab0', '#1c2230', '#f2f6fc'],
+  eye: ['#d04a3a', '#3a0c08', '#ffd8c8'],
+  club: ['#8a7a6a', '#241c14', '#f4ece0'],
+  wolf: ['#8a8a8a', '#202020', '#f4f4f4'],
+  ladder: ['#9a7a4a', '#2a1c0c', '#fff0d4'],
+  castle: ['#c9a23a', '#3a2a08', '#fff6cc'],
+  lock: ['#6a6a6a', '#1a1a1a', '#d0d0d0'],
+};
+
+export const richIcon = (name: string): string => {
+  const [a, b, f] = THEME[name] ?? ['#9a8a6a', '#2a2418', '#fff4dc'];
+  const id = `ri-${name}`;
+  return `<svg class="rich" viewBox="0 0 24 24" aria-hidden="true"><defs>
+    <radialGradient id="${id}-bg" cx="40%" cy="32%" r="75%"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></radialGradient>
+    <linearGradient id="${id}-fg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="${f}"/></linearGradient>
+    <radialGradient id="${id}-gl" cx="50%" cy="10%" r="60%"><stop offset="0" stop-color="#fff" stop-opacity="0.45"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+  </defs>
+  <circle cx="12" cy="12" r="11.6" fill="url(#${id}-bg)"/>
+  <g transform="translate(3.6 3.6) scale(0.7)" fill="url(#${id}-fg)" color="${f}" stroke="#120c06" stroke-width="0.9" paint-order="stroke" stroke-linejoin="round">${P[name] ?? P.power}</g>
+  <ellipse cx="12" cy="7" rx="9" ry="5.5" fill="url(#${id}-gl)"/>
+  <circle cx="12" cy="12" r="11.3" fill="none" stroke="rgba(0,0,0,0.55)" stroke-width="0.8"/>
+</svg>`;
+};

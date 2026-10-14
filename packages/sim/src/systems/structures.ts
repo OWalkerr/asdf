@@ -392,6 +392,15 @@ export const structureSystem = (world: SimWorld): void => {
         world.rng.nextInt(6);
       continue;
     }
+    if (kind === StructureKind.Farm) {
+      // Çiftlik: seviye başına saniyede altın.
+      if (world.tick % SIM_HZ === 0 && world.match.state === MatchState.Playing) {
+        const gain = (BUILDING_DEFS.farm.income ?? 1) * (up + 1);
+        world.match.gold[team] = (world.match.gold[team] as number) + gain;
+        if (team === 0) world.match.goldEarned += gain;
+      }
+      continue;
+    }
     if (kind === StructureKind.Forge && (Structure.qLen[e] as number) > 0) {
       const left = (Structure.qProgress[e] as number) - 1;
       Structure.qProgress[e] = Math.max(0, left);
