@@ -3,6 +3,7 @@ import {
   type MapDef,
   SNAP_UNIT_INTS,
   type SnapshotFrame,
+  UnitTypeId,
   unpackTeam,
   type Vec2,
 } from '@bulwark/shared';
@@ -40,35 +41,44 @@ export class Scenario {
 
   start(): void {
     const at = (x: number, z: number) => ({ x: fxFromFloat(x), z: fxFromFloat(z) });
+    const spacing = fxFromFloat(1.6);
     if (!this.def) {
       this.sim.send(
-        { type: 'spawn', team: 0, unitType: 0, ...at(0, 40), count: 64, spacing: fxFromFloat(1.6) },
+        { type: 'spawn', team: 0, unitType: UnitTypeId.GondorSoldier, ...at(0, 40), count: 64, spacing },
         PLAYER,
       );
       return;
     }
-    // Savunucular: Deeping Wall arkasında iki tabur, Hornburg avlusunda bir tabur.
+    // Savunucular: Deeping Wall arkasında Gondor askerleri + Tower Guard'lar, Hornburg avlusunda askerler.
     const wallZ = this.def.walls[0]?.points[0]?.[1] ?? 0;
-    for (const x of [-2, 40]) {
-      this.sim.send(
-        { type: 'spawn', team: 0, unitType: 0, ...at(x, wallZ - 14), count: 60, spacing: fxFromFloat(1.6) },
-        PLAYER,
-      );
+    for (const [x, unitType] of [
+      [-2, UnitTypeId.GondorSoldier],
+      [40, UnitTypeId.TowerGuard],
+    ] as const) {
+      this.sim.send({ type: 'spawn', team: 0, unitType, ...at(x, wallZ - 14), count: 60, spacing }, PLAYER);
     }
     const plateau = this.def.terrain.plateaus[0];
     if (plateau) {
       const [px, pz] = plateau.center;
       this.sim.send(
-        { type: 'spawn', team: 0, unitType: 0, ...at(px + 4, pz + 4), count: 36, spacing: fxFromFloat(1.6) },
+        {
+          type: 'spawn',
+          team: 0,
+          unitType: UnitTypeId.GondorSoldier,
+          ...at(px + 4, pz + 4),
+          count: 36,
+          spacing,
+        },
         PLAYER,
       );
     }
     this.sendWave(240);
   }
 
-  /** Spawn noktalarından sırayla bir düşman grubu çıkarır ve koridor sonuna yürütür. */
+  /** Spawn noktalarından sırayla bir düşman grubu (Orc / Uruk-hai dönüşümlü) çıkarır ve koridor sonuna yürütür. */
   sendWave(count: number): void {
     if (!this.def) return;
+    const unitType = this.waveIndex % 2 === 0 ? UnitTypeId.OrcWarrior : UnitTypeId.UrukHai;
     const spawn = this.def.spawns[this.waveIndex++ % this.def.spawns.length];
     if (!spawn) return;
     const lane = this.def.lanes.find((l) => l.id === spawn.lane);
@@ -77,7 +87,7 @@ export class Scenario {
       {
         type: 'spawn',
         team: 1,
-        unitType: 1,
+        unitType,
         x: fxFromFloat(spawn.pos[0]),
         z: fxFromFloat(spawn.pos[1] - 12),
         count,

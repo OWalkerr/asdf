@@ -1,5 +1,6 @@
 import type { SlotDef } from '@bulwark/shared';
 import { Scene, type Texture, Timer } from 'three/webgpu';
+import { GALLERY_CENTER, updateGallery } from './app/gallery';
 import { Scenario } from './app/scenario';
 import { createDebugPanel } from './debug/DebugPanel';
 import { GroundPicker } from './input/GroundPicker';
@@ -13,7 +14,7 @@ import type { MapScene } from './render/map/MapScene';
 import { createToonParams, type ToonParams } from './render/materials/ToonMaterial';
 import { createPaletteTexture } from './render/palette';
 import { createRenderContext } from './render/renderer';
-import { PawnRenderer } from './render/units/PawnRenderer';
+import { UnitRenderer } from './render/units/UnitRenderer';
 import { SimHost } from './sim-host/SimHost';
 
 /**
@@ -35,7 +36,10 @@ const boot = async () => {
   const scene = new Scene();
   const palette = createPaletteTexture();
   const toon = createToonParams();
-  const mapId = new URLSearchParams(location.search).get('map') ?? 'helms_deep';
+  const params = new URLSearchParams(location.search);
+  // Galeri modu birim look-dev'idir: look-dev haritasında, sim olmadan çalışır.
+  const gallery = params.has('gallery');
+  const mapId = gallery ? 'lookdev' : (params.get('map') ?? 'helms_deep');
   const build = MAPS[mapId];
   if (!build) throw new Error(`Bilinmeyen harita: ${mapId} (seçenekler: ${Object.keys(MAPS).join(', ')})`);
   const world = build(palette, toon);
@@ -51,7 +55,8 @@ const boot = async () => {
     maxDistance: Math.max(150, world.size * 0.55),
     heightAt: ground.sample,
   });
-  cam.setHome(world.home.x, world.home.z, world.home.yaw, world.home.distance);
+  if (gallery) cam.setHome(GALLERY_CENTER.x, GALLERY_CENTER.z, 0, 24);
+  else cam.setHome(world.home.x, world.home.z, world.home.yaw, world.home.distance);
   cam.attach(canvas);
 
   // --- Zemin / slot seçimi (three-mesh-bvh) -------------------------------------
@@ -74,10 +79,10 @@ const boot = async () => {
   // --- Simülasyon (Web Worker) --------------------------------------------------
   const UNIT_CAPACITY = 8192;
   const sim = await SimHost.start({ seed: world.def?.seed ?? 1, capacity: UNIT_CAPACITY });
-  const pawns = new PawnRenderer(UNIT_CAPACITY, palette, toon, ground.sample);
-  scene.add(pawns.mesh);
+  const units = new UnitRenderer(UNIT_CAPACITY, palette, toon, ground.sample);
+  for (const m of units.meshes) scene.add(m);
   const scenario = new Scenario(sim, world.def);
-  scenario.start();
+  if (!gallery) scenario.start();
 
   canvas.addEventListener('pointerdown', (e) => {
     if (e.button === 2) {
@@ -149,7 +154,8 @@ const boot = async () => {
     const dt = Math.min(timer.getDelta(), 0.1);
     cam.update(dt);
     sim.poll(now);
-    pawns.update(sim, now);
+    if (gallery) updateGallery(units, now / 1000, ground.sample);
+    else units.updateFromSim(sim, now);
     updatePick();
     ctx.render();
     debug.update();
@@ -165,6 +171,7 @@ const boot = async () => {
         `statik   ${world.stats.instances} instance / ${world.stats.batches} batch`,
         `kamera   (${t.x.toFixed(0)}, ${t.z.toFixed(0)}) zoom ${(cam.zoom01 * 100).toFixed(0)}%`,
         `imleç    ${hoverText}`,
+        `birim    ${units.drawn} çizildi · ${units.meshes.length} InstancedMesh`,
         `sim      tick ${sim.tick} · ${sim.frame.count} birim · ${(sim.frame.simMicros / 1000).toFixed(2)} ms · ${sim.shared ? 'SAB' : 'postMessage'}`,
         `hash     #${sim.lastHash.tick} ${sim.lastHash.hash.toString(16).padStart(8, '0')}`,
       ];

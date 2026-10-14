@@ -1,16 +1,17 @@
-import { FX_ONE, type Fx, fxFromInt, fxMul, type StampedCommand } from '@bulwark/shared';
+import { type Fx, fxFromFloat, fxFromInt, fxMul, type StampedCommand, UNIT_DEFS } from '@bulwark/shared';
 import { addComponent, addEntity, entityExists } from 'bitecs';
 import type { SimWorld } from '../world';
 
 /** Oyuncu → takım eşlemesi (Phase 1: oyuncu N = takım N). Co-op'ta lobi belirleyecek. */
 const teamOf = (player: number): number => player;
 
-/** Birim tipi başına temel değerler (Phase 1 placeholder; data/units Adım 8'de gelecek). */
-const UNIT_SPEED: Record<number, Fx> = { 0: fxFromInt(4) + (FX_ONE >> 1), 1: fxFromInt(5) };
-const UNIT_HP: Record<number, number> = { 0: 100, 1: 60 };
+/** Birim tablosu Q16.16'ya bir kez çevrilir (fxFromFloat = Math.round → deterministik). */
+const UNIT_SPEED: readonly Fx[] = UNIT_DEFS.map((d) => fxFromFloat(d.speed));
+const UNIT_HP: readonly number[] = UNIT_DEFS.map((d) => d.hp);
 
 export const spawnUnit = (world: SimWorld, team: number, unitType: number, x: Fx, z: Fx): number => {
   const { Position, Velocity, Facing, Team, UnitType, Speed, MoveTarget, Health, Anim } = world.c;
+  if (!UNIT_SPEED[unitType]) throw new Error(`Bilinmeyen birim tipi: ${unitType}`);
   const eid = addEntity(world);
   for (const comp of [Position, Velocity, Facing, Team, UnitType, Speed, MoveTarget, Health, Anim])
     addComponent(world, eid, comp);
@@ -22,9 +23,9 @@ export const spawnUnit = (world: SimWorld, team: number, unitType: number, x: Fx
   Facing.angle[eid] = team === 0 ? 16384 : 49152;
   Team.id[eid] = team;
   UnitType.id[eid] = unitType;
-  Speed.value[eid] = UNIT_SPEED[unitType] ?? fxFromInt(4);
+  Speed.value[eid] = UNIT_SPEED[unitType] as Fx;
   MoveTarget.active[eid] = 0;
-  const hp = UNIT_HP[unitType] ?? 100;
+  const hp = UNIT_HP[unitType] as number;
   Health.hp[eid] = hp;
   Health.max[eid] = hp;
   Anim.state[eid] = 0;
@@ -62,6 +63,8 @@ export const applyCommand = (world: SimWorld, sc: StampedCommand): void => {
   const { MoveTarget, Velocity } = world.c;
   switch (cmd.type) {
     case 'spawn': {
+      // Geçersiz komutlar her istemcide aynı şekilde yok sayılır (worker'ı çökertmez).
+      if (UNIT_SPEED[cmd.unitType] === undefined || cmd.team < 0 || cmd.team > 3) break;
       const n = Math.min(cmd.count, 2000);
       for (let i = 0; i < n; i++) {
         const [dx, dz] = gridOffset(i, n, cmd.spacing);

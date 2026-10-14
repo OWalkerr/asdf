@@ -44,15 +44,16 @@ export const createRenderContext = async (
   renderer.toneMappingExposure = 1.05;
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = PCFShadowMap; // r186: PCFSoft kaldırıldı, PCF zaten yumuşak filtreli
-  // WebGPU sürücü/tarayıcı uyumsuzluğunda cihaz kaybolursa sayfayı WebGL2 ile yeniden aç.
-  renderer.onDeviceLost = (info) => {
-    console.error('WebGPU cihazı kayboldu, WebGL2 ile yeniden başlatılıyor:', info.message);
-    if (!forceWebGL) {
-      const url = new URL(location.href);
-      url.searchParams.set('webgl', '1');
-      location.replace(url);
-    }
+  // WebGPU sürücü/tarayıcı uyumsuzluğunda sayfayı WebGL2 ile yeniden aç. İki belirti var:
+  // cihaz kaybı (onDeviceLost) ve kısmi WebGPU desteğinde her karede fırlayan istisnalar.
+  const fallbackToWebGL = (reason: string) => {
+    console.error(`WebGPU kullanılamıyor (${reason}), WebGL2 ile yeniden başlatılıyor.`);
+    if (forceWebGL) return;
+    const url = new URL(location.href);
+    url.searchParams.set('webgl', '1');
+    location.replace(url);
   };
+  renderer.onDeviceLost = (info) => fallbackToWebGL(info.message);
   await renderer.init();
 
   const backend: Backend = (renderer.backend as { isWebGPUBackend?: boolean }).isWebGPUBackend
@@ -70,6 +71,9 @@ export const createRenderContext = async (
   const pipeline = new RenderPipeline(renderer);
   pipeline.outputNode = sceneColor.add(bloomPass);
 
+  // Üst üste bu kadar kare hata verirse WebGPU backend'i bozuk kabul edilir.
+  const MAX_RENDER_ERRORS = 5;
+  let consecutiveErrors = 0;
   const ctx: RenderContext = {
     renderer,
     backend,
@@ -77,8 +81,17 @@ export const createRenderContext = async (
     bloomStrength,
     usePost: true,
     render() {
-      if (ctx.usePost) pipeline.render();
-      else renderer.render(scene, camera);
+      try {
+        if (ctx.usePost) pipeline.render();
+        else renderer.render(scene, camera);
+        consecutiveErrors = 0;
+      } catch (err) {
+        consecutiveErrors++;
+        if (consecutiveErrors === 1) console.error(err);
+        if (backend === 'webgpu' && consecutiveErrors >= MAX_RENDER_ERRORS) {
+          fallbackToWebGL(err instanceof Error ? err.message : String(err));
+        }
+      }
     },
     resize(width, height) {
       renderer.setSize(width, height, false);

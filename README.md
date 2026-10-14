@@ -18,7 +18,8 @@ Tasarım ve mimari: [`GDD.md`](GDD.md).
 | `pnpm check` | lint + typecheck + test |
 | `pnpm shot <url> <png> [zoom\|rotate\|pan]` | Playwright ile ekran görüntüsü + konsol hata raporu |
 
-URL parametreleri: `?map=helms_deep` (varsayılan) veya `?map=lookdev`, `?webgl` WebGL2 backend'ini zorlar,
+URL parametreleri: `?map=helms_deep` (varsayılan) veya `?map=lookdev`, `?gallery` birim galerisi
+(her birim tipi × boşta/yürüme/saldırı/ölüm × iki takım), `?webgl` WebGL2 backend'ini zorlar,
 `?debug=0` tweak panelini gizler, `?nosab` SharedArrayBuffer yerine postMessage yedek yolunu zorlar. Debug panelindeki "Koridor/spawn katmanı" düşman rotalarını gösterir.
 
 ## Paketler

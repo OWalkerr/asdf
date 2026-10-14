@@ -160,3 +160,28 @@ describe('snapshot (SharedArrayBuffer)', () => {
     expect(sim.writeSnapshot(view)).toBe(10);
   });
 });
+
+describe('komut doğrulama', () => {
+  it('bilinmeyen birim tipi / takım içeren spawn yok sayılır', () => {
+    const sim = new Simulation(9);
+    sim.schedule(
+      stamp(0, 0, 0, { type: 'spawn', team: 0, unitType: 99, x: 0, z: 0, count: 5, spacing: FX_ONE }),
+    );
+    sim.schedule(
+      stamp(0, 0, 1, { type: 'spawn', team: 9, unitType: 0, x: 0, z: 0, count: 5, spacing: FX_ONE }),
+    );
+    expect(() => sim.step()).not.toThrow();
+    expect(query(sim.world, [sim.world.c.Position]).length).toBe(0);
+  });
+
+  it('birim tablosundan hız ve can alınır', () => {
+    const sim = new Simulation(9);
+    sim.schedule(
+      stamp(0, 0, 0, { type: 'spawn', team: 0, unitType: 2, x: 0, z: 0, count: 1, spacing: FX_ONE }),
+    );
+    sim.step();
+    const [eid] = query(sim.world, [sim.world.c.Position]);
+    expect(sim.world.c.Health.max[eid as number]).toBe(140);
+    expect(sim.world.c.Speed.value[eid as number]).toBe(4 * FX_ONE);
+  });
+});
