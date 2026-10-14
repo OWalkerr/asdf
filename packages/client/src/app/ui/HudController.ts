@@ -1,0 +1,401 @@
+import {
+  BUILDING_DEFS,
+  BUILDING_KINDS,
+  type BuildingKind,
+  ECONOMY,
+  FORTRESS_UPGRADES,
+  HERO_ABILITIES,
+  type MapDef,
+  type MatchInfo,
+  SLOT_BUILDS,
+  UNIT_DEFS,
+  UnitTypeId,
+  UPGRADE_DEFS,
+} from '@bulwark/shared';
+import type { SlotMarkers } from '../../render/map/SlotMarkers';
+import type { StructureRenderer } from '../../render/structures/StructureRenderer';
+import type { UnitRenderer } from '../../render/units/UnitRenderer';
+import { SIM_TICK_MS } from '../../sim-host/protocol';
+import type { Scenario } from '../scenario';
+import type { CommandBar, CommandButton, CommandContext } from './CommandBar';
+
+/**
+ * Seçime göre komut çubuğu bağlamı (GDD §11.1): taburlar (kahraman yetenekleri), boş inşa
+ * yuvası, bina (kışla kuyruğu, demirhane araştırması, kule bilgisi), kale (yükseltmeler,
+ * kahraman, kapı onarımı) ve boş durum.
+ */
+export const UNIT_LABELS: Record<number, string> = {
+  0: 'Gondor Askerleri',
+  1: 'Mordor Orkları',
+  2: 'Kule Muhafızları',
+  3: 'Uruk-hai',
+  4: 'Gondor Okçuları',
+  5: 'Koçbaşı',
+  6: 'Aragorn',
+  7: 'Lurtz',
+  8: 'Lórien Okçuları',
+  9: 'Rohirrim',
+  10: 'Ölüler Ordusu',
+};
+const UNIT_ICON: Record<number, string> = {
+  0: 'sword',
+  1: 'sword',
+  2: 'spear',
+  3: 'sword',
+  4: 'bow',
+  5: 'catapult',
+  6: 'hero',
+  7: 'sword',
+  8: 'bow',
+  9: 'horse',
+  10: 'ghost',
+};
+const UNIT_DESC: Record<number, string> = {
+  0: 'Kılıç ve kalkanlı çok yönlü piyade. Orklara karşı güçlü.',
+  2: 'Ağır zırhlı mızrakçılar; süvari ve Uruk hücumunu karşılar.',
+  4: 'Uzun menzilli okçular; zırhsız düşmana etkili.',
+};
+const BUILD_ICON: Record<BuildingKind, string> = {
+  arrow_tower: 'tower',
+  barracks: 'hall',
+  forge: 'anvil',
+  catapult: 'catapult',
+};
+const BUILD_DESC: Record<BuildingKind, string> = {
+  arrow_tower: 'Menzildeki düşman taburlarına 3 oklu yaylım atar.',
+  barracks: 'Gondor piyadesi, okçu ve Kule Muhafızı yetiştirir.',
+  forge: 'Takım çapında yükseltmeler: kılıç, zırh, ateşli ok.',
+  catapult: 'Uzaktaki düşman kümelerine alan hasarlı taş atar; koçbaşı ve Uruk saflarına etkili.',
+};
+const UP_ICON = ['blade', 'armor', 'flame'];
+const FORT_ICON = ['wall', 'slits', 'catapult', 'banner', 'coin'];
+const SLOT_NAMES: Record<string, string> = {
+  wall_socket: 'Sur Soketi',
+  tower: 'Kule Platformu',
+  building: 'İnşa Arsası',
+};
+const secs = (ticks: number) => Math.max(0, Math.ceil((ticks * SIM_TICK_MS) / 1000));
+
+export interface HudDeps {
+  def: MapDef;
+  scenario: Scenario;
+  units: UnitRenderer;
+  structures: StructureRenderer;
+  slots: SlotMarkers;
+  selected: Set<number>;
+  bar: CommandBar;
+  /** Kale seçili mi (HeroBar / dünya tıklaması). */
+  fortressSelected: () => boolean;
+  gateRepair: () => readonly number[];
+}
+
+export class HudController {
+  private match: MatchInfo | null = null;
+  private tick = 0;
+  /** Kahraman yeteneği kullanıldı (görsel efekt). */
+  onAbility: ((ability: number) => void) | null = null;
+
+  constructor(private readonly d: HudDeps) {}
+
+  update(match: MatchInfo, tick: number): void {
+    this.match = match;
+    this.tick = tick;
+    const { selected, slots, structures } = this.d;
+    let ctx: CommandContext;
+    this.d.bar.stop = null;
+    if (selected.size > 0) ctx = this.battalions();
+    else if (this.d.fortressSelected()) ctx = this.fortress();
+    else if (slots.selectedIndex >= 0)
+      ctx = structures.bySlot.has(slots.selectedIndex)
+        ? this.building(slots.selectedIndex)
+        : this.slot(slots.selectedIndex);
+    else ctx = this.idle();
+    this.d.bar.render(ctx);
+  }
+
+  private get gold(): number {
+    return this.match?.gold ?? 0;
+  }
+
+  private idle(): CommandContext {
+    const fd = this.d.def.mode === 'FD';
+    return {
+      key: `idle:${this.d.def.id}`,
+      portrait: fd ? 'castle' : 'tower',
+      title: this.d.def.name,
+      subtitle: fd ? 'Kale Savunması' : 'Kule Savunması',
+      lines: fd
+        ? [
+            'Kapıları tut, kaleyi koru. Kale düşerse savaş biter.',
+            'Altın halkalı yuvalara kule ve bina kur; kaleyi seçip (K) yükselt.',
+          ]
+        : [
+            'Düşman yolu izleyip çıkışa yürür; sızan her tabur can götürür.',
+            'Yolun kenarındaki yuvalara okçu kulesi ve mancınık kur.',
+          ],
+      buttons: [],
+    };
+  }
+
+  private battalions(): CommandContext {
+    const counts = new Map<number, { battalions: Set<number>; men: number; hp: number; rank: number }>();
+    this.d.units.forEach((_x, _y, _z, b, _team, hp, type, rank) => {
+      if (!this.d.selected.has(b)) return;
+      let c = counts.get(type);
+      if (!c) {
+        c = { battalions: new Set(), men: 0, hp: 0, rank: 0 };
+        counts.set(type, c);
+      }
+      c.battalions.add(b);
+      c.men++;
+      c.hp += hp;
+      c.rank = Math.max(c.rank, rank);
+    });
+    const m = this.match;
+    const sel = this.d.selected;
+    this.d.bar.stop = () => this.d.scenario.stop(sel);
+    const types = [...counts.keys()];
+    const main = types[0] ?? 0;
+    const mc = counts.get(main);
+    let men = 0;
+    let hpSum = 0;
+    let cap = 0;
+    for (const [t, c] of counts) {
+      men += c.men;
+      hpSum += c.hp;
+      cap += (UNIT_DEFS[t]?.battalionSize ?? 1) * c.battalions.size;
+    }
+    const hp = cap > 0 ? hpSum / cap : 1;
+    const hero = m && m.hero !== 0 && sel.has(m.hero) ? m.hero : 0;
+    const buttons: CommandButton[] = [];
+    if (hero) {
+      const heroRank = counts.get(UnitTypeId.Aragorn)?.rank ?? 1;
+      HERO_ABILITIES.forEach((a, i) => {
+        const left = secs((m?.abilityReady[i] ?? 0) - this.tick);
+        const locked = heroRank < a.rank;
+        const active = i === 0 && (m?.elendilUntil ?? 0) > this.tick;
+        buttons.push({
+          icon: i === 0 ? 'blade' : 'leaf',
+          label: a.name,
+          state: locked ? 'locked' : active ? 'busy' : left > 0 ? 'busy' : 'ready',
+          badge: locked ? `R${a.rank}` : left > 0 ? `${left}` : undefined,
+          progress: !locked && left > 0 ? 1 - left / a.cooldown : undefined,
+          tip: {
+            title: a.name,
+            meta: `Bekleme ${a.cooldown} sn${locked ? ` · rütbe ${a.rank} gerekir` : ''}`,
+            body: a.desc,
+          },
+          run: () => {
+            this.d.scenario.ability(hero, i);
+            this.onAbility?.(i);
+          },
+        });
+      });
+    }
+    buttons.push({
+      icon: 'stop',
+      label: 'Dur',
+      state: 'ready',
+      tip: { title: 'Dur (H)', body: 'Seçili taburlar yerinde durur.' },
+      run: () => this.d.scenario.stop(sel),
+    });
+    const summary = types
+      .map((t) => `${UNIT_LABELS[t] ?? '?'} ×${counts.get(t)?.battalions.size}`)
+      .join(' · ');
+    const single = types.length === 1 ? UNIT_LABELS[main] : `${sel.size} tabur`;
+    return {
+      key: `bat:${[...sel].join(',')}:${Math.round(hp * 40)}:${mc?.rank}:${buttons.map((b) => `${b.state}${b.badge}`).join(',')}`,
+      portrait: UNIT_ICON[main] ?? 'sword',
+      title: single ?? '?',
+      subtitle: types.length === 1 ? `${mc?.battalions.size ?? 0} tabur · ${men} asker` : summary,
+      hp,
+      rank: types.length === 1 ? mc?.rank : undefined,
+      lines: [
+        hero
+          ? 'Liderlik: 20 m içindeki taburlara +%25 hasar.'
+          : (UNIT_DESC[main] ?? 'Sağ tık: yürü · düşmana sağ tık: saldır.'),
+      ],
+      buttons,
+    };
+  }
+
+  private slot(slot: number): CommandContext {
+    const def = this.d.def.slots[slot];
+    const kinds = def ? (SLOT_BUILDS[def.kind] ?? []) : [];
+    const buttons: CommandButton[] = kinds.map((k) => {
+      const b = BUILDING_DEFS[k];
+      return {
+        icon: BUILD_ICON[k],
+        label: b.name,
+        state: this.gold >= b.cost ? 'ready' : 'off',
+        badge: `${b.cost}`,
+        tip: { title: b.name, meta: `◆ ${b.cost} · ${b.buildTime} sn`, body: BUILD_DESC[k] },
+        run: () => this.d.scenario.build(slot, BUILDING_KINDS.indexOf(k)),
+      };
+    });
+    return {
+      key: `slot:${slot}:${buttons.map((b) => b.state).join('')}`,
+      portrait: def?.kind === 'building' ? 'hall' : 'tower',
+      title: SLOT_NAMES[def?.kind ?? ''] ?? 'Yuva',
+      subtitle: def?.id ?? '',
+      lines: ['Bir yapı seç: altın yeterliyse inşa hemen başlar.'],
+      buttons,
+    };
+  }
+
+  private building(slot: number): CommandContext {
+    const st = this.d.structures.bySlot.get(slot);
+    const kind = st ? BUILDING_KINDS[st.kind] : undefined;
+    if (!st || !kind) return this.idle();
+    const b = BUILDING_DEFS[kind];
+    const hp = st.hp / st.max;
+    const base = { portrait: BUILD_ICON[kind], title: b.name, hp };
+    if (st.built < 1)
+      return {
+        ...base,
+        key: `build:${slot}:${Math.round(st.built * 50)}`,
+        subtitle: `İnşa ediliyor · %${Math.round(st.built * 100)}`,
+        lines: [BUILD_DESC[kind]],
+        buttons: [],
+      };
+    const upgrades = this.match?.upgrades ?? 0;
+    const researching = this.match?.researching ?? 0;
+    if (kind === 'arrow_tower' || kind === 'catapult') {
+      const fire = (upgrades & 4) !== 0 && kind === 'arrow_tower';
+      const a = b.attack;
+      return {
+        ...base,
+        key: `tower:${slot}:${st.hp}:${fire}`,
+        subtitle: `${st.hp} / ${st.max}`,
+        lines: [
+          `Menzil ${a?.range} m · ${a?.volley} atış / ${a?.interval} sn${a?.aoe ? ` · alan ${a.aoe} m` : ''}`,
+          fire ? 'Ateşli Oklar etkin.' : BUILD_DESC[kind],
+        ],
+        buttons: [],
+      };
+    }
+    if (kind === 'forge') {
+      const busy = st.queueLen > 0;
+      const buttons: CommandButton[] = (b.researches ?? []).map((u) => {
+        const def = UPGRADE_DEFS[u];
+        const done = (upgrades & (1 << u)) !== 0;
+        const running = (researching & (1 << u)) !== 0;
+        return {
+          icon: UP_ICON[u] ?? 'anvil',
+          label: def?.name ?? '',
+          state: done ? 'done' : running ? 'busy' : !busy && this.gold >= (def?.cost ?? 0) ? 'ready' : 'off',
+          badge: done ? '✓' : running ? `%${Math.round(st.queuePct * 100)}` : `${def?.cost}`,
+          progress: running ? st.queuePct : undefined,
+          tip: { title: def?.name ?? '', meta: `◆ ${def?.cost} · ${def?.researchTime} sn`, body: def?.desc },
+          run: () => this.d.scenario.research(st.eid, u),
+        };
+      });
+      return {
+        ...base,
+        key: `forge:${slot}:${upgrades}:${researching}:${Math.round(st.queuePct * 40)}:${buttons.map((x) => x.state).join('')}`,
+        subtitle: `${st.hp} / ${st.max}`,
+        lines: ['Yükseltmeler tüm ordunuza uygulanır; aynı anda tek araştırma.'],
+        buttons,
+      };
+    }
+    // Kışla
+    const full = st.queueLen >= ECONOMY.queueMax;
+    const buttons: CommandButton[] = (b.trains ?? []).map((u) => {
+      const def = UNIT_DEFS[u];
+      return {
+        icon: UNIT_ICON[u] ?? 'sword',
+        label: UNIT_LABELS[u] ?? '',
+        state: !full && this.gold >= (def?.cost ?? 0) ? 'ready' : 'off',
+        badge: `${def?.cost}`,
+        tip: {
+          title: UNIT_LABELS[u] ?? '',
+          meta: `◆ ${def?.cost} · ${def?.trainTime} sn · ${def?.battalionSize} asker`,
+          body: UNIT_DESC[u],
+        },
+        run: () => this.d.scenario.train(st.eid, u),
+      };
+    });
+    const queue =
+      st.queueLen > 0
+        ? `Kuyruk: ${st.queueLen} · ${UNIT_LABELS[st.queueUnit] ?? ''} %${Math.round(st.queuePct * 100)}`
+        : 'Kuyruk boş';
+    return {
+      ...base,
+      key: `barracks:${slot}:${buttons.map((x) => x.state).join('')}:${st.queueLen}:${Math.round(st.queuePct * 40)}`,
+      subtitle: `${st.hp} / ${st.max}`,
+      lines: [queue, `Yetişen taburlar binanın önünde toplanır (kuyruk en fazla ${ECONOMY.queueMax}).`],
+      buttons,
+    };
+  }
+
+  private fortress(): CommandContext {
+    const m = this.match;
+    const def = this.d.def;
+    const fortUp = m?.fortUp ?? 0;
+    const research = m?.fortResearch ?? -1;
+    const buttons: CommandButton[] = FORTRESS_UPGRADES.map((u, i) => {
+      const done = (fortUp & (1 << i)) !== 0;
+      const running = research === i;
+      return {
+        icon: FORT_ICON[i] ?? 'castle',
+        label: u.name,
+        state: done ? 'done' : running ? 'busy' : research < 0 && this.gold >= u.cost ? 'ready' : 'off',
+        badge: done ? '✓' : running ? `%${Math.round((m?.fortPct ?? 0) * 100)}` : `${u.cost}`,
+        progress: running ? (m?.fortPct ?? 0) : undefined,
+        tip: { title: u.name, meta: `◆ ${u.cost} · ${u.time} sn`, body: u.desc },
+        run: () => this.d.scenario.fortressUpgrade(i),
+      };
+    });
+    // Kahraman
+    const heroCost = UNIT_DEFS[UnitTypeId.Aragorn]?.cost ?? 0;
+    const heroWait = m ? secs(m.heroReady - this.tick) : 0;
+    buttons.push({
+      icon: 'hero',
+      label: 'Aragorn',
+      state: m?.hero ? 'done' : heroWait > 0 ? 'busy' : this.gold >= heroCost ? 'ready' : 'off',
+      badge: m?.hero ? '✓' : heroWait > 0 ? `${heroWait}` : `${heroCost}`,
+      tip: {
+        title: "Aragorn'u çağır",
+        meta: `◆ ${heroCost}`,
+        body: "Kahraman kalenin kapısından çıkar. Liderlik aurası, Elendil'in Kılıcı ve Athelas. Ölürse 45 sn sonra yeniden çağrılabilir.",
+      },
+      run: () => this.d.scenario.summonHero(UnitTypeId.Aragorn),
+    });
+    // Kapı onarımı
+    const repair = this.d.gateRepair();
+    (m?.gateHp ?? []).forEach((hp, i) => {
+      const g = def.gates[i];
+      const max = m?.gateMax[i] ?? 1;
+      const busy = (repair[i] ?? 0) > 0;
+      buttons.push({
+        icon: 'repair',
+        label: `${g?.name ?? 'Kapı'} onar`,
+        state: busy ? 'busy' : hp > 0 && hp < max && this.gold >= ECONOMY.repairCost ? 'ready' : 'off',
+        badge: hp <= 0 ? 'yıkık' : busy ? '…' : `${Math.round((hp / max) * 100)}%`,
+        progress: hp / max,
+        tip: {
+          title: `${g?.name ?? 'Kapı'} onarımı`,
+          meta: `◆ ${ECONOMY.repairCost} · ${ECONOMY.repairTime} sn · +%${ECONOMY.repairPercent}`,
+          body: hp <= 0 ? 'Bu kapı yıkıldı; düşman içeri akıyor.' : `Can ${hp} / ${max}.`,
+        },
+        run: () => this.d.scenario.repair(i),
+      });
+    });
+    const f = m?.fortress ?? 0;
+    const fs = f ? this.d.structures.fortress : null;
+    const hp = fs ? fs.hp / Math.max(1, fs.max) : 1;
+    return {
+      key: `fort:${fortUp}:${research}:${Math.round((m?.fortPct ?? 0) * 40)}:${Math.round(hp * 50)}:${buttons.map((b) => `${b.state}${b.badge}`).join(',')}`,
+      portrait: 'castle',
+      title: def.citadel.name ?? 'Kale',
+      subtitle: fs ? `${fs.hp} / ${fs.max}` : '',
+      hp,
+      lines: [
+        def.mode === 'FD'
+          ? 'Kale düşerse savaş biter. Yükseltmeler sırayla araştırılır.'
+          : 'Üssünüz: kahramanlar buradan çıkar.',
+      ],
+      buttons,
+    };
+  }
+}

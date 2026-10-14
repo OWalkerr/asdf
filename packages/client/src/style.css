@@ -1,9 +1,23 @@
+/*
+ * Bulwark arayüzü — BFME2 "palantír" düzenine sadık (GDD §11):
+ *   sol alt: palantír (yuvarlak mini harita) · alt orta: komut çubuğu (madalyon + yuvarlak düğmeler)
+ *   sol kenar: güçler sütunu · sol üst: kahraman/kale portreleri · üst orta: dalga ve savunma
+ *   sağ üst: kaynaklar
+ * Malzeme dili: koyu bronz/demir zemin, altın işleme, kabartmalı yuvarlak düğmeler.
+ */
 :root {
   --ink: #f3ead6;
   --ink-dim: #c9bfa8;
-  --panel: rgba(22, 20, 17, 0.72);
   --gold: #c9a23a;
-  font-family: "Georgia", "Times New Roman", serif;
+  --gold-hi: #f3d77a;
+  --gold-lo: #7a5d22;
+  --metal-1: #3a3226;
+  --metal-2: #1d1812;
+  --metal-3: #0f0c09;
+  --panel: rgba(22, 20, 17, 0.72);
+  --frame: linear-gradient(180deg, #3d3428 0%, #241e16 45%, #15110c 100%);
+  --title: "Cinzel", Georgia, "Times New Roman", serif;
+  font-family: Georgia, "Times New Roman", serif;
 }
 * {
   box-sizing: border-box;
@@ -24,14 +38,791 @@ body {
   display: block;
   outline: none;
 }
-#hud {
+button {
+  font: inherit;
+}
+svg {
+  display: block;
+}
+
+/* --- Ortak: altın işlemeli çerçeve ve yuvarlak düğme ----------------------------- */
+.frame-plate,
+#cmdbar,
+#status,
+#resources,
+#powers {
+  background: var(--frame);
+  border: 1px solid var(--gold-lo);
+  box-shadow:
+    inset 0 1px 0 rgba(243, 215, 122, 0.25),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.6),
+    0 0 0 2px #0c0a07,
+    0 0 0 3px var(--gold-lo),
+    0 6px 22px rgba(0, 0, 0, 0.55);
+}
+#cmdbar .cmd,
+#powers .power,
+#heroes .portrait {
+  position: relative;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 2px solid #b8913a;
+  background: radial-gradient(circle at 38% 30%, #50442f 0%, #2a2318 48%, #120e0a 100%);
+  color: #f0dca0;
+  cursor: pointer;
+  padding: 0;
+  box-shadow:
+    0 0 0 2px #1a140d,
+    0 0 0 3px #6e5524,
+    inset 0 2px 5px rgba(255, 225, 150, 0.22),
+    inset 0 -5px 9px rgba(0, 0, 0, 0.65),
+    0 3px 6px rgba(0, 0, 0, 0.6);
+  transition:
+    transform 0.08s,
+    filter 0.12s;
+}
+#cmdbar .cmd:hover,
+#powers .power:hover,
+#heroes .portrait:hover {
+  filter: brightness(1.18);
+  border-color: var(--gold-hi);
+}
+#cmdbar .cmd:active,
+#powers .power:active,
+#heroes .portrait:active {
+  transform: scale(0.95);
+}
+kbd {
+  font:
+    9px / 13px ui-monospace,
+    Menlo,
+    monospace;
+  padding: 0 3px;
+  background: #0f0c09;
+  border: 1px solid var(--gold-lo);
+  border-radius: 3px;
+  color: var(--gold);
+}
+
+/* --- Komut çubuğu ------------------------------------------------------------------ */
+#cmdbar {
   position: fixed;
-  left: 12px;
-  bottom: 12px;
+  left: max(262px, calc(50% - 400px));
+  bottom: 10px;
+  width: min(800px, calc(100vw - 274px));
+  height: 136px;
+  display: grid;
+  grid-template-columns: 118px minmax(150px, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 16px 10px 12px;
+  border-radius: 14px 14px 10px 10px;
+  user-select: none;
+  z-index: 10;
+}
+#cmdbar::before {
+  /* üst kenarda ince altın işleme */
+  content: "";
+  position: absolute;
+  left: 40px;
+  right: 40px;
+  top: -1px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold-hi), transparent);
+  opacity: 0.7;
+}
+#cmdbar .medal {
+  position: relative;
+  width: 112px;
+  height: 112px;
+  justify-self: center;
+}
+#cmdbar .medal .ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(var(--hpc, #7fd05a) var(--hp, 360deg), rgba(0, 0, 0, 0.6) 0), #111;
+  box-shadow:
+    0 0 0 3px #1a140d,
+    0 0 0 4px var(--gold),
+    0 0 0 6px #1a140d,
+    0 0 0 7px var(--gold-lo),
+    0 4px 14px rgba(0, 0, 0, 0.6);
+}
+#cmdbar .medal .ring.none {
+  background: conic-gradient(var(--gold-lo) 360deg, #000 0);
+}
+#cmdbar .medal .face {
+  position: absolute;
+  inset: 7px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(circle at 40% 30%, #4d5566 0%, #232833 55%, #0d0f14 100%);
+  color: #f3e3b0;
+  box-shadow:
+    inset 0 3px 8px rgba(200, 220, 255, 0.25),
+    inset 0 -8px 14px rgba(0, 0, 0, 0.7);
+}
+#cmdbar .medal .face svg {
+  width: 54px;
+  height: 54px;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.7));
+}
+#cmdbar .medal .stars {
+  position: absolute;
+  left: 50%;
+  bottom: -6px;
+  transform: translateX(-50%);
+  font-size: 12px;
+  letter-spacing: 1px;
+  color: var(--gold-hi);
+  text-shadow: 0 1px 3px #000;
+  background: #15110c;
+  border: 1px solid var(--gold-lo);
+  border-radius: 8px;
+  padding: 0 6px;
+}
+#cmdbar .info {
+  min-width: 0;
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px;
+  padding-left: 12px;
+  border-left: 1px solid rgba(201, 162, 58, 0.25);
+}
+#cmdbar .info h3 {
+  margin: 0;
+  font-family: var(--title);
+  font-weight: 700;
+  font-size: 17px;
+  letter-spacing: 0.06em;
+  color: var(--gold-hi);
+  text-shadow: 0 1px 2px #000;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#cmdbar .info .sub {
+  font-size: 12px;
+  color: var(--ink);
+}
+#cmdbar .info .line {
+  font-size: 11.5px;
+  line-height: 1.35;
+  color: var(--ink-dim);
+}
+#cmdbar .grid {
+  display: grid;
+  grid-template-columns: repeat(6, 50px);
+  grid-auto-rows: 50px;
+  gap: 10px 8px;
+}
+#cmdbar .grid .slot {
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.15));
+  box-shadow: inset 0 0 0 1px rgba(201, 162, 58, 0.18);
+}
+#cmdbar .cmd {
+  width: 50px;
+  height: 50px;
+}
+#cmdbar .cmd svg {
+  width: 25px;
+  height: 25px;
+  position: relative;
+  z-index: 1;
+}
+#cmdbar .cmd small {
+  position: absolute;
+  bottom: -7px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  font-size: 10px;
+  line-height: 13px;
+  padding: 0 4px;
+  border-radius: 6px;
+  background: #15110c;
+  border: 1px solid var(--gold-lo);
+  color: var(--gold-hi);
+  white-space: nowrap;
+}
+#cmdbar .cmd kbd {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  z-index: 2;
+}
+#cmdbar .cmd.off,
+#cmdbar .cmd.locked {
+  filter: grayscale(0.8) brightness(0.6);
+  cursor: not-allowed;
+}
+#cmdbar .cmd.done {
+  border-color: #8fd05a;
+  color: #cfeeb0;
+}
+#cmdbar .cmd.done small {
+  color: #a8e070;
+}
+#cmdbar .cmd.busy {
+  cursor: default;
+}
+#cmdbar .cmd.prog::before,
+#powers .power[data-state="cd"]::before {
+  /* ilerleme / bekleme halkası */
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: 50%;
+  background: conic-gradient(rgba(243, 215, 122, 0.85) var(--p, 0deg), transparent 0);
+  -webkit-mask: radial-gradient(circle, transparent 62%, #000 64%);
+  mask: radial-gradient(circle, transparent 62%, #000 64%);
+}
+#cmdbar .tip,
+#powers .tip {
+  position: absolute;
   pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.12s;
+  background: linear-gradient(180deg, rgba(36, 30, 21, 0.97), rgba(18, 15, 11, 0.97));
+  border: 1px solid var(--gold-lo);
+  box-shadow:
+    0 0 0 1px #000,
+    0 8px 20px rgba(0, 0, 0, 0.6);
+  border-radius: 8px;
+  padding: 9px 12px;
+  max-width: 320px;
+  font-size: 12px;
+  line-height: 1.45;
+  z-index: 30;
+}
+#cmdbar .tip {
+  right: 12px;
+  bottom: calc(100% + 12px);
+}
+#cmdbar .tip.show,
+#powers .tip.show {
+  opacity: 1;
+}
+#cmdbar .tip b,
+#powers .tip b {
+  display: block;
+  font-family: var(--title);
+  color: var(--gold-hi);
+  font-size: 14px;
+  letter-spacing: 0.04em;
+}
+#cmdbar .tip em,
+#powers .tip em {
+  display: block;
+  font-style: normal;
+  color: #f0c95a;
+  font-size: 11.5px;
+  margin: 2px 0 4px;
+}
+#cmdbar .tip p,
+#powers .tip p {
+  margin: 0;
+  color: var(--ink-dim);
+}
+
+/* --- Palantír (sol alt) --------------------------------------------------------------- */
+#palantir {
+  position: fixed;
+  left: 14px;
+  bottom: 14px;
+  width: 224px;
+  height: 224px;
+  z-index: 11;
+}
+#palantir .frame {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: repeating-conic-gradient(from 0deg, #4a3d28 0 6deg, #2a2218 6deg 12deg), #2a2218;
+  box-shadow:
+    inset 0 0 0 3px #1a140d,
+    inset 0 0 0 5px var(--gold),
+    inset 0 0 0 6px #1a140d,
+    0 0 0 2px #0c0a07,
+    0 0 0 3px var(--gold-lo),
+    0 8px 26px rgba(0, 0, 0, 0.65);
+}
+#palantir canvas {
+  position: absolute;
+  left: 14px;
+  top: 14px;
+  border-radius: 50%;
+  cursor: crosshair;
+  box-shadow:
+    0 0 0 2px #0c0a07,
+    0 0 0 3px var(--gold-hi),
+    inset 0 0 30px rgba(0, 0, 0, 0.8);
+}
+#palantir::after {
+  /* görüş taşının cam parıltısı */
+  content: "";
+  position: absolute;
+  left: 14px;
+  top: 14px;
+  width: 196px;
+  height: 196px;
+  border-radius: 50%;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 35% 28%, rgba(255, 255, 255, 0.22), transparent 32%),
+    radial-gradient(circle at 50% 50%, transparent 58%, rgba(20, 30, 50, 0.55) 100%);
+}
+#palantir .pbtns {
+  position: absolute;
+  right: -14px;
+  top: 6px;
   display: grid;
   gap: 6px;
-  max-width: min(300px, calc(50vw - 330px));
+  z-index: 2;
+}
+#palantir .pbtns button {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1.5px solid #b8913a;
+  background: radial-gradient(circle at 38% 30%, #50442f, #16120d);
+  color: #f0dca0;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  box-shadow:
+    0 0 0 2px #1a140d,
+    0 2px 5px rgba(0, 0, 0, 0.6);
+}
+#palantir .pbtns button:nth-child(2) {
+  transform: translateX(10px);
+}
+#palantir .pbtns button:nth-child(3) {
+  transform: translateX(14px);
+}
+#palantir .pbtns svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* --- Güçler sütunu (sol kenar) ---------------------------------------------------------- */
+#powers {
+  position: fixed;
+  left: 12px;
+  top: 104px;
+  width: 128px;
+  padding: 8px 0 12px;
+  border-radius: 12px;
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  z-index: 10;
+}
+#powers .head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 2px;
+  padding-bottom: 6px;
+  margin-bottom: 2px;
+  border-bottom: 1px solid rgba(201, 162, 58, 0.3);
+  width: 108px;
+}
+#powers .head span {
+  font-family: var(--title);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+#powers .pp {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  color: #b9d3ff;
+}
+#powers .pp svg {
+  width: 13px;
+  height: 13px;
+}
+#powers .pp b {
+  font-size: 15px;
+}
+#powers .list {
+  display: grid;
+  grid-template-columns: 50px 50px;
+  justify-items: center;
+  gap: 9px 10px;
+}
+#powers .tier {
+  grid-column: 1 / -1;
+  font-family: var(--title);
+  font-size: 10px;
+  color: var(--gold-lo);
+  letter-spacing: 0.2em;
+  line-height: 10px;
+  margin-top: 2px;
+}
+#powers .power {
+  width: 50px;
+  height: 50px;
+}
+#powers .power svg {
+  width: 24px;
+  height: 24px;
+}
+#powers .power small {
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 10px;
+  line-height: 13px;
+  padding: 0 4px;
+  border-radius: 6px;
+  background: #15110c;
+  border: 1px solid var(--gold-lo);
+  color: #b9d3ff;
+  z-index: 2;
+}
+#powers .power kbd {
+  position: absolute;
+  top: -5px;
+  right: -6px;
+}
+#powers .power .lock {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: rgba(255, 255, 255, 0.55);
+}
+#powers .power .lock svg {
+  width: 18px;
+  height: 18px;
+  transform: translate(10px, 10px);
+}
+#powers .power[data-state="locked"] {
+  filter: grayscale(0.9) brightness(0.5);
+}
+#powers .power[data-state="open"] {
+  border-color: #9cc4ff;
+  animation: glow 1.6s ease-in-out infinite;
+}
+#powers .power[data-state="cd"] > svg {
+  opacity: 0.45;
+}
+#powers .power[data-state="ready"] {
+  color: #ffe9a8;
+}
+#powers .power.active {
+  box-shadow:
+    0 0 0 2px #1a140d,
+    0 0 16px 4px rgba(240, 201, 90, 0.7);
+}
+#powers .tip {
+  left: calc(100% + 14px);
+  width: 260px;
+}
+@keyframes glow {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 2px #1a140d,
+      0 0 4px 1px rgba(156, 196, 255, 0.3);
+  }
+  50% {
+    box-shadow:
+      0 0 0 2px #1a140d,
+      0 0 14px 4px rgba(156, 196, 255, 0.75);
+  }
+}
+
+/* --- Sol üst: kahraman ve kale portreleri ------------------------------------------------ */
+#heroes {
+  position: fixed;
+  left: 14px;
+  top: 12px;
+  display: flex;
+  gap: 14px;
+  z-index: 10;
+}
+#heroes .portrait {
+  width: 64px;
+  height: 64px;
+}
+#heroes .portrait .ring {
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  background: conic-gradient(#7fd05a var(--hp, 0deg), rgba(0, 0, 0, 0.55) 0);
+  -webkit-mask: radial-gradient(circle, transparent 66%, #000 68%);
+  mask: radial-gradient(circle, transparent 66%, #000 68%);
+}
+#heroes .portrait svg {
+  width: 30px;
+  height: 30px;
+}
+#heroes .portrait small {
+  position: absolute;
+  bottom: -9px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 10px;
+  line-height: 14px;
+  padding: 0 5px;
+  border-radius: 7px;
+  background: #15110c;
+  border: 1px solid var(--gold-lo);
+  color: var(--gold-hi);
+  white-space: nowrap;
+}
+#heroes .portrait kbd {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+}
+#heroes .hero {
+  background: radial-gradient(circle at 40% 30%, #58657a 0%, #2a3140 55%, #10131a 100%);
+}
+#heroes .hero[data-state="off"],
+#heroes .hero[data-state="dead"] {
+  filter: grayscale(0.85) brightness(0.65);
+}
+#heroes .hero[data-state="ready"] {
+  animation: glow 1.8s ease-in-out infinite;
+}
+#heroes .fort {
+  background: radial-gradient(circle at 40% 30%, #6e6450 0%, #3a3326 55%, #14110c 100%);
+}
+
+/* --- Üst orta: dalga ve savunma durumu ---------------------------------------------------- */
+#status {
+  position: fixed;
+  left: 50%;
+  top: 10px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 8px 20px;
+  border-radius: 0 0 14px 14px;
+  z-index: 9;
+  pointer-events: none;
+}
+#status .wave {
+  display: grid;
+  gap: 1px;
+  min-width: 170px;
+}
+#status .wave b {
+  font-family: var(--title);
+  font-size: 15px;
+  letter-spacing: 0.06em;
+  color: var(--gold-hi);
+}
+#status .wave span {
+  font-size: 11.5px;
+  color: var(--ink-dim);
+}
+#status .wave .foes {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #ff9a7a;
+}
+#status .wave .foes svg {
+  width: 13px;
+  height: 13px;
+}
+#status .fort {
+  display: grid;
+  gap: 3px;
+  min-width: 190px;
+}
+#status .fort .bar {
+  display: block;
+  height: 11px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.6);
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.8),
+    0 0 0 1px var(--gold-lo);
+}
+#status .fort .bar i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(180deg, #a8e070, #4f8f2a);
+  transition: width 0.25s;
+}
+#status .fort em {
+  font-style: normal;
+  font-family: var(--title);
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+#status .gates {
+  display: flex;
+  gap: 5px;
+  pointer-events: auto;
+}
+#status .gate svg {
+  width: 20px;
+  height: 20px;
+}
+#status .gate {
+  color: #7fd05a;
+  filter: drop-shadow(0 1px 1px #000);
+}
+#status .gate.mid {
+  color: #e8c440;
+}
+#status .gate.low {
+  color: #e0442e;
+  animation: pulse 1s ease-in-out infinite;
+}
+#status .gate.down {
+  color: #4a4038;
+}
+#status .lives {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #e85a4a;
+}
+#status .lives svg {
+  width: 22px;
+  height: 22px;
+}
+#status .lives b {
+  font-size: 22px;
+  color: var(--ink);
+}
+#status .lives span {
+  font-size: 11px;
+  color: var(--ink-dim);
+}
+@keyframes pulse {
+  50% {
+    opacity: 0.45;
+  }
+}
+
+/* --- Sağ üst: kaynaklar ----------------------------------------------------------------- */
+#resources {
+  position: fixed;
+  right: 12px;
+  top: 10px;
+  display: flex;
+  gap: 16px;
+  padding: 8px 16px;
+  border-radius: 0 0 0 14px;
+  z-index: 9;
+  pointer-events: none;
+}
+#resources > div {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+}
+#resources svg {
+  width: 16px;
+  height: 16px;
+  align-self: center;
+}
+#resources > div:nth-child(1) svg {
+  color: #f0c95a;
+}
+#resources > div:nth-child(2) svg {
+  color: #9cc4ff;
+}
+#resources > div:nth-child(3) svg {
+  color: #d9c9a0;
+}
+#resources b {
+  font-size: 18px;
+  font-weight: normal;
+  color: var(--ink);
+}
+#resources span {
+  font-size: 11px;
+  color: var(--ink-dim);
+}
+
+/* --- Yardım penceresi -------------------------------------------------------------------- */
+#hud-help {
+  position: fixed;
+  inset: 0;
+  display: none;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 40;
+}
+body.show-help #hud-help {
+  display: grid;
+}
+#hud-help .card {
+  width: min(760px, calc(100vw - 32px));
+  padding: 20px 26px;
+  border-radius: 12px;
+  background: var(--frame);
+  border: 1px solid var(--gold-lo);
+  box-shadow:
+    0 0 0 2px #0c0a07,
+    0 0 0 3px var(--gold-lo),
+    0 12px 40px rgba(0, 0, 0, 0.7);
+}
+#hud-help h2 {
+  margin: 0 0 12px;
+  font-family: var(--title);
+  color: var(--gold-hi);
+  letter-spacing: 0.1em;
+}
+#hud-help h4 {
+  margin: 0 0 6px;
+  font-family: var(--title);
+  color: var(--gold);
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+#hud-help .cols {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+#hud-help p {
+  margin: 4px 0;
+  font-size: 13px;
+  color: var(--ink-dim);
+}
+#hud-help .hint {
+  margin-top: 14px;
+  color: var(--ink);
+}
+
+/* --- Debug bilgi kutusu (yalnızca ?debug) --------------------------------------------------- */
+#hud {
+  position: fixed;
+  right: 12px;
+  top: 64px;
+  display: none;
+  gap: 6px;
+  pointer-events: none;
+  max-width: min(640px, calc(100vw - 24px));
+  z-index: 8;
+}
+body.debug #hud {
+  display: grid;
 }
 #hud > div {
   background: var(--panel);
@@ -40,7 +831,8 @@ body {
   padding: 6px 10px;
 }
 #hud-title {
-  font-size: 15px;
+  font-family: var(--title);
+  font-size: 13px;
   letter-spacing: 0.18em;
   color: var(--gold);
 }
@@ -57,20 +849,20 @@ body {
     monospace;
   white-space: pre;
 }
-#hud-help {
-  font-size: 12px;
-  color: var(--ink-dim);
-}
+
+/* --- Yükleme, seçim kutusu -------------------------------------------------------------- */
 #boot {
   position: fixed;
   inset: 0;
   display: grid;
   place-items: center;
-  font-size: 20px;
-  letter-spacing: 0.1em;
+  font-family: var(--title);
+  font-size: 22px;
+  letter-spacing: 0.14em;
   color: var(--gold);
   background: #1a1916;
   transition: opacity 0.4s;
+  z-index: 60;
 }
 #boot.done {
   opacity: 0;
@@ -79,9 +871,9 @@ body {
 #boot.error {
   color: #e36b5a;
   font-size: 15px;
-  padding: 24px;
-  text-align: center;
   white-space: pre-wrap;
+  text-align: center;
+  padding: 24px;
 }
 #selbox {
   position: fixed;
@@ -90,324 +882,8 @@ body {
   border: 1px solid #f2cf63;
   background: rgba(242, 207, 99, 0.12);
 }
-#matchbar {
-  position: fixed;
-  top: 10px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  flex-wrap: wrap;
-  justify-content: center;
-  width: max-content;
-  max-width: calc(100vw - 24px);
-  pointer-events: none;
-}
-#matchbar > div {
-  background: var(--panel);
-  border: 1px solid rgba(201, 162, 58, 0.45);
-  border-radius: 6px;
-  padding: 6px 10px;
-  font-size: 13px;
-}
-#matchbar .wave {
-  color: var(--ink);
-  letter-spacing: 0.02em;
-}
-#matchbar .gate {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-#matchbar .gate .bar {
-  width: 90px;
-  height: 8px;
-  background: rgba(0, 0, 0, 0.5);
-  border-radius: 4px;
-  overflow: hidden;
-}
-#matchbar .gate .bar i {
-  display: block;
-  height: 100%;
-  width: 100%;
-  background: linear-gradient(90deg, #8fbf5a, #c9e08a);
-  transition: width 0.2s;
-}
-#matchbar .gate.danger .bar i {
-  background: linear-gradient(90deg, #c2281e, #e36b5a);
-}
-#matchbar .gate {
-  pointer-events: auto;
-}
-#matchbar .gate button.repair {
-  font: inherit;
-  font-size: 11px;
-  padding: 2px 8px;
-  color: #f0c95a;
-  background: #2a241b;
-  border: 1px solid rgba(201, 162, 58, 0.6);
-  border-radius: 4px;
-  cursor: pointer;
-}
-#matchbar .gate button.repair:disabled {
-  opacity: 0.4;
-  cursor: default;
-}
-#matchbar .gate.repairing .bar i {
-  background: linear-gradient(90deg, #3d86c6, #8fd0ff);
-}
-#matchbar .gate .hp {
-  font:
-    12px ui-monospace,
-    Menlo,
-    monospace;
-  color: var(--ink-dim);
-  min-width: 3.5em;
-  text-align: right;
-}
-#endscreen {
-  position: fixed;
-  inset: 0;
-  display: none;
-  place-items: center;
-  background: rgba(10, 9, 8, 0.55);
-}
-#endscreen.show {
-  display: grid;
-}
-#endscreen .card {
-  background: var(--panel);
-  border: 1px solid var(--gold);
-  border-radius: 10px;
-  padding: 28px 40px;
-  text-align: center;
-  max-width: calc(100vw - 32px);
-}
-#endscreen h1 {
-  margin: 0 0 8px;
-  letter-spacing: 0.3em;
-  font-size: 40px;
-}
-#endscreen .victory h1 {
-  color: var(--gold);
-}
-#endscreen .defeat h1 {
-  color: #e36b5a;
-}
-#endscreen p {
-  color: var(--ink-dim);
-  margin: 0 0 18px;
-}
-#endscreen button {
-  font: inherit;
-  color: #1a1916;
-  background: var(--gold);
-  border: 0;
-  border-radius: 6px;
-  padding: 8px 18px;
-  cursor: pointer;
-}
 
-/* --- Komut paneli (alt orta) ------------------------------------------------ */
-#cmdpanel {
-  position: fixed;
-  left: 50%;
-  bottom: 12px;
-  transform: translateX(-50%);
-  width: min(620px, calc(100vw - 24px));
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 10px;
-  align-items: stretch;
-  background: linear-gradient(180deg, rgba(34, 30, 24, 0.92), rgba(16, 14, 11, 0.92));
-  border: 1px solid rgba(201, 162, 58, 0.7);
-  box-shadow:
-    0 0 0 3px rgba(12, 10, 8, 0.65),
-    0 8px 24px rgba(0, 0, 0, 0.5);
-  border-radius: 8px;
-  padding: 8px 10px;
-  user-select: none;
-}
-#cmdpanel .gold {
-  display: grid;
-  place-content: center;
-  text-align: center;
-  min-width: 82px;
-  padding: 0 10px 0 2px;
-  border-right: 1px solid rgba(201, 162, 58, 0.35);
-}
-#cmdpanel .gold b {
-  font-size: 24px;
-  color: #f0c95a;
-  text-shadow: 0 0 8px rgba(240, 201, 90, 0.35);
-}
-#cmdpanel .gold span {
-  font-size: 11px;
-  color: var(--ink-dim);
-}
-#cmdpanel .body {
-  display: grid;
-  gap: 6px;
-  min-height: 74px;
-  align-content: center;
-}
-#cmdpanel .title {
-  font-size: 13px;
-  letter-spacing: 0.08em;
-  color: var(--gold);
-  text-transform: uppercase;
-}
-#cmdpanel .row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  align-items: stretch;
-}
-#cmdpanel .hint {
-  font-size: 12px;
-  color: var(--ink-dim);
-}
-#cmdpanel svg {
-  width: 26px;
-  height: 26px;
-  flex: none;
-}
-#cmdpanel .cmd {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 12px 6px 8px;
-  background: linear-gradient(180deg, #3b3427, #241f17);
-  border: 1px solid rgba(201, 162, 58, 0.6);
-  border-radius: 6px;
-  color: var(--ink);
-  font: inherit;
-  font-size: 13px;
-  cursor: pointer;
-}
-#cmdpanel .cmd:hover {
-  border-color: #f0c95a;
-  background: linear-gradient(180deg, #4a4130, #2c261c);
-}
-#cmdpanel .cmd.off {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-#cmdpanel .cmd em {
-  font-style: normal;
-  color: #f0c95a;
-  margin-left: 2px;
-}
-#cmdpanel .cmd em::before {
-  content: "◆ ";
-  font-size: 9px;
-}
-#cmdpanel .cmd.stop {
-  color: #f2b7a8;
-}
-#cmdpanel kbd {
-  position: absolute;
-  top: -7px;
-  right: -5px;
-  font:
-    10px / 14px ui-monospace,
-    monospace;
-  padding: 0 4px;
-  background: #15120e;
-  border: 1px solid rgba(201, 162, 58, 0.6);
-  border-radius: 3px;
-  color: var(--gold);
-}
-#cmdpanel .unitcard {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  padding: 4px 10px 4px 6px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(201, 162, 58, 0.25);
-  border-radius: 6px;
-  min-width: 170px;
-}
-#cmdpanel .unitcard b {
-  display: block;
-  font-size: 13px;
-}
-#cmdpanel .unitcard span {
-  font-size: 11px;
-  color: var(--ink-dim);
-}
-#cmdpanel .hpbar {
-  display: block;
-  height: 5px;
-  margin-top: 3px;
-  background: #15120e;
-  border-radius: 2px;
-  overflow: hidden;
-}
-#cmdpanel .hpbar > i {
-  display: block;
-  height: 100%;
-  background: linear-gradient(90deg, #6cc04a, #a6dc5a);
-}
-#cmdpanel .hpbar.build > i {
-  background: linear-gradient(90deg, #3d86c6, #6db8f0);
-}
-#cmdpanel .queue {
-  display: flex;
-  gap: 4px;
-}
-#cmdpanel .queue .q {
-  position: relative;
-  display: grid;
-  place-items: center;
-  width: 34px;
-  height: 34px;
-  background: #1b1712;
-  border: 1px solid rgba(201, 162, 58, 0.35);
-  border-radius: 4px;
-  overflow: hidden;
-  opacity: 0.6;
-}
-#cmdpanel .queue .q.head {
-  opacity: 1;
-  border-color: #f0c95a;
-}
-#cmdpanel .queue .q > i {
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  height: 3px;
-  background: #f0c95a;
-}
-#cmdpanel .queue svg {
-  width: 20px;
-  height: 20px;
-}
-body.debug #hud {
-  top: 12px;
-  bottom: auto;
-  max-width: min(640px, calc(100vw - 24px));
-}
-@media (max-width: 1100px) {
-  #hud {
-    display: none;
-  }
-}
-#cmdpanel .cmd em.done,
-#cmdpanel em.fire {
-  color: #ffa24a;
-  font-style: normal;
-}
-#cmdpanel .cmd em.done::before {
-  content: "";
-}
-#cmdpanel .cmd.done {
-  border-color: #ffa24a;
-}
-
-/* --- Dalga duyurusu ------------------------------------------------------------ */
+/* --- Dalga duyurusu, boss çubuğu ----------------------------------------------------------- */
 #wavebanner {
   position: fixed;
   left: 50%;
@@ -419,23 +895,26 @@ body.debug #hud {
   text-shadow:
     0 2px 12px rgba(0, 0, 0, 0.9),
     0 0 2px #000;
+  z-index: 20;
 }
 #wavebanner.show {
   animation: wavein 4.2s ease forwards;
 }
 #wavebanner small {
   display: block;
-  font-size: 14px;
+  font-family: var(--title);
+  font-size: 13px;
   letter-spacing: 0.4em;
   color: var(--ink-dim);
   text-transform: uppercase;
 }
 #wavebanner b {
   display: block;
-  font-size: 44px;
+  font-family: var(--title);
+  font-size: 46px;
+  font-weight: 700;
   letter-spacing: 0.08em;
-  color: #f0c95a;
-  font-weight: normal;
+  color: var(--gold-hi);
 }
 #wavebanner span {
   display: block;
@@ -459,171 +938,28 @@ body.debug #hud {
     opacity: 0;
   }
 }
-
-/* --- Mini harita (sağ alt) ------------------------------------------------------ */
-#minimap {
-  position: fixed;
-  right: 12px;
-  bottom: 12px;
-  padding: 5px;
-  background: linear-gradient(180deg, rgba(34, 30, 24, 0.92), rgba(16, 14, 11, 0.92));
-  border: 1px solid rgba(201, 162, 58, 0.7);
-  box-shadow: 0 0 0 3px rgba(12, 10, 8, 0.65);
-  border-radius: 8px;
-  line-height: 0;
-}
-#minimap canvas {
-  border-radius: 4px;
-  cursor: crosshair;
-}
-@media (max-width: 1100px) {
-  #minimap {
-    display: none;
-  }
-}
-#cmdpanel em.rank {
-  color: #f0c95a;
-  font-style: normal;
-  font-size: 11px;
-}
-
-/* --- Kahraman + Spellbook çubuğu (komut panelinin üstü) -------------------------- */
-#spellbar {
-  position: fixed;
-  left: 50%;
-  bottom: 132px;
-  transform: translateX(-50%);
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 6px;
-  align-items: stretch;
-  width: max-content;
-  max-width: calc(100vw - 24px);
-  user-select: none;
-}
-#spellbar button {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 9px 4px 6px;
-  background: linear-gradient(180deg, rgba(40, 35, 27, 0.94), rgba(20, 17, 13, 0.94));
-  border: 1px solid rgba(201, 162, 58, 0.6);
-  border-radius: 6px;
-  color: var(--ink);
-  font: inherit;
-  cursor: pointer;
-  text-align: left;
-}
-#spellbar button:hover {
-  border-color: #f0c95a;
-}
-#spellbar svg {
-  width: 24px;
-  height: 24px;
-  flex: none;
-}
-#spellbar b {
-  display: block;
-  font-size: 12px;
-  font-weight: normal;
-}
-#spellbar small {
-  display: block;
-  font-size: 11px;
-  color: var(--ink-dim);
-}
-#spellbar kbd {
-  position: absolute;
-  top: -7px;
-  right: -5px;
-  font:
-    10px / 14px ui-monospace,
-    monospace;
-  padding: 0 4px;
-  background: #15120e;
-  border: 1px solid rgba(201, 162, 58, 0.6);
-  border-radius: 3px;
-  color: var(--gold);
-}
-#spellbar button.hero {
-  border-color: #c9d6ea;
-}
-#spellbar button.spell {
-  flex-direction: column;
-  gap: 1px;
-  min-width: 58px;
-  padding: 5px 6px 3px;
-  text-align: center;
-}
-#spellbar button.spell small {
-  font-size: 10px;
-}
-#spellbar button.hero.alive svg {
-  color: #c9e0ff;
-  filter: drop-shadow(0 0 4px #9cc4ff);
-}
-#spellbar button.off,
-#spellbar button[data-state="locked"],
-#spellbar button[data-state="cd"] {
-  opacity: 0.5;
-}
-#spellbar button[data-state="locked"] svg,
-#spellbar button[data-state="open"] svg {
-  color: #8a8172;
-}
-#spellbar button[data-state="open"] {
-  border-style: dashed;
-}
-#spellbar button[data-state="open"] small {
-  color: #f0c95a;
-}
-#spellbar button[data-state="ready"] svg {
-  color: #f0c95a;
-}
-#spellbar button.active {
-  box-shadow: 0 0 12px rgba(240, 201, 90, 0.7);
-}
-#spellbar .pp {
-  display: grid;
-  place-content: center;
-  text-align: center;
-  padding: 0 10px;
-  background: rgba(20, 17, 13, 0.9);
-  border: 1px solid rgba(160, 190, 255, 0.45);
-  border-radius: 6px;
-}
-#spellbar .pp b {
-  font-size: 18px;
-  color: #b9d3ff;
-}
-#spellbar .pp span {
-  font-size: 10px;
-  color: var(--ink-dim);
-}
-
-/* --- Boss çubuğu --------------------------------------------------------------- */
 #bossbar {
   position: fixed;
   left: 50%;
-  top: 58px;
+  top: 78px;
   transform: translateX(-50%);
   display: none;
   gap: 4px;
   text-align: center;
   pointer-events: none;
+  font-family: var(--title);
   font-size: 12px;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   color: #ffb3a3;
   text-shadow: 0 1px 6px #000;
+  z-index: 9;
 }
 #bossbar.show {
   display: grid;
 }
 #bossbar .bar {
   display: block;
-  width: 340px;
+  width: 360px;
   height: 10px;
   background: rgba(0, 0, 0, 0.6);
   border: 1px solid rgba(220, 80, 60, 0.7);
@@ -636,16 +972,72 @@ body.debug #hud {
   background: linear-gradient(90deg, #8a1810, #e0442e);
 }
 
-/* --- Başlangıç ekranı ---------------------------------------------------------- */
+/* --- Zafer / yenilgi ------------------------------------------------------------------------ */
+#endscreen {
+  position: fixed;
+  inset: 0;
+  display: none;
+  place-items: center;
+  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.75));
+  z-index: 50;
+}
+#endscreen.show {
+  display: grid;
+}
+#endscreen .card {
+  text-align: center;
+  padding: 28px 48px;
+  border-radius: 14px;
+  background: var(--frame);
+  box-shadow:
+    0 0 0 2px #0c0a07,
+    0 0 0 3px var(--gold-lo),
+    0 14px 40px rgba(0, 0, 0, 0.7);
+}
+#endscreen small {
+  font-family: var(--title);
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+#endscreen h1 {
+  margin: 6px 0 8px;
+  font-family: var(--title);
+  font-size: 54px;
+  letter-spacing: 0.12em;
+}
+#endscreen .victory h1 {
+  color: var(--gold-hi);
+}
+#endscreen .defeat h1 {
+  color: #e36b5a;
+}
+#endscreen p {
+  color: var(--ink-dim);
+  margin: 0 0 18px;
+}
+#endscreen button {
+  padding: 9px 30px;
+  font-family: var(--title);
+  font-size: 15px;
+  letter-spacing: 0.1em;
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #1a1916;
+  background: linear-gradient(180deg, var(--gold-hi), var(--gold));
+}
+
+/* --- Başlangıç ekranı ---------------------------------------------------------------------- */
 #startscreen {
   position: fixed;
   inset: 0;
-  z-index: 50;
+  z-index: 70;
   display: grid;
   place-items: center;
   padding: 16px;
   background:
-    radial-gradient(ellipse at 50% 30%, rgba(80, 90, 110, 0.35), transparent 60%),
+    radial-gradient(ellipse at 50% 25%, rgba(90, 100, 120, 0.35), transparent 60%),
     linear-gradient(180deg, #1c2029, #0f0e0c);
   transition: opacity 0.4s;
   overflow-y: auto;
@@ -655,126 +1047,136 @@ body.debug #hud {
   pointer-events: none;
 }
 #startscreen .card {
-  width: min(760px, 100%);
+  width: min(980px, 100%);
   text-align: center;
 }
 #startscreen small {
+  font-family: var(--title);
   letter-spacing: 0.4em;
   text-transform: uppercase;
   color: var(--ink-dim);
   font-size: 12px;
 }
 #startscreen h1 {
-  margin: 8px 0 10px;
-  font-size: clamp(34px, 7vw, 60px);
-  font-weight: normal;
-  letter-spacing: 0.08em;
-  color: #f0c95a;
-  text-shadow: 0 2px 18px rgba(240, 201, 90, 0.25);
+  margin: 6px 0 8px;
+  font-family: var(--title);
+  font-size: clamp(40px, 8vw, 72px);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--gold-hi);
+  text-shadow: 0 2px 22px rgba(240, 201, 90, 0.25);
 }
 #startscreen p {
   color: var(--ink-dim);
   line-height: 1.55;
-  max-width: 620px;
-  margin: 0 auto 18px;
+  max-width: 680px;
+  margin: 0 auto 16px;
 }
+#startscreen .maps,
 #startscreen .diffs {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-  gap: 10px;
-  margin-bottom: 18px;
-}
-#startscreen .diffs button {
-  display: grid;
-  gap: 4px;
-  padding: 14px 12px;
-  text-align: left;
-  font: inherit;
-  color: var(--ink);
-  background: rgba(30, 27, 22, 0.85);
-  border: 1px solid rgba(201, 162, 58, 0.35);
-  border-radius: 8px;
-  cursor: pointer;
-}
-#startscreen .diffs button.sel {
-  border-color: #f0c95a;
-  box-shadow:
-    0 0 0 1px #f0c95a,
-    0 0 18px rgba(240, 201, 90, 0.2);
-}
-#startscreen .diffs b {
-  font-size: 18px;
-  font-weight: normal;
-  color: #f0c95a;
-}
-#startscreen .diffs span {
-  font-size: 13px;
-}
-#startscreen .diffs em {
-  font-style: normal;
-  font-size: 11px;
-  color: var(--ink-dim);
-}
-#startscreen .go {
-  font: inherit;
-  font-size: 18px;
-  letter-spacing: 0.08em;
-  padding: 10px 36px;
-  color: #1a1916;
-  background: linear-gradient(180deg, #f0c95a, #c9a23a);
-  border: 0;
-  border-radius: 6px;
-  cursor: pointer;
-}
-#startscreen .keys {
-  margin-top: 16px;
-  font-size: 12px;
-}
-#startscreen .maps {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 10px;
   margin-bottom: 14px;
 }
-#startscreen .maps button {
+#startscreen .maps button,
+#startscreen .diffs button {
   display: grid;
+  align-content: start;
   gap: 4px;
   padding: 12px;
   text-align: left;
-  font: inherit;
   color: var(--ink);
-  background: rgba(30, 27, 22, 0.85);
+  background: linear-gradient(180deg, rgba(42, 36, 27, 0.92), rgba(20, 17, 13, 0.92));
   border: 1px solid rgba(201, 162, 58, 0.35);
-  border-radius: 8px;
+  border-radius: 9px;
   cursor: pointer;
 }
-#startscreen .maps button.sel {
-  border-color: #f0c95a;
+#startscreen .maps button.sel,
+#startscreen .diffs button.sel {
+  border-color: var(--gold-hi);
   box-shadow:
-    0 0 0 1px #f0c95a,
-    0 0 18px rgba(240, 201, 90, 0.2);
+    0 0 0 1px var(--gold-hi),
+    0 0 18px rgba(240, 201, 90, 0.22);
 }
-#startscreen .maps b {
-  font-size: 17px;
-  font-weight: normal;
-  color: #f0c95a;
+#startscreen .maps b,
+#startscreen .diffs b {
+  font-family: var(--title);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--gold-hi);
 }
-#startscreen .maps span {
+#startscreen .maps span,
+#startscreen .diffs span {
   font-size: 12px;
   line-height: 1.4;
 }
-#startscreen .maps em {
+#startscreen .maps em,
+#startscreen .diffs em {
   font-style: normal;
   font-size: 11px;
   color: var(--ink-dim);
 }
 #startscreen .mode {
   font-style: normal;
-  font-size: 10px;
+  font-family: var(--title);
+  font-size: 9.5px;
   letter-spacing: 0.15em;
   text-transform: uppercase;
   color: #9cc4ff;
 }
 #startscreen .mode.TD {
   color: #b6e39a;
+}
+#startscreen .go {
+  font-family: var(--title);
+  font-size: 18px;
+  letter-spacing: 0.12em;
+  padding: 11px 40px;
+  color: #1a1916;
+  background: linear-gradient(180deg, var(--gold-hi), var(--gold));
+  border: 0;
+  border-radius: 7px;
+  cursor: pointer;
+  box-shadow:
+    0 0 0 2px #0c0a07,
+    0 0 0 3px var(--gold-lo);
+}
+#startscreen .keys {
+  margin-top: 16px;
+  font-size: 12px;
+}
+
+/* --- Dar ekran ------------------------------------------------------------------------------ */
+@media (max-width: 1180px) {
+  #cmdbar {
+    left: 262px;
+    width: calc(100vw - 274px);
+    grid-template-columns: 96px 1fr;
+    height: auto;
+  }
+  #cmdbar .medal {
+    width: 90px;
+    height: 90px;
+  }
+  #cmdbar .grid {
+    grid-column: 1 / -1;
+    grid-template-columns: repeat(6, 46px);
+  }
+  #resources > div:nth-child(3) {
+    display: none;
+  }
+}
+@media (max-width: 760px) {
+  #palantir {
+    transform: scale(0.7);
+    transform-origin: left bottom;
+  }
+  #powers {
+    transform: scale(0.85);
+    transform-origin: left top;
+  }
+  #status .fort {
+    min-width: 110px;
+  }
 }

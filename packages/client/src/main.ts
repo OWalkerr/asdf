@@ -1,13 +1,15 @@
 import { MAP_DEFS, type SlotDef, UnitTypeId } from '@bulwark/shared';
 import { buildNavGrid, createOpenGrid } from '@bulwark/sim';
-import { Scene, type Texture, Timer } from 'three/webgpu';
-import { CommandPanel } from './app/CommandPanel';
+import { Scene, type Texture, Timer, Vector3 } from 'three/webgpu';
 import { GALLERY_CENTER, updateGallery } from './app/gallery';
 import { MatchHud } from './app/MatchHud';
 import { Minimap } from './app/Minimap';
-import { SpellBar } from './app/SpellBar';
 import { chooseMatch } from './app/StartScreen';
 import { PLAYER, Scenario } from './app/scenario';
+import { CommandBar } from './app/ui/CommandBar';
+import { HudController } from './app/ui/HudController';
+import { PowersColumn } from './app/ui/PowersColumn';
+import { TopHud } from './app/ui/TopHud';
 import { AudioEngine } from './audio/AudioEngine';
 import { GameAudio } from './audio/GameAudio';
 import { createDebugPanel } from './debug/DebugPanel';
@@ -122,7 +124,6 @@ const boot = async () => {
   scene.add(...impacts.meshes);
   scene.add(cursor.mesh, marker.mesh, rings.mesh, arrows.mesh, arrows.stones);
   const hud = world.def && !gallery ? new MatchHud(world.def) : null;
-  if (hud) hud.onRepair = (gate) => scenario.repair(gate);
   // --- Ses (prosedürel WebAudio; ilk tıklamada açılır, M: sessiz) ---------------------
   const audioEngine = new AudioEngine();
   const sfx = new GameAudio(audioEngine);
@@ -156,19 +157,30 @@ const boot = async () => {
   if (fortressFx) scene.add(...fortressFx.meshes);
   const banners = new BattalionHud(palette, toon);
   if (!gallery) scene.add(...banners.meshes);
-  const panel =
-    world.def && structures && world.slots && !gallery
-      ? new CommandPanel({
-          def: world.def,
-          scenario,
-          units,
-          structures,
-          slots: world.slots,
-          selected: selection.selected,
-        })
-      : null;
-  if (panel) panel.onClick = () => sfx.click();
+  // Seçili şey: taburlar (Selection), inşa yuvası (SlotMarkers) veya kale (bu bayrak).
+  let fortressSelected = false;
+  const citadel = world.def?.citadel;
+  const fortressScreen = new Vector3();
   const input = new PlayerInput({
+    onSelectFortress: (on) => {
+      fortressSelected = on;
+    },
+    fortressPick: (sx, sy, w, h) => {
+      if (!citadel) return false;
+      const y = ground.sample(citadel.pos[0], citadel.pos[1]) + (citadel.elevation ?? 0) + 8;
+      fortressScreen.set(citadel.pos[0], y, citadel.pos[1]).project(cam.camera);
+      if (fortressScreen.z > 1) return false;
+      const px = ((fortressScreen.x + 1) / 2) * w;
+      const py = ((1 - fortressScreen.y) / 2) * h;
+      // Ekranda kalenin görünen boyutu: mesafeyle küçülür.
+      const r = Math.max(
+        40,
+        (1600 /
+          Math.max(20, cam.camera.position.distanceTo(new Vector3(citadel.pos[0], y, citadel.pos[1])))) *
+          10,
+      );
+      return Math.hypot(px - sx, py - sy) < r;
+    },
     canvas,
     selBox: document.getElementById('selbox') as HTMLDivElement,
     cam,
@@ -188,26 +200,79 @@ const boot = async () => {
   scene.add(...spellFx.meshes);
   input.onTargetHover = (x, y, z, r) => spellFx.showTarget(x, y, z, r);
   input.onTargetEnd = () => spellFx.hideTarget();
-  const spellBar =
-    world.def && !gallery
-      ? new SpellBar({
+  // --- BFME2 tarzı arayüz: komut çubuğu, güçler sütunu, üst arayüz ----------------------
+  const ui = world.def && structures && world.slots && !gallery;
+  const bar = ui ? new CommandBar() : null;
+  if (bar) bar.onClick = () => sfx.click();
+  const hudCtl =
+    ui && bar && world.def && structures && world.slots
+      ? new HudController({
+          def: world.def,
           scenario,
-          input,
-          fx: spellFx,
-          cam,
-          selection,
           units,
-          groundY: ground.sample,
-          onClick: () => sfx.click(),
+          structures,
+          slots: world.slots,
+          selected: selection.selected,
+          bar,
+          fortressSelected: () => fortressSelected,
+          gateRepair: () => structures.gateRepair,
         })
       : null;
-  if (panel)
-    panel.onAbility = (i) => {
+  if (hudCtl)
+    hudCtl.onAbility = (i) => {
       const hero = sim.frame.match.hero;
       units.forEach((x, y, z, b) => {
         if (b === hero)
           spellFx.pulse(x, y, z, i === 1 ? 15 : 4, i === 1 ? '#7dffa0' : '#9cc4ff', i === 1 ? 1.2 : 0.8);
       });
+    };
+  const powers = ui
+    ? new PowersColumn({
+        scenario,
+        input,
+        fx: spellFx,
+        cam,
+        groundY: ground.sample,
+        onClick: () => sfx.click(),
+      })
+    : null;
+  const top =
+    ui && world.def
+      ? new TopHud({
+          def: world.def,
+          scenario,
+          units,
+          structures,
+          cam,
+          onClick: () => sfx.click(),
+          selectHero: (hero) => {
+            selection.click(hero, false);
+            world.slots?.setSelected(-1);
+            fortressSelected = false;
+          },
+          selectFortress: () => {
+            selection.click(0, false);
+            world.slots?.setSelected(-1);
+            fortressSelected = true;
+          },
+        })
+      : null;
+  // Yardım penceresi + palantır düğmeleri.
+  const help = document.getElementById('hud-help');
+  const toggleHelp = () => document.body.classList.toggle('show-help');
+  window.addEventListener('keydown', (e) => {
+    if (e.key === '?' || e.code === 'F1') {
+      toggleHelp();
+      e.preventDefault();
+    }
+  });
+  help?.addEventListener('click', () => document.body.classList.remove('show-help'));
+  if (minimap)
+    minimap.onButton = (a) => {
+      if (a === 'help') toggleHelp();
+      else if (a === 'sound') audioEngine.setMuted(!audioEngine.isMuted);
+      else if (a === 'home') cam.lookAt(world.home.x, world.home.z);
+      sfx.click();
     };
   // Nav ızgarası debug katmanı (sim'in kullandığı ızgaranın aynısı).
   const navOverlay = buildNavOverlay(
@@ -279,8 +344,19 @@ const boot = async () => {
         structures?.bySlot.values() ?? [],
         world.slots?.selectedIndex ?? -1,
       );
-    panel?.update(sim.frame.match, sim.tick);
-    spellBar?.update(sim.frame.match, sim.tick);
+    hudCtl?.update(sim.frame.match, sim.tick);
+    powers?.update(sim.frame.match, sim.tick);
+    top?.update(sim.frame.match, sim.tick);
+    // Kale seçiliyken çevresinde altın halka.
+    if (fortressSelected && citadel) {
+      if (selection.selected.size > 0 || (world.slots?.selectedIndex ?? -1) >= 0) fortressSelected = false;
+      spellFx.showSelect(
+        citadel.pos[0],
+        ground.sample(citadel.pos[0], citadel.pos[1]) + (citadel.elevation ?? 0),
+        citadel.pos[1],
+        citadel.radius + 2,
+      );
+    } else spellFx.hideSelect();
     spellFx.update(dt);
     if (!gallery && world.def) {
       sfx.setListener(cam.target.x, cam.target.z, cam.zoom01);
@@ -317,7 +393,7 @@ const boot = async () => {
         );
       }
       info.textContent = lines.join('\n');
-      hud?.update(sim.frame.match, sim.tick, structures?.gateRepair);
+      hud?.update(sim.frame.match);
       let boss: number | null = null;
       units.forEach((_x, _y, _z, b, _t, hp, type) => {
         if (b !== 0 && type === UnitTypeId.Lurtz) boss = hp;

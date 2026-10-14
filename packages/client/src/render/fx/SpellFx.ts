@@ -26,6 +26,7 @@ export class SpellFx {
   readonly meshes: InstancedMesh[];
   private readonly pulses: InstancedMesh;
   private readonly target: InstancedMesh;
+  private readonly select: InstancedMesh;
   private readonly list: Pulse[] = [];
   private readonly m = new Matrix4();
   private readonly q = new Quaternion();
@@ -47,7 +48,13 @@ export class SpellFx {
     }
     this.pulses.name = 'spell-pulses';
     this.target.name = 'spell-target';
-    this.meshes = [this.pulses, this.target];
+    this.select = new InstancedMesh(new RingGeometry(0.9, 1, 64).rotateX(-Math.PI / 2), mat(), 1);
+    this.select.setColorAt(0, new Color('#f2cf63'));
+    this.select.frustumCulled = false;
+    this.select.renderOrder = 6;
+    this.select.count = 0;
+    this.select.name = 'select-ring';
+    this.meshes = [this.pulses, this.target, this.select];
   }
 
   /** Hedefleme halkasını göster/gizle. */
@@ -62,6 +69,18 @@ export class SpellFx {
 
   hideTarget(): void {
     this.target.count = 0;
+  }
+
+  /** Seçili yapı (kale) çevresinde kalıcı altın halka. */
+  showSelect(x: number, y: number, z: number, radius: number): void {
+    this.m.compose(this.p.set(x, y + 0.35, z), this.q.identity(), this.s.set(radius, 1, radius));
+    this.select.setMatrixAt(0, this.m);
+    this.select.instanceMatrix.needsUpdate = true;
+    this.select.count = 1;
+  }
+
+  hideSelect(): void {
+    this.select.count = 0;
   }
 
   /** Genişleyen halka: üç iç içe dalga. */

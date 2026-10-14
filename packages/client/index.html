@@ -5,19 +5,44 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Bulwark — Middle-earth Fortress Defense</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M2 15V6l3-2v3l3-3 3 3V4l3 2v9z' fill='%23c9a23a'/%3E%3C/svg%3E" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&display=swap" />
     <link rel="stylesheet" href="/src/style.css" />
   </head>
   <body>
     <canvas id="view"></canvas>
     <div id="selbox"></div>
     <div id="hud">
-      <div id="hud-title">BULWARK <span>· Phase 1 look-dev</span></div>
+      <div id="hud-title">BULWARK <span></span></div>
       <div id="hud-info"></div>
-      <div id="hud-help">
-        WASD / kenar: kaydır · Q/E: döndür · Tekerlek: zoom · Orta tuş: sürükle<br />
-        Z X C V: panel · F: Aragorn · 1–6: büyüler · H: dur · Esc: iptal · M: ses
-      </div>
     </div>
+    <div id="hud-help">
+        <div class="card">
+          <h2>Kontroller</h2>
+          <div class="cols">
+            <div>
+              <h4>Kamera</h4>
+              <p><kbd>W A S D</kbd> / ekran kenarı: kaydır</p>
+              <p><kbd>Q</kbd> <kbd>E</kbd> veya Alt + sürükle: döndür</p>
+              <p>Tekerlek: yakınlaş · Orta tuş: sürükle</p>
+              <p><kbd>Space</kbd>: başlangıç görünümü</p>
+            </div>
+            <div>
+              <h4>Birlikler</h4>
+              <p>Sol tık / kutu: seç · <kbd>Shift</kbd>: ekle</p>
+              <p>Sağ tık: yürü · düşmana sağ tık: saldır</p>
+              <p><kbd>H</kbd>: dur · <kbd>Esc</kbd>: seçimi / hedeflemeyi bırak</p>
+            </div>
+            <div>
+              <h4>Komuta</h4>
+              <p><kbd>Z X C V B N</kbd>: komut düğmeleri</p>
+              <p><kbd>F</kbd>: Aragorn · <kbd>K</kbd>: kale</p>
+              <p><kbd>1</kbd>–<kbd>6</kbd>: güçler · <kbd>M</kbd>: ses · <kbd>?</kbd>: bu pencere</p>
+            </div>
+          </div>
+          <p class="hint">Altın halkalı yuvalara kule ve bina kur. Kale düşerse savaş biter; kapılar kırılınca düşman içeri akar.</p>
+        </div>
+      </div>
     <div id="boot">Orta Dünya yükleniyor…</div>
     <script type="module" src="/src/main.ts"></script>
   </body>

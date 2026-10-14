@@ -99,7 +99,7 @@ export const createGenericHeight = (def: MapDef): HeightFn => {
     for (const road of t.roads ?? []) {
       const d = polyDist(x, z, road.points);
       if (td) h += smoothstep(road.width / 2, road.width / 2 + 5, d) * 1.6 - 0.4;
-      else h += (Math.min(h, 0.4) - h) * (1 - smoothstep(road.width / 2, road.width / 2 + 3, d)) * 0.5;
+      else h += (Math.min(h, 0.4) - h) * (1 - smoothstep(road.width / 2 + 1, road.width / 2 + 5, d));
     }
     for (const river of t.rivers ?? []) {
       const d = polyDist(x, z, river.points);
@@ -122,8 +122,6 @@ const createGenericPaint = (def: MapDef): PaintFn => {
     if (avgY > 34) return 'snow';
     if (avgY > 16) return 'rockDark';
     for (const b of t.bridges ?? []) if (segDist(x, z, b.a, b.b).d < b.width / 2) return 'helmStone';
-    for (const road of t.roads ?? [])
-      if (polyDist(x, z, road.points) < road.width / 2) return def.mode === 'TD' ? 'dirt' : 'dirtDark';
     for (const p of t.plateaus)
       if (Math.hypot(x - p.center[0], z - p.center[1]) < p.radius - 4) return 'rockLight';
     const n = valueNoise(x / 16, z / 16, def.seed + 99);
@@ -391,7 +389,7 @@ const roadRibbon = (
   const edge = (x: number, z: number, nx: number, nz: number, s: number): [number, number, number] => {
     const px = x + nx * s;
     const pz = z + nz * s;
-    return [px, heightAt(px, pz) + 0.12, pz];
+    return [px, heightAt(px, pz) + 0.45, pz];
   };
   for (let i = 0; i + 1 < samples.length; i++) {
     const [x0, z0, dx0, dz0] = samples[i] as [number, number, number, number];
@@ -406,10 +404,10 @@ const roadRibbon = (
       const b = edge(x0, z0, n0[0] as number, n0[1] as number, lanes[k + 1] as number);
       const c = edge(x1, z1, n1[0] as number, n1[1] as number, lanes[k] as number);
       const d = edge(x1, z1, n1[0] as number, n1[1] as number, lanes[k + 1] as number);
-      pos.push(...a, ...c, ...b, ...b, ...c, ...d);
+      pos.push(...a, ...b, ...c, ...b, ...d, ...c);
       const sa = shade[k] as number;
       const sb = shade[k + 1] as number;
-      col.push(sa, sa, sa, sa, sa, sa, sb, sb, sb, sb, sb, sb, sa, sa, sa, sb, sb, sb);
+      col.push(sa, sa, sa, sb, sb, sb, sa, sa, sa, sb, sb, sb, sb, sb, sb, sa, sa, sa);
     }
   }
   const g = new BufferGeometry();

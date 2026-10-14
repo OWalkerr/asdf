@@ -53,6 +53,8 @@ export class StructureRenderer {
   readonly bySlot = new Map<number, StructInfo>();
   /** Kapı indeksi → kalan onarım tick'i (0 = onarılmıyor). */
   readonly gateRepair: number[] = [];
+  /** Kale (kind 9) canı. */
+  fortress: { hp: number; max: number } | null = null;
   private readonly kindMeshes: InstancedMesh[] = [];
   private readonly scaffold: InstancedMesh;
   private readonly m = new Matrix4();
@@ -104,6 +106,10 @@ export class StructureRenderer {
       const slot = unpackStructSlot(kp);
       if (kind < 0) {
         this.gateRepair[slot] = st[o + 4] as number;
+        continue;
+      }
+      if (kind === 8) {
+        this.fortress = { hp: st[o + 2] as number, max: st[o + 3] as number };
         continue;
       }
       const kindKey = BUILDING_KINDS[kind];

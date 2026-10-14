@@ -88,6 +88,11 @@ export class Scenario {
     this.sim.send({ type: 'castSpell', spell, x: fxFromFloat(x), z: fxFromFloat(z) }, PLAYER);
   }
 
+  /** Kale yükseltmesi. */
+  fortressUpgrade(upgrade: number): void {
+    this.sim.send({ type: 'fortressUpgrade', upgrade }, PLAYER);
+  }
+
   /** Seçili taburları durdur. */
   stop(battalions: Iterable<number>): void {
     const units = [...battalions];

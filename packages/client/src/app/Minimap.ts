@@ -3,13 +3,14 @@ import { type PerspectiveCamera, Plane, Raycaster, Vector2, Vector3 } from 'thre
 import type { RTSCamera } from '../render/camera/RTSCamera';
 import type { StructureRenderer } from '../render/structures/StructureRenderer';
 import type { UnitRenderer } from '../render/units/UnitRenderer';
+import { icon } from './ui/icons';
 
 /**
  * Mini harita (GDD §11.1, sağ alt): arazi bir kez rasterize edilir; 10 Hz'de birlik noktaları,
  * yapılar, kapılar ve kameranın yer izdüşümü çizilir. Tıkla/sürükle → kamera oraya kayar.
  * Kuzey (−Z) yukarıda.
  */
-const SIZE = 184;
+const SIZE = 196;
 const TEAM = ['#6fa8ff', '#ff5a4a', '#5ad16a', '#f0c95a'];
 
 export class Minimap {
@@ -21,6 +22,8 @@ export class Minimap {
   private readonly hit = new Vector3();
   private readonly ndc = new Vector2();
   private accum = 1;
+  /** Palantír çevresindeki düğmeler (help / sound / home). */
+  onButton: ((action: string) => void) | null = null;
   private dragging = false;
 
   constructor(
@@ -29,7 +32,20 @@ export class Minimap {
     private readonly cam: RTSCamera,
   ) {
     const root = document.createElement('div');
-    root.id = 'minimap';
+    root.id = 'palantir';
+    // BFME2 palantírı: yuvarlak görüş taşı, süslü metal halka ve çevresinde küçük düğmeler.
+    const ring = document.createElement('div');
+    ring.className = 'frame';
+    root.appendChild(ring);
+    const btns = document.createElement('div');
+    btns.className = 'pbtns';
+    btns.innerHTML = `<button type="button" data-a="help" title="Kontroller (?)">${icon('help')}</button><button type="button" data-a="sound" title="Ses (M)">${icon('sound')}</button><button type="button" data-a="home" title="Kaleye dön (Space)">${icon('castle')}</button>`;
+    btns.addEventListener('click', (e) => {
+      const el = (e.target as HTMLElement).closest('[data-a]') as HTMLElement | null;
+      if (el) this.onButton?.(el.dataset.a ?? '');
+    });
+    btns.addEventListener('pointerdown', (e) => e.stopPropagation());
+    root.appendChild(btns);
     this.canvas = document.createElement('canvas');
     const dpr = Math.min(2, window.devicePixelRatio || 1);
     this.canvas.width = this.canvas.height = SIZE * dpr;
@@ -119,11 +135,42 @@ export class Minimap {
       });
       g.stroke();
     }
-    const plateau = this.def.terrain.plateaus[0];
+    const plateau = this.def.id === 'helms_deep' ? this.def.terrain.plateaus[0] : undefined;
     if (plateau) {
       const [px, py] = this.toMap(plateau.center[0], plateau.center[1]);
       g.beginPath();
       g.arc(px, py, (19 * SIZE) / this.def.size, 0, Math.PI * 2);
+      g.stroke();
+    }
+    // Kale işareti
+    {
+      const [kx, ky] = this.toMap(this.def.citadel.pos[0], this.def.citadel.pos[1]);
+      g.fillStyle = '#f3ead6';
+      g.beginPath();
+      g.arc(kx, ky, 4, 0, Math.PI * 2);
+      g.fill();
+    }
+    // Yollar (TD/FD koridorları)
+    g.strokeStyle = 'rgba(150,110,70,0.85)';
+    g.lineWidth = 2;
+    for (const road of this.def.terrain.roads ?? []) {
+      g.beginPath();
+      road.points.forEach(([x, z], i) => {
+        const [px, py] = this.toMap(x, z);
+        if (i === 0) g.moveTo(px, py);
+        else g.lineTo(px, py);
+      });
+      g.stroke();
+    }
+    for (const river of this.def.terrain.rivers ?? []) {
+      g.strokeStyle = 'rgba(60,110,150,0.9)';
+      g.lineWidth = (river.width * SIZE) / this.def.size;
+      g.beginPath();
+      river.points.forEach(([x, z], i) => {
+        const [px, py] = this.toMap(x, z);
+        if (i === 0) g.moveTo(px, py);
+        else g.lineTo(px, py);
+      });
       g.stroke();
     }
     g.fillStyle = '#f0c95a';

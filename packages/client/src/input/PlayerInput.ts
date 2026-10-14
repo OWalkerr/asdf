@@ -28,6 +28,9 @@ export interface PlayerInputDeps {
   slots?: SlotMarkers | undefined;
   /** Slotun üzerindeki yapının yarı yüksekliği (ekran seçimi için), yoksa 0. */
   slotLift?: (slot: number) => number;
+  /** Ekran noktası kalenin üzerinde mi (kale seçimi). */
+  fortressPick?: (sx: number, sy: number, w: number, h: number) => boolean;
+  onSelectFortress?: (on: boolean) => void;
 }
 
 /** Alan büyüsü hedefleme: halka yarıçapı ve seçilen noktayla çağrılacak işlev. */
@@ -61,6 +64,7 @@ export class PlayerInput {
         }
         d.selection.click(0, false);
         d.slots?.setSelected(-1);
+        d.onSelectFortress?.(false);
       }
     });
   }
@@ -167,14 +171,17 @@ export class PlayerInput {
     if (drag.active) {
       selection.box(cam.camera, { x0: drag.x0, y0: drag.y0, x1: x, y1: y }, w, h, e.shiftKey);
       slots?.setSelected(-1);
+      this.d.onSelectFortress?.(false);
       return;
     }
     const battalion = selection.pick(cam.camera, x, y, w, h);
     if (battalion !== 0) {
       selection.click(battalion, e.shiftKey);
       slots?.setSelected(-1);
+      this.d.onSelectFortress?.(false);
       return;
     }
+    this.d.onSelectFortress?.(false);
     let slot = slots ? slots.pickScreen(cam.camera, x, y, w, h, this.d.slotLift ?? (() => 0)) : -1;
     if (slot < 0 && slots) {
       const hit = picker.pick(cam.camera, x, y, w, h);
@@ -182,6 +189,7 @@ export class PlayerInput {
     }
     slots?.setSelected(slot);
     if (!e.shiftKey) selection.click(0, false);
+    if (slot < 0 && this.d.fortressPick?.(x, y, w, h)) this.d.onSelectFortress?.(true);
   };
 
   private order(sx: number, sy: number): void {
