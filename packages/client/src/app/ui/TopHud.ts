@@ -1,4 +1,12 @@
-import { ECONOMY, type MapDef, type MatchInfo, MatchState, UNIT_DEFS, UnitTypeId } from '@bulwark/shared';
+import {
+  ECONOMY,
+  HERO,
+  type MapDef,
+  type MatchInfo,
+  MatchState,
+  UNIT_DEFS,
+  UnitTypeId,
+} from '@bulwark/shared';
 import type { RTSCamera } from '../../render/camera/RTSCamera';
 import type { StructureRenderer } from '../../render/structures/StructureRenderer';
 import type { UnitRenderer } from '../../render/units/UnitRenderer';
@@ -102,8 +110,12 @@ export class TopHud {
     const wait = m.hero === 0 && tick < m.heroReady ? fmt(m.heroReady - tick) : '';
     const heroState = m.hero !== 0 ? 'alive' : wait ? 'dead' : m.gold >= cost ? 'ready' : 'off';
     const heroHtml = `<span class="ring" style="--hp:${(m.hero ? hp : 0) * 360}deg"></span>${icon('hero')}<small>${
-      m.hero ? `${'★'.repeat(Math.max(0, rank - 1)) || 'Aragorn'}` : wait || `◆${cost}`
-    }</small><kbd>F</kbd>`;
+      m.hero ? `${'★'.repeat(Math.max(0, rank - 1)) || 'Aragorn'}` : wait ? 'Düştü' : `◆${cost}`
+    }</small>${wait ? `<b class="cdn">${Math.ceil(((m.heroReady - tick) * SIM_TICK_MS) / 1000)}</b>` : ''}<kbd>F</kbd>`;
+    this.heroBtn.style.setProperty(
+      '--p',
+      `${m.hero === 0 && wait ? (1 - (m.heroReady - tick) / (HERO.reviveTime * 20)) * 360 : 360}deg`,
+    );
     if (this.heroBtn.innerHTML !== heroHtml) this.heroBtn.innerHTML = heroHtml;
     this.heroBtn.dataset.state = heroState;
     this.heroBtn.title =
@@ -130,7 +142,9 @@ export class TopHud {
         : `<b>Dalga ${m.waveIndex} / ${m.waveCount}</b><span>${name ?? ''}${next ? ` · sonraki ${next}` : ''}</span>`;
     let defense = '';
     if (def.mode === 'TD') {
-      defense = `<div class="lives">${icon('heart')}<b>${m.lives}</b><span>can</span></div>`;
+      defense = `<div class="lives">${icon('heart')}<b>${m.lives}</b><span>can</span>${
+        m.zone > 0 ? `<em class="zone" title="Uç bölgede bekleyen düşman taburu">⚠ ${m.zone}</em>` : ''
+      }</div>`;
     } else {
       const gates = m.gateHp
         .map((g, i) => {

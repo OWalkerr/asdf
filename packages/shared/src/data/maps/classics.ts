@@ -125,7 +125,7 @@ export const TOWER_WARS: MapDef = {
   lives: 40,
   blurb:
     "Tower Wars: tek yol dört şeride ayrılır, 30 dalga. Dalga başı altın; uç bölgede bekleyen her tabur 4 sn'de 1 can götürür. 28. dalga: Trol Kralları.",
-  camera: { home: [0, 0], yaw: 0, distance: 215 },
+  camera: { home: [0, -20], yaw: 0, distance: 185 },
   citadel: {
     id: 'tw_base',
     name: 'Son Kale',
@@ -414,8 +414,8 @@ export const FORTRESS_DEFENCE: MapDef = {
     theme: 'meadow',
   },
   garrison: [
-    { unitType: UnitTypeId.GondorSoldier, pos: [0, 30], count: 1 },
-    { unitType: UnitTypeId.GondorSoldier, pos: [0, -30], count: 1 },
+    { unitType: UnitTypeId.GondorSoldier, pos: [-14, 28], count: 1 },
+    { unitType: UnitTypeId.GondorSoldier, pos: [14, -28], count: 1 },
     { unitType: UnitTypeId.GondorArcher, pos: [-28, 0], count: 1 },
     { unitType: UnitTypeId.GondorArcher, pos: [28, 0], count: 1 },
   ],

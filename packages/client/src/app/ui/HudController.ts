@@ -19,6 +19,7 @@ import type { UnitRenderer } from '../../render/units/UnitRenderer';
 import { SIM_TICK_MS } from '../../sim-host/protocol';
 import type { Scenario } from '../scenario';
 import type { CommandBar, CommandButton, CommandContext } from './CommandBar';
+import type { RadialAnchor, RadialMenu } from './RadialMenu';
 
 /**
  * Seçime göre komut çubuğu bağlamı (GDD §11.1): taburlar (kahraman yetenekleri), boş inşa
@@ -97,6 +98,9 @@ export interface HudDeps {
   /** Kale seçili mi (HeroBar / dünya tıklaması). */
   fortressSelected: () => boolean;
   gateRepair: () => readonly number[];
+  /** BFME tarzı halka menü (yapı/yuva/kale seçiliyken). */
+  radial?: RadialMenu;
+  groundY: (x: number, z: number) => number;
 }
 
 export class HudController {
@@ -112,15 +116,33 @@ export class HudController {
     this.tick = tick;
     const { selected, slots, structures } = this.d;
     let ctx: CommandContext;
+    let anchor: RadialAnchor | null = null;
     this.d.bar.stop = null;
     if (selected.size > 0) ctx = this.battalions();
-    else if (this.d.fortressSelected()) ctx = this.fortress();
-    else if (slots.selectedIndex >= 0)
-      ctx = structures.bySlot.has(slots.selectedIndex)
-        ? this.building(slots.selectedIndex)
-        : this.slot(slots.selectedIndex);
-    else ctx = this.idle();
+    else if (this.d.fortressSelected()) {
+      ctx = this.fortress();
+      const c = this.d.def.citadel;
+      const td = this.d.def.mode === 'TD';
+      anchor = {
+        x: c.pos[0],
+        y: this.d.groundY(c.pos[0], c.pos[1]) + (c.elevation ?? 0) + (td ? 9 : 13),
+        z: c.pos[1],
+      };
+    } else if (slots.selectedIndex >= 0) {
+      const i = slots.selectedIndex;
+      const st = structures.bySlot.get(i);
+      if (st) {
+        ctx = this.building(i);
+        anchor = { x: st.x, y: st.y + (st.top - st.y) * 0.5, z: st.z };
+      } else {
+        ctx = this.slot(i);
+        const sd = this.d.def.slots[i];
+        if (sd)
+          anchor = { x: sd.pos[0], y: this.d.groundY(sd.pos[0], sd.pos[1]) + sd.elevation + 1, z: sd.pos[1] };
+      }
+    } else ctx = this.idle();
     this.d.bar.render(ctx);
+    this.d.radial?.render(anchor ? ctx : null, anchor);
   }
 
   private get gold(): number {
@@ -188,8 +210,9 @@ export class HudController {
           icon: i === 0 ? 'blade' : 'leaf',
           label: a.name,
           state: locked ? 'locked' : active ? 'busy' : left > 0 ? 'busy' : 'ready',
-          badge: locked ? `R${a.rank}` : left > 0 ? `${left}` : undefined,
+          badge: locked ? `R${a.rank}` : undefined,
           progress: !locked && left > 0 ? 1 - left / a.cooldown : undefined,
+          cooldown: !locked && left > 0 ? left : undefined,
           tip: {
             title: a.name,
             meta: `Bekleme ${a.cooldown} sn${locked ? ` · rütbe ${a.rank} gerekir` : ''}`,
@@ -214,7 +237,7 @@ export class HudController {
       .join(' · ');
     const single = types.length === 1 ? UNIT_LABELS[main] : `${sel.size} tabur`;
     return {
-      key: `bat:${[...sel].join(',')}:${Math.round(hp * 40)}:${mc?.rank}:${buttons.map((b) => `${b.state}${b.badge}`).join(',')}`,
+      key: `bat:${[...sel].join(',')}:${Math.round(hp * 40)}:${mc?.rank}:${buttons.map((b) => `${b.state}${b.badge}${b.cooldown ?? ''}`).join(',')}`,
       portrait: UNIT_ICON[main] ?? 'sword',
       title: single ?? '?',
       subtitle: types.length === 1 ? `${mc?.battalions.size ?? 0} tabur · ${men} asker` : summary,
@@ -260,22 +283,46 @@ export class HudController {
     const b = BUILDING_DEFS[kind];
     const hp = st.hp / st.max;
     const base = { portrait: BUILD_ICON[kind], title: `${b.name} ${ROMAN[st.level] ?? ''}`, hp };
-    if (st.upgrading >= 0)
+    if (st.upgrading >= 0) {
+      const left = Math.ceil(BUILDING_LEVEL.upgradeTime * (1 - st.upgrading));
       return {
         ...base,
-        key: `upg:${slot}:${Math.round(st.upgrading * 50)}`,
+        key: `upg:${slot}:${left}`,
         subtitle: `Seviye ${st.level}'e yükseltiliyor · %${Math.round(st.upgrading * 100)}`,
         lines: ['Yükseltme süresince yapı devre dışıdır.'],
-        buttons: [this.sellButton(st.eid, st.level, kind)],
+        buttons: [
+          {
+            icon: 'up',
+            label: 'Yükseltiliyor',
+            state: 'busy',
+            progress: st.upgrading,
+            cooldown: left,
+            tip: { title: `Seviye ${ROMAN[st.level]}`, meta: `${left} sn kaldı`, body: 'Yükseltme sürüyor.' },
+          },
+          this.sellButton(st.eid, st.level, kind),
+        ],
       };
-    if (st.built < 1)
+    }
+    if (st.built < 1) {
+      const left = Math.ceil(b.buildTime * (1 - st.built));
       return {
         ...base,
-        key: `build:${slot}:${Math.round(st.built * 50)}`,
+        key: `build:${slot}:${left}`,
         subtitle: `İnşa ediliyor · %${Math.round(st.built * 100)}`,
         lines: [BUILD_DESC[kind]],
-        buttons: [],
+        buttons: [
+          {
+            icon: 'repair',
+            label: 'İnşa',
+            state: 'busy',
+            progress: st.built,
+            cooldown: left,
+            tip: { title: `${b.name} inşa ediliyor`, meta: `${left} sn kaldı`, body: BUILD_DESC[kind] },
+          },
+          this.sellButton(st.eid, st.level, kind),
+        ],
       };
+    }
     const upgrades = this.match?.upgrades ?? 0;
     const researching = this.match?.researching ?? 0;
     if (kind === 'arrow_tower' || kind === 'catapult') {
@@ -317,6 +364,7 @@ export class HudController {
           state: done ? 'done' : running ? 'busy' : !busy && this.gold >= (def?.cost ?? 0) ? 'ready' : 'off',
           badge: done ? '✓' : running ? `%${Math.round(st.queuePct * 100)}` : `${def?.cost}`,
           progress: running ? st.queuePct : undefined,
+          cooldown: running ? Math.ceil((def?.researchTime ?? 0) * (1 - st.queuePct)) : undefined,
           tip: { title: def?.name ?? '', meta: `◆ ${def?.cost} · ${def?.researchTime} sn`, body: def?.desc },
           run: () => this.d.scenario.research(st.eid, u),
         };
@@ -324,7 +372,7 @@ export class HudController {
       buttons.push(this.sellButton(st.eid, st.level, kind));
       return {
         ...base,
-        key: `forge:${slot}:${upgrades}:${researching}:${Math.round(st.queuePct * 40)}:${buttons.map((x) => x.state).join('')}`,
+        key: `forge:${slot}:${upgrades}:${researching}:${buttons.map((x) => `${x.state}${x.cooldown ?? ''}`).join('')}`,
         subtitle: `${st.hp} / ${st.max}`,
         lines: ['Yükseltmeler tüm ordunuza uygulanır; aynı anda tek araştırma.'],
         buttons,
@@ -334,11 +382,15 @@ export class HudController {
     const full = st.queueLen >= ECONOMY.queueMax;
     const buttons: CommandButton[] = (b.trains ?? []).map((u) => {
       const def = UNIT_DEFS[u];
+      const head = st.queueLen > 0 && st.queueUnit === u;
+      const train = ((def?.trainTime ?? 0) * (100 - BUILDING_LEVEL.trainTimePercent * (st.level - 1))) / 100;
       return {
         icon: UNIT_ICON[u] ?? 'sword',
         label: UNIT_LABELS[u] ?? '',
         state: !full && this.gold >= (def?.cost ?? 0) ? 'ready' : 'off',
         badge: `${def?.cost}`,
+        progress: head ? st.queuePct : undefined,
+        cooldown: head ? Math.max(1, Math.ceil(train * (1 - st.queuePct))) : undefined,
         tip: {
           title: UNIT_LABELS[u] ?? '',
           meta: `◆ ${def?.cost} · ${def?.trainTime} sn · ${def?.battalionSize} asker`,
@@ -354,7 +406,7 @@ export class HudController {
         : 'Kuyruk boş';
     return {
       ...base,
-      key: `barracks:${slot}:${buttons.map((x) => x.state).join('')}:${st.queueLen}:${Math.round(st.queuePct * 40)}:${st.level}`,
+      key: `barracks:${slot}:${buttons.map((x) => `${x.state}${x.cooldown ?? ''}`).join('')}:${st.queueLen}:${st.level}`,
       subtitle: `Seviye ${st.level} · ${st.hp} / ${st.max}`,
       lines: [
         queue,
@@ -424,6 +476,7 @@ export class HudController {
         state: done ? 'done' : running ? 'busy' : research < 0 && this.gold >= u.cost ? 'ready' : 'off',
         badge: done ? '✓' : running ? `%${Math.round((m?.fortPct ?? 0) * 100)}` : `${u.cost}`,
         progress: running ? (m?.fortPct ?? 0) : undefined,
+        cooldown: running ? Math.max(1, Math.ceil(u.time * (1 - (m?.fortPct ?? 0)))) : undefined,
         tip: { title: u.name, meta: `◆ ${u.cost} · ${u.time} sn`, body: u.desc },
         run: () => this.d.scenario.fortressUpgrade(i),
       };
@@ -435,7 +488,8 @@ export class HudController {
       icon: 'hero',
       label: 'Aragorn',
       state: m?.hero ? 'done' : heroWait > 0 ? 'busy' : this.gold >= heroCost ? 'ready' : 'off',
-      badge: m?.hero ? '✓' : heroWait > 0 ? `${heroWait}` : `${heroCost}`,
+      badge: m?.hero ? '✓' : `${heroCost}`,
+      cooldown: !m?.hero && heroWait > 0 ? heroWait : undefined,
       tip: {
         title: "Aragorn'u çağır",
         meta: `◆ ${heroCost}`,
@@ -453,8 +507,9 @@ export class HudController {
         icon: 'repair',
         label: `${g?.name ?? 'Kapı'} onar`,
         state: busy ? 'busy' : hp > 0 && hp < max && this.gold >= ECONOMY.repairCost ? 'ready' : 'off',
-        badge: hp <= 0 ? 'yıkık' : busy ? '…' : `${Math.round((hp / max) * 100)}%`,
-        progress: hp / max,
+        badge: hp <= 0 ? 'yıkık' : `${Math.round((hp / max) * 100)}%`,
+        progress: busy ? 1 - (repair[i] ?? 0) / (ECONOMY.repairTime * 20) : hp / max,
+        cooldown: busy ? secs(repair[i] ?? 0) : undefined,
         tip: {
           title: `${g?.name ?? 'Kapı'} onarımı`,
           meta: `◆ ${ECONOMY.repairCost} · ${ECONOMY.repairTime} sn · +%${ECONOMY.repairPercent}`,
@@ -467,7 +522,7 @@ export class HudController {
     const fs = f ? this.d.structures.fortress : null;
     const hp = fs ? fs.hp / Math.max(1, fs.max) : 1;
     return {
-      key: `fort:${fortUp}:${research}:${Math.round((m?.fortPct ?? 0) * 40)}:${Math.round(hp * 50)}:${buttons.map((b) => `${b.state}${b.badge}`).join(',')}`,
+      key: `fort:${fortUp}:${research}:${Math.round((m?.fortPct ?? 0) * 40)}:${Math.round(hp * 50)}:${buttons.map((b) => `${b.state}${b.badge}${b.cooldown ?? ''}`).join(',')}`,
       portrait: 'castle',
       title: def.citadel.name ?? 'Kale',
       subtitle: fs ? `${fs.hp} / ${fs.max}` : '',

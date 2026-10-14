@@ -60,7 +60,7 @@ svg {
     0 0 0 3px var(--gold-lo),
     0 6px 22px rgba(0, 0, 0, 0.55);
 }
-#cmdbar .cmd,
+.cmd,
 #powers .power,
 #heroes .portrait {
   position: relative;
@@ -82,13 +82,13 @@ svg {
     transform 0.08s,
     filter 0.12s;
 }
-#cmdbar .cmd:hover,
+.cmd:hover,
 #powers .power:hover,
 #heroes .portrait:hover {
   filter: brightness(1.18);
   border-color: var(--gold-hi);
 }
-#cmdbar .cmd:active,
+.cmd:active,
 #powers .power:active,
 #heroes .portrait:active {
   transform: scale(0.95);
@@ -226,17 +226,17 @@ kbd {
   background: radial-gradient(circle, rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.15));
   box-shadow: inset 0 0 0 1px rgba(201, 162, 58, 0.18);
 }
-#cmdbar .cmd {
+.cmd {
   width: 50px;
   height: 50px;
 }
-#cmdbar .cmd svg {
+.cmd svg {
   width: 25px;
   height: 25px;
   position: relative;
   z-index: 1;
 }
-#cmdbar .cmd small {
+.cmd small {
   position: absolute;
   bottom: -7px;
   left: 50%;
@@ -251,28 +251,28 @@ kbd {
   color: var(--gold-hi);
   white-space: nowrap;
 }
-#cmdbar .cmd kbd {
+.cmd kbd {
   position: absolute;
   top: -5px;
   right: -5px;
   z-index: 2;
 }
-#cmdbar .cmd.off,
-#cmdbar .cmd.locked {
+.cmd.off,
+.cmd.locked {
   filter: grayscale(0.8) brightness(0.6);
   cursor: not-allowed;
 }
-#cmdbar .cmd.done {
+.cmd.done {
   border-color: #8fd05a;
   color: #cfeeb0;
 }
-#cmdbar .cmd.done small {
+.cmd.done small {
   color: #a8e070;
 }
-#cmdbar .cmd.busy {
+.cmd.busy {
   cursor: default;
 }
-#cmdbar .cmd.prog::before,
+.cmd.prog::before,
 #powers .power[data-state="cd"]::before {
   /* ilerleme / bekleme halkası */
   content: "";
@@ -1178,5 +1178,185 @@ body.debug #hud {
   }
   #status .fort {
     min-width: 110px;
+  }
+}
+#status .lives .zone {
+  margin-left: 10px;
+  font-style: normal;
+  font-size: 13px;
+  color: #ff8a5a;
+  animation: zonePulse 1s ease-in-out infinite alternate;
+}
+@keyframes zonePulse {
+  to {
+    opacity: 0.45;
+  }
+}
+
+/* ---------- Bekleme sayaçları (BFME: karanlık saat dilimi + kalan saniye) ---------- */
+.cmd.cd::after,
+#powers .power[data-state="cd"]::after,
+#heroes .portrait[data-state="dead"]::after {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  border-radius: 50%;
+  background: conic-gradient(transparent var(--p, 0deg), rgba(6, 4, 2, 0.72) 0);
+  z-index: 1;
+  pointer-events: none;
+}
+.cmd .cdn,
+#powers .power .cdn,
+#heroes .portrait .cdn {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  z-index: 3;
+  font: 700 17px / 1 var(--title, serif);
+  color: #fff3c4;
+  text-shadow:
+    0 0 4px #000,
+    0 1px 2px #000,
+    0 0 10px rgba(255, 190, 80, 0.6);
+  pointer-events: none;
+}
+.cmd.cd svg,
+#powers .power[data-state="cd"] svg {
+  opacity: 0.55;
+}
+
+/* ---------- Halka menü (yapı / yuva / kale seçilince) ---------- */
+#radial {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  z-index: 25;
+  pointer-events: none;
+}
+#radial.away {
+  visibility: hidden;
+}
+#radial .ring {
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+#radial .ring::before {
+  /* altın halka izi */
+  content: "";
+  position: absolute;
+  left: calc(-1 * var(--r, 76px));
+  top: calc(-1 * var(--r, 76px));
+  width: calc(2 * var(--r, 76px));
+  height: calc(2 * var(--r, 76px));
+  border-radius: 50%;
+  border: 2px solid rgba(201, 162, 58, 0.55);
+  box-shadow:
+    0 0 0 6px rgba(20, 15, 10, 0.35),
+    inset 0 0 18px rgba(0, 0, 0, 0.45);
+  opacity: 0;
+  transform: scale(0.4);
+  transition:
+    opacity 0.18s,
+    transform 0.22s cubic-bezier(0.2, 1.4, 0.4, 1);
+}
+#radial .cmd {
+  position: absolute;
+  width: 46px;
+  height: 46px;
+  margin: -23px 0 0 -23px;
+  pointer-events: auto;
+  opacity: 0;
+  transform: scale(0.2);
+  transition:
+    opacity 0.16s,
+    transform 0.22s cubic-bezier(0.2, 1.5, 0.4, 1),
+    filter 0.12s;
+}
+#radial .cmd svg {
+  width: 23px;
+  height: 23px;
+}
+#radial.open .ring::before {
+  opacity: 1;
+  transform: scale(1);
+}
+#radial.open .cmd {
+  opacity: 1;
+  transform: scale(1);
+}
+#radial.open .cmd:hover {
+  transform: scale(1.12);
+}
+#radial .plate {
+  position: absolute;
+  left: 0;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  text-align: center;
+  padding: 3px 12px 4px;
+  border-radius: 8px;
+  background: linear-gradient(180deg, rgba(36, 30, 21, 0.92), rgba(18, 15, 11, 0.92));
+  border: 1px solid var(--gold-lo);
+  opacity: 0;
+  transition: opacity 0.2s 0.08s;
+}
+#radial.open .plate {
+  opacity: 1;
+}
+#radial .plate b {
+  display: block;
+  font-family: var(--title);
+  color: var(--gold-hi);
+  font-size: 13px;
+  letter-spacing: 0.05em;
+}
+#radial .plate span {
+  font-size: 11px;
+  color: #d8c89a;
+}
+#radial .tip {
+  position: absolute;
+  left: 0;
+  transform: translateX(-50%);
+  width: 260px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.12s;
+  background: linear-gradient(180deg, rgba(36, 30, 21, 0.97), rgba(18, 15, 11, 0.97));
+  border: 1px solid var(--gold-lo);
+  border-radius: 8px;
+  padding: 8px 11px;
+  font-size: 12px;
+  line-height: 1.45;
+}
+#radial .tip.show {
+  opacity: 1;
+}
+#radial .tip b {
+  display: block;
+  font-family: var(--title);
+  color: var(--gold-hi);
+  font-size: 13.5px;
+}
+#radial .tip em {
+  display: block;
+  font-style: normal;
+  color: #f0c95a;
+  font-size: 11.5px;
+  margin: 2px 0 4px;
+}
+#radial .tip p {
+  margin: 0;
+  color: #e6dcc0;
+}
+@media (max-width: 760px) {
+  #radial .cmd {
+    width: 40px;
+    height: 40px;
+    margin: -20px 0 0 -20px;
   }
 }

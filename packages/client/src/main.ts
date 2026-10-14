@@ -9,6 +9,7 @@ import { PLAYER, Scenario } from './app/scenario';
 import { CommandBar } from './app/ui/CommandBar';
 import { HudController } from './app/ui/HudController';
 import { PowersColumn } from './app/ui/PowersColumn';
+import { RadialMenu } from './app/ui/RadialMenu';
 import { TopHud } from './app/ui/TopHud';
 import { AudioEngine } from './audio/AudioEngine';
 import { GameAudio } from './audio/GameAudio';
@@ -204,6 +205,8 @@ const boot = async () => {
   const ui = world.def && structures && world.slots && !gallery;
   const bar = ui ? new CommandBar() : null;
   if (bar) bar.onClick = () => sfx.click();
+  const radial = ui ? new RadialMenu(cam.camera) : null;
+  if (radial) radial.onClick = () => sfx.click();
   const hudCtl =
     ui && bar && world.def && structures && world.slots
       ? new HudController({
@@ -216,6 +219,8 @@ const boot = async () => {
           bar,
           fortressSelected: () => fortressSelected,
           gateRepair: () => structures.gateRepair,
+          radial: radial ?? undefined,
+          groundY: (x, z) => ground.sample(x, z),
         })
       : null;
   if (hudCtl)
@@ -345,6 +350,7 @@ const boot = async () => {
         world.slots?.selectedIndex ?? -1,
       );
     hudCtl?.update(sim.frame.match, sim.tick);
+    radial?.place(window.innerWidth, window.innerHeight);
     powers?.update(sim.frame.match, sim.tick);
     top?.update(sim.frame.match, sim.tick);
     // Kale seçiliyken çevresinde altın halka.
@@ -407,7 +413,19 @@ const boot = async () => {
   bootEl.classList.add('done');
   // Playwright / debug erişimi için.
   Object.assign(window, {
-    __bulwark: { ctx, cam, scene, world, picker, sim, scenario, selection, units, structures },
+    __bulwark: {
+      ctx,
+      cam,
+      scene,
+      world,
+      picker,
+      sim,
+      scenario,
+      selection,
+      units,
+      structures,
+      fortress: fortressFx,
+    },
   });
 };
 

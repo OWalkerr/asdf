@@ -138,8 +138,8 @@ export class PowersColumn {
       const cd = Math.ceil((left * SIM_TICK_MS) / 1000);
       const state = !unlocked ? (this.canUnlock(i) ? 'open' : 'locked') : cd > 0 ? 'cd' : 'ready';
       const prog = cd > 0 ? 1 - left / (def.cooldown * 20) : 1;
-      const label = !unlocked ? `${def.cost}` : cd > 0 ? `${cd}` : '';
-      const h = `${icon(SPELL_ICON[def.key] ?? 'power')}${!unlocked ? `<i class="lock">${icon('lock')}</i>` : ''}${label ? `<small>${label}</small>` : ''}<kbd>${i + 1}</kbd>`;
+      const label = !unlocked ? `${def.cost}` : '';
+      const h = `${icon(SPELL_ICON[def.key] ?? 'power')}${!unlocked ? `<i class="lock">${icon('lock')}</i>` : ''}${label ? `<small>${label}</small>` : ''}${cd > 0 ? `<b class="cdn">${cd}</b>` : ''}<kbd>${i + 1}</kbd>`;
       if (b.innerHTML !== h) b.innerHTML = h;
       b.dataset.state = state;
       b.style.setProperty('--p', `${prog * 360}deg`);

@@ -1,4 +1,5 @@
 import { icon } from './icons';
+import { buttonClass, cooldownHtml, cooldownStyle } from './RadialMenu';
 
 /**
  * BFME2 tarzı alt komut çubuğu (GDD §11.1): solda can halkalı madalyon portre, ortada seçimin
@@ -20,6 +21,8 @@ export interface CommandButton {
   badge?: string;
   /** Araştırma / bekleme ilerlemesi [0, 1] (halka). */
   progress?: number;
+  /** Kalan bekleme / süre (sn): düğmede karanlık dilim + ortada sayaç. */
+  cooldown?: number;
   tip: CommandTip;
   run?: () => void;
 }
@@ -119,10 +122,9 @@ export class CommandBar {
     this.grid.innerHTML = Array.from({ length: 12 }, (_, i) => {
       const b = ctx.buttons[i];
       if (!b) return '<span class="slot"></span>';
-      const prog =
-        b.progress !== undefined ? `style="--p:${Math.max(0, Math.min(1, b.progress)) * 360}deg"` : '';
-      return `<button type="button" class="cmd ${b.state}${b.progress !== undefined ? ' prog' : ''}" data-i="${i}" aria-label="${b.label}" ${prog}>
-        ${icon(b.icon)}${b.badge ? `<small>${b.badge}</small>` : ''}${i < 6 ? `<kbd>${HOTKEY_LABEL[i]}</kbd>` : ''}</button>`;
+      const cd = b.cooldown !== undefined && b.cooldown > 0;
+      return `<button type="button" class="${buttonClass(b)}" data-i="${i}" aria-label="${b.label}" ${cooldownStyle(b)}>
+        ${icon(b.icon)}${b.badge && !cd ? `<small>${b.badge}</small>` : ''}${cooldownHtml(b)}${i < 6 ? `<kbd>${HOTKEY_LABEL[i]}</kbd>` : ''}</button>`;
     }).join('');
     this.showTip();
   }

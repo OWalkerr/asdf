@@ -36,6 +36,14 @@ Tekerlek: imlece doğru zoom · Space/Home: başlangıç görünümü.
 ## Nasıl oynanır
 Başlangıç ekranında bir **harita** ve **zorluk** seçilir (`?map=…&difficulty=easy|normal|hard` ekranı atlar).
 
+**Kule Savaşı (Tower Wars)** — BFME2 topluluğunun klasik özel harita türü: tek yol kuzeyden iner, çatalda
+dört şeride ayrılır ve güneydeki **uç bölgede** birleşir. 30 dalga (5: Warg akını, 10/20: kuşatma, 15: trol
+sürüsü, 25: ok yağmuru, 28: Trol Kralları, 30: Lurtz); her dalga başında altın. Uç bölgeye varan düşman
+kaybolmaz: bölge güç vuruşlarıyla onları eritir, içeride bekleyen her tabur 4 sn'de bir can götürür (40 can).
+
+**Kale Savunması (Fortress Defence)** — klasik tür: kale yolun tam ortasında, kare surun dört kapısı; 20 dalga
+dört yönden aynı anda gelir, her 5. dalga özel (trol sürüsü, kuşatma, warg akını, Lurtz); dalga başı altın.
+
 **Kale Savunması (FD)** — *Taşkalkan Kalesi*, *İkiz Köprü Geçidi*, *Helm's Deep*: düşman dalgaları
 koridorlarından kapılara yürür. Kapılar yalnızca engeldir: kırılan kapıdan (gedik) düşman içeri akar ve
 koridorundaki sıradaki kapıya, en sonda **kaleye** saldırır. **Kale düşerse savaş biter**; tüm dalgaları
@@ -64,6 +72,12 @@ koçbaşı ve Lurtz. Kale haritalarında yakın dövüşçüler kapı yerine yak
 Athelas). Düşman öldürmek ve dalga başları **Güç Puanı** verir; ekranın solundaki **Güçler** sütunundan (**1–6**)
 kademe kademe açılır: Şifa, Toplanma Çağrısı → Ok Yağmuru, Elf Müttefikleri → Rohirrim'i Çağır →
 Ölüler Ordusu. Taburlar öldürdükçe 5 rütbeye kadar yükselir. Son dalgada boss **Lurtz** gelir.
+
+**Halka menü ve sayaçlar:** bir yapıya, inşa yuvasına veya kaleye tıklayınca BFME'deki gibi etrafında yuvarlak
+komut halkası açılır (aynı komutlar alttaki çubukta da). İnşa, yükseltme, eğitim, araştırma, onarım, kahraman
+yetenekleri, kahramanın dönüşü ve güçlerin beklemeleri düğme üzerinde karanlık saat dilimi ve kalan saniye ile
+gösterilir. Kale her yükseltmede görsel olarak gelişir (burçlu sur, mazgal çıkmaları, mancınıklar, şifa
+sancakları, altın başlıklar; 3+ yükseltmede Gondor sancakları ve taç, 5'te işaret ateşi).
 
 **Arayüz (BFME2 düzeni):** sol altta palantír mini harita (tıkla: kamera), altta madalyon portre ve
 yuvarlak komut düğmeleri (**Z X C V B N**, ipucu için üzerine gelin), solda güçler, sol üstte kahraman ve

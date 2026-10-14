@@ -259,6 +259,23 @@ export const buildGenericMap = (palette: Texture, params: ToonParams, def: MapDe
   const pines = [P.pineTree(rand), P.pineTree(rand), P.pineTree(rand)];
   const broads = [P.broadleafTree(rand), P.broadleafTree(rand)];
   const rocks = [P.rock(rand, 1.2), P.rock(rand, 2.2), P.rock(rand, 3.6)];
+  // Uç bölge (Tower Wars): mangallı taş çember.
+  const zone = def.endZone;
+  const zoneAt = def.lanes[0]?.points.at(-1);
+  if (zone && zoneAt) {
+    const r = zone.radius + 1;
+    for (let i = 0; i < 24; i++) {
+      const a = (i / 24) * Math.PI * 2;
+      const x = zoneAt[0] + Math.cos(a) * r;
+      const z = zoneAt[1] + Math.sin(a) * r;
+      if (i % 3 === 0) {
+        solid.add(brazier, at(x, z));
+        glow.add(flame, at(x, z, rand() * 6));
+        if (i % 6 === 0) torches.push([x, heightAt(x, z) + 3, z]);
+      } else solid.add(rocks[0] as BufferGeometry, at(x, z, rand() * 6, 0.6));
+    }
+  }
+
   const tufts = [P.grassTuft(rand, 'grass'), P.grassTuft(rand, 'grassDark'), P.grassTuft(rand, 'grassDry')];
   const half = def.size / 2 - 4;
   const basins = def.terrain.basins ?? [];
