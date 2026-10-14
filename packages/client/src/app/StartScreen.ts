@@ -1,4 +1,5 @@
 import { DEFAULT_DIFFICULTY, DIFFICULTIES, FACTIONS, MAP_DEFS } from '@bulwark/shared';
+import { bestForMap, starText } from './records';
 
 /**
  * Maç öncesi ekran (GDD §4.4, §11): harita (FD / TD) ve zorluk seçimi. Seçim yapılınca çözülür;
@@ -68,6 +69,12 @@ export const chooseMatch = (): Promise<MatchChoice> => {
               <i class="mode ${m.mode}">${m.mode === 'TD' ? 'Kule Savunması' : 'Kale Savunması'}</i>
               <b>${m.name}</b><span>${m.blurb ?? ''}</span>
               <em>${m.waves.length} dalga${m.mode === 'TD' ? ` · ${m.lives ?? 20} can` : ` · ${m.gates.length} kapı`}</em>
+              ${(() => {
+                const r = bestForMap(id);
+                return r
+                  ? `<i class="rec"><b>${starText(r.stars)}</b> ${r.score.toLocaleString('tr-TR')}${r.victory ? '' : ` · dalga ${r.wave}`}</i>`
+                  : '';
+              })()}
             </button>`;
           }).join('')}
         </div>

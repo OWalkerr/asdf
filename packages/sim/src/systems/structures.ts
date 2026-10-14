@@ -49,7 +49,10 @@ const CATA_DMG_TYPE = DAMAGE_TYPES.indexOf(CATA.damageType);
 
 export const economySystem = (world: SimWorld): void => {
   if (!world.map || world.match.state !== MatchState.Playing) return;
-  if (world.tick % INCOME_EVERY === 0) world.match.gold[0] = (world.match.gold[0] as number) + 1;
+  if (world.tick % INCOME_EVERY === 0) {
+    world.match.gold[0] = (world.match.gold[0] as number) + 1;
+    world.match.goldEarned++;
+  }
   treasuryIncome(world);
 };
 

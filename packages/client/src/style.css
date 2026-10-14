@@ -1438,3 +1438,72 @@ body.debug #hud {
   color: #e6dcc0;
   font-size: 13px;
 }
+
+/* --- Maç sonu istatistikleri ve rekorlar --- */
+#endscreen .stars {
+  font-size: 30px;
+  letter-spacing: 6px;
+  color: var(--gold-hi);
+  text-shadow: 0 0 12px rgba(240, 201, 90, 0.45);
+  margin: -4px 0 6px;
+}
+#endscreen .defeat .stars {
+  color: #5c4a2c;
+  text-shadow: none;
+}
+#endscreen .stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(150px, 1fr));
+  gap: 6px 18px;
+  margin: 4px auto 14px;
+  max-width: 420px;
+  text-align: left;
+}
+#endscreen .stats div {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(201, 162, 58, 0.18);
+  padding: 3px 0;
+  font-size: 13px;
+}
+#endscreen .stats span {
+  color: var(--ink-dim);
+}
+#endscreen .stats b {
+  color: #f3ead6;
+}
+#endscreen .score {
+  margin: 0 0 16px;
+  font-family: var(--title);
+  font-size: 15px;
+  color: var(--ink-dim);
+}
+#endscreen .score b {
+  font-size: 26px;
+  color: var(--gold-hi);
+  margin: 0 8px;
+}
+#endscreen .score em {
+  font-style: normal;
+  color: #8fe07a;
+  animation: zonePulse 0.8s ease-in-out infinite alternate;
+}
+#endscreen .score span {
+  font-size: 12px;
+}
+#startscreen .maps .rec {
+  font-style: normal;
+  font-size: 11px;
+  color: #e8d9a8;
+}
+#startscreen .maps .rec b {
+  font-family: inherit;
+  font-size: 12px;
+  color: var(--gold-hi);
+  letter-spacing: 1px;
+}
+@media (max-width: 560px) {
+  #endscreen .stats {
+    grid-template-columns: 1fr;
+  }
+}

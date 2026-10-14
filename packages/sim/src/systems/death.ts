@@ -37,9 +37,12 @@ export const deathSystem = (world: SimWorld): void => {
     const type = UnitType.id[e] as number;
     // Ödül (GDD §5.1): saldıran takımın her kaybı savunan oyuncuya altın ve Güç Puanı kazandırır.
     if (world.map && Team.id[e] === ENEMY_TEAM) {
+      world.match.kills++;
+      world.match.goldEarned += STAT.bounty[type] as number;
       world.match.gold[0] = (world.match.gold[0] as number) + (STAT.bounty[type] as number);
       world.match.pp[0] = (world.match.pp[0] as number) + (STAT.ppValue[type] as number);
     }
+    if (world.map && Team.id[e] === 0 && STAT.summoned[type] !== 1) world.match.losses++;
     // XP: son vuran tabur (karşı takımdan) ölenin değeri kadar deneyim kazanır.
     const killer = Health.lastBy[e] as number;
     if (killer !== 0 && entityExists(world, killer) && Team.id[killer] !== Team.id[e])

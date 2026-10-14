@@ -5,6 +5,7 @@ import {
   HELMS_DEEP,
   type MapDef,
   type StampedCommand,
+  UNIT_DEFS,
   UnitTypeId,
 } from '@bulwark/shared';
 import { entityExists, query } from 'bitecs';
@@ -187,5 +188,41 @@ describe('yeni düşmanlar', () => {
     const hp0 = sim.world.c.Structure.hp[e] as number;
     run(sim, 300);
     expect(sim.world.c.Structure.hp[e] as number).toBeLessThan(hp0);
+  });
+});
+
+describe('maç istatistikleri', () => {
+  it('öldürülen düşman, kayıp ve kazanılan altın sayılır', () => {
+    const sim = newSim();
+    sim.schedule(
+      stamp(0, {
+        type: 'spawnBattalion',
+        team: 1,
+        unitType: UnitTypeId.OrcWarrior,
+        x: F(0),
+        z: F(60),
+        count: 1,
+        facing: 0,
+      }),
+    );
+    sim.schedule(
+      stamp(0, {
+        type: 'spawnBattalion',
+        team: 0,
+        unitType: UnitTypeId.GondorSoldier,
+        x: F(20),
+        z: F(40),
+        count: 1,
+        facing: 0,
+      }),
+    );
+    run(sim, 1);
+    const { Health, Soldier } = sim.world.c;
+    const g0 = sim.world.match.goldEarned;
+    for (const e of query(sim.world, [Soldier, Health])) Health.hp[e] = 0;
+    run(sim, 1);
+    expect(sim.world.match.kills).toBe(UNIT_DEFS[UnitTypeId.OrcWarrior]?.battalionSize);
+    expect(sim.world.match.losses).toBe(UNIT_DEFS[UnitTypeId.GondorSoldier]?.battalionSize);
+    expect(sim.world.match.goldEarned).toBeGreaterThan(g0);
   });
 });

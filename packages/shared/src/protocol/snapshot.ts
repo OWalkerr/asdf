@@ -1,10 +1,10 @@
 /**
- * Sim → render snapshot düzeni (GDD §13.3), sürüm 8.
+ * Sim → render snapshot düzeni (GDD §13.3), sürüm 9.
  *
  * Tek bir Int32Array (SharedArrayBuffer üzerinde veya fallback'te düz ArrayBuffer):
  *
  *   [global header: 4]  activeIndex, publishCount, capacity, projCapacity
- *   [buffer 0: header 64 + capacity × 6 + projCapacity × 7 + SNAP_MAX_STRUCTS × 6]
+ *   [buffer 0: header 72 + capacity × 6 + projCapacity × 7 + SNAP_MAX_STRUCTS × 6]
  *   [buffer 1: aynı]
  *
  * Buffer header: version (seqlock; tek = yazılıyor), tick, count, simMicros, projCount,
@@ -26,7 +26,7 @@
  * Konumlar ham Q16.16 olarak taşınır; float'a çeviri render tarafında (GDD §13.7).
  */
 export const SNAP_GLOBAL_INTS = 4;
-export const SNAP_HEADER_INTS = 64;
+export const SNAP_HEADER_INTS = 72;
 export const SNAP_UNIT_INTS = 6;
 export const SNAP_PROJ_INTS = 7;
 export const SNAP_STRUCT_INTS = 6;
@@ -77,6 +77,10 @@ export const H_ABILITY_READY = 54;
 /** Kahraman yuvası 0'ın güçlendirme bitişi (28); yuva 1–2: H_HERO_BUFF (60, 61). */
 export const H_ELENDIL_UNTIL = 28;
 export const H_HERO_BUFF = 60;
+/** Maç istatistikleri: öldürülen düşman, kayıp, kazanılan altın (64–66). */
+export const H_KILLS = 64;
+export const H_LOSSES = 65;
+export const H_GOLD_EARNED = 66;
 export const H_RALLY_UNTIL = 29;
 
 /** Birim kaydı flags biti: son birkaç tick içinde hasar aldı (vurulma parıltısı). */
@@ -185,6 +189,9 @@ export interface MatchInfo {
   lives: number;
   /** TD uç bölgesinde bekleyen düşman taburu. */
   zone: number;
+  kills: number;
+  losses: number;
+  goldEarned: number;
 }
 
 /** Okunan tek bir snapshot (render tarafının kendi kopyası). */
@@ -235,6 +242,9 @@ export const createFrame = (capacity: number, projCapacity = 2048): SnapshotFram
     fortPct: 0,
     lives: 0,
     zone: 0,
+    kills: 0,
+    losses: 0,
+    goldEarned: 0,
   },
 });
 
@@ -268,6 +278,9 @@ export const readMatchHeader = (view: Int32Array, base: number, out: MatchInfo):
   out.fortPct = ((fu >>> 16) & 0x7f) / 100;
   out.lives = view[base + H_LIVES] as number;
   out.zone = view[base + H_ZONE] as number;
+  out.kills = view[base + H_KILLS] as number;
+  out.losses = view[base + H_LOSSES] as number;
+  out.goldEarned = view[base + H_GOLD_EARNED] as number;
   out.gateHp.length = 0;
   out.gateMax.length = 0;
   for (let g = 0; g < SNAP_MAX_GATES; g++) {

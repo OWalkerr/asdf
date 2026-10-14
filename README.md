@@ -92,6 +92,11 @@ yakındaki askerleriniz merdivene saldırıp yıkar, boştaki kuleler merdivene 
 içindeki Uruk taburu iner ve geniş geçitten surun üstüne akar. Kule itilemez ve kendiliğinden çökmez: mancınık
 taşları ve askerlerinizle yıkın (mancınıklar boşta kalınca kuşatma yapılarını hedefler).
 
+**Maç sonu ve rekorlar:** maç bitince istatistik ekranı açılır — dalga, öldürülen düşman, kayıp, kazanılan altın,
+kale canı / kalan can, süre — ve puan (öldürülen ×2, temizlenen dalga ×100, zaferde 1000 + sağlık ×1000, kayıp −1;
+zorluk çarpanı 0.75 / 1 / 1.5). Zaferde sağlığa göre 1–3 yıldız. Harita × zorluk × taraf başına en iyi puan tarayıcıda
+saklanır; başlangıç ekranındaki harita kartlarında en iyi yıldız ve puan görünür.
+
 **Oyun hızı:** sağ üstteki düğmeler ya da kısayollar — **P** duraklat/devam, **+ / −** hız (1×, 2×, 3×).
 
 **Balrog:** Kule Savaşı'nın 28. dalgasında iki, Kale Savunması'nın final dalgasında bir Balrog gelir — dev, alev

@@ -14,10 +14,13 @@ import {
   H_GATE_HP,
   H_GATE_MAX,
   H_GOLD,
+  H_GOLD_EARNED,
   H_HERO_BUFF,
   H_HERO_READY,
   H_HEROES,
+  H_KILLS,
   H_LIVES,
+  H_LOSSES,
   H_MATCH_STATE,
   H_NEXT_WAVE_TICK,
   H_PP,
@@ -148,6 +151,9 @@ export const writeSnapshot = (world: SimWorld, view: Int32Array, simMicros = 0):
     (m.fortressUp[0] as number) | (((m.fortResearch[0] as number) + 1) << 8) | (fortressPct(world) << 16);
   view[base + H_LIVES] = m.lives;
   view[base + H_ZONE] = m.zone;
+  view[base + H_KILLS] = m.kills;
+  view[base + H_LOSSES] = m.losses;
+  view[base + H_GOLD_EARNED] = m.goldEarned;
   view[base + H_PP] = m.pp[0] as number;
   view[base + H_SPELLS] = m.spells[0] as number;
   for (let i = 0; i < SNAP_SPELLS; i++) view[base + H_SPELL_READY + i] = m.spellReady[i] as number;

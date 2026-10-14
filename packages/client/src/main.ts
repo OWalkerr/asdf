@@ -143,6 +143,14 @@ const boot = async () => {
   if (lightning) lightning.onStrike = () => sfx.thunder();
   impacts.onHit = (x, z) => sfx.clash(x, z);
   if (hud) {
+    hud.difficulty = difficulty;
+    hud.faction = faction;
+    hud.health = () => {
+      const m = sim.frame.match;
+      if (world.def?.mode === 'TD') return m.lives / Math.max(1, world.def.lives ?? 20);
+      const f = structures?.fortress;
+      return f ? f.hp / Math.max(1, f.max) : 1;
+    };
     hud.onWave = () => sfx.horn(true);
     hud.onEnd = (victory) => sfx.horn(!victory);
   }
@@ -432,7 +440,7 @@ const boot = async () => {
         );
       }
       info.textContent = lines.join('\n');
-      hud?.update(sim.frame.match);
+      hud?.update(sim.frame.match, sim.tick);
       // Boss çubuğu: öncelik Balrog > Su Gözcüsü > Ateş Ejderi > Lurtz.
       const BOSS_RANK: Record<number, number> = {
         [UnitTypeId.Balrog]: 4,
@@ -473,6 +481,7 @@ const boot = async () => {
       structures,
       fortress: fortressFx,
       ladders,
+      hud,
     },
   });
 };

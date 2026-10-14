@@ -61,6 +61,10 @@ export interface MatchContext {
   lives: number;
   /** TD uç bölgesindeki düşman taburu (görüntü). */
   zone: number;
+  /** Maç istatistikleri (oyuncu): öldürülen düşman askeri, kaybedilen asker, kazanılan altın. */
+  kills: number;
+  losses: number;
+  goldEarned: number;
   state: number;
   /** Başlamış son dalga (1 tabanlı; 0 = henüz yok). */
   waveIndex: number;
@@ -152,6 +156,9 @@ export const createSimWorld = (
       breached: 0,
       lives: 0,
       zone: 0,
+      kills: 0,
+      losses: 0,
+      goldEarned: 0,
       waveIndex: 0,
       waveCount: 0,
       schedule: [],
@@ -285,6 +292,9 @@ export const hashWorld = (world: SimWorld): number => {
   h = hashInt(h, world.match.lives);
   h = hashInt(h, world.match.faction);
   h = hashInt(h, world.match.zone);
+  h = hashInt(h, world.match.kills);
+  h = hashInt(h, world.match.losses);
+  h = hashInt(h, world.match.goldEarned);
   for (const u of world.match.upgrades) h = hashInt(h, u);
   for (const u of world.match.researching) h = hashInt(h, u);
   const m = world.match;

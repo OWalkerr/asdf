@@ -99,8 +99,11 @@ export const waveSystem = (world: SimWorld): void => {
     if (g.wave > m.waveIndex) {
       m.pp[0] = (m.pp[0] as number) + PP.waveBonus * 10;
       // Tower Wars: dalga başı gelir.
-      if (map.waveGold)
-        m.gold[0] = (m.gold[0] as number) + map.waveGold.base + map.waveGold.perWave * (g.wave - 1);
+      if (map.waveGold) {
+        const bonus = map.waveGold.base + map.waveGold.perWave * (g.wave - 1);
+        m.gold[0] = (m.gold[0] as number) + bonus;
+        m.goldEarned += bonus;
+      }
     }
     m.waveIndex = Math.max(m.waveIndex, g.wave);
   }

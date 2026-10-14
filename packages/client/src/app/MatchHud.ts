@@ -1,4 +1,6 @@
-import { type MapDef, type MatchInfo, MatchState } from '@bulwark/shared';
+import { DIFFICULTIES, FACTIONS, type MapDef, type MatchInfo, MatchState } from '@bulwark/shared';
+import { SIM_TICK_MS } from '../sim-host/protocol';
+import { saveRecord, starText } from './records';
 
 /**
  * Maç olayları arayüzü (GDD §11.1): dalga duyurusu (koçbaşı/boss uyarısı), boss can çubuğu ve
@@ -22,6 +24,12 @@ export class MatchHud {
   /** Maç bitti (zafer/yenilgi). */
   onEnd: ((victory: boolean) => void) | null = null;
 
+  /** Maç bağlamı (rekor anahtarı) ve sağlık oranı kaynağı (kale canı / kalan can). */
+  difficulty = 1;
+  faction = 0;
+  health: () => number = () => 1;
+  private tick = 0;
+
   constructor(private readonly def: MapDef) {
     this.end = document.createElement('div');
     this.end.id = 'endscreen';
@@ -44,7 +52,8 @@ export class MatchHud {
       (this.boss.querySelector('i') as HTMLElement).style.width = `${(ratio * 100).toFixed(1)}%`;
   }
 
-  update(info: MatchInfo): void {
+  update(info: MatchInfo, tick = 0): void {
+    this.tick = tick;
     const { waveIndex, waveCount } = info;
     if (waveIndex > this.lastWave) {
       this.lastWave = waveIndex;
@@ -91,11 +100,42 @@ export class MatchHud {
       this.onEnd?.(victory);
       const lost =
         this.def.mode === 'TD' ? 'Düşman sınırı aştı.' : `${this.def.citadel.name ?? 'Kale'} düştü.`;
+      const health = Math.max(0, Math.min(1, this.health()));
+      const stats = {
+        victory,
+        wave: waveIndex,
+        waves: waveCount,
+        kills: info.kills,
+        losses: info.losses,
+        goldEarned: info.goldEarned,
+        seconds: (this.tick * SIM_TICK_MS) / 1000,
+        health,
+        difficulty: this.difficulty,
+        faction: this.faction,
+      };
+      const { entry, best, isNew } = saveRecord(this.def.id, stats);
+      const mm = Math.floor(stats.seconds / 60);
+      const ss = String(Math.floor(stats.seconds % 60)).padStart(2, '0');
+      const row = (k: string, v: string | number) => `<div><span>${k}</span><b>${v}</b></div>`;
       this.end.innerHTML = `
         <div class="card ${victory ? 'victory' : 'defeat'}">
-          <small>${this.def.name}</small>
+          <small>${this.def.name} · ${FACTIONS[this.faction]?.name ?? ''} · ${DIFFICULTIES[this.difficulty]?.name ?? ''}</small>
           <h1>${victory ? 'Zafer' : 'Yenilgi'}</h1>
+          <div class="stars">${starText(entry.stars)}</div>
           <p>${victory ? `${waveCount} dalga püskürtüldü. ${this.def.citadel.name ?? 'Kale'} ayakta.` : lost}</p>
+          <div class="stats">
+            ${row('Dalga', `${waveIndex} / ${waveCount}`)}
+            ${row('Öldürülen düşman', info.kills)}
+            ${row('Kayıp', info.losses)}
+            ${row('Kazanılan altın', info.goldEarned)}
+            ${row(this.def.mode === 'TD' ? 'Kalan can' : 'Kale canı', `%${Math.round(health * 100)}`)}
+            ${row('Süre', `${mm}:${ss}`)}
+          </div>
+          <div class="score">Puan <b>${entry.score.toLocaleString('tr-TR')}</b>${
+            isNew
+              ? '<em>Yeni rekor!</em>'
+              : `<span>Rekor ${best.score.toLocaleString('tr-TR')} ${starText(best.stars)}</span>`
+          }</div>
           <button type="button">Yeniden başlat</button>
         </div>`;
       this.end.querySelector('button')?.addEventListener('click', () => location.reload());

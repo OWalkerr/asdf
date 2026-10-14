@@ -195,7 +195,10 @@ export const fortressSystem = (world: SimWorld): void => {
 export const treasuryIncome = (world: SimWorld): void => {
   if (!has(world, 0, FortressUpgrade.Treasury)) return;
   const every = Math.max(1, Math.round(SIM_HZ / W.treasuryIncome));
-  if (world.tick % every === 0) world.match.gold[0] = (world.match.gold[0] as number) + 1;
+  if (world.tick % every === 0) {
+    world.match.gold[0] = (world.match.gold[0] as number) + 1;
+    world.match.goldEarned++;
+  }
 };
 
 /**
