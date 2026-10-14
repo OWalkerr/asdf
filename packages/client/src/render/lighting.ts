@@ -2,8 +2,12 @@ import { Color, DirectionalLight, Fog, HemisphereLight, MathUtils, type Scene } 
 
 /**
  * Stilize aydınlatma (GDD §3.1): tek directional güneş + hemisphere ambient + mesafe sisi.
+ * Güneş yönü `sunDirection` ile gökyüzü ışımasına da aktarılır.
  * Gölge kamerası harita sınırına sabit ortho — cascade yok (performans).
  */
+/** Ufuk/sis rengi (gökyüzü kubbesi aynı rengi kullanır). */
+export const FOG_COLOR = '#76808f';
+
 export interface LightingRig {
   sun: DirectionalLight;
   hemi: HemisphereLight;
@@ -15,15 +19,17 @@ export interface LightingRig {
 }
 
 export const createLighting = (scene: Scene, mapHalfSize: number): LightingRig => {
-  const sky = new Color('#b9cbe0');
-  scene.background = sky;
-  const fog = new Fog(sky.clone(), 170, 430);
+  // Fırtınalı alacakaranlık (Helm's Deep gecesine doğru): soğuk ambient, alçak sıcak güneş.
+  // Sis rengi gökyüzü ufkuyla aynıdır (sky.ts) — uzak dağlar fırtınaya karışır.
+  const horizon = new Color(FOG_COLOR);
+  scene.background = horizon;
+  const fog = new Fog(horizon.clone(), 160, 470);
   scene.fog = fog;
 
-  const hemi = new HemisphereLight('#cfe0f5', '#6b5a45', 1.1);
+  const hemi = new HemisphereLight('#8a9cbc', '#3a342c', 0.95);
   scene.add(hemi);
 
-  const sun = new DirectionalLight('#ffe4bd', 2.6);
+  const sun = new DirectionalLight('#ffd2a6', 1.75);
   sun.castShadow = true;
   sun.shadow.mapSize.set(2048, 2048);
   const cam = sun.shadow.camera;
@@ -41,8 +47,8 @@ export const createLighting = (scene: Scene, mapHalfSize: number): LightingRig =
     sun,
     hemi,
     fog,
-    azimuth: 118,
-    elevation: 46,
+    azimuth: 128,
+    elevation: 34,
     applySun() {
       const az = MathUtils.degToRad(rig.azimuth);
       const el = MathUtils.degToRad(rig.elevation);

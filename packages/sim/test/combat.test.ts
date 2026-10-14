@@ -183,7 +183,7 @@ describe("maç (Helm's Deep)", () => {
 
   it('dalgalar programa göre çıkar ve kapıya yönelir', () => {
     const sim = new Simulation(8, buildNavGrid(HELMS_DEEP), HELMS_DEEP);
-    expect(sim.world.match.waveCount).toBe(3);
+    expect(sim.world.match.waveCount).toBe(HELMS_DEEP.waves.length);
     for (let t = 0; t < 25 * 20 + 1; t++) sim.step();
     expect(sim.world.match.waveIndex).toBe(1);
     const enemies = [...query(sim.world, [sim.world.c.Battalion])].filter(
@@ -193,6 +193,27 @@ describe("maç (Helm's Deep)", () => {
     for (const b of enemies) {
       expect(sim.world.c.Battalion.targetStructure[b]).toBe(sim.world.match.gates[0]);
       expect(entityExists(sim.world, sim.world.c.Battalion.targetStructure[b] as number)).toBe(true);
+    }
+  });
+});
+
+describe('düşman yapay zekâsı', () => {
+  it('kapıdan uzakta boşta kalan düşman taburu kapıya yeniden yönelir', () => {
+    const sim = new Simulation(4, buildNavGrid(HELMS_DEEP), HELMS_DEEP);
+    for (let t = 0; t < 25 * 20 + 2; t++) sim.step();
+    const { Battalion } = sim.world.c;
+    const enemies = [...query(sim.world, [Battalion])].filter((b) => sim.world.c.Team.id[b] === 1);
+    expect(enemies.length).toBeGreaterThan(0);
+    // Taburları ovada "yerleşmiş" duruma zorla (kalabalıkta takılma benzetimi).
+    for (const b of enemies) {
+      Battalion.active[b] = 0;
+      Battalion.mode[b] = 0;
+    }
+    for (let t = 0; t < 25; t++) sim.step();
+    for (const b of enemies) {
+      expect(Battalion.active[b]).toBe(1);
+      expect(Battalion.mode[b]).toBe(2);
+      expect(Battalion.targetStructure[b]).toBe(sim.world.match.gates[0]);
     }
   });
 });

@@ -29,7 +29,7 @@ const DEFAULTS: RTSCameraOptions = {
   minDistance: 14,
   maxDistance: 150,
   pitchNear: 38,
-  pitchFar: 62,
+  pitchFar: 56,
 };
 
 export class RTSCamera {

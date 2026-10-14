@@ -16,9 +16,9 @@ export const PALETTE_SIZE = 16;
 
 const SWATCHES = {
   // 0: arazi
-  grass: [0, 0, '#6f8f4e'],
-  grassDark: [1, 0, '#557440'],
-  grassDry: [2, 0, '#8f9a5a'],
+  grass: [0, 0, '#5f7f47'],
+  grassDark: [1, 0, '#4a6638'],
+  grassDry: [2, 0, '#7b8550'],
   dirt: [3, 0, '#7a6448'],
   dirtDark: [4, 0, '#5d4a35'],
   rock: [5, 0, '#8a8580'],

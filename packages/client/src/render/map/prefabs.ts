@@ -219,3 +219,37 @@ export const caveMouth = (rand: Rand): BufferGeometry => {
     paint(place(new BoxGeometry(8, 0.4, 5), 0, 0.2, 4), 'helmStone'),
   ]);
 };
+
+/** Çimen öbeği: 3 ince üçgen yaprak (dekor; binlerce instance, ~6 üçgen). */
+export const grassTuft = (rand: Rand, swatch: 'grass' | 'grassDark' | 'grassDry'): BufferGeometry => {
+  const parts: BufferGeometry[] = [];
+  for (let i = 0; i < 3; i++) {
+    const h = 0.6 + rand() * 0.5;
+    parts.push(
+      paint(
+        place(
+          new ConeGeometry(0.12, h, 3, 1, true),
+          (rand() - 0.5) * 0.4,
+          h / 2,
+          (rand() - 0.5) * 0.4,
+          rand() * 6,
+        ),
+        swatch,
+      ),
+    );
+  }
+  return verticalShade(merge(parts), 0.55, 1.1);
+};
+
+/** Duvar meşalesi: ince ahşap direk + demir kafes (alev ayrı emissive batch'te: torchFlame). */
+export const torchPost = (): BufferGeometry =>
+  merge([
+    paint(place(new CylinderGeometry(0.07, 0.09, 1.6, 4), 0, 0.8, 0), 'woodDark'),
+    paint(place(new CylinderGeometry(0.22, 0.12, 0.3, 5), 0, 1.7, 0), 'iron'),
+  ]);
+
+export const torchFlame = (rand: Rand): BufferGeometry =>
+  merge([
+    paint(place(jitter(new OctahedronGeometry(0.28, 0), 0.08, rand), 0, 2.05, 0, 0, 1, 1.7, 1), 'fire'),
+    paint(place(new OctahedronGeometry(0.14, 0), 0.04, 2.2, 0.03, 0.5, 1, 1.8, 1), 'ember'),
+  ]);

@@ -6,6 +6,7 @@ import {
   LineBasicNodeMaterial,
   LineSegments,
   Matrix4,
+  PointLight,
   Quaternion,
   type Texture,
   Vector3,
@@ -115,7 +116,6 @@ const createHelmsDeepPaint = (def: MapDef): PaintFn => {
     if (slope > 0.4) return 'rockDark';
     if (avgY > 40) return 'snow';
     if (ramp && projectOnSegment(x, z, ramp.from, ramp.to).dist < ramp.width / 2 - 0.5) return 'dirt';
-    if (def.lanes.some((l) => distToPolyline(x, z, l.points) < 2.6)) return 'dirtDark';
     if (avgY > 18) return 'rockDark';
     const n = valueNoise(x / 16, z / 16, def.seed + 99);
     // Rohan ovası: kuru, sarımsı çimen ağırlıklı.
@@ -131,6 +131,8 @@ export const buildHelmsDeep = (palette: Texture, params: ToonParams, def: MapDef
   const pick = <T>(list: readonly T[]): T => list[Math.floor(rand() * list.length)] as T;
 
   const solid = new StaticBatch();
+  /** Sıcak nokta ışığı alabilecek meşale konumları. */
+  const torches: [number, number, number][] = [];
   const glow = new StaticBatch();
   const m = new Matrix4();
   const q = new Quaternion();
@@ -139,7 +141,7 @@ export const buildHelmsDeep = (palette: Texture, params: ToonParams, def: MapDef
     m.compose(new Vector3(x, y, z), q.setFromAxisAngle(up, rotY), new Vector3(s, s, s));
 
   // --- Arazi -----------------------------------------------------------------
-  const grid = { size: def.size, segments: 96 };
+  const grid = { size: def.size, segments: 144 };
   solid.add(buildTerrainGeometry(grid, heightAt, createHelmsDeepPaint(def)), new Matrix4(), true);
 
   // --- Deeping Wall ------------------------------------------------------------
@@ -157,6 +159,20 @@ export const buildHelmsDeep = (palette: Texture, params: ToonParams, def: MapDef
       for (let k = 0; k < n; k++) {
         const t = (k + 0.5) / n;
         solid.add(seg, at(ax + (bx - ax) * t, az + (bz - az) * t, rot, 1, 0.4), true);
+      }
+      // Sur üstü meşaleler: iç korkuluk boyunca, soket ve kulelerden kaçınarak.
+      const post = P.torchPost();
+      const torch = P.torchFlame(rand);
+      const innerZ = -wall.thickness / 2 + 0.7;
+      for (let d = 6; d < len - 4; d += 11) {
+        const t = d / len;
+        const x = ax + (bx - ax) * t;
+        const z = az + (bz - az) * t + innerZ;
+        if (def.slots.some((sl) => Math.hypot(sl.pos[0] - x, sl.pos[1] - (z - innerZ)) < 4)) continue;
+        if ([0.38, 0.72].some((tt) => Math.abs(tt - t) * len < 6.5)) continue;
+        solid.add(post, at(x, z, 0, 1, 0.4 + wall.height));
+        glow.add(torch, at(x, z, rand() * 6, 1, 0.4 + wall.height));
+        torches.push([x, 0.4 + wall.height + 2, z]);
       }
       // Merdiven kuleleri: sur boyunca iki adet.
       const tower = P.wallTower(wall.height + 3);
@@ -220,7 +236,7 @@ export const buildHelmsDeep = (palette: Texture, params: ToonParams, def: MapDef
     if (Math.hypot(x - ccx, z - ccz) < 22) return true;
     return def.slots.some((s) => Math.hypot(x - s.pos[0], z - s.pos[1]) < 8);
   };
-  for (let i = 0; i < 900; i++) {
+  for (let i = 0; i < 1500; i++) {
     const x = (rand() * 2 - 1) * half;
     const z = (rand() * 2 - 1) * half;
     if (blocked(x, z)) continue;
@@ -238,6 +254,20 @@ export const buildHelmsDeep = (palette: Texture, params: ToonParams, def: MapDef
     }
   }
 
+  // --- Çimen öbekleri: vadi tabanında yoğun, yollardan ve surdan uzak ------------------
+  const tufts = [P.grassTuft(rand, 'grass'), P.grassTuft(rand, 'grassDark'), P.grassTuft(rand, 'grassDry')];
+  for (let i = 0; i < 5200; i++) {
+    const x = (rand() * 2 - 1) * half;
+    const z = (rand() * 2 - 1) * half;
+    if (valleyMargin(x, z) < 2) continue;
+    if (def.lanes.some((l) => distToPolyline(x, z, l.points) < 3.5)) continue;
+    if (wall && Math.abs(z - (wall.points[0] as Vec2)[1]) < 6 && x > -45 && x < 92) continue;
+    if (plateau && Math.hypot(x - plateau.center[0], z - plateau.center[1]) < plateau.radius + 2) continue;
+    const y = heightAt(x, z);
+    const tuft = z > -10 ? (rand() < 0.5 ? tufts[2] : tufts[0]) : rand() < 0.6 ? tufts[1] : tufts[0];
+    solid.add(tuft as BufferGeometry, at(x, z, rand() * 6.28, 0.8 + rand() * 0.9, y - 0.05));
+  }
+
   // --- Batch'ler ---------------------------------------------------------------
   const root = new Group();
   root.name = def.id;
@@ -248,6 +278,20 @@ export const buildHelmsDeep = (palette: Texture, params: ToonParams, def: MapDef
   const glowMesh = glow.build(flameMat.material, 'static-glow');
   glowMesh.castShadow = false;
   root.add(glowMesh);
+
+  // Sıcak ışık havuzları: kapılar, mağara ağzı ve sur boyunca birkaç meşale (az sayıda — maliyet).
+  const lightSpots: [number, number, number][] = [];
+  if (gate) lightSpots.push([gate.pos[0] + 3, heightAt(gate.pos[0], gate.pos[1]) + 4, gate.pos[1] + 3]);
+  lightSpots.push([ccx, heightAt(ccx, ccz) + 4, ccz + 3]);
+  for (const k of [0.2, 0.5, 0.8]) {
+    const tp = torches[Math.floor(torches.length * k)];
+    if (tp) lightSpots.push(tp);
+  }
+  for (const [x, y, z] of lightSpots) {
+    const l = new PointLight('#ff9a48', 60, 34, 1.6);
+    l.position.set(x, y, z);
+    root.add(l);
+  }
 
   const slots = new SlotMarkers(def.slots, heightAt, palette, params);
   root.add(slots.mesh);

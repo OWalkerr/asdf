@@ -12,7 +12,7 @@ import {
 } from './systems/battalion';
 import { combatSystem, projectileSystem } from './systems/combat';
 import { deathSystem } from './systems/death';
-import { matchSystem, setupMatch, waveSystem } from './systems/match';
+import { enemyAiSystem, matchSystem, setupMatch, waveSystem } from './systems/match';
 import { movementSystem } from './systems/movement';
 import { animStateSystem, moveToTargetSystem } from './systems/moveToTarget';
 import { separationSystem } from './systems/separation';
@@ -104,6 +104,7 @@ export const createSimWorld = (
  */
 export const stepWorld = (world: SimWorld): void => {
   waveSystem(world);
+  enemyAiSystem(world);
   economySystem(world);
   spatialSystem(world);
   engagementSystem(world);

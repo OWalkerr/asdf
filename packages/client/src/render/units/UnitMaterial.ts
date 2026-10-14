@@ -50,6 +50,9 @@ import { Part } from './models';
  * de animasyonlu pozu görür; CPU instance başına 64 bayt matris yerine 32 bayt yükler.
  * Not: three r186'da instancing positionNode'dan önce uygulanır; identity matris bunu etkisiz kılar.
  */
+/** Birim görsel ölçeği (model 1 m = 1 birim; RTS'de birimler biraz büyük çizilir). */
+export const UNIT_SCALE = 1.25;
+
 export const ANIM_IDLE = 0;
 export const ANIM_WALK = 1;
 export const ANIM_ATTACK = 2;
@@ -151,7 +154,10 @@ export const createUnitMaterial = (
   // --- Ölüm: ayak hizasından geriye devrilme, 3 sn sonra yere batma ---------------------
   const fall = min(t.div(0.6), 1).mul(1.45).mul(die);
   const sink = max(t.sub(3), 0).mul(0.35).mul(die);
-  const posDead = rotZ(posPart, fall).sub(vec3(0, sink, 0));
+  // Birimler oynanış okunurluğu için gerçek boydan büyük çizilir (RTS konvansiyonu).
+  const posDead = rotZ(posPart, fall)
+    .sub(vec3(0, sink, 0))
+    .mul(UNIT_SCALE);
   const nrmDead = rotZ(nrmPart, fall);
 
   // --- Dünya uzayı -------------------------------------------------------------------

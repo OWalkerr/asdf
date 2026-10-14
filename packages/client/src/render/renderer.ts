@@ -45,7 +45,7 @@ export const createRenderContext = async (
   });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.toneMapping = ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.05;
+  renderer.toneMappingExposure = 0.92;
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = PCFShadowMap; // r186: PCFSoft kaldırıldı, PCF zaten yumuşak filtreli
   // WebGPU sürücü/tarayıcı uyumsuzluğunda sayfayı WebGL2 ile yeniden aç. İki belirti var:

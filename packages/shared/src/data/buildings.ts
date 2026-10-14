@@ -26,7 +26,7 @@ export const BUILDING_DEFS: Readonly<Record<BuildingKind, BuildingDef>> = {
     cost: 250,
     buildTime: 12,
     hp: 1500,
-    attack: { damage: 14, damageType: 'pierce', interval: 1.2, range: 36, volley: 3 },
+    attack: { damage: 16, damageType: 'pierce', interval: 1.2, range: 36, volley: 3 },
   },
   barracks: {
     kind: 'barracks',

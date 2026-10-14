@@ -1,5 +1,5 @@
-import { ECONOMY, fxAtan2, fxFromFloat, type MapDef, MatchState, type Vec2 } from '@bulwark/shared';
-import { addComponent, addEntity } from 'bitecs';
+import { ECONOMY, fxAtan2, fxFromFloat, fxLen, type MapDef, MatchState, type Vec2 } from '@bulwark/shared';
+import { addComponent, addEntity, query } from 'bitecs';
 import { BattalionMode } from '../components';
 import { SIM_HZ } from '../constants';
 import type { ScheduledGroup, SimWorld } from '../world';
@@ -67,6 +67,48 @@ export const waveSystem = (world: SimWorld): void => {
     const structure = gateIndex >= 0 ? (m.gates[gateIndex] as number) : 0;
     for (const b of battalions) world.c.Battalion.targetStructure[b] = structure;
     m.waveIndex = Math.max(m.waveIndex, g.wave);
+  }
+};
+
+/** Düşman yapay zekâsının yeniden değerlendirme aralığı (tick). */
+const AI_INTERVAL = SIM_HZ;
+/** Hedef kapıya bundan uzakta boşta kalan düşman taburu yeniden yola çıkar. */
+const REGROUP_DIST = fxFromFloat(10);
+
+/**
+ * Düşman taburu kuşatma inadı: hedef kapısı ayaktayken boşta (varmış/yerleşmiş, çatışmada değil)
+ * ve kapıdan uzaktaysa, kendi koridorunun kapı ucuna yeniden "saldırarak ilerle" emri alır.
+ * Kalabalıkta veya çatışma sonrası yerleşen taburların ovada sonsuza dek beklemesini önler.
+ */
+export const enemyAiSystem = (world: SimWorld): void => {
+  const map = world.map;
+  if (!map || world.match.state !== MatchState.Playing || world.tick % AI_INTERVAL !== 0) return;
+  const { Battalion, Position, Team, Structure } = world.c;
+  for (const b of query(world, [Battalion, Position])) {
+    if (Team.id[b] !== ENEMY_TEAM || Battalion.active[b] || Battalion.engaged[b]) continue;
+    if ((Battalion.count[b] as number) === 0 || Battalion.mode[b] === BattalionMode.Attack) continue;
+    const g = Battalion.targetStructure[b] as number;
+    if (g === 0 || (Structure.hp[g] as number) <= 0) continue;
+    const bx = Position.x[b] as number;
+    const bz = Position.z[b] as number;
+    const reach = ((Structure.radius[g] as number) + REGROUP_DIST) | 0;
+    if (fxLen(((Position.x[g] as number) - bx) | 0, ((Position.z[g] as number) - bz) | 0) <= reach) continue;
+    // Bu kapıya giden koridorlardan uç noktası en yakın olanı.
+    const gateId = map.gates[Structure.gateIndex[g] as number]?.id;
+    let best: [number, number] | null = null;
+    let bestD = 0x7fffffff;
+    for (const lane of map.lanes) {
+      if (lane.target !== gateId) continue;
+      const [ex, ez] = fxv(lane.points[lane.points.length - 1] as Vec2);
+      const d = fxLen((ex - bx) | 0, (ez - bz) | 0);
+      if (d < bestD) {
+        bestD = d;
+        best = [ex, ez];
+      }
+    }
+    if (!best) continue;
+    orderBattalions(world, [b], best[0], best[1], ENEMY_TEAM, BattalionMode.AttackMove);
+    Battalion.targetStructure[b] = g;
   }
 };
 

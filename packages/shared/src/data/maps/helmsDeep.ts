@@ -80,12 +80,12 @@ export const HELMS_DEEP: MapDef = {
   mode: 'FD',
   size: 384,
   seed: 3019,
-  camera: { home: [8, -10], yaw: 0, distance: 175 },
+  camera: { home: [6, -8], yaw: 0, distance: 135 },
   citadel: { id: 'glittering_caves', pos: [15, -140], radius: 10, hp: 10_000 },
   gates: [
-    { id: 'hornburg_gate', pos: GATE_POS, facing: GATE_FACING, width: 6, hp: 3000 },
+    { id: 'hornburg_gate', pos: GATE_POS, facing: GATE_FACING, width: 6, hp: 4000 },
     // Deeping Wall menfezi (culvert): savunucuların çıkış kapısı, düşmanın kırmaya çalıştığı zayıf nokta.
-    { id: 'culvert', pos: [CULVERT_X, WALL_Z], facing: 90, width: 4, hp: 2500 },
+    { id: 'culvert', pos: [CULVERT_X, WALL_Z], facing: 90, width: 4, hp: 3000 },
   ],
   walls: [
     {
@@ -245,6 +245,25 @@ export const HELMS_DEEP: MapDef = {
         { atSec: 175, spawn: 'S_west', unitType: UnitTypeId.UrukHai, battalions: 3 },
         { atSec: 180, spawn: 'S_east', unitType: UnitTypeId.OrcWarrior, battalions: 4 },
         { atSec: 190, spawn: 'S_main', unitType: UnitTypeId.OrcWarrior, battalions: 2 },
+      ],
+    },
+    {
+      name: 'Kuşatma',
+      groups: [
+        { atSec: 255, spawn: 'S_west', unitType: UnitTypeId.OrcWarrior, battalions: 4 },
+        { atSec: 260, spawn: 'S_main', unitType: UnitTypeId.UrukHai, battalions: 4 },
+        { atSec: 268, spawn: 'S_east', unitType: UnitTypeId.UrukHai, battalions: 3 },
+        { atSec: 280, spawn: 'S_main', unitType: UnitTypeId.OrcWarrior, battalions: 4 },
+      ],
+    },
+    {
+      name: 'Son hücum',
+      groups: [
+        { atSec: 345, spawn: 'S_main', unitType: UnitTypeId.UrukHai, battalions: 5 },
+        { atSec: 350, spawn: 'S_west', unitType: UnitTypeId.UrukHai, battalions: 3 },
+        { atSec: 355, spawn: 'S_east', unitType: UnitTypeId.UrukHai, battalions: 3 },
+        { atSec: 365, spawn: 'S_main', unitType: UnitTypeId.OrcWarrior, battalions: 4 },
+        { atSec: 372, spawn: 'S_west', unitType: UnitTypeId.OrcWarrior, battalions: 3 },
       ],
     },
   ],

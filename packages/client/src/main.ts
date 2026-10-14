@@ -10,13 +10,17 @@ import { GroundPicker } from './input/GroundPicker';
 import { PlayerInput } from './input/PlayerInput';
 import { Selection } from './input/Selection';
 import { buildHelmsDeep } from './maps/helmsDeep';
+import { createRain } from './render/atmosphere/rain';
+import { createSky } from './render/atmosphere/sky';
+import { Lightning } from './render/atmosphere/weather';
 import { RTSCamera } from './render/camera/RTSCamera';
+import { ImpactFx } from './render/fx/ImpactFx';
 import { OrderMarker } from './render/fx/OrderMarker';
 import { PickCursor } from './render/fx/PickCursor';
 import { ProjectileRenderer } from './render/fx/ProjectileRenderer';
 import { SelectionRings } from './render/fx/SelectionRings';
 import { BattalionHud } from './render/hud/BattalionHud';
-import { createLighting } from './render/lighting';
+import { createLighting, FOG_COLOR } from './render/lighting';
 import { HeightGrid } from './render/map/HeightGrid';
 import { buildLookdevScene } from './render/map/lookdev';
 import type { MapScene } from './render/map/MapScene';
@@ -62,6 +66,14 @@ const boot = async () => {
   const ground = new HeightGrid(world.terrainGrid, world.heightAt);
   const half = world.size / 2;
   const light = createLighting(scene, half);
+  // Atmosfer: gökyüzü kubbesi, yağmur, şimşek (look-dev galerisinde sade gökyüzü).
+  const sky = createSky(FOG_COLOR, '#262e3c', '#d98a4e');
+  sky.sunDir.value.copy(light.sun.position).normalize();
+  scene.add(sky.mesh);
+  const weather = !gallery && mapId === 'helms_deep';
+  const rain = weather ? createRain() : null;
+  if (rain) scene.add(rain.mesh);
+  const lightning = weather ? new Lightning(scene, light.hemi, sky.flash) : null;
 
   const cam = new RTSCamera(window.innerWidth / window.innerHeight, {
     bounds: { minX: -half + 20, maxX: half - 20, minZ: -half + 20, maxZ: half - 20 },
@@ -91,6 +103,8 @@ const boot = async () => {
   const marker = new OrderMarker();
   const rings = new SelectionRings(2048);
   const arrows = new ProjectileRenderer(2048, ground.sample);
+  const impacts = new ImpactFx(palette, toon, ground.sample);
+  scene.add(...impacts.meshes);
   scene.add(cursor.mesh, marker.mesh, rings.mesh, arrows.mesh);
   const hud = world.def && !gallery ? new MatchHud(world.def) : null;
   const selection = new Selection(units, PLAYER);
@@ -175,7 +189,11 @@ const boot = async () => {
       units.updateFromSim(sim, now);
       arrows.update(sim, now);
       structures?.update(sim.frame);
+      impacts.update(sim.frame, dt);
     }
+    sky.update(cam.camera.position);
+    rain?.update(cam.target, ground.sample(cam.target.x, cam.target.z));
+    lightning?.update(dt);
     selection.prune();
     rings.update(units, selection.selected);
     if (!gallery)

@@ -34,14 +34,19 @@ WASD / ok tuşları / ekran kenarı: kaydır · Orta tuş sürükle: kaydır · 
 Tekerlek: imlece doğru zoom · Space/Home: başlangıç görünümü.
 
 ## Nasıl oynanır (Helm's Deep, Phase 1)
-Üç düşman dalgası güneyden gelir; Orc ve Uruk-hai taburları causeway'den **Hornburg kapısına**, ovadan
-**Deeping Wall menfezine** saldırır. Kapılardan biri düşerse yenilirsiniz, üç dalgayı temizlerseniz kazanırsınız.
-Kapılar yalnızca sizin birliklerinize açıktır (arka kapı): piyadeyi dışarı çıkarıp saldıranları dağıtın.
-Okçular menzildeki düşmana kendiliğinden ateş eder.
+Beş düşman dalgası fırtınalı gecede güneyden gelir; Orc ve Uruk-hai taburları causeway'den **Hornburg
+kapısına**, ovadan **Deeping Wall menfezine** saldırır. Kapılardan biri düşerse yenilirsiniz, tüm dalgaları
+temizlerseniz kazanırsınız. Kapılar yalnızca sizin birliklerinize açıktır (arka kapı): piyadeyi dışarı çıkarıp
+saldıranları dağıtın. Okçular ve kuleler menzildeki düşmana kendiliğinden ateş eder.
+
+**Ekonomi ve inşa:** 700 altınla başlarsınız, saniyede +5 gelir ve öldürülen her düşman için ödül alırsınız.
+Altın halkalı alana tıklayın: sur soketlerine ve Hornburg platformlarına **Okçu Kulesi** (250), vadideki
+arsalara **Kışla** (400) kurulur. Kışlayı seçip Gondor Askerleri, Okçuları ve Kule Muhafızları yetiştirin
+(kuyruk en fazla 5). Alt paneldeki düğmeler Z X C V kısayollarıyla da çalışır.
 
 ## Birim kontrolleri
 Sol tık: tabur seç (Shift ile ekle/çıkar) · Sol sürükle: kutu seçimi · Sağ tık: seçili taburları yürüt
 (düşman askerinin üstünde: saldır) ·
-Esc: seçimi temizle · Asker olmayan yere sol tık: inşa slotu seç. Taburlar akış alanıyla (flow field)
+Esc: seçimi temizle · H: seçili taburları durdur · Asker olmayan yere sol tık: inşa slotu / yapı seç. Taburlar akış alanıyla (flow field)
 engellerin etrafından dolaşır, dar geçitte formasyonu daraltır. `?debug` panelinde "Nav ızgarası sınırı"
 ve sim hızı ayarı var.
