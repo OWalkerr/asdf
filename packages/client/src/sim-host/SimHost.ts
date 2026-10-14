@@ -107,7 +107,11 @@ export class SimHost {
     this.post({ type: 'commands', commands: [stamped] });
   }
 
+  /** Oyun hızı (0 = duraklat). Ara değerleme tick süresini buna göre ölçekler. */
+  speed = 1;
+
   setSpeed(value: number): void {
+    this.speed = value;
     this.post({ type: 'speed', value });
   }
 
@@ -119,7 +123,8 @@ export class SimHost {
 
   /** prev → curr arası ara değer katsayısı [0, 1]. */
   alpha(now: number): number {
-    return Math.min(1, Math.max(0, (now - this.currAt) / SIM_TICK_MS));
+    if (this.speed <= 0) return 1;
+    return Math.min(1, Math.max(0, ((now - this.currAt) * this.speed) / SIM_TICK_MS));
   }
 
   /** Bu eid'in önceki snapshot'taki kaydının başlangıç indeksi, yoksa -1. */

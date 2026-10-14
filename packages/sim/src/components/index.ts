@@ -150,6 +150,8 @@ export const StructureKind = {
   Catapult: 4,
   /** Düşmanın sura dayadığı kuşatma merdiveni. */
   Ladder: 5,
+  /** Sura yanaşmış kuşatma kulesi. */
+  SiegeTower: 6,
   Fortress: 9,
 } as const;
 

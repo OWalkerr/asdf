@@ -314,6 +314,8 @@ export const fortressDefenceWaves = (spawns: readonly string[], first = 35, gap 
       g(14, side(0), UnitTypeId.Wyrm, 1);
       g(18, side(2), UnitTypeId.Wyrm, 1);
     }
+    // Isengard kuşatma kuleleri.
+    if (wave === 14 || wave === 19) g(10, side(wave === 14 ? 2 : 0), UnitTypeId.SiegeTower, 1);
     if (wave === 17) {
       g(16, side(1), UnitTypeId.Watcher, 1);
       g(22, side(3), UnitTypeId.Wyrm, 1);

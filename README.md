@@ -82,6 +82,12 @@ kapının yanındaki sur kesimine merdiven dayar; merdiven ayaktayken o koldaki 
 yakındaki askerleriniz merdivene saldırıp yıkar, boştaki kuleler merdivene ok atar; merdiven 90 sn sonra kendiliğinden
 çöker.
 
+**Kuşatma kuleleri:** Isengard'ın tekerlekli ahşap kuleleri (oklara dayanıklı) sura yanaşınca köprüsünü indirir,
+içindeki Uruk taburu iner ve geniş geçitten surun üstüne akar. Kule itilemez ve kendiliğinden çökmez: mancınık
+taşları ve askerlerinizle yıkın (mancınıklar boşta kalınca kuşatma yapılarını hedefler).
+
+**Oyun hızı:** sağ üstteki düğmeler ya da kısayollar — **P** duraklat/devam, **+ / −** hız (1×, 2×, 3×).
+
 **Balrog:** Kule Savaşı'nın 28. dalgasında iki, Kale Savunması'nın final dalgasında bir Balrog gelir — dev, alev
 kılıçlı, yarma vuruşlu ve çevresini her saniye yakan ateş aurasıyla; ona yakın dövüşle değil Gandalf ve okçularla
 karşılık verin.

@@ -26,6 +26,7 @@ import { createToonMaterial, type ToonParams } from '../materials/ToonMaterial';
  * ayaktan sur tepesine tırmanır, içeride iner) — UnitRenderer zemin yüksekliğine eklenir.
  */
 const LADDER_KIND = 5;
+const TOWER_KIND = 6;
 
 const ladderGeometry = (): BufferGeometry => {
   // Yerel: +x boyunca uzunluk 1 (ölçekle uzar), z genişlik.
@@ -36,10 +37,28 @@ const ladderGeometry = (): BufferGeometry => {
   return verticalShade(merge(parts), 0.85, 1.05);
 };
 
+/** Sura yanaşmış kuşatma kulesi: yerel +x sura doğru, yükseklik 1 → ölçekle sur boyuna uzar. */
+const towerGeometry = (): BufferGeometry => {
+  const parts: BufferGeometry[] = [];
+  for (const x of [-1.3, 1.3])
+    for (const z of [-1.3, 1.3]) parts.push(paint(place(new BoxGeometry(0.24, 1, 0.24), x, 0.5, z), 'wood'));
+  for (const y of [0.25, 0.5, 0.75])
+    parts.push(paint(place(new BoxGeometry(2.9, 0.025, 2.8), 0, y, 0), 'woodDark'));
+  parts.push(paint(place(new BoxGeometry(0.12, 0.9, 2.7), -1.4, 0.5, 0), 'leather'));
+  for (const z of [-1.35, 1.35])
+    parts.push(paint(place(new BoxGeometry(2.7, 0.9, 0.1), 0, 0.5, z), 'leather'));
+  parts.push(paint(place(new BoxGeometry(2.6, 0.03, 2.4), 2.4, 0.98, 0), 'woodDark')); // indirilmiş köprü
+  for (const x of [-1.2, 1.2])
+    for (const z of [-1.5, 1.5])
+      parts.push(paint(place(new BoxGeometry(1.1, 0.12, 0.25), x, 0.06, z), 'woodDark'));
+  return verticalShade(merge(parts), 0.75, 1.05);
+};
+
 export class LadderRenderer {
   readonly mesh: InstancedMesh;
+  readonly towers: InstancedMesh;
   private readonly spots: LadderSpot[][];
-  private readonly active: LadderSpot[] = [];
+  private readonly active: { spot: LadderSpot; tower: boolean }[] = [];
   private lastTick = -1;
   private readonly m = new Matrix4();
   private readonly v = new Vector3();
@@ -59,6 +78,11 @@ export class LadderRenderer {
     this.mesh.castShadow = true;
     this.mesh.frustumCulled = false;
     this.mesh.count = 0;
+    this.towers = new InstancedMesh(towerGeometry(), createToonMaterial(palette, params), 12);
+    this.towers.name = 'siege-towers';
+    this.towers.castShadow = true;
+    this.towers.frustumCulled = false;
+    this.towers.count = 0;
   }
 
   update(frame: SnapshotFrame): void {
@@ -69,14 +93,29 @@ export class LadderRenderer {
     for (let i = 0; i < frame.structCount; i++) {
       const o = i * SNAP_STRUCT_INTS;
       const kp = st[o + 1] as number;
-      if (unpackStructKind(kp) !== LADDER_KIND) continue;
+      const kind = unpackStructKind(kp);
+      if (kind !== LADDER_KIND && kind !== TOWER_KIND) continue;
       const slot = unpackStructSlot(kp);
       const spot = this.spots[slot >> 3]?.[slot & 7];
-      if (spot) this.active.push(spot);
+      if (spot) this.active.push({ spot, tower: kind === TOWER_KIND });
     }
     let n = 0;
-    for (const sp of this.active) {
-      if (n >= 24) break;
+    let nt = 0;
+    for (const { spot: sp, tower } of this.active) {
+      if (tower) {
+        if (nt >= 12) continue;
+        // Kule gövdesi surun dışında, köprüsü sur tepesine iner.
+        const cx = sp.p[0] + sp.n[0] * 4.6;
+        const cz = sp.p[1] + sp.n[1] * 4.6;
+        const h = sp.height + 2.2;
+        const X = this.e.set(-sp.n[0], 0, -sp.n[1]);
+        const Y = this.v.set(0, h, 0);
+        const Z = this.s.set(sp.n[1], 0, -sp.n[0]); // sağ el tabanı (det > 0)
+        this.m.makeBasis(X, Y, Z).setPosition(cx, this.groundY(cx, cz), cz);
+        this.towers.setMatrixAt(nt++, this.m);
+        continue;
+      }
+      if (n >= 24) continue;
       // Dış ayak (sur ekseninden 5.5 m) → sur tepesi: belirgin eğimle yaslanır.
       const fx = sp.p[0] + sp.n[0] * 5.5;
       const fz = sp.p[1] + sp.n[1] * 5.5;
@@ -95,17 +134,19 @@ export class LadderRenderer {
     }
     this.mesh.count = n;
     this.mesh.instanceMatrix.needsUpdate = true;
+    this.towers.count = nt;
+    this.towers.instanceMatrix.needsUpdate = true;
   }
 
   /** Merdiven geçidindeki noktanın ek yüksekliği (m): dış ayaktan tepeye çıkar, içeride iner. */
   climb(x: number, z: number): number {
     let h = 0;
-    for (const sp of this.active) {
+    for (const { spot: sp, tower } of this.active) {
       const dx = x - sp.p[0];
       const dz = z - sp.p[1];
       const s = dx * sp.n[0] + dz * sp.n[1]; // +: dış taraf
       const lat = Math.abs(dx * sp.n[1] - dz * sp.n[0]);
-      if (lat > 1.8 || s > 5.5 || s < -4.5) continue;
+      if (lat > (tower ? 2.6 : 1.8) || s > (tower ? 6.5 : 5.5) || s < -4.5) continue;
       const k = s >= 1.2 ? 1 - (s - 1.2) / 4.3 : s >= -1.2 ? 1 : 1 + (s + 1.2) / 3.3;
       h = Math.max(h, (sp.height + 0.6) * Math.max(0, k));
     }

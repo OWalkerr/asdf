@@ -99,7 +99,12 @@ export const isBuilding = (world: SimWorld, e: number): boolean => {
   if (!Number.isInteger(e) || e <= 0 || !entityExists(world, e) || !hasComponent(world, e, world.c.Structure))
     return false;
   const kind = world.c.Structure.kind[e] as number;
-  return kind !== StructureKind.Gate && kind !== StructureKind.Fortress && kind !== StructureKind.Ladder;
+  return (
+    kind !== StructureKind.Gate &&
+    kind !== StructureKind.Fortress &&
+    kind !== StructureKind.Ladder &&
+    kind !== StructureKind.SiegeTower
+  );
 };
 
 /** Seviye çarpanı: taban × (100 + pct·(seviye−1)) / 100. */
@@ -231,7 +236,8 @@ export const structureSystem = (world: SimWorld): void => {
   const ruined: number[] = [];
   for (const e of query(world, [Structure, Position])) {
     const kind = Structure.kind[e] as number;
-    if (kind === StructureKind.Fortress || kind === StructureKind.Ladder) continue; // fortressSystem / ladderSystem
+    if (kind === StructureKind.Fortress || kind === StructureKind.Ladder || kind === StructureKind.SiegeTower)
+      continue; // fortressSystem / ladderSystem
     if (kind === StructureKind.Gate) {
       // Onarım: kalan süre boyunca her tick max·oran/süre (tamsayı, son tick'te kalan pay).
       const left = Structure.buildLeft[e] as number;
@@ -337,7 +343,34 @@ export const structureSystem = (world: SimWorld): void => {
           target = b;
         }
       }
-      if (target === 0) continue;
+      if (target === 0) {
+        // Boşta: menzildeki kuşatma kulesi / merdivene taş.
+        let lad = 0;
+        let ld = CATA_RANGE;
+        for (const l of world.match.ladders) {
+          const d = fxLen(((Position.x[l.eid] as number) - x) | 0, ((Position.z[l.eid] as number) - z) | 0);
+          if (d < ld) {
+            ld = d;
+            lad = l.eid;
+          }
+        }
+        if (lad !== 0) {
+          fireStone(
+            world,
+            x,
+            z,
+            Position.x[lad] as number,
+            Position.z[lad] as number,
+            ((CATA.damage * (100 + BUILDING_LEVEL.catapultDamagePercent * up)) / 100) | 0,
+            CATA_DMG_TYPE,
+            (Structure.height[e] as number) + 200,
+            CATA_AOE,
+            team,
+          );
+          Structure.cooldown[e] = CATA_INTERVAL + world.rng.nextInt(6);
+        }
+        continue;
+      }
       fireStone(
         world,
         x,

@@ -10,6 +10,7 @@ import { CommandBar } from './app/ui/CommandBar';
 import { HudController } from './app/ui/HudController';
 import { PowersColumn } from './app/ui/PowersColumn';
 import { RadialMenu } from './app/ui/RadialMenu';
+import { SpeedControl } from './app/ui/SpeedControl';
 import { TopHud } from './app/ui/TopHud';
 import { AudioEngine } from './audio/AudioEngine';
 import { GameAudio } from './audio/GameAudio';
@@ -150,7 +151,7 @@ const boot = async () => {
     world.def?.mode === 'FD'
       ? new LadderRenderer(world.def, buildNavGrid(world.def), ground.sample, palette, toon)
       : null;
-  if (ladders) scene.add(ladders.mesh);
+  if (ladders) scene.add(ladders.mesh, ladders.towers);
   // Kapı kanatları (kırılınca enkaz) ve kale yükseltme görselleri.
   const hdPlateau = world.def?.id === 'helms_deep' ? world.def.terrain.plateaus[0] : undefined;
   const gates = world.def
@@ -251,6 +252,8 @@ const boot = async () => {
       if (key === 'word_of_power' || key === 'wizard_blast') sfx.thunder();
       else sfx.chime(true);
     };
+  const speedUi = ui ? new SpeedControl(sim) : null;
+  if (speedUi) speedUi.onClick = () => sfx.click();
   const powers = ui
     ? new PowersColumn({
         scenario,

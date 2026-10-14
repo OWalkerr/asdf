@@ -75,6 +75,14 @@ export const fdWaves = (
         unitType: UnitTypeId.CaveTroll,
         battalions: 1,
       });
+    // Isengard kuşatma kulesi: son iki dalgada.
+    if (w >= count - 2)
+      groups.push({
+        atSec: t0 + 8,
+        spawn: spawns[w % spawns.length] as string,
+        unitType: UnitTypeId.SiegeTower,
+        battalions: 1,
+      });
     // Kuşatma merdivenleri (sur noktası olan haritalarda sura dayanır).
     if (w >= 1)
       groups.push({

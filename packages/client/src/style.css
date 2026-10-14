@@ -1364,3 +1364,56 @@ body.debug #hud {
   background: linear-gradient(90deg, #ff4a10, #ffb03a);
   box-shadow: 0 0 10px rgba(255, 110, 30, 0.8);
 }
+
+/* ---------- Oyun hızı ---------- */
+#speed {
+  position: fixed;
+  top: 64px;
+  right: 14px;
+  z-index: 20;
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 8px;
+  background: linear-gradient(180deg, rgba(36, 30, 21, 0.92), rgba(18, 15, 11, 0.92));
+  border: 1px solid var(--gold-lo);
+}
+#speed button {
+  min-width: 30px;
+  height: 24px;
+  padding: 0 6px;
+  border-radius: 5px;
+  border: 1px solid #5a4620;
+  background: #1c1610;
+  color: #d8c89a;
+  font: 600 12px / 1 var(--title, serif);
+  cursor: pointer;
+}
+#speed button.on {
+  background: linear-gradient(180deg, #6e5524, #3a2c12);
+  color: #fff3c4;
+  border-color: var(--gold-hi);
+}
+#pauseveil {
+  position: fixed;
+  inset: 0;
+  z-index: 15;
+  display: none;
+  place-content: center;
+  text-align: center;
+  pointer-events: none;
+  background: rgba(10, 8, 6, 0.35);
+}
+#pauseveil.show {
+  display: grid;
+}
+#pauseveil b {
+  font: 700 34px / 1.2 var(--title, serif);
+  color: var(--gold-hi);
+  letter-spacing: 0.12em;
+  text-shadow: 0 2px 10px #000;
+}
+#pauseveil span {
+  color: #e6dcc0;
+  font-size: 13px;
+}

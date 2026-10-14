@@ -903,6 +903,68 @@ export const wyrm = (): BufferGeometry => {
   return b.build(1.1);
 };
 
+/**
+ * Isengard kuşatma kulesi (BFME2): tekerlekli, üç katlı ahşap kule; ön yüzü deri kaplı, tepede
+ * kalkık köprü ve Ak El sancağı; arkada iten Uruk'lar. Model ~6.5 m (UNIT_SCALE ile ~8 m).
+ */
+export const siegeTower = (): BufferGeometry => {
+  const b = new ModelBuilder({ hip: 0.7, shoulder: 1.3, neck: 6.4, shoulderZ: 0.5, hipZ: 0.4 });
+  // Şasi ve tekerlekler
+  b.add(Part.Body, box(3.2, 0.4, 2.8), 'woodDark', [0, 0.8, 0]);
+  for (const x of [-1.2, 1.2])
+    for (const z of [-1.5, 1.5])
+      b.add(Part.Body, cyl(0.55, 0.55, 0.25, 8), 'woodDark', [x, 0.55, z], [Math.PI / 2, 0, 0]);
+  // Gövde: dört köşe direği, katlar, deri kaplama
+  for (const x of [-1.3, 1.3])
+    for (const z of [-1.2, 1.2]) b.add(Part.Body, box(0.22, 5.6, 0.22), 'wood', [x, 3.6, z]);
+  for (const y of [2.2, 3.9, 5.6]) b.add(Part.Body, box(2.9, 0.18, 2.7), 'woodDark', [0, y, 0]);
+  b.add(Part.Body, box(0.12, 4.8, 2.6), 'leather', [1.4, 3.7, 0]); // ön deri kaplama
+  for (const z of [-1.3, 1.3]) b.add(Part.Body, box(2.6, 4.8, 0.1), 'leather', [0, 3.7, z]);
+  for (let k = 0; k < 4; k++) b.add(Part.Body, box(0.14, 0.08, 2.7), 'iron', [1.47, 1.8 + k * 1.2, 0]);
+  // Tepe: mazgal + kalkık köprü + sancak (Head: hafif sallanır)
+  for (const z of [-1.1, 0, 1.1]) b.add(Part.Body, box(0.5, 0.5, 0.4), 'wood', [1.1, 6.0, z]);
+  b.add(Part.ArmR, box(0.12, 2.4, 2.4), 'woodDark', [1.6, 6.5, 0], [0, 0, -0.25], [1, 1, 1], [1.4, 5.6, 0]);
+  b.add(Part.Head, cyl(0.05, 0.05, 1.8, 4), 'wood', [-1.0, 6.9, 0], [0, 0, 0], [1, 1, 1], [-1.0, 6.0, 0]);
+  b.add(Part.Head, box(0.06, 0.8, 0.9), 'sootBlack', [-1.0, 7.3, 0.45], [0, 0, 0], [1, 1, 1], [-1.0, 6.0, 0]);
+  b.add(
+    Part.Head,
+    box(0.07, 0.3, 0.25),
+    'whiteHand',
+    [-1.0, 7.3, 0.45],
+    [0, 0, 0],
+    [1, 1, 1],
+    [-1.0, 6.0, 0],
+  );
+  // İten Uruk'lar (arkada)
+  for (const z of [-0.8, 0.8]) {
+    b.add(Part.Body, box(0.36, 0.55, 0.4), 'urukSkin', [-1.95, 1.12, z]);
+    b.add(Part.Body, box(0.22, 0.22, 0.22), 'urukSkin', [-1.9, 1.5, z]);
+    b.add(
+      Part.ArmL,
+      box(0.4, 0.12, 0.12),
+      'urukSkin',
+      [-1.65, 1.25, z],
+      [0, 0, 0],
+      [1, 1, 1],
+      [-1.9, 1.3, z],
+    );
+    for (const [part, dz] of [
+      [Part.LegL, -0.1],
+      [Part.LegR, 0.1],
+    ] as const)
+      b.add(
+        part,
+        box(0.15, 0.7, 0.15),
+        'sootBlack',
+        [-1.95, 0.38, z + dz],
+        [0, 0, 0],
+        [1, 1, 1],
+        [-1.95, 0.72, z + dz],
+      );
+  }
+  return b.build();
+};
+
 /** Birim tipi id → model üreticisi (UNIT_DEFS ile aynı sıra). */
 export const UNIT_MODELS: Record<number, () => BufferGeometry> = {
   0: gondorSoldier,
@@ -926,4 +988,5 @@ export const UNIT_MODELS: Record<number, () => BufferGeometry> = {
   17: ladderTeam,
   18: watcher,
   19: wyrm,
+  20: siegeTower,
 };

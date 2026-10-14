@@ -16,6 +16,7 @@ import {
   orcWarrior,
   Part,
   rohirrim,
+  siegeTower,
   towerGuard,
   UNIT_MODELS,
   urukHai,
@@ -45,6 +46,7 @@ const BUDGET: [string, () => import('three/webgpu').BufferGeometry, number][] = 
   ['Merdiven takımı', ladderTeam, 900],
   ['Su Gözcüsü', watcher, 900],
   ['Ateş Ejderi', wyrm, 900],
+  ['Kuşatma kulesi', siegeTower, 900],
 ];
 
 describe('birim modelleri', () => {

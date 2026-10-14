@@ -48,6 +48,12 @@ const tick = () => {
 
 const loop = () => {
   const now = performance.now();
+  if (speed === 0) {
+    // Duraklatıldı: tick yok, kısa aralıkla yeniden bak.
+    nextAt = now + SIM_TICK_MS;
+    timer = setTimeout(loop, SIM_TICK_MS);
+    return;
+  }
   const interval = SIM_TICK_MS / speed;
   let steps = 0;
   // Gecikmeyi yakala ama spiral of death'e girme (en fazla 5 tick).
@@ -81,7 +87,7 @@ self.onmessage = (e: MessageEvent<ToWorker>) => {
         for (const c of msg.commands) sim?.schedule(c);
         break;
       case 'speed':
-        speed = Math.max(0.05, Math.min(8, msg.value));
+        speed = msg.value <= 0 ? 0 : Math.max(0.05, Math.min(8, msg.value));
         break;
     }
   } catch (err) {

@@ -48,6 +48,7 @@ export const UNIT_LABELS: Record<number, string> = {
   17: 'Merdiven Takımı',
   18: 'Su Gözcüsü',
   19: 'Ateş Ejderi',
+  20: 'Kuşatma Kulesi',
 };
 const UNIT_ICON: Record<number, string> = {
   0: 'sword',
@@ -70,6 +71,7 @@ const UNIT_ICON: Record<number, string> = {
   17: 'ladder',
   18: 'eye',
   19: 'flame',
+  20: 'tower',
 };
 const STAT_HERO = new Set(HEROES.map((h) => h.unitType));
 const ABILITY_ICON: Record<string, string> = {

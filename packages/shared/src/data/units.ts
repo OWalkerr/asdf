@@ -64,6 +64,8 @@ export interface UnitDef {
   siegeArcher?: boolean;
   /** Alev püskürtme (Ateş Ejderi): menzilli saldırı hedef noktasına `aoe` m yarıçaplı ateş topu. */
   breath?: { aoe: number };
+  /** Kuşatma kulesi: sura yanaşır, geniş geçit açar ve içindeki Uruk taburunu indirir. */
+  siegeTower?: boolean;
   /** Kuşatma merdiveni taşır: sura dayar, düşman surun üstünden geçer. */
   ladder?: boolean;
   /** Ateş aurası (Balrog): her saniye `radius` içindeki düşmanlara `damage` ateş hasarı. */
@@ -548,6 +550,34 @@ export const UNIT_DEFS: readonly UnitDef[] = [
     breath: { aoe: 4 },
     stepRate: 1.2,
   },
+  {
+    // Isengard kuşatma kulesi (BFME2): Uruk'ların ittiği tekerlekli dev ahşap kule; sura yanaşınca
+    // köprüsünü indirir, içindeki Uruk taburu surun üstüne çıkar. Oklara dayanıklı.
+    id: 20,
+    key: 'siege_tower',
+    name: 'Siege Tower',
+    faction: 'isengard',
+    speed: 2.4,
+    hp: 2600,
+    armor: 'siege',
+    attackStyle: 'thrust',
+    damage: 5,
+    damageType: 'crush',
+    attackInterval: 3,
+    range: 3,
+    ranged: false,
+    battalionSize: 1,
+    cost: 900,
+    trainTime: 0,
+    files: 1,
+    spacing: 6,
+    jitter: 0,
+    siegeOnly: true,
+    ladder: true,
+    siegeTower: true,
+    lifeCost: 4,
+    stepRate: 0.8,
+  },
 ];
 
 export const UnitTypeId = {
@@ -571,6 +601,7 @@ export const UnitTypeId = {
   LadderTeam: 17,
   Watcher: 18,
   Wyrm: 19,
+  SiegeTower: 20,
 } as const;
 
 export const unitDef = (id: number): UnitDef => {

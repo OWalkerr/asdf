@@ -264,3 +264,11 @@ export const LADDER = {
   /** Dayandıktan sonra kendiliğinden çökme süresi (s). */
   lifetime: 90,
 } as const;
+
+/** Sura yanaşmış kuşatma kulesi: itilemez, kendiliğinden çökmez; mancınık ve askerle yıkılır. */
+export const SIEGE_TOWER = {
+  hp: 2400,
+  /** Açtığı geçidin yarı genişliği (m) ve indirdiği Uruk taburu sayısı. */
+  passHalfWidth: 2.6,
+  troops: 1,
+} as const;

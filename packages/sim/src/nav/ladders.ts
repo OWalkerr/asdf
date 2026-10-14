@@ -88,16 +88,17 @@ export const ladderSpots = (map: MapDef, grid: NavGrid): LadderSpot[][] =>
     return out;
   });
 
-/** Merdiven geçidindeki hücreler (O→I kapsülü, yarıçap 1.5 m) — yalnızca sur hücreleri. */
-export const ladderCells = (grid: NavGrid, spot: LadderSpot): number[] => {
+/** Merdiven / kule geçidindeki hücreler (O→I kapsülü, verilen yarıçap). */
+export const ladderCells = (grid: NavGrid, spot: LadderSpot, halfWidth = 1.5): number[] => {
   const out: number[] = [];
   const half = (grid.cols * grid.cellSize) / 2;
   const [ax, az] = spot.o;
   const [bx, bz] = spot.i;
-  const minX = Math.min(ax, bx) - 2;
-  const maxX = Math.max(ax, bx) + 2;
-  const minZ = Math.min(az, bz) - 2;
-  const maxZ = Math.max(az, bz) + 2;
+  const pad = halfWidth + 1;
+  const minX = Math.min(ax, bx) - pad;
+  const maxX = Math.max(ax, bx) + pad;
+  const minZ = Math.min(az, bz) - pad;
+  const maxZ = Math.max(az, bz) + pad;
   const c0 = Math.max(0, Math.floor((minX + half) / grid.cellSize));
   const c1 = Math.min(grid.cols - 1, Math.floor((maxX + half) / grid.cellSize));
   const r0 = Math.max(0, Math.floor((minZ + half) / grid.cellSize));
@@ -113,7 +114,7 @@ export const ladderCells = (grid: NavGrid, spot: LadderSpot): number[] => {
       t = t < 0 ? 0 : t > 1 ? 1 : t;
       const dx = x - (ax + abx * t);
       const dz = z - (az + abz * t);
-      if (dx * dx + dz * dz <= 1.5 * 1.5) out.push(r * grid.cols + c);
+      if (dx * dx + dz * dz <= halfWidth * halfWidth) out.push(r * grid.cols + c);
     }
   return out;
 };

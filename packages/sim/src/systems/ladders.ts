@@ -1,4 +1,4 @@
-import { fxFromFloat, fxLen, LADDER, MatchState } from '@bulwark/shared';
+import { fxFromFloat, fxLen, LADDER, MatchState, SIEGE_TOWER, UnitTypeId } from '@bulwark/shared';
 import { addComponent, addEntity, entityExists, query, removeEntity } from 'bitecs';
 import { BattalionMode, StructureKind } from '../components';
 import { SIM_HZ } from '../constants';
@@ -6,7 +6,7 @@ import { BLOCK_ALL } from '../nav/grid';
 import { ladderCells } from '../nav/ladders';
 import { STAT } from '../unitStats';
 import type { SimWorld } from '../world';
-import { orderBattalions } from './commands';
+import { orderBattalions, spawnBattalionRow } from './commands';
 
 /**
  * Kuşatma merdivenleri (BFME2): merdiven takımı koridorunun merdiven noktasının dış ayağına varınca
@@ -67,22 +67,33 @@ export const ladderSystem = (world: SimWorld): void => {
     const lane = (Battalion.lane[b] as number) - 1;
     const idx = (Battalion.ladder[b] as number) - 1;
     const spot = world.ladderSpots[lane]?.[idx];
+    const tower = STAT.siegeTower[Battalion.unitType[b] as number] === 1;
     removeBattalion(world, b);
-    if (!spot || m.ladders.some((l) => l.lane === lane && l.spot === idx)) continue;
+    if (!spot) continue;
+    if (tower) {
+      // Kulenin içindeki Uruk'lar dış ayakta iner ve koridorun hedefine yürür.
+      const [ox, oz] = fx2(spot.o);
+      const troops = spawnBattalionRow(world, ENEMY, UnitTypeId.UrukHai, ox, oz, SIEGE_TOWER.troops, 0);
+      for (const t of troops) Battalion.lane[t] = lane + 1;
+    }
+    // Nokta doluysa (merdiven/kule) yeni yapı kurulmaz; kulenin askerleri yine de iner.
+    if (m.ladders.some((l) => l.lane === lane && l.spot === idx)) continue;
     const e = addEntity(world);
     for (const comp of [Position, Team, Structure]) addComponent(world, e, comp);
     [Position.x[e], Position.z[e]] = fx2(spot.p);
     Team.id[e] = ENEMY;
-    Structure.kind[e] = StructureKind.Ladder;
-    Structure.hp[e] = LADDER.hp;
-    Structure.max[e] = LADDER.hp;
+    Structure.kind[e] = tower ? StructureKind.SiegeTower : StructureKind.Ladder;
+    Structure.hp[e] = tower ? SIEGE_TOWER.hp : LADDER.hp;
+    Structure.max[e] = tower ? SIEGE_TOWER.hp : LADDER.hp;
     Structure.radius[e] = fxFromFloat(2.5);
     Structure.gateIndex[e] = 255;
     Structure.slot[e] = lane * 8 + idx;
     Structure.buildLeft[e] = 0;
     Structure.qLen[e] = 0;
     Structure.level[e] = 1;
-    const cells = ladderCells(grid, spot).filter((c) => grid.blocked[c] === BLOCK_ALL);
+    const cells = ladderCells(grid, spot, tower ? SIEGE_TOWER.passHalfWidth : 1.5).filter(
+      (c) => grid.blocked[c] === BLOCK_ALL,
+    );
     const orig = cells.map((c) => grid.blocked[c] as number);
     for (const c of cells) grid.blocked[c] = BLOCK_ALL & ~(1 << ENEMY);
     m.ladders.push({ eid: e, lane, spot: idx, cells, orig, at: world.tick });
@@ -92,6 +103,7 @@ export const ladderSystem = (world: SimWorld): void => {
   // Sur kuleleri merdiveni iter; süre dolunca merdiven çöker.
   if (world.tick % SIM_HZ === 0)
     for (const l of m.ladders) {
+      if ((Structure.kind[l.eid] as number) !== StructureKind.Ladder) continue; // kule itilemez
       if (world.tick - l.at >= LIFETIME) {
         Structure.hp[l.eid] = 0;
         continue;

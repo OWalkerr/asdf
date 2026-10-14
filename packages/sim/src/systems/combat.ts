@@ -275,7 +275,12 @@ const enemyBuildings = (world: SimWorld): number[] => {
   const out: number[] = [];
   for (const e of query(world, [Structure])) {
     const kind = Structure.kind[e] as number;
-    if (kind !== StructureKind.Gate && kind !== StructureKind.Fortress && kind !== StructureKind.Ladder)
+    if (
+      kind !== StructureKind.Gate &&
+      kind !== StructureKind.Fortress &&
+      kind !== StructureKind.Ladder &&
+      kind !== StructureKind.SiegeTower
+    )
       out.push(e);
   }
   return out;
@@ -463,6 +468,17 @@ export const projectileSystem = (world: SimWorld): void => {
         0,
         Projectile.source[p] as number,
       );
+      // Alan hasarı kuşatma yapılarına (merdiven, kule) da işler.
+      const team = Projectile.team[p] as number;
+      for (const l of world.match.ladders) {
+        if (world.c.Team.id[l.eid] === team) continue;
+        const d = fxLen(
+          ((Position.x[l.eid] as number) - (Projectile.toX[p] as number)) | 0,
+          ((Position.z[l.eid] as number) - (Projectile.toZ[p] as number)) | 0,
+        );
+        if (d <= aoe + (world.c.Structure.radius[l.eid] as number))
+          applyDamage(world, l.eid, Projectile.damage[p] as number, Projectile.dmgType[p] as number);
+      }
       removeEntity(world, p);
       continue;
     }

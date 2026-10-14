@@ -121,4 +121,38 @@ describe('kuşatma merdivenleri', () => {
     );
     expect(inside || (sim.world.c.Structure.hp[fort] as number) < hp0).toBe(true);
   });
+
+  it('kuşatma kulesi yanaşır: geniş geçit açar, Uruk indirir, kendiliğinden çökmez', () => {
+    const sim = new Simulation(4, buildNavGrid(QUIET), QUIET);
+    const spot = sim.world.ladderSpots[0]?.[0];
+    if (!spot) throw new Error('nokta yok');
+    send(sim, {
+      type: 'spawnBattalion',
+      team: 1,
+      unitType: UnitTypeId.SiegeTower,
+      x: F(spot.o[0] + spot.n[0] * 8),
+      z: F(spot.o[1] + spot.n[1] * 8),
+      count: 1,
+      facing: 0,
+    });
+    run(sim);
+    const { Battalion, Team, Structure } = sim.world.c;
+    const b = [...query(sim.world, [Battalion])].find((e) => Team.id[e] === 1) as number;
+    Battalion.lane[b] = 1;
+    sendLadderTeam(sim.world, b, 0);
+    for (let i = 0; i < 1200 && sim.world.match.ladders.length === 0; i++) sim.step();
+    const m = sim.world.match;
+    expect(m.ladders.length).toBe(1);
+    const l = m.ladders[0] as (typeof m.ladders)[number];
+    expect(Structure.kind[l.eid]).toBe(6);
+    const uruks = [...query(sim.world, [Battalion])].filter(
+      (e) => Team.id[e] === 1 && Battalion.unitType[e] === UnitTypeId.UrukHai,
+    );
+    expect(uruks.length).toBe(1);
+    expect(Battalion.lane[uruks[0] as number]).toBe(1);
+    // Merdivenden geniş geçit ve 90 sn sonra hâlâ ayakta.
+    expect(l.cells.length).toBeGreaterThan(6);
+    run(sim, 20 * 95);
+    expect(m.ladders.some((x) => x.eid === l.eid)).toBe(true);
+  });
 });
