@@ -1,0 +1,33 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.5.15/schema.json",
+  "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
+  "files": { "ignoreUnknown": true, "includes": ["**", "!**/*.md"] },
+  "formatter": { "enabled": true, "indentStyle": "space", "indentWidth": 2, "lineWidth": 110 },
+  "linter": {
+    "enabled": true,
+    "rules": { "preset": "recommended" }
+  },
+  "javascript": { "formatter": { "quoteStyle": "single" } },
+  "assist": { "enabled": true, "actions": { "source": { "organizeImports": "on" } } },
+  "overrides": [
+    {
+      "includes": ["packages/shared/src/**", "packages/sim/src/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "paths": {
+                  "three": "Simülasyon render katmanından bağımsızdır (GDD §13.1).",
+                  "three/webgpu": "Simülasyon render katmanından bağımsızdır (GDD §13.1).",
+                  "three/tsl": "Simülasyon render katmanından bağımsızdır (GDD §13.1)."
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

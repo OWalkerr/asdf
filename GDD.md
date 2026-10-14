@@ -831,7 +831,9 @@ Profil araçları: `stats-gl` (GPU timer query), Chrome Performance, sim içi si
 | Kapsam şişmesi (5 faction, 6 harita, PvP) | Yüksek | Yüksek | Sıkı faz kapsamı (§16): MVP = 1 harita, 1 good faction (Gondor), 1 düşman (Isengard). |
 | Low-poly ama "BFME2'ye sadık" siluet üretimi için 3D sanat kapasitesi | Orta | Yüksek | Prosedürel "kit-bash" sistem: ortak gövde + değiştirilebilir miğfer/silah/kalkan parçaları → 1 rig'siz baz ile 20+ birim varyantı. Phase 1'de programatik (kodla üretilen) placeholder geometri. |
 
-**Açık sorular (onayınız gerekli):**
+**Phase 1 için varsayılan kararlar (2026-10-14, GDD onayıyla):** Aşağıdaki sorular yanıtlanana kadar önerilen seçeneklerle ilerleniyor — Gondor/Rohan vs Isengard, sadeleştirilmiş Helm's Deep, Solid.js, non-commercial (IP soyutlama katmanı Phase 5'e kadar ertelendi). Değiştirmek Phase 1 kodunu etkilemez.
+
+**Açık sorular:**
 
 1. **İlk faction çifti:** MVP için *Gondor vs Isengard* öneriyorum (Helm's Deep'e en uygun — teknik olarak Helm's Deep'te Rohan savunur; Rohan + Gondor'u "Men of the West" olarak tek faction'da birleştirdik). Onay?
 2. **MVP haritası:** Helm's Deep (FD) mi, yoksa daha basit bir Osgiliath (TD) mi? Öneri: **Helm's Deep'in sadeleştirilmiş versiyonu** (Deeping Wall + 1 kapı + culvert yok).

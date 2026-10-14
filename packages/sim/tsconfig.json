@@ -1,0 +1,6 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": { "outDir": "../../node_modules/.cache/tsc/sim", "types": [] },
+  "include": ["src"],
+  "references": [{ "path": "../shared" }]
+}
