@@ -32,7 +32,11 @@ export const createRenderContext = async (
   scene: Scene,
   camera: Camera,
 ): Promise<RenderContext> => {
-  const forceWebGL = new URLSearchParams(location.search).has('webgl');
+  // `?webgl` veya sayfanın koyduğu `BULWARK_FORCE_WEBGL` bayrağı (adres parametresi taşımayan
+  // gömülü/barındırılan sürümler için) WebGL2'yi zorlar.
+  const forceWebGL =
+    new URLSearchParams(location.search).has('webgl') ||
+    (globalThis as { BULWARK_FORCE_WEBGL?: boolean }).BULWARK_FORCE_WEBGL === true;
   const renderer = new WebGPURenderer({
     canvas,
     antialias: true,
