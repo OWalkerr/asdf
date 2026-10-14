@@ -136,7 +136,7 @@ export const FORKED_ROAD: MapDef = {
   mode: 'TD',
   size: 256,
   seed: 5150,
-  lives: 20,
+  lives: 25,
   blurb: 'İki koldan gelen düşman ortada birleşir. Kavşağı tut, iki yolu da ayrı ayrı inceltin.',
   camera: { home: [0, 0], yaw: 0, distance: 190 },
   citadel: {

@@ -33,37 +33,32 @@ URL parametreleri: `?map=helms_deep` (varsayılan) veya `?map=lookdev`, `?galler
 WASD / ok tuşları / ekran kenarı: kaydır · Orta tuş sürükle: kaydır · Q/E veya Alt+sol sürükle: döndür ·
 Tekerlek: imlece doğru zoom · Space/Home: başlangıç görünümü.
 
-## Nasıl oynanır (Helm's Deep, Phase 1)
-Beş düşman dalgası fırtınalı gecede güneyden gelir; Orc ve Uruk-hai taburları causeway'den **Hornburg
-kapısına**, ovadan **Deeping Wall menfezine** saldırır. Kapılardan biri düşerse yenilirsiniz, tüm dalgaları
-temizlerseniz kazanırsınız. Kapılar yalnızca sizin birliklerinize açıktır (arka kapı): piyadeyi dışarı çıkarıp
-saldıranları dağıtın. Okçular ve kuleler menzildeki düşmana kendiliğinden ateş eder.
+## Nasıl oynanır
+Başlangıç ekranında bir **harita** ve **zorluk** seçilir (`?map=…&difficulty=easy|normal|hard` ekranı atlar).
 
-**Ekonomi ve inşa:** 700 altınla başlarsınız, saniyede +5 gelir ve öldürülen her düşman için ödül alırsınız.
-Altın halkalı alana tıklayın: sur soketlerine ve Hornburg platformlarına **Okçu Kulesi** (250), vadideki
-arsalara **Kışla** (400) kurulur. Kışlayı seçip Gondor Askerleri, Okçuları ve Kule Muhafızları yetiştirin
-(kuyruk en fazla 5). Arsalara **Demirhane** (500) kurup takım çapında yükseltme araştırın: Dövme Kılıçlar
-(+%25 yakın dövüş), Ağır Zırh (−%25 alınan hasar), Ateşli Oklar (okçu ve kule okları ateş hasarı verir).
-Alt paneldeki düğmeler Z X C V kısayollarıyla da çalışır.
+**Kale Savunması (FD)** — *Taşkalkan Kalesi*, *İkiz Köprü Geçidi*, *Helm's Deep*: düşman dalgaları
+koridorlarından kapılara yürür. Kapılar yalnızca engeldir: kırılan kapıdan (gedik) düşman içeri akar ve
+koridorundaki sıradaki kapıya, en sonda **kaleye** saldırır. **Kale düşerse savaş biter**; tüm dalgaları
+püskürtürseniz kazanırsınız. Kale seçilince (**K**, portre veya tıklama) yükseltmeleri satın alınır:
+Taş Takviye (+%50 can), Ok Mazgalları, Kale Mancınığı, Şifa Sancağı, Hazine (+4 altın/sn). Kahramanlar
+kalenin kapısından çıkar; kapılar kale panelinden onarılır.
 
-**Koçbaşı:** 3. dalgadan itibaren Isengard koçbaşıları kapılara yürür. Oklara dayanıklıdır (Ateşli Oklar hariç),
-kılıca açıktır — piyadeyle kapının önüne çıkın. Hasar alan kapıyı üst şeritteki **Onar** düğmesiyle
-(300 altın, 10 sn'de +%25) onarabilirsiniz. Sağ alttaki mini haritaya tıklayınca kamera oraya kayar.
-Sesler prosedürel olarak üretilir (ilk tıklamada açılır, **M** ile sessize alınır).
+**Kule Savunması (TD)** — *Yılan Vadisi*, *Çatal Yol*: düşman sabit yolu izleyip çıkışa yürür; çıkışa
+ulaşan her tabur **can** götürür (Uruk 2, koçbaşı 3, Lurtz 10). Yol kenarındaki yuvalara **okçu kulesi**
+(250) ve alan hasarlı **mancınık** (450) kurun; üssün yanındaki arsalara kışla/demirhane.
 
-**Zorluk ve boss:** Maç öncesi ekranda Kolay / Normal / Zor seçilir (düşman canı, dalga büyüklüğü, başlangıç
-altını; `?difficulty=hard` ekranı atlar). Son dalgada **Lurtz** gelir: yanındaki Uruk'lara liderlik aurası
-verir, ekranın üstünde can çubuğu görünür.
+**Ekonomi:** saniyede +5 altın ve öldürülen her düşman için ödül. Sur soketleri ve kule platformlarına okçu
+kulesi veya mancınık, arsalara **Kışla** (400) ve **Demirhane** (500: Dövme Kılıçlar, Ağır Zırh, Ateşli Oklar).
+Koçbaşları oklara dayanıklıdır — mancınık, Ateşli Oklar veya piyadeyle durdurun.
 
-**Kahraman ve Spellbook (Phase 3):** Panelin üstündeki çubuktan **Aragorn**'u çağırın (1200 altın, **F**).
-20 m içindeki taburlara +%25 hasar aurası verir; seçiliyken *Elendil'in Kılıcı* (10 sn çift hasar) ve
-rütbe 3'te *Athelas* (alan iyileştirme) yeteneklerini kullanır. Ölürse 45 sn sonra yeniden çağrılabilir.
-Düşman öldürmek ve dalga başları **Güç Puanı** verir: **1–6** ile büyüleri açın/kullanın (hedefli büyülerde
-zeminde nokta seçilir, Esc iptal). Kademe 1: *Şifa*, *Toplanma Çağrısı*; kademe 2: *Ok Yağmuru*,
-*Elf Müttefikleri* (60 sn Lórien okçuları); kademe 3: *Rohirrim'i Çağır* (yoldaki düşmanı ezen süvari hücumu);
-kademe 4: *Ölüler Ordusu* (45 sn, hasar almayan hayalet taburlar). Üst kademe, bir alt kademe büyüsü ister. Taburlar
-öldürdükçe deneyim kazanır ve 5 rütbeye kadar yükselir (rütbe başına +%10 hasar ve dayanıklılık;
-rütbe 3'ten itibaren sancak altına döner).
+**Kahraman ve Güçler:** **F** ile Aragorn'u çağırın (1200; liderlik aurası, Elendil'in Kılıcı, rütbe 3'te
+Athelas). Düşman öldürmek ve dalga başları **Güç Puanı** verir; ekranın solundaki **Güçler** sütunundan (**1–6**)
+kademe kademe açılır: Şifa, Toplanma Çağrısı → Ok Yağmuru, Elf Müttefikleri → Rohirrim'i Çağır →
+Ölüler Ordusu. Taburlar öldürdükçe 5 rütbeye kadar yükselir. Son dalgada boss **Lurtz** gelir.
+
+**Arayüz (BFME2 düzeni):** sol altta palantír mini harita (tıkla: kamera), altta madalyon portre ve
+yuvarlak komut düğmeleri (**Z X C V B N**, ipucu için üzerine gelin), solda güçler, sol üstte kahraman ve
+kale portreleri, üstte dalga/kale/kapı durumu, sağ üstte kaynaklar. **?** yardım, **M** ses.
 
 ## Birim kontrolleri
 Sol tık: tabur seç (Shift ile ekle/çıkar) · Sol sürükle: kutu seçimi · Sağ tık: seçili taburları yürüt

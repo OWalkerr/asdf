@@ -82,8 +82,13 @@ export const spawnUnit = (world: SimWorld, team: number, unitType: number, x: Fx
 };
 
 /** Konum takım için kapalı hücredeyse en yakın açık hücre merkezine taşı. */
-const snapOpen = (world: SimWorld, x: Fx, z: Fx, team: number): [Fx, Fx] => {
+const snapOpen = (world: SimWorld, x0: Fx, z0: Fx, team: number): [Fx, Fx] => {
   const grid = world.nav;
+  // Önce ızgaranın içine kıstır (kalabalık dalga sırası harita kenarını aşabilir).
+  const lo = (grid.originFx + grid.cellFx) | 0;
+  const hi = (-grid.originFx - grid.cellFx) | 0;
+  const x = Math.max(lo, Math.min(hi, x0)) | 0;
+  const z = Math.max(lo, Math.min(hi, z0)) | 0;
   if (!isBlockedAt(grid, x, z, team)) return [x, z];
   const c = nearestOpenCell(grid, cellAt(grid, x, z), team);
   return c < 0 ? [x, z] : [cellCenterX(grid, c), cellCenterZ(grid, c)];
