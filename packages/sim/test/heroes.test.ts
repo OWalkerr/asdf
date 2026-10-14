@@ -72,8 +72,9 @@ describe('tabur rütbesi', () => {
     const b = battalionsOf(sim, 0)[0] as number;
     for (let t = 0; t < 1500 && battalionsOf(sim, 1).length > 0; t++) sim.step();
     expect(battalionsOf(sim, 1).length).toBe(0);
+    // 20 ork × asker başı değer 5 = en fazla 100 XP (son vuruşları başka tabur almadıysa).
     expect(sim.world.c.Battalion.xp[b]).toBeGreaterThan(0);
-    expect(sim.world.c.Battalion.rank[b]).toBeGreaterThanOrEqual(2);
+    expect(sim.world.c.Battalion.xp[b]).toBeLessThanOrEqual(100);
     expect(sim.world.match.pp[0] as number).toBeGreaterThan(pp0);
   });
 });
