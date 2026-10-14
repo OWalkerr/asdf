@@ -20,7 +20,11 @@ export type Command =
   | { type: 'move'; units: readonly number[]; x: Fx; z: Fx; spacing: Fx }
   /** Taburlarla düşman taburuna saldır (hedef, ölene veya emir değişene kadar izlenir). */
   | { type: 'attack'; units: readonly number[]; target: number }
-  | { type: 'stop'; units: readonly number[] };
+  | { type: 'stop'; units: readonly number[] }
+  /** Haritanın `slot` indeksli inşa yerine yapı kur (BUILDING_KINDS indeksi). */
+  | { type: 'build'; slot: number; kind: number }
+  /** Kışlada birim yetiştir (kuyruğa ekle). building = yapı eid'i. */
+  | { type: 'train'; building: number; unitType: number };
 
 export interface StampedCommand {
   /** Uygulanacağı sim tick'i. */

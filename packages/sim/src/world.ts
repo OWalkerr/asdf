@@ -17,6 +17,7 @@ import { movementSystem } from './systems/movement';
 import { animStateSystem, moveToTargetSystem } from './systems/moveToTarget';
 import { separationSystem } from './systems/separation';
 import { spatialSystem } from './systems/spatial';
+import { economySystem, structureSystem } from './systems/structures';
 
 /** Dalga programının düzleştirilmiş hali (tick sırasına göre). */
 export interface ScheduledGroup {
@@ -37,6 +38,10 @@ export interface MatchContext {
   /** MapDef.gates sırasıyla kapı entity'leri. */
   gates: number[];
   enemiesAlive: number;
+  /** Oyuncu başına altın (GDD §5.1). */
+  gold: Int32Array;
+  /** MapDef.slots sırasıyla inşa edilmiş yapı eid'i (0 = boş). */
+  slots: Int32Array;
 }
 
 export interface SimContext {
@@ -81,6 +86,8 @@ export const createSimWorld = (
       nextGroup: 0,
       gates: [],
       enemiesAlive: 0,
+      gold: new Int32Array(4),
+      slots: new Int32Array(map?.slots.length ?? 0),
     },
     hashHead: new Int32Array(nav.cols * nav.rows),
     hashNext: new Int32Array(MAX_ENTITIES),
@@ -97,12 +104,14 @@ export const createSimWorld = (
  */
 export const stepWorld = (world: SimWorld): void => {
   waveSystem(world);
+  economySystem(world);
   spatialSystem(world);
   engagementSystem(world);
   battalionSystem(world);
   battalionSpacingSystem(world);
   formationSystem(world);
   combatSystem(world);
+  structureSystem(world);
   moveToTargetSystem(world);
   separationSystem(world);
   movementSystem(world);
@@ -157,7 +166,15 @@ export const hashWorld = (world: SimWorld): number => {
     h = hashInt(h, Soldier.battalion[eid] as number);
     h = hashInt(h, Soldier.slot[eid] as number);
   }
-  for (const eid of query(world, [Structure])) h = hashInt(h, Structure.hp[eid] as number);
+  for (const eid of query(world, [Structure])) {
+    h = hashInt(h, eid);
+    h = hashInt(h, Structure.hp[eid] as number);
+    h = hashInt(h, Structure.kind[eid] as number);
+    h = hashInt(h, Structure.buildLeft[eid] as number);
+    h = hashInt(h, Structure.qLen[eid] as number);
+    h = hashInt(h, Structure.qProgress[eid] as number);
+  }
+  for (const g of world.match.gold) h = hashInt(h, g);
   h = hashInt(h, world.match.state);
   h = hashInt(h, world.match.nextGroup);
   for (const s of world.rng.getState()) h = hashInt(h, s);

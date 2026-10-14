@@ -2,6 +2,7 @@ import {
   ARMOR_CLASSES,
   DAMAGE_PERCENT,
   DAMAGE_TYPES,
+  ECONOMY,
   type Fx,
   fxFromFloat,
   UNIT_DEFS,
@@ -23,6 +24,12 @@ export const STAT = {
   interval: UNIT_DEFS.map((d) => Math.max(1, Math.round(d.attackInterval * SIM_HZ))) as readonly number[],
   range: UNIT_DEFS.map((d) => fxFromFloat(d.range)) as readonly Fx[],
   ranged: UNIT_DEFS.map((d) => (d.ranged ? 1 : 0)) as readonly number[],
+  cost: UNIT_DEFS.map((d) => d.cost) as readonly number[],
+  trainTicks: UNIT_DEFS.map((d) => Math.round(d.trainTime * SIM_HZ)) as readonly number[],
+  /** Öldürülen asker başına ödül (altın). */
+  bounty: UNIT_DEFS.map((d) =>
+    Math.max(1, Math.round((d.cost / d.battalionSize) * ECONOMY.bountyRate)),
+  ) as readonly number[],
 };
 
 export const isUnitType = (t: number): boolean => Number.isInteger(t) && t >= 0 && t < UNIT_DEFS.length;

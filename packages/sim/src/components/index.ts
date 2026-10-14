@@ -79,12 +79,24 @@ export const createComponents = (capacity = MAX_ENTITIES) => ({
     jx: new Int32Array(capacity),
     jz: new Int32Array(capacity),
   },
-  /** Yapı (kapı): can, saldırılabilir yarıçap (Fx), MapDef.gates indeksi. */
+  /**
+   * Yapı: kapı (kind 0) veya inşa edilmiş bina (1 = okçu kulesi, 2 = kışla; BUILDING_KINDS + 1).
+   * Kuyruk: eid × QUEUE_MAX dilimli birim tipleri; qProgress = baştaki birimin kalan tick'i.
+   */
   Structure: {
+    kind: new Uint8Array(capacity),
     hp: new Int32Array(capacity),
     max: new Int32Array(capacity),
     radius: new Int32Array(capacity),
     gateIndex: new Uint8Array(capacity),
+    slot: new Int16Array(capacity),
+    buildLeft: new Int32Array(capacity),
+    cooldown: new Int32Array(capacity),
+    /** Ok çıkış yüksekliği (cm, zeminden): sur üstü kule. */
+    height: new Uint16Array(capacity),
+    qLen: new Uint8Array(capacity),
+    qProgress: new Int32Array(capacity),
+    queue: new Uint8Array(capacity * 8),
   },
   /** Analitik mermi (GDD §6.4): uçuş önceden bilinir, isabet impact tick'inde çözülür. */
   Projectile: {
@@ -97,8 +109,15 @@ export const createComponents = (capacity = MAX_ENTITIES) => ({
     target: new Int32Array(capacity),
     damage: new Int32Array(capacity),
     dmgType: new Uint8Array(capacity),
+    /** Çıkış yüksekliği (cm, zeminden). */
+    height: new Uint16Array(capacity),
   },
 });
+
+/** Kışla kuyruğu dilim boyu (Structure.queue[eid * QUEUE_STRIDE + i]). */
+export const QUEUE_STRIDE = 8;
+/** Structure.kind: 0 kapı, sonra BUILDING_KINDS sırası + 1. */
+export const StructureKind = { Gate: 0, ArrowTower: 1, Barracks: 2 } as const;
 
 export type Components = ReturnType<typeof createComponents>;
 

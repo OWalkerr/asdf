@@ -1,27 +1,33 @@
 /**
- * Sim → render snapshot düzeni (GDD §13.3), sürüm 3.
+ * Sim → render snapshot düzeni (GDD §13.3), sürüm 4.
  *
  * Tek bir Int32Array (SharedArrayBuffer üzerinde veya fallback'te düz ArrayBuffer):
  *
  *   [global header: 4]  activeIndex, publishCount, capacity, projCapacity
- *   [buffer 0: header 16 + capacity × 6 + projCapacity × 6]
+ *   [buffer 0: header 24 + capacity × 6 + projCapacity × 7 + SNAP_MAX_STRUCTS × 6]
  *   [buffer 1: aynı]
  *
  * Buffer header: version (seqlock; tek = yazılıyor), tick, count, simMicros, projCount,
- *   matchState, waveIndex, waveCount, nextWaveTick, enemiesAlive, gateHp[0..2], gateMax[0..2]
+ *   matchState, waveIndex, waveCount, nextWaveTick, enemiesAlive, gateHp[0..2], gateMax[0..2],
+ *   gold (oyuncu 0), structCount
  *
  * Birim kaydı (6 × int32):
  *   0 eid · 1 x (Q16.16) · 2 z (Q16.16) · 3 yaw:16|unitType:8|team:8
  *   4 anim:8|flags:8|hp8:8|animTick:8 · 5 tabur eid'i (0 = yok/ölü)
- * Ok kaydı (6 × int32):
- *   0 eid · 1 fromX · 2 fromZ · 3 toX · 4 toZ · 5 fireTick:20|flightTicks:12
+ * Ok kaydı (7 × int32):
+ *   0 eid · 1 fromX · 2 fromZ · 3 toX · 4 toZ · 5 fireTick:20|flightTicks:12 · 6 çıkış yüksekliği (cm, zeminden)
+ * Yapı kaydı (6 × int32):
+ *   0 eid · 1 kind:8|slot:8|team:8 · 2 hp · 3 max · 4 kalan inşa tick'i · 5 kuyruk (packQueue)
  *
  * Konumlar ham Q16.16 olarak taşınır; float'a çeviri render tarafında (GDD §13.7).
  */
 export const SNAP_GLOBAL_INTS = 4;
-export const SNAP_HEADER_INTS = 16;
+export const SNAP_HEADER_INTS = 24;
 export const SNAP_UNIT_INTS = 6;
-export const SNAP_PROJ_INTS = 6;
+export const SNAP_PROJ_INTS = 7;
+export const SNAP_STRUCT_INTS = 6;
+/** Snapshot'ta taşınan en fazla inşa edilmiş yapı. */
+export const SNAP_MAX_STRUCTS = 48;
 /** Snapshot'ta taşınan en fazla kapı sayısı. */
 export const SNAP_MAX_GATES = 3;
 
@@ -42,6 +48,8 @@ export const H_NEXT_WAVE_TICK = 8;
 export const H_ENEMIES_ALIVE = 9;
 export const H_GATE_HP = 10; // 10, 11, 12
 export const H_GATE_MAX = 13; // 13, 14, 15
+export const H_GOLD = 16;
+export const H_STRUCT_COUNT = 17;
 
 /** Birim kaydı flags biti: son birkaç tick içinde hasar aldı (vurulma parıltısı). */
 export const FLAG_HIT = 1;
@@ -51,7 +59,10 @@ export const MatchState = { Playing: 0, Victory: 1, Defeat: 2 } as const;
 export type MatchState = (typeof MatchState)[keyof typeof MatchState];
 
 const bufferInts = (capacity: number, projCapacity: number) =>
-  SNAP_HEADER_INTS + capacity * SNAP_UNIT_INTS + projCapacity * SNAP_PROJ_INTS;
+  SNAP_HEADER_INTS +
+  capacity * SNAP_UNIT_INTS +
+  projCapacity * SNAP_PROJ_INTS +
+  SNAP_MAX_STRUCTS * SNAP_STRUCT_INTS;
 
 export const snapshotInts = (capacity: number, projCapacity: number): number =>
   SNAP_GLOBAL_INTS + 2 * bufferInts(capacity, projCapacity);
@@ -62,6 +73,22 @@ export const bufferOffset = (view: Int32Array, index: number): number =>
 /** Buffer içinde ok bölümünün başı (header sonrası birim bölümünden sonra). */
 export const projOffset = (view: Int32Array, base: number): number =>
   base + SNAP_HEADER_INTS + (view[G_CAPACITY] as number) * SNAP_UNIT_INTS;
+
+/** Buffer içinde yapı bölümünün başı (ok bölümünden sonra). */
+export const structOffset = (view: Int32Array, base: number): number =>
+  projOffset(view, base) + (view[G_PROJ_CAPACITY] as number) * SNAP_PROJ_INTS;
+
+/** Kışla kuyruğu: uzunluk (4 bit), şu an yetişen birim tipi (8 bit), ilerleme % (7 bit). */
+export const packQueue = (len: number, unit: number, pct: number): number =>
+  (len & 0xf) | ((unit & 0xff) << 4) | ((pct & 0x7f) << 12);
+export const unpackQueueLen = (v: number): number => v & 0xf;
+export const unpackQueueUnit = (v: number): number => (v >>> 4) & 0xff;
+export const unpackQueuePct = (v: number): number => (v >>> 12) & 0x7f;
+
+export const packStructKind = (kind: number, slot: number, team: number): number =>
+  ((kind & 0xff) << 16) | ((slot & 0xff) << 8) | (team & 0xff);
+export const unpackStructKind = (v: number): number => (v >>> 16) & 0xff;
+export const unpackStructSlot = (v: number): number => (v >>> 8) & 0xff;
 
 export const createSnapshotView = (capacity: number, shared: boolean, projCapacity = 2048): Int32Array => {
   const bytes = snapshotInts(capacity, projCapacity) * 4;
@@ -99,6 +126,7 @@ export interface MatchInfo {
   enemiesAlive: number;
   gateHp: number[];
   gateMax: number[];
+  gold: number;
 }
 
 /** Okunan tek bir snapshot (render tarafının kendi kopyası). */
@@ -110,6 +138,8 @@ export interface SnapshotFrame {
   units: Int32Array;
   projCount: number;
   projectiles: Int32Array;
+  structCount: number;
+  structures: Int32Array;
   match: MatchInfo;
 }
 
@@ -120,7 +150,18 @@ export const createFrame = (capacity: number, projCapacity = 2048): SnapshotFram
   units: new Int32Array(capacity * SNAP_UNIT_INTS),
   projCount: 0,
   projectiles: new Int32Array(projCapacity * SNAP_PROJ_INTS),
-  match: { state: 0, waveIndex: 0, waveCount: 0, nextWaveTick: 0, enemiesAlive: 0, gateHp: [], gateMax: [] },
+  structCount: 0,
+  structures: new Int32Array(SNAP_MAX_STRUCTS * SNAP_STRUCT_INTS),
+  match: {
+    state: 0,
+    waveIndex: 0,
+    waveCount: 0,
+    nextWaveTick: 0,
+    enemiesAlive: 0,
+    gateHp: [],
+    gateMax: [],
+    gold: 0,
+  },
 });
 
 /** Header'daki maç alanlarını frame'e kopyalar. */
@@ -130,6 +171,7 @@ export const readMatchHeader = (view: Int32Array, base: number, out: MatchInfo):
   out.waveCount = view[base + H_WAVE_COUNT] as number;
   out.nextWaveTick = view[base + H_NEXT_WAVE_TICK] as number;
   out.enemiesAlive = view[base + H_ENEMIES_ALIVE] as number;
+  out.gold = view[base + H_GOLD] as number;
   out.gateHp.length = 0;
   out.gateMax.length = 0;
   for (let g = 0; g < SNAP_MAX_GATES; g++) {
@@ -160,12 +202,16 @@ export const readLatestSnapshot = (view: Int32Array, out: SnapshotFrame): boolea
     const projCount = Math.min(view[base + H_PROJ_COUNT] as number, projCapacity);
     const pStart = projOffset(view, base);
     out.projectiles.set(view.subarray(pStart, pStart + projCount * SNAP_PROJ_INTS));
+    const structCount = Math.min(view[base + H_STRUCT_COUNT] as number, SNAP_MAX_STRUCTS);
+    const sStart = structOffset(view, base);
+    out.structures.set(view.subarray(sStart, sStart + structCount * SNAP_STRUCT_INTS));
     const simMicros = view[base + H_SIM_MICROS] as number;
     readMatchHeader(view, base, out.match);
     if (Atomics.load(view, base + H_VERSION) !== v1) continue;
     out.tick = tick;
     out.count = count;
     out.projCount = projCount;
+    out.structCount = structCount;
     out.simMicros = simMicros;
     return true;
   }

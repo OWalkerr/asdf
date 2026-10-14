@@ -89,24 +89,48 @@ const startAttackAnim = (world: SimWorld, s: number): void => {
   world.c.Anim.startTick[s] = world.tick;
 };
 
-const fireArrow = (world: SimWorld, s: number, target: number): void => {
-  const { Position, Projectile, Combat } = world.c;
-  const sx = Position.x[s] as number;
-  const sz = Position.z[s] as number;
+/**
+ * Analitik ok: hedefin şimdiki konumuna (küçük sapmayla) nişan alır; uçuş süresi mesafeden.
+ * height: çıkış yüksekliği (cm, zeminden) — yalnızca render yayı için.
+ */
+export const fireProjectile = (
+  world: SimWorld,
+  fromX: number,
+  fromZ: number,
+  target: number,
+  damage: number,
+  dmgType: number,
+  height: number,
+): void => {
+  const { Position, Projectile } = world.c;
   const tx = (Position.x[target] as number) + fxMul(world.rng.nextFx() - FX_HALF, ARROW_SPREAD);
   const tz = (Position.z[target] as number) + fxMul(world.rng.nextFx() - FX_HALF, ARROW_SPREAD);
-  const d = fxLen((tx - sx) | 0, (tz - sz) | 0);
+  const d = fxLen((tx - fromX) | 0, (tz - fromZ) | 0);
   const p = addEntity(world);
   addComponent(world, p, Projectile);
-  Projectile.fromX[p] = sx;
-  Projectile.fromZ[p] = sz;
+  Projectile.fromX[p] = fromX;
+  Projectile.fromZ[p] = fromZ;
   Projectile.toX[p] = tx | 0;
   Projectile.toZ[p] = tz | 0;
   Projectile.fireTick[p] = world.tick;
   Projectile.flight[p] = Math.max(4, Math.min(4000, (d / ARROW_STEP) | 0));
   Projectile.target[p] = target;
-  Projectile.damage[p] = Combat.damage[s] as number;
-  Projectile.dmgType[p] = Combat.dmgType[s] as number;
+  Projectile.damage[p] = damage;
+  Projectile.dmgType[p] = dmgType;
+  Projectile.height[p] = height;
+};
+
+const fireArrow = (world: SimWorld, s: number, target: number): void => {
+  const { Position, Combat } = world.c;
+  fireProjectile(
+    world,
+    Position.x[s] as number,
+    Position.z[s] as number,
+    target,
+    Combat.damage[s] as number,
+    Combat.dmgType[s] as number,
+    150,
+  );
 };
 
 export const combatSystem = (world: SimWorld): void => {

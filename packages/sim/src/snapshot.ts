@@ -9,25 +9,34 @@ import {
   H_ENEMIES_ALIVE,
   H_GATE_HP,
   H_GATE_MAX,
+  H_GOLD,
   H_MATCH_STATE,
   H_NEXT_WAVE_TICK,
   H_PROJ_COUNT,
   H_SIM_MICROS,
+  H_STRUCT_COUNT,
   H_TICK,
   H_VERSION,
   H_WAVE_COUNT,
   H_WAVE_INDEX,
   packAnim,
   packFlight,
+  packQueue,
+  packStructKind,
   packYawTypeTeam,
   projOffset,
   SNAP_HEADER_INTS,
   SNAP_MAX_GATES,
+  SNAP_MAX_STRUCTS,
   SNAP_PROJ_INTS,
+  SNAP_STRUCT_INTS,
   SNAP_UNIT_INTS,
+  structOffset,
 } from '@bulwark/shared';
 import { query } from 'bitecs';
+import { QUEUE_STRIDE } from './components';
 import { nextWaveTick } from './systems/match';
+import { STAT } from './unitStats';
 import type { SimWorld } from './world';
 
 /** Bu kadar tick içinde hasar alan birim "vurulmuş" bayrağı taşır (render parıltısı). */
@@ -76,10 +85,34 @@ export const writeSnapshot = (world: SimWorld, view: Int32Array, simMicros = 0):
     view[p + 3] = Projectile.toX[eid] as number;
     view[p + 4] = Projectile.toZ[eid] as number;
     view[p + 5] = packFlight(Projectile.fireTick[eid] as number, Projectile.flight[eid] as number);
+    view[p + 6] = Projectile.height[eid] as number;
     p += SNAP_PROJ_INTS;
     projCount++;
   }
+  let s = structOffset(view, base);
+  let structCount = 0;
+  for (const eid of query(world, [Structure, Position, Team])) {
+    const kind = Structure.kind[eid] as number;
+    if (kind === 0 || structCount >= SNAP_MAX_STRUCTS) continue;
+    const qLen = Structure.qLen[eid] as number;
+    const head = Structure.queue[eid * QUEUE_STRIDE] as number;
+    const total = qLen > 0 ? (STAT.trainTicks[head] as number) : 1;
+    const pct =
+      qLen > 0
+        ? Math.min(100, Math.max(0, (100 - ((Structure.qProgress[eid] as number) * 100) / total) | 0))
+        : 0;
+    view[s] = eid;
+    view[s + 1] = packStructKind(kind, Structure.slot[eid] as number, Team.id[eid] as number);
+    view[s + 2] = Structure.hp[eid] as number;
+    view[s + 3] = Structure.max[eid] as number;
+    view[s + 4] = Structure.buildLeft[eid] as number;
+    view[s + 5] = packQueue(qLen, head, pct);
+    s += SNAP_STRUCT_INTS;
+    structCount++;
+  }
   const m = world.match;
+  view[base + H_STRUCT_COUNT] = structCount;
+  view[base + H_GOLD] = m.gold[0] as number;
   view[base + H_TICK] = world.tick;
   view[base + H_COUNT] = count;
   view[base + H_SIM_MICROS] = simMicros | 0;

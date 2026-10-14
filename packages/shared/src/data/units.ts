@@ -33,6 +33,9 @@ export interface UnitDef {
   ranged: boolean;
   /** Tabur başına asker (GDD §6.1). */
   battalionSize: number;
+  /** Tabur maliyeti (altın) ve kışlada yetiştirme süresi (s). Düşman için ödül tabanı. */
+  cost: number;
+  trainTime: number;
   /** Tercih edilen ön cephe genişliği (asker); dar geçitte otomatik daralır. */
   files: number;
   /** Formasyon aralığı (m). */
@@ -57,6 +60,8 @@ export const UNIT_DEFS: readonly UnitDef[] = [
     range: 1.6,
     ranged: false,
     battalionSize: 15,
+    cost: 200,
+    trainTime: 10,
     files: 5,
     spacing: 1.4,
     jitter: 0.05,
@@ -76,6 +81,8 @@ export const UNIT_DEFS: readonly UnitDef[] = [
     range: 1.5,
     ranged: false,
     battalionSize: 20,
+    cost: 100,
+    trainTime: 8,
     files: 5,
     spacing: 1.25,
     jitter: 0.35,
@@ -95,6 +102,8 @@ export const UNIT_DEFS: readonly UnitDef[] = [
     range: 2.4,
     ranged: false,
     battalionSize: 15,
+    cost: 350,
+    trainTime: 14,
     files: 5,
     spacing: 1.4,
     jitter: 0.05,
@@ -114,6 +123,8 @@ export const UNIT_DEFS: readonly UnitDef[] = [
     range: 1.6,
     ranged: false,
     battalionSize: 10,
+    cost: 300,
+    trainTime: 12,
     files: 5,
     spacing: 1.5,
     jitter: 0.08,
@@ -133,6 +144,8 @@ export const UNIT_DEFS: readonly UnitDef[] = [
     range: 32,
     ranged: true,
     battalionSize: 15,
+    cost: 250,
+    trainTime: 12,
     files: 5,
     spacing: 1.4,
     jitter: 0.06,

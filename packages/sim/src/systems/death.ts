@@ -1,6 +1,8 @@
 import { AnimState } from '@bulwark/shared';
 import { entityExists, query, removeEntity } from 'bitecs';
+import { STAT } from '../unitStats';
 import type { SimWorld } from '../world';
+import { ENEMY_TEAM } from './match';
 
 /** Cesetlerin sahnede kaldığı süre (tick; ölüm animasyonu + yere batma). */
 const CORPSE_TICKS = 90;
@@ -11,7 +13,7 @@ const CORPSE_TICKS = 90;
  * tabur silinir. Cesetler CORPSE_TICKS sonra temizlenir.
  */
 export const deathSystem = (world: SimWorld): void => {
-  const { Health, UnitType, Dead, Anim, Velocity, Combat, Soldier, Battalion, MoveTarget } = world.c;
+  const { Health, UnitType, Dead, Anim, Velocity, Combat, Soldier, Battalion, MoveTarget, Team } = world.c;
   const affected: number[] = [];
   const units = query(world, [Health, UnitType]);
   for (const e of units) {
@@ -31,6 +33,11 @@ export const deathSystem = (world: SimWorld): void => {
     Velocity.z[e] = 0;
     Combat.target[e] = 0;
     MoveTarget.active[e] = 0;
+    // Ödül (GDD §5.1): saldıran takımın her kaybı savunan oyuncuya altın kazandırır.
+    if (world.map && Team.id[e] === ENEMY_TEAM) {
+      world.match.gold[0] =
+        (world.match.gold[0] as number) + (STAT.bounty[UnitType.id[e] as number] as number);
+    }
     const b = Soldier.battalion[e] as number;
     if (b !== 0) {
       Soldier.battalion[e] = 0;

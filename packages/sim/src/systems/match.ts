@@ -1,4 +1,4 @@
-import { fxAtan2, fxFromFloat, type MapDef, MatchState, type Vec2 } from '@bulwark/shared';
+import { ECONOMY, fxAtan2, fxFromFloat, type MapDef, MatchState, type Vec2 } from '@bulwark/shared';
 import { addComponent, addEntity } from 'bitecs';
 import { BattalionMode } from '../components';
 import { SIM_HZ } from '../constants';
@@ -23,6 +23,8 @@ export const setupMatch = (world: SimWorld, map: MapDef): void => {
     // Saldırılabilir yarıçap: kapı yarı genişliği + duvar kalınlığı payı (ön sıra erişebilsin).
     Structure.radius[g] = fxFromFloat(gate.width / 2 + 2.5);
     Structure.gateIndex[g] = i;
+    Structure.kind[g] = 0;
+    Structure.slot[g] = -1;
     world.match.gates.push(g);
   });
   const schedule: ScheduledGroup[] = [];
@@ -40,6 +42,7 @@ export const setupMatch = (world: SimWorld, map: MapDef): void => {
   // Kararlı sıralama (Array.prototype.sort spec gereği kararlıdır): tick, sonra tanım sırası.
   schedule.sort((a, b) => a.tick - b.tick);
   world.match.schedule = schedule;
+  world.match.gold[0] = ECONOMY.startGold;
   world.match.waveCount = map.waves.length;
 };
 
