@@ -123,4 +123,21 @@ describe('kahraman kadrosu', () => {
     run(sim, 25);
     expect(membersHp(sim, s)).toBeLessThan(hp0);
   });
+
+  it('Ateş Ejderi uzaktan alan hasarlı ateş topu püskürtür', () => {
+    const sim = newSim();
+    spawn(sim, 1, UnitTypeId.Wyrm, 0, 50);
+    spawn(sim, 0, UnitTypeId.GondorSoldier, 0, 64);
+    run(sim);
+    const s = battalionsOf(sim, 0, UnitTypeId.GondorSoldier)[0] as number;
+    const hp0 = membersHp(sim, s);
+    let fireball = false;
+    for (let i = 0; i < 120; i++) {
+      run(sim);
+      const { Projectile } = sim.world.c;
+      if ([...query(sim.world, [Projectile])].some((p) => Projectile.kind[p] === 2)) fireball = true;
+    }
+    expect(fireball).toBe(true);
+    expect(membersHp(sim, s)).toBeLessThan(hp0);
+  });
 });

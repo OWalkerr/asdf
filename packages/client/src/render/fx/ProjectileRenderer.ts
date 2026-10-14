@@ -5,6 +5,7 @@ import {
   ConeGeometry,
   DodecahedronGeometry,
   DynamicDrawUsage,
+  IcosahedronGeometry,
   InstancedMesh,
   Matrix4,
   MeshBasicNodeMaterial,
@@ -23,6 +24,8 @@ const ARC = 0.16; // tepe yüksekliği / mesafe
 export class ProjectileRenderer {
   readonly mesh: InstancedMesh;
   readonly stones: InstancedMesh;
+  /** Ateş Ejderi alev topları (tür 2). */
+  readonly fireballs: InstancedMesh;
   private readonly m = new Matrix4();
   private readonly q = new Quaternion();
   private readonly p = new Vector3();
@@ -52,6 +55,12 @@ export class ProjectileRenderer {
     this.stones.name = 'stones';
     this.stones.frustumCulled = false;
     this.stones.count = 0;
+    const ball = new IcosahedronGeometry(0.9, 0);
+    ball.deleteAttribute('uv');
+    this.fireballs = new InstancedMesh(ball, new MeshBasicNodeMaterial({ color: '#ff8a2a' }), 32);
+    this.fireballs.name = 'fireballs';
+    this.fireballs.frustumCulled = false;
+    this.fireballs.count = 0;
   }
 
   update(host: SimHost, now: number): void {
@@ -61,6 +70,8 @@ export class ProjectileRenderer {
     const cap = this.mesh.instanceMatrix.count;
     let n = 0;
     let ns = 0;
+    let nf = 0;
+    const fcap = this.fireballs.instanceMatrix.count;
     const scap = this.stones.instanceMatrix.count;
     for (let i = 0; i < frame.projCount && n < cap; i++) {
       const o = i * SNAP_PROJ_INTS;
@@ -78,6 +89,16 @@ export class ProjectileRenderer {
       const dist = Math.hypot(tx - fx, tz - fz);
       const h = dist * (kind === 1 ? ARC * 2.2 : ARC);
       this.p.set(fx + (tx - fx) * t, y0 + (y1 - y0) * t + 4 * h * t * (1 - t), fz + (tz - fz) * t);
+      if (kind === 2) {
+        if (nf >= fcap) continue;
+        // Alev topu: alçak yay, titreşen ölçek.
+        this.p.y = y0 + (y1 - y0) * t + dist * ARC * 0.6 * t * (1 - t);
+        const sc = 0.8 + 0.35 * Math.sin(t * 40 + i);
+        this.q.setFromAxisAngle(this.fwd, t * 12);
+        this.m.compose(this.p, this.q, this.p.clone().set(sc, sc, sc));
+        this.fireballs.setMatrixAt(nf++, this.m);
+        continue;
+      }
       if (kind === 1) {
         if (ns >= scap) continue;
         this.q.setFromAxisAngle(this.fwd, t * 9 + i);
@@ -95,5 +116,7 @@ export class ProjectileRenderer {
     if (n > 0) this.mesh.instanceMatrix.needsUpdate = true;
     this.stones.count = ns;
     if (ns > 0) this.stones.instanceMatrix.needsUpdate = true;
+    this.fireballs.count = nf;
+    if (nf > 0) this.fireballs.instanceMatrix.needsUpdate = true;
   }
 }

@@ -20,6 +20,8 @@ import {
   UNIT_MODELS,
   urukHai,
   wargRider,
+  watcher,
+  wyrm,
 } from '../src/render/units/models';
 
 /** GDD §3.2 poligon bütçeleri (LOD0): piyade ≤ 300, elit piyade ≤ 450, kahraman ≤ 450, kuşatma aracı ≤ 900 üçgen. */
@@ -41,6 +43,8 @@ const BUDGET: [string, () => import('three/webgpu').BufferGeometry, number][] = 
   ['Legolas', legolas, 450],
   ['Balrog', balrog, 900],
   ['Merdiven takımı', ladderTeam, 900],
+  ['Su Gözcüsü', watcher, 900],
+  ['Ateş Ejderi', wyrm, 900],
 ];
 
 describe('birim modelleri', () => {

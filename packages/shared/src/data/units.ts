@@ -62,6 +62,8 @@ export interface UnitDef {
   cleave?: number;
   /** Okçu birliği yapılara da ok atar (yapılara karşı hasar tipi: ateşli ok). */
   siegeArcher?: boolean;
+  /** Alev püskürtme (Ateş Ejderi): menzilli saldırı hedef noktasına `aoe` m yarıçaplı ateş topu. */
+  breath?: { aoe: number };
   /** Kuşatma merdiveni taşır: sura dayar, düşman surun üstünden geçer. */
   ladder?: boolean;
   /** Ateş aurası (Balrog): her saniye `radius` içindeki düşmanlara `damage` ateş hasarı. */
@@ -492,6 +494,60 @@ export const UNIT_DEFS: readonly UnitDef[] = [
     lifeCost: 2,
     stepRate: 1.6,
   },
+  {
+    // Su Gözcüsü (BFME2, Moria kapısı): dokunaçlı dev göl canavarı; dokunaçları geniş alana vurur.
+    // Fortress Defence haritalarının ünlü özel dalgası.
+    id: 18,
+    key: 'watcher',
+    name: 'Watcher in the Water',
+    faction: 'mordor',
+    speed: 2.8,
+    hp: 6000,
+    armor: 'monster',
+    attackStyle: 'slash',
+    damage: 90,
+    damageType: 'crush',
+    attackInterval: 2.0,
+    range: 5,
+    ranged: false,
+    battalionSize: 1,
+    cost: 2500,
+    trainTime: 0,
+    files: 1,
+    spacing: 6,
+    jitter: 0,
+    boss: true,
+    lifeCost: 10,
+    cleave: 4.5,
+    stepRate: 0.7,
+  },
+  {
+    // Ateş Ejderi (BFME2 Goblin "Fire Drake" / wyrm): uzaktan alev püskürtür; binaları da yakar.
+    id: 19,
+    key: 'wyrm',
+    name: 'Fire Drake',
+    faction: 'mordor',
+    speed: 4.6,
+    hp: 3500,
+    armor: 'monster',
+    attackStyle: 'thrust',
+    damage: 60,
+    damageType: 'fire',
+    attackInterval: 3.0,
+    range: 18,
+    ranged: true,
+    battalionSize: 1,
+    cost: 2000,
+    trainTime: 0,
+    files: 1,
+    spacing: 6,
+    jitter: 0,
+    boss: true,
+    lifeCost: 8,
+    siegeArcher: true,
+    breath: { aoe: 4 },
+    stepRate: 1.2,
+  },
 ];
 
 export const UnitTypeId = {
@@ -513,6 +569,8 @@ export const UnitTypeId = {
   Legolas: 15,
   Balrog: 16,
   LadderTeam: 17,
+  Watcher: 18,
+  Wyrm: 19,
 } as const;
 
 export const unitDef = (id: number): UnitDef => {

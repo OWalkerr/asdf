@@ -42,7 +42,9 @@ sürüsü, 25: ok yağmuru, 28: Trol Kralları, 30: Lurtz); her dalga başında 
 kaybolmaz: bölge güç vuruşlarıyla onları eritir, içeride bekleyen her tabur 4 sn'de bir can götürür (40 can).
 
 **Kale Savunması (Fortress Defence)** — klasik tür: kale yolun tam ortasında, kare surun dört kapısı; 20 dalga
-dört yönden aynı anda gelir, her 5. dalga özel (trol sürüsü, kuşatma, warg akını, Lurtz); dalga başı altın.
+dört yönden aynı anda gelir, her 5. dalga özel (trol sürüsü, kuşatma, warg akını, Lurtz); Sojuz'un haritalarındaki
+gibi 7. dalgada **Su Gözcüsü** (dokunaçlarıyla geniş alana vuran göl canavarı), 12. dalgada iki **Ateş Ejderi**
+(uzaktan alan hasarlı alev topu püskürtür, binaları yakar), 17. dalgada ikisi birden; dalga başı altın.
 
 **Kale Savunması (FD)** — *Taşkalkan Kalesi*, *İkiz Köprü Geçidi*, *Helm's Deep*: düşman dalgaları
 koridorlarından kapılara yürür. Kapılar yalnızca engeldir: kırılan kapıdan (gedik) düşman içeri akar ve

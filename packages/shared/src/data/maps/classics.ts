@@ -12,7 +12,8 @@ import { gateOps, pathOpens, wallBlocks } from './builders';
  *   kalan her tabur düzenli aralıkla can götürür (bölge 2–3 dalgayı tamponlar).
  * - Kale Savunması (Fortress Defence): kale yolun tam ortasında; dört yönden gelen yollar kare
  *   surun dört kapısına, oradan kaleye çıkar. 20 dalga, her 5. dalga özel (trol sürüsü,
- *   kuşatma, warg akını, Lurtz), dalga başı gelir. Kale düşerse savaş biter.
+ *   kuşatma, warg akını, Lurtz); 7. dalgada Su Gözcüsü, 12.'de Ateş Ejderleri, 17.'de ikisi
+ *   (Sojuz'un haritalarındaki Watcher/Wyrm dalgaları). Dalga başı gelir. Kale düşerse savaş biter.
  */
 const tower = (id: string, pos: Vec2): SlotDef => ({ id, kind: 'tower', pos, elevation: 0, allowed: [] });
 const plot = (id: string, pos: Vec2): SlotDef => ({ id, kind: 'building', pos, elevation: 0, allowed: [] });
@@ -272,17 +273,17 @@ const FD_NAMES = [
   'Uruk öncüleri',
   'Trol sürüsü',
   'Kurtlar',
-  'Kara sel',
+  'Sudaki Gözcü',
   'Demir kalkanlar',
   'Gece hücumu',
   'Kuşatma',
   'Ok yağmuru',
-  'Kemik kıranlar',
+  'Ejder ateşi',
   'Isengard alayı',
   'Dört kol',
   'Warg akını',
   'Uzun gece',
-  'Kızıl gözler',
+  'Gözcü ve ejder',
   'Son hazırlık',
   'Kara ordu',
   'Lurtz ve Balrog',
@@ -307,6 +308,16 @@ export const fortressDefenceWaves = (spawns: readonly string[], first = 35, gap 
       if (wave >= 4 && (w + k) % (wave >= 10 ? 2 : 4) === 0) g(dt + 16, spawn, UnitTypeId.LadderTeam, 1);
     });
     const side = (i: number) => spawns[(w + i) % spawns.length] as string;
+    // Sojuz'un Fortress Defense özel dalgaları: Su Gözcüsü (7), Ateş Ejderleri (12), ikisi (17).
+    if (wave === 7) g(20, side(1), UnitTypeId.Watcher, 1);
+    if (wave === 12) {
+      g(14, side(0), UnitTypeId.Wyrm, 1);
+      g(18, side(2), UnitTypeId.Wyrm, 1);
+    }
+    if (wave === 17) {
+      g(16, side(1), UnitTypeId.Watcher, 1);
+      g(22, side(3), UnitTypeId.Wyrm, 1);
+    }
     if (wave === 5)
       spawns.forEach((s, k) => {
         g(20 + k * 3, s, UnitTypeId.CaveTroll, k % 2 === 0 ? 1 : 0);

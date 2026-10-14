@@ -175,6 +175,8 @@ export const fireStone = (
   height: number,
   aoe: Fx,
   team: number,
+  kind = 1,
+  source = 0,
 ): void => {
   const { Projectile } = world.c;
   const tx = (toX + fxMul(world.rng.nextFx() - FX_HALF, STONE_SPREAD)) | 0;
@@ -192,10 +194,10 @@ export const fireStone = (
   Projectile.damage[p] = damage;
   Projectile.dmgType[p] = dmgType;
   Projectile.height[p] = height;
-  Projectile.source[p] = 0;
+  Projectile.source[p] = source;
   Projectile.aoe[p] = aoe;
   Projectile.team[p] = team;
-  Projectile.kind[p] = 1;
+  Projectile.kind[p] = kind;
 };
 
 /** Alan hasarı: (x, z) çevresinde `radius` içindeki karşı takım birimleri (uzamsal hash). */
@@ -233,9 +235,28 @@ export const splash = (
 };
 
 const fireArrow = (world: SimWorld, s: number, target: number): void => {
-  const { Position, Combat, Team, Soldier } = world.c;
+  const { Position, Combat, Team, Soldier, UnitType } = world.c;
   const team = Team.id[s] as number;
   const b = Soldier.battalion[s] as number;
+  const aoe = STAT.breathAoe[UnitType.id[s] as number] as number;
+  if (aoe > 0) {
+    // Alev püskürtme: hedef noktasına alan hasarlı ateş topu (tür 2).
+    fireStone(
+      world,
+      Position.x[s] as number,
+      Position.z[s] as number,
+      Position.x[target] as number,
+      Position.z[target] as number,
+      (((Combat.damage[s] as number) * attackPercent(world, b, team, false)) / 100) | 0,
+      Combat.dmgType[s] as number,
+      320,
+      aoe,
+      team,
+      2,
+      b,
+    );
+    return;
+  }
   fireProjectile(
     world,
     Position.x[s] as number,
@@ -439,6 +460,8 @@ export const projectileSystem = (world: SimWorld): void => {
         Projectile.team[p] as number,
         Projectile.damage[p] as number,
         Projectile.dmgType[p] as number,
+        0,
+        Projectile.source[p] as number,
       );
       removeEntity(world, p);
       continue;

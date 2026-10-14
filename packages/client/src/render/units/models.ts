@@ -807,6 +807,102 @@ export const ladderTeam = (): BufferGeometry => {
   return b.build();
 };
 
+/**
+ * Su Gözcüsü (BFME2, Moria kapısı): yarı suya gömülü iri gövde, tek büyük kızıl göz, yayılan
+ * dokunaçlar. SPA: ön dokunaç çiftleri kol (vuruş), yan dokunaçlar bacak (kıvranma).
+ */
+export const watcher = (): BufferGeometry => {
+  const b = new ModelBuilder({ hip: 1.2, shoulder: 2.6, neck: 2.9, shoulderZ: 1.4, hipZ: 1.2 });
+  b.add(Part.Body, cyl(1.6, 2.2, 2.4, 8), 'waterDeep', [0, 1.2, 0]);
+  b.add(Part.Body, cyl(1.0, 1.6, 1.0, 8), 'water', [0, 2.8, 0]);
+  b.add(Part.Head, new OctahedronGeometry(1.0, 0), 'waterDeep', [0.5, 3.6, 0]);
+  b.add(Part.Head, box(0.3, 0.55, 0.7), 'eyeRed', [1.3, 3.7, 0]); // tek göz
+  b.add(Part.Head, box(0.32, 0.2, 0.2), 'sootBlack', [1.42, 3.7, 0]);
+  // Dokunaçlar: üç parçalı kavisli kollar, çevreye yayılır.
+  const tentacle = (part: PartId, a: number, lift: number, pivot: V3) => {
+    const c = Math.cos(a);
+    const sn = Math.sin(a);
+    for (let k = 0; k < 3; k++) {
+      const r = 2.0 + k * 1.1;
+      b.add(
+        part,
+        box(1.3, 0.36 - k * 0.08, 0.36 - k * 0.08),
+        k === 2 ? 'orcSkin' : 'waterDeep',
+        [c * r, 1.2 + lift + k * 0.5 * (k === 2 ? -1 : 1), sn * r],
+        [0, -a, 0.35 - k * 0.3],
+        [1, 1, 1],
+        pivot,
+      );
+    }
+  };
+  tentacle(Part.ArmR, 0.5, 1.2, [1.2, 2.6, 1.0]);
+  tentacle(Part.ArmL, -0.5, 1.2, [1.2, 2.6, -1.0]);
+  tentacle(Part.ArmR, 1.2, 0.6, [0.6, 2.2, 1.4]);
+  tentacle(Part.ArmL, -1.2, 0.6, [0.6, 2.2, -1.4]);
+  tentacle(Part.LegL, 2.1, 0.4, [-0.6, 1.2, 1.2]);
+  tentacle(Part.LegR, -2.1, 0.4, [-0.6, 1.2, -1.2]);
+  tentacle(Part.LegL, Math.PI, 0.4, [-1.4, 1.2, 0]);
+  return b.build(1.1);
+};
+
+/**
+ * Ateş Ejderi (BFME2 Goblin "Fire Drake"): dört ayaklı kızıl-pas pullu ejder, uzun boyun ve
+ * kuyruk, deri kanatlar, ağzında kor. SPA: boyun+baş = Head (püskürtme sallanması), kanatlar
+ * kol, çapraz bacak çiftleri LegL/LegR.
+ */
+export const wyrm = (): BufferGeometry => {
+  const b = new ModelBuilder({ hip: 1.3, shoulder: 2.2, neck: 2.3, shoulderZ: 0.9, hipZ: 0.6 });
+  b.add(Part.Body, box(3.4, 1.3, 1.5), 'rust', [0, 1.7, 0]);
+  b.add(Part.Body, box(3.0, 0.3, 1.2), 'ember', [0, 1.05, 0]); // karın
+  for (let k = 0; k < 6; k++)
+    b.add(Part.Body, new ConeGeometry(0.18, 0.5, 4), 'sootBlack', [1.3 - k * 0.55, 2.55, 0]); // sırt dikenleri
+  // Kuyruk
+  for (let k = 0; k < 3; k++)
+    b.add(
+      Part.Body,
+      box(1.4, 0.6 - k * 0.15, 0.6 - k * 0.15),
+      'rust',
+      [-2.2 - k * 1.2, 1.6 - k * 0.3, 0],
+      [0, 0, 0.15],
+    );
+  // Boyun + baş
+  const neck: V3 = [1.5, 2.2, 0];
+  b.add(Part.Head, box(1.6, 0.7, 0.7), 'rust', [2.3, 2.7, 0], [0, 0, 0.6], [1, 1, 1], neck);
+  b.add(Part.Head, box(1.1, 0.6, 0.7), 'rust', [3.3, 3.25, 0], [0, 0, 0], [1, 1, 1], neck);
+  b.add(Part.Head, box(0.7, 0.18, 0.55), 'ember', [3.7, 3.0, 0], [0, 0, 0], [1, 1, 1], neck); // kor ağız
+  b.add(Part.Head, box(0.12, 0.12, 0.6), 'fire', [3.55, 3.45, 0], [0, 0, 0], [1, 1, 1], neck); // gözler
+  for (const z of [-0.25, 0.25])
+    b.add(
+      Part.Head,
+      new ConeGeometry(0.1, 0.7, 4),
+      'sootBlack',
+      [3.0, 3.75, z],
+      [0, 0, 0.9],
+      [1, 1, 1],
+      neck,
+    );
+  // Kanatlar
+  for (const [part, z] of [
+    [Part.ArmR, 1],
+    [Part.ArmL, -1],
+  ] as const) {
+    const sh: V3 = [0.6, 2.3, z * 0.7];
+    b.add(part, box(0.2, 0.2, 2.4), 'rust', [0.6, 2.8, z * 1.8], [z * -0.5, 0, 0], [1, 1, 1], sh);
+    b.add(part, box(2.0, 0.08, 2.4), 'sootBlack', [-0.3, 2.7, z * 1.9], [z * -0.45, 0, 0], [1, 1, 1], sh);
+  }
+  for (const [part, x, z] of [
+    [Part.LegL, 1.1, -0.6],
+    [Part.LegR, -1.1, -0.6],
+    [Part.LegR, 1.1, 0.6],
+    [Part.LegL, -1.1, 0.6],
+  ] as const) {
+    const hip: V3 = [x, 1.4, z];
+    b.add(part, box(0.4, 1.3, 0.4), 'rust', [x, 0.7, z], [0, 0, 0], [1, 1, 1], hip);
+    b.add(part, box(0.6, 0.14, 0.45), 'sootBlack', [x + 0.15, 0.07, z], [0, 0, 0], [1, 1, 1], hip);
+  }
+  return b.build(1.1);
+};
+
 /** Birim tipi id → model üreticisi (UNIT_DEFS ile aynı sıra). */
 export const UNIT_MODELS: Record<number, () => BufferGeometry> = {
   0: gondorSoldier,
@@ -828,4 +924,6 @@ export const UNIT_MODELS: Record<number, () => BufferGeometry> = {
   15: legolas,
   16: balrog,
   17: ladderTeam,
+  18: watcher,
+  19: wyrm,
 };

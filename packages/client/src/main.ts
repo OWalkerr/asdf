@@ -128,7 +128,7 @@ const boot = async () => {
   const arrows = new ProjectileRenderer(2048, ground.sample);
   const impacts = new ImpactFx(palette, toon, ground.sample);
   scene.add(...impacts.meshes);
-  scene.add(cursor.mesh, marker.mesh, rings.mesh, arrows.mesh, arrows.stones);
+  scene.add(cursor.mesh, marker.mesh, rings.mesh, arrows.mesh, arrows.stones, arrows.fireballs);
   const hud = world.def && !gallery ? new MatchHud(world.def) : null;
   // --- Ses (prosedürel WebAudio; ilk tıklamada açılır, M: sessiz) ---------------------
   const audioEngine = new AudioEngine();
@@ -421,15 +421,23 @@ const boot = async () => {
       }
       info.textContent = lines.join('\n');
       hud?.update(sim.frame.match);
-      // Boss çubuğu: Balrog öncelikli, sonra Lurtz.
+      // Boss çubuğu: öncelik Balrog > Su Gözcüsü > Ateş Ejderi > Lurtz.
+      const BOSS_RANK: Record<number, number> = {
+        [UnitTypeId.Balrog]: 4,
+        [UnitTypeId.Watcher]: 3,
+        [UnitTypeId.Wyrm]: 2,
+        [UnitTypeId.Lurtz]: 1,
+      };
       let boss: number | null = null;
       let bossType = -1;
       units.forEach((_x, _y, _z, b, _t, hp, type) => {
-        if (b === 0 || (type !== UnitTypeId.Lurtz && type !== UnitTypeId.Balrog)) return;
-        if (bossType !== UnitTypeId.Balrog || type === UnitTypeId.Balrog) {
-          boss = bossType === type && boss !== null ? Math.max(boss, hp) : hp;
+        const r = BOSS_RANK[type] ?? 0;
+        if (b === 0 || r === 0) return;
+        const cur = BOSS_RANK[bossType] ?? 0;
+        if (r > cur) {
+          boss = hp;
           bossType = type;
-        }
+        } else if (r === cur && boss !== null) boss = Math.max(boss, hp);
       });
       hud?.setBoss(boss, bossType);
       infoAccum = 0;
