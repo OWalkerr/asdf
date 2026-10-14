@@ -6,7 +6,7 @@ import type { LightingRig } from '../render/lighting';
 import type { ToonParams } from '../render/materials/ToonMaterial';
 import type { RenderContext } from '../render/renderer';
 
-/** lil-gui tweak paneli + stats-gl (CPU/GPU frame süresi). `?debug=0` ile gizlenir. */
+/** lil-gui tweak paneli + stats-gl (CPU/GPU frame süresi). Yalnızca `?debug` ile görünür. */
 export interface DebugHooks {
   ctx: RenderContext;
   cam: RTSCamera;
@@ -20,7 +20,8 @@ export interface DebugHooks {
 }
 
 export const createDebugPanel = async (renderer: WebGPURenderer, hooks: DebugHooks) => {
-  const visible = new URLSearchParams(location.search).get('debug') !== '0';
+  const params = new URLSearchParams(location.search);
+  const visible = params.has('debug') && params.get('debug') !== '0';
   const stats = new Stats({ trackGPU: true, horizontal: true });
   await stats.init(renderer);
   if (visible) document.body.appendChild(stats.dom);

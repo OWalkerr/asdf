@@ -2,6 +2,7 @@ import type { SlotDef } from '@bulwark/shared';
 import { buildNavGrid, createOpenGrid } from '@bulwark/sim';
 import { Scene, type Texture, Timer } from 'three/webgpu';
 import { GALLERY_CENTER, updateGallery } from './app/gallery';
+import { MatchHud } from './app/MatchHud';
 import { PLAYER, Scenario } from './app/scenario';
 import { createDebugPanel } from './debug/DebugPanel';
 import { GroundPicker } from './input/GroundPicker';
@@ -11,6 +12,7 @@ import { buildHelmsDeep } from './maps/helmsDeep';
 import { RTSCamera } from './render/camera/RTSCamera';
 import { OrderMarker } from './render/fx/OrderMarker';
 import { PickCursor } from './render/fx/PickCursor';
+import { ProjectileRenderer } from './render/fx/ProjectileRenderer';
 import { SelectionRings } from './render/fx/SelectionRings';
 import { createLighting } from './render/lighting';
 import { HeightGrid } from './render/map/HeightGrid';
@@ -45,6 +47,7 @@ const boot = async () => {
   const params = new URLSearchParams(location.search);
   // Galeri modu birim look-dev'idir: look-dev haritasında, sim olmadan çalışır.
   const gallery = params.has('gallery');
+  const debugMode = params.has('debug') && params.get('debug') !== '0';
   const mapId = gallery ? 'lookdev' : (params.get('map') ?? 'helms_deep');
   const build = MAPS[mapId];
   if (!build) throw new Error(`Bilinmeyen harita: ${mapId} (seçenekler: ${Object.keys(MAPS).join(', ')})`);
@@ -83,7 +86,9 @@ const boot = async () => {
   const cursor = new PickCursor();
   const marker = new OrderMarker();
   const rings = new SelectionRings(2048);
-  scene.add(cursor.mesh, marker.mesh, rings.mesh);
+  const arrows = new ProjectileRenderer(2048, ground.sample);
+  scene.add(cursor.mesh, marker.mesh, rings.mesh, arrows.mesh);
+  const hud = world.def && !gallery ? new MatchHud(world.def) : null;
   const selection = new Selection(units, PLAYER);
   const input = new PlayerInput({
     canvas,
@@ -115,12 +120,7 @@ const boot = async () => {
     sim: {
       speed: 1,
       setSpeed: (v: number) => sim.setSpeed(v),
-      actions: {
-        'Düşman dalgası (+3 tabur)': () => scenario.sendWave(3),
-        'Stres testi (+30 tabur)': () => {
-          for (let i = 0; i < 6; i++) scenario.sendWave(5);
-        },
-      },
+      actions: {},
     },
   });
 
@@ -148,7 +148,10 @@ const boot = async () => {
     cam.update(dt);
     sim.poll(now);
     if (gallery) updateGallery(units, now / 1000, ground.sample);
-    else units.updateFromSim(sim, now);
+    else {
+      units.updateFromSim(sim, now);
+      arrows.update(sim, now);
+    }
     selection.prune();
     rings.update(units, selection.selected);
     marker.update(now);
@@ -161,24 +164,31 @@ const boot = async () => {
     if (infoAccum >= 0.25) {
       const r = ctx.renderer.info.render;
       const t = cam.target;
-      const lines = [
-        `backend  ${ctx.backend.toUpperCase()}   fps ${(frames / infoAccum).toFixed(0)}`,
-        `draw     ${r.drawCalls} çağrı · ${(r.triangles / 1000).toFixed(1)}k üçgen`,
-        `statik   ${world.stats.instances} instance / ${world.stats.batches} batch`,
-        `kamera   (${t.x.toFixed(0)}, ${t.z.toFixed(0)}) zoom ${(cam.zoom01 * 100).toFixed(0)}%`,
-        `imleç    ${input.hoverText}`,
-        `seçim    ${selection.selected.size} tabur${selection.selected.size ? ' · sağ tık: hareket' : ' · tıkla / kutu çiz'}`,
-        `birim    ${units.drawn} çizildi · ${units.meshes.length} InstancedMesh`,
-        `sim      tick ${sim.tick} · ${sim.frame.count} birim · ${(sim.frame.simMicros / 1000).toFixed(2)} ms · ${sim.shared ? 'SAB' : 'postMessage'}`,
-        `hash     #${sim.lastHash.tick} ${sim.lastHash.hash.toString(16).padStart(8, '0')}`,
-      ];
-      if (world.slots) {
+      const lines = !debugMode
+        ? [
+            `fps ${(frames / infoAccum).toFixed(0)} · ${selection.selected.size ? `${selection.selected.size} tabur seçili · sağ tık: yürü / düşmana saldır` : 'tabur seçmek için tıkla veya kutu çiz'}`,
+            'İpucu: menfez ve Hornburg kapısı yalnızca sizin birliklerinize açık — piyadeyi dışarı çıkarıp',
+            'kapılara saldıranları dağıtın; okçular menzildeki düşmana kendiliğinden ateş eder.',
+          ]
+        : [
+            `backend  ${ctx.backend.toUpperCase()}   fps ${(frames / infoAccum).toFixed(0)}`,
+            `draw     ${r.drawCalls} çağrı · ${(r.triangles / 1000).toFixed(1)}k üçgen`,
+            `statik   ${world.stats.instances} instance / ${world.stats.batches} batch`,
+            `kamera   (${t.x.toFixed(0)}, ${t.z.toFixed(0)}) zoom ${(cam.zoom01 * 100).toFixed(0)}%`,
+            `imleç    ${input.hoverText}`,
+            `seçim    ${selection.selected.size} tabur${selection.selected.size ? ' · sağ tık: hareket' : ' · tıkla / kutu çiz'}`,
+            `birim    ${units.drawn} çizildi · ${units.meshes.length} InstancedMesh`,
+            `sim      tick ${sim.tick} · ${sim.frame.count} birim · ${(sim.frame.simMicros / 1000).toFixed(2)} ms · ${sim.shared ? 'SAB' : 'postMessage'}`,
+            `hash     #${sim.lastHash.tick} ${sim.lastHash.hash.toString(16).padStart(8, '0')}`,
+          ];
+      if (debugMode && world.slots) {
         lines.push(
           slotLine('slot    ', world.slots.hoveredSlot),
           slotLine('seçili  ', world.slots.selectedSlot),
         );
       }
       info.textContent = lines.join('\n');
+      hud?.update(sim.frame.match, sim.tick);
       infoAccum = 0;
       frames = 0;
     }

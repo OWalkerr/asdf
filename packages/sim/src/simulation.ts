@@ -1,4 +1,4 @@
-import type { StampedCommand } from '@bulwark/shared';
+import type { MapDef, StampedCommand } from '@bulwark/shared';
 import { CommandQueue } from './commandQueue';
 import type { NavGrid } from './nav/grid';
 import { writeSnapshot } from './snapshot';
@@ -13,9 +13,12 @@ export class Simulation {
   readonly world: SimWorld;
   readonly queue = new CommandQueue();
 
-  /** nav: haritanın navigasyon ızgarası (buildNavGrid); verilmezse açık ızgara. */
-  constructor(seed: number, nav?: NavGrid) {
-    this.world = createSimWorld(seed, nav);
+  /**
+   * nav: haritanın navigasyon ızgarası (buildNavGrid); verilmezse açık ızgara.
+   * map: verilirse kapılar ve dalga programı kurulur (FD maçı).
+   */
+  constructor(seed: number, nav?: NavGrid, map?: MapDef) {
+    this.world = createSimWorld(seed, nav, map ?? null);
   }
 
   get tick(): number {

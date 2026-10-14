@@ -1,0 +1,219 @@
+import { AnimState, FX_HALF, type Fx, fxAtan2, fxDiv, fxFromFloat, fxLen, fxMul } from '@bulwark/shared';
+import { addComponent, addEntity, entityExists, hasComponent, query, removeEntity } from 'bitecs';
+import { cellAt } from '../nav/grid';
+import { ARMOR_STRUCTURE, PERCENT } from '../unitStats';
+import type { SimWorld } from '../world';
+import { clearLine } from './battalion';
+import { forEachMember } from './spatial';
+
+/**
+ * Savaş (GDD §6.4):
+ * - Çatışan taburun yakın dövüşçüleri en yakın düşman askerini (uzamsal hash, ≤ ACQUIRE)
+ *   kademeli olarak seçer (tick başına askerlerin 1/5'i), erişime kadar kovalar, vurur.
+ * - Okçular hedef taburdan rastgele bir askere analitik ok atar; isabet impact tick'inde çözülür.
+ * - Kapıya yönelmiş düşman taburları, birim hedefi yokken erişimdeki kapıya vurur.
+ * Tümü tamsayı; rastgelelik yalnızca world.rng (deterministik sıra).
+ */
+const ACQUIRE: Fx = fxFromFloat(6);
+const ACQUIRE_CELLS = 3;
+/** Askerin sancaktan bu kadar uzaklaşınca hedefi bırakıp formasyona döndüğü mesafe. */
+const LEASH: Fx = fxFromFloat(14);
+/** İki gövde yarıçapı toplamı: erişim = silah menzili + gövde. */
+const BODY: Fx = fxFromFloat(0.7);
+/** Ok hızı: tick başına 2 m (40 m/s). */
+const ARROW_STEP: Fx = fxFromFloat(2);
+const ARROW_SPREAD: Fx = fxFromFloat(1.2);
+const ARROW_HIT_RADIUS: Fx = fxFromFloat(1.3);
+/** Saldırı animasyonunun süresi (tick); bu sürede yürüme/durma animasyonu araya girmez. */
+export const ATTACK_ANIM_TICKS = 14;
+
+const alive = (world: SimWorld, e: number): boolean =>
+  e > 0 && entityExists(world, e) && hasComponent(world, e, world.c.Health) && world.c.Dead.at[e] === 0;
+
+/** Hasar uygular (GDD §6.2 çarpanı, en az 1). Birim veya yapı. */
+export const applyDamage = (world: SimWorld, target: number, damage: number, dmgType: number): void => {
+  const { Structure, Health, Combat } = world.c;
+  if (hasComponent(world, target, Structure)) {
+    const pct = PERCENT[dmgType]?.[ARMOR_STRUCTURE] ?? 100;
+    Structure.hp[target] = Math.max(
+      0,
+      (Structure.hp[target] as number) - Math.max(1, ((damage * pct) / 100) | 0),
+    );
+    return;
+  }
+  const pct = PERCENT[dmgType]?.[Combat.armor[target] as number] ?? 100;
+  Health.hp[target] = (Health.hp[target] as number) - Math.max(1, ((damage * pct) / 100) | 0);
+  Health.lastHit[target] = world.tick + 1;
+};
+
+/** Uzamsal hash'te `ACQUIRE` içindeki en yakın canlı düşman (görüş hattı açık); yoksa 0. */
+const acquireNearest = (world: SimWorld, s: number, team: number): number => {
+  const { Position, Team } = world.c;
+  const grid = world.nav;
+  const sx = Position.x[s] as number;
+  const sz = Position.z[s] as number;
+  const c = cellAt(grid, sx, sz);
+  if (c < 0) return 0;
+  const c0 = c % grid.cols;
+  const r0 = (c / grid.cols) | 0;
+  let best = 0;
+  let bestD = ACQUIRE;
+  for (let dr = -ACQUIRE_CELLS; dr <= ACQUIRE_CELLS; dr++) {
+    const r = r0 + dr;
+    if (r < 0 || r >= grid.rows) continue;
+    for (let dc = -ACQUIRE_CELLS; dc <= ACQUIRE_CELLS; dc++) {
+      const cc = c0 + dc;
+      if (cc < 0 || cc >= grid.cols) continue;
+      for (let o = world.hashHead[r * grid.cols + cc] as number; o !== -1; o = world.hashNext[o] as number) {
+        if (Team.id[o] === team) continue;
+        const d = fxLen(((Position.x[o] as number) - sx) | 0, ((Position.z[o] as number) - sz) | 0);
+        if (d < bestD || (d === bestD && o < best)) {
+          bestD = d;
+          best = o;
+        }
+      }
+    }
+  }
+  if (best !== 0 && !clearLine(grid, sx, sz, Position.x[best] as number, Position.z[best] as number, team))
+    return 0;
+  return best;
+};
+
+const face = (world: SimWorld, s: number, tx: number, tz: number): void => {
+  const { Position, Facing } = world.c;
+  Facing.angle[s] = fxAtan2((tz - (Position.z[s] as number)) | 0, (tx - (Position.x[s] as number)) | 0);
+};
+
+const startAttackAnim = (world: SimWorld, s: number): void => {
+  world.c.Anim.state[s] = AnimState.Attack;
+  world.c.Anim.startTick[s] = world.tick;
+};
+
+const fireArrow = (world: SimWorld, s: number, target: number): void => {
+  const { Position, Projectile, Combat } = world.c;
+  const sx = Position.x[s] as number;
+  const sz = Position.z[s] as number;
+  const tx = (Position.x[target] as number) + fxMul(world.rng.nextFx() - FX_HALF, ARROW_SPREAD);
+  const tz = (Position.z[target] as number) + fxMul(world.rng.nextFx() - FX_HALF, ARROW_SPREAD);
+  const d = fxLen((tx - sx) | 0, (tz - sz) | 0);
+  const p = addEntity(world);
+  addComponent(world, p, Projectile);
+  Projectile.fromX[p] = sx;
+  Projectile.fromZ[p] = sz;
+  Projectile.toX[p] = tx | 0;
+  Projectile.toZ[p] = tz | 0;
+  Projectile.fireTick[p] = world.tick;
+  Projectile.flight[p] = Math.max(4, Math.min(4000, (d / ARROW_STEP) | 0));
+  Projectile.target[p] = target;
+  Projectile.damage[p] = Combat.damage[s] as number;
+  Projectile.dmgType[p] = Combat.dmgType[s] as number;
+};
+
+export const combatSystem = (world: SimWorld): void => {
+  const { Position, Velocity, Combat, Soldier, Battalion, Team, Speed, Structure, Dead } = world.c;
+  for (const s of query(world, [Soldier, Combat, Position, Velocity])) {
+    if (Dead.at[s] !== 0) continue;
+    const cd = Combat.cooldown[s] as number;
+    if (cd > 0) Combat.cooldown[s] = cd - 1;
+    const b = Soldier.battalion[s] as number;
+    if (b === 0) continue;
+    const team = Team.id[s] as number;
+    const sx = Position.x[s] as number;
+    const sz = Position.z[s] as number;
+
+    if (Battalion.engaged[b] === 1 && Combat.ranged[s] === 1) {
+      // --- Okçu: hedef taburdan rastgele bir askere ok ---
+      if ((Combat.cooldown[s] as number) > 0) continue;
+      const e = Battalion.enemy[b] as number;
+      const n = e > 0 && hasComponent(world, e, Battalion) ? (Battalion.count[e] as number) : 0;
+      if (n === 0) continue;
+      let pick = world.rng.nextInt(n);
+      let target = 0;
+      forEachMember(world, e, (m) => {
+        if (pick-- === 0) target = m;
+      });
+      if (target === 0) continue;
+      const d = fxLen(((Position.x[target] as number) - sx) | 0, ((Position.z[target] as number) - sz) | 0);
+      if (d > (Combat.range[s] as number)) continue;
+      fireArrow(world, s, target);
+      // Hafif rastgele gecikme: bütün tabur aynı karede ateşlemesin.
+      Combat.cooldown[s] = (Combat.interval[s] as number) + world.rng.nextInt(4);
+      face(world, s, Position.x[target] as number, Position.z[target] as number);
+      startAttackAnim(world, s);
+      continue;
+    }
+
+    // --- Yakın dövüş ---
+    let t = Combat.target[s] as number;
+    if (t !== 0 && (!alive(world, t) || Team.id[t] === team)) t = 0;
+    if (Battalion.engaged[b] === 1) {
+      if (t === 0 && (s + world.tick) % 5 === 0) t = acquireNearest(world, s, team);
+    } else {
+      t = 0;
+    }
+    if (t !== 0) {
+      const ax = (Position.x[b] as number) - sx;
+      const az = (Position.z[b] as number) - sz;
+      if (fxLen(ax | 0, az | 0) > LEASH) t = 0;
+    }
+    Combat.target[s] = t;
+    if (t !== 0) {
+      const tx = Position.x[t] as number;
+      const tz = Position.z[t] as number;
+      const dx = (tx - sx) | 0;
+      const dz = (tz - sz) | 0;
+      const d = fxLen(dx, dz);
+      if (d > (Combat.range[s] as number) + BODY) {
+        const speed = Speed.value[s] as number;
+        Velocity.x[s] = fxMul(fxDiv(dx, d), speed);
+        Velocity.z[s] = fxMul(fxDiv(dz, d), speed);
+      } else {
+        Velocity.x[s] = 0;
+        Velocity.z[s] = 0;
+        face(world, s, tx, tz);
+        if ((Combat.cooldown[s] as number) === 0) {
+          applyDamage(world, t, Combat.damage[s] as number, Combat.dmgType[s] as number);
+          Combat.cooldown[s] = Combat.interval[s] as number;
+          startAttackAnim(world, s);
+        }
+      }
+      continue;
+    }
+
+    // --- Kapı: birim hedefi yokken, varmış tabur erişimdeki kapıya vurur ---
+    const g = Battalion.targetStructure[b] as number;
+    if (g !== 0 && Battalion.active[b] === 0 && (Structure.hp[g] as number) > 0) {
+      const gx = Position.x[g] as number;
+      const gz = Position.z[g] as number;
+      const d = fxLen((gx - sx) | 0, (gz - sz) | 0);
+      if (d <= (Structure.radius[g] as number) + (Combat.range[s] as number)) {
+        Velocity.x[s] = 0;
+        Velocity.z[s] = 0;
+        face(world, s, gx, gz);
+        if ((Combat.cooldown[s] as number) === 0) {
+          applyDamage(world, g, Combat.damage[s] as number, Combat.dmgType[s] as number);
+          Combat.cooldown[s] = Combat.interval[s] as number;
+          startAttackAnim(world, s);
+        }
+      }
+    }
+  }
+};
+
+/** Oklar: impact tick'inde hedef hâlâ isabet noktasının yakınındaysa hasar, sonra mermi silinir. */
+export const projectileSystem = (world: SimWorld): void => {
+  const { Projectile, Position } = world.c;
+  for (const p of query(world, [Projectile])) {
+    if (world.tick < (Projectile.fireTick[p] as number) + (Projectile.flight[p] as number)) continue;
+    const t = Projectile.target[p] as number;
+    if (alive(world, t)) {
+      const d = fxLen(
+        ((Position.x[t] as number) - (Projectile.toX[p] as number)) | 0,
+        ((Position.z[t] as number) - (Projectile.toZ[p] as number)) | 0,
+      );
+      if (d <= ARROW_HIT_RADIUS)
+        applyDamage(world, t, Projectile.damage[p] as number, Projectile.dmgType[p] as number);
+    }
+    removeEntity(world, p);
+  }
+};

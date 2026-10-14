@@ -21,7 +21,7 @@ export class Selection {
 
   constructor(
     private readonly units: UnitRenderer,
-    private readonly team: number,
+    readonly team: number,
   ) {}
 
   private toScreen(
@@ -38,17 +38,29 @@ export class Selection {
   }
 
   /** İmlecin altındaki askerin taburu (yalnızca kendi takımı), yoksa 0. */
-  pick(camera: Camera, sx: number, sy: number, w: number, h: number, anyTeam = false): number {
-    let best = 0;
+  pick(camera: Camera, sx: number, sy: number, w: number, h: number): number {
+    const hit = this.pickAny(camera, sx, sy, w, h);
+    return hit && hit.team === this.team ? hit.battalion : 0;
+  }
+
+  /** İmlecin altındaki herhangi bir takımdan askerin taburu ve takımı. */
+  pickAny(
+    camera: Camera,
+    sx: number,
+    sy: number,
+    w: number,
+    h: number,
+  ): { battalion: number; team: number } | null {
+    let best: { battalion: number; team: number } | null = null;
     let bestD = PICK_RADIUS_PX * PICK_RADIUS_PX;
     this.units.forEach((x, y, z, battalion, team) => {
-      if (battalion === 0 || (!anyTeam && team !== this.team)) return;
+      if (battalion === 0) return;
       const p = this.toScreen(camera, x, y, z, w, h);
       if (!p) return;
       const d = (p[0] - sx) ** 2 + (p[1] - sy) ** 2;
       if (d < bestD) {
         bestD = d;
-        best = battalion;
+        best = { battalion, team };
       }
     });
     return best;

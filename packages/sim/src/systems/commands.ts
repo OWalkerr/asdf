@@ -13,25 +13,36 @@ import {
   UNIT_DEFS,
 } from '@bulwark/shared';
 import { addComponent, addEntity, entityExists, hasComponent } from 'bitecs';
+import { BattalionMode } from '../components';
 import { cellAt, cellCenterX, cellCenterZ, isBlockedAt, nearestOpenCell } from '../nav/grid';
+import { isUnitType, STAT } from '../unitStats';
 import type { SimWorld } from '../world';
 
 /** Oyuncu → takım eşlemesi (Phase 1: oyuncu N = takım N). Co-op'ta lobi belirleyecek. */
 const teamOf = (player: number): number => player;
 
-/** Birim tablosu Q16.16'ya bir kez çevrilir (fxFromFloat = Math.round → deterministik). */
-const UNIT_SPEED: readonly Fx[] = UNIT_DEFS.map((d) => fxFromFloat(d.speed));
-const UNIT_HP: readonly number[] = UNIT_DEFS.map((d) => d.hp);
-const UNIT_SPACING: readonly Fx[] = UNIT_DEFS.map((d) => fxFromFloat(d.spacing));
-const UNIT_JITTER: readonly Fx[] = UNIT_DEFS.map((d) => fxFromFloat(d.jitter));
 /** Taburlar arası yan boşluk (m). */
 const BATTALION_GAP: Fx = fxFromFloat(2);
 
+/** Serbest (tabursuz) bir birim oluşturur; tüm savaş/can değerleri birim tablosundan. */
 export const spawnUnit = (world: SimWorld, team: number, unitType: number, x: Fx, z: Fx): number => {
-  const { Position, Velocity, Facing, Team, UnitType, Speed, MoveTarget, Health, Anim } = world.c;
-  if (!UNIT_SPEED[unitType]) throw new Error(`Bilinmeyen birim tipi: ${unitType}`);
+  if (!isUnitType(unitType)) throw new Error(`Bilinmeyen birim tipi: ${unitType}`);
+  const {
+    Position,
+    Velocity,
+    Facing,
+    Team,
+    UnitType,
+    Speed,
+    MoveTarget,
+    Health,
+    Anim,
+    Combat,
+    Dead,
+    Soldier,
+  } = world.c;
   const eid = addEntity(world);
-  for (const comp of [Position, Velocity, Facing, Team, UnitType, Speed, MoveTarget, Health, Anim])
+  for (const comp of [Position, Velocity, Facing, Team, UnitType, Speed, MoveTarget, Health, Anim, Combat])
     addComponent(world, eid, comp);
   Position.x[eid] = x;
   Position.z[eid] = z;
@@ -41,30 +52,39 @@ export const spawnUnit = (world: SimWorld, team: number, unitType: number, x: Fx
   Facing.angle[eid] = team === 0 ? 16384 : 49152;
   Team.id[eid] = team;
   UnitType.id[eid] = unitType;
-  Speed.value[eid] = UNIT_SPEED[unitType] as Fx;
+  Speed.value[eid] = STAT.speed[unitType] as Fx;
   MoveTarget.active[eid] = 0;
-  const hp = UNIT_HP[unitType] as number;
-  Health.hp[eid] = hp;
-  Health.max[eid] = hp;
+  Health.hp[eid] = STAT.hp[unitType] as number;
+  Health.max[eid] = STAT.hp[unitType] as number;
+  Health.lastHit[eid] = 0;
   Anim.state[eid] = 0;
   Anim.startTick[eid] = world.tick;
-  // Geri dönüştürülmüş eid önceki tabur bağını taşımasın.
-  world.c.Soldier.battalion[eid] = 0;
+  Combat.target[eid] = 0;
+  Combat.cooldown[eid] = 0;
+  Combat.damage[eid] = STAT.damage[unitType] as number;
+  Combat.dmgType[eid] = STAT.dmgType[unitType] as number;
+  Combat.armor[eid] = STAT.armor[unitType] as number;
+  Combat.interval[eid] = STAT.interval[unitType] as number;
+  Combat.range[eid] = STAT.range[unitType] as Fx;
+  Combat.ranged[eid] = STAT.ranged[unitType] as number;
+  // Geri dönüştürülmüş eid önceki durumları taşımasın.
+  Dead.at[eid] = 0;
+  Soldier.battalion[eid] = 0;
   return eid;
 };
 
-/** Konum kapalı hücredeyse en yakın açık hücre merkezine taşı. */
-const snapOpen = (world: SimWorld, x: Fx, z: Fx): [Fx, Fx] => {
+/** Konum takım için kapalı hücredeyse en yakın açık hücre merkezine taşı. */
+const snapOpen = (world: SimWorld, x: Fx, z: Fx, team: number): [Fx, Fx] => {
   const grid = world.nav;
-  if (!isBlockedAt(grid, x, z)) return [x, z];
-  const c = nearestOpenCell(grid, cellAt(grid, x, z));
+  if (!isBlockedAt(grid, x, z, team)) return [x, z];
+  const c = nearestOpenCell(grid, cellAt(grid, x, z), team);
   return c < 0 ? [x, z] : [cellCenterX(grid, c), cellCenterZ(grid, c)];
 };
 
 /** Tabur genişliği (Fx): dosya × aralık + boşluk. */
 const battalionWidth = (unitType: number): Fx => {
   const def = UNIT_DEFS[unitType];
-  return ((def?.files ?? 5) * (UNIT_SPACING[unitType] as number) + BATTALION_GAP) | 0;
+  return ((def?.files ?? 5) * (STAT.spacing[unitType] as number) + BATTALION_GAP) | 0;
 };
 
 /** Sancak noktası + askerleri oluşturur. Askerler doğrudan yuvalarında doğar. */
@@ -79,7 +99,7 @@ export const spawnBattalion = (
   const def = UNIT_DEFS[unitType];
   if (!def) throw new Error(`Bilinmeyen birim tipi: ${unitType}`);
   const { Position, Facing, Team, Battalion, Soldier } = world.c;
-  const [bx, bz] = snapOpen(world, x, z);
+  const [bx, bz] = snapOpen(world, x, z, team);
   const b = addEntity(world);
   for (const comp of [Position, Facing, Team, Battalion]) addComponent(world, b, comp);
   Position.x[b] = bx;
@@ -90,18 +110,24 @@ export const spawnBattalion = (
   Battalion.count[b] = def.battalionSize;
   Battalion.prefFiles[b] = def.files;
   Battalion.files[b] = Math.min(def.files, def.battalionSize);
-  Battalion.spacing[b] = UNIT_SPACING[unitType] as Fx;
+  Battalion.spacing[b] = STAT.spacing[unitType] as Fx;
   // Tabur en yavaş askeri kadar hızlı; askerler yetişebilsin diye biraz daha yavaş.
-  Battalion.speed[b] = fxMul(UNIT_SPEED[unitType] as Fx, fxFromFloat(0.92));
+  Battalion.speed[b] = fxMul(STAT.speed[unitType] as Fx, fxFromFloat(0.92));
   Battalion.active[b] = 0;
   Battalion.lagging[b] = 0;
+  Battalion.stall[b] = 0;
+  Battalion.mode[b] = BattalionMode.Idle;
+  Battalion.targetBattalion[b] = 0;
+  Battalion.targetStructure[b] = 0;
+  Battalion.engaged[b] = 0;
+  Battalion.enemy[b] = 0;
   const c = fxCos(facing);
   const sn = fxSin(facing);
   Battalion.cos[b] = c;
   Battalion.sin[b] = sn;
   const files = Battalion.files[b] as number;
   const spacing = Battalion.spacing[b] as number;
-  const jitter = UNIT_JITTER[unitType] as Fx;
+  const jitter = STAT.jitter[unitType] as Fx;
   for (let slot = 0; slot < def.battalionSize; slot++) {
     const jx = fxMul(((world.rng.nextFx() - FX_HALF) * 2) | 0, jitter);
     const jz = fxMul(((world.rng.nextFx() - FX_HALF) * 2) | 0, jitter);
@@ -113,6 +139,7 @@ export const spawnBattalion = (
       world,
       (bx - fxMul(c, back) - fxMul(sn, lateral)) | 0,
       (bz - fxMul(sn, back) + fxMul(c, lateral)) | 0,
+      team,
     );
     const s = spawnUnit(world, team, unitType, sx, sz);
     addComponent(world, s, Soldier);
@@ -125,18 +152,29 @@ export const spawnBattalion = (
   return b;
 };
 
-/** Kare ızgara ofseti: i. eleman için (dx, dz), merkezlenmiş. Tamamen tamsayı aritmetiği. */
-const gridOffset = (i: number, n: number, spacing: Fx): [Fx, Fx] => {
-  let cols = 1;
-  while (cols * cols < n) cols++;
-  const rows = Math.ceil(n / cols);
-  const col = i % cols;
-  const row = (i / cols) | 0;
-  // (col - (cols-1)/2) · spacing  =  (2·col - (cols-1)) · spacing / 2
-  return [
-    fxMul(fxFromInt(2 * col - (cols - 1)), spacing) >> 1,
-    fxMul(fxFromInt(2 * row - (rows - 1)), spacing) >> 1,
-  ];
+/** `count` taburu bakış yönüne dik bir hatta yan yana oluşturur. */
+export const spawnBattalionRow = (
+  world: SimWorld,
+  team: number,
+  unitType: number,
+  x: Fx,
+  z: Fx,
+  count: number,
+  facing: number,
+): number[] => {
+  const n = Math.min(count, 64);
+  const width = battalionWidth(unitType);
+  // sağ = (−sin, cos)
+  const rx = -fxSin(facing);
+  const rz = fxCos(facing);
+  const out: number[] = [];
+  for (let k = 0; k < n; k++) {
+    const off = fxMul(((2 * k - (n - 1)) * FX_ONE) >> 1, width);
+    out.push(
+      spawnBattalion(world, team, unitType, (x + fxMul(rx, off)) | 0, (z + fxMul(rz, off)) | 0, facing),
+    );
+  }
+  return out;
 };
 
 /** Komuttaki eid'leri taburlara (asker → kendi taburu) ve serbest birimlere ayırır. */
@@ -146,23 +184,31 @@ const splitOwned = (
   eids: readonly number[],
 ): { battalions: number[]; free: number[] } => {
   const team = teamOf(player);
-  const { Battalion, Soldier, Team } = world.c;
+  const { Battalion, Soldier, Team, Dead, UnitType } = world.c;
   const battalions = new Set<number>();
   const free: number[] = [];
   for (const eid of eids) {
     if (!Number.isInteger(eid) || eid <= 0 || !entityExists(world, eid) || Team.id[eid] !== team) continue;
     if (hasComponent(world, eid, Battalion)) battalions.add(eid);
-    else if (hasComponent(world, eid, Soldier)) battalions.add(Soldier.battalion[eid] as number);
-    else free.push(eid);
+    else if (hasComponent(world, eid, Soldier) && (Soldier.battalion[eid] as number) !== 0)
+      battalions.add(Soldier.battalion[eid] as number);
+    else if (hasComponent(world, eid, UnitType) && Dead.at[eid] === 0) free.push(eid);
   }
   return { battalions: [...battalions].sort((a, b) => a - b), free: free.sort((a, b) => a - b) };
 };
 
 /**
  * Tabur grubu emri: tüm grup hedefin akış alanını paylaşır; varışta taburlar hedef–grup
- * merkezi doğrultusuna dik bir hatta yan yana dizilir.
+ * merkezi doğrultusuna dik bir hatta, mevcut yanal sıralarıyla yan yana dizilir.
  */
-const orderBattalions = (world: SimWorld, battalions: readonly number[], x: Fx, z: Fx): void => {
+export const orderBattalions = (
+  world: SimWorld,
+  battalions: readonly number[],
+  x: Fx,
+  z: Fx,
+  team: number,
+  mode: number,
+): void => {
   const { Position, Battalion } = world.c;
   const n = battalions.length;
   if (n === 0) return;
@@ -192,25 +238,43 @@ const orderBattalions = (world: SimWorld, battalions: readonly number[], x: Fx, 
   const ordered = [...battalions].sort((a, b) => lateralOf(a) - lateralOf(b) || a - b);
   ordered.forEach((b, k) => {
     const off = fxMul(((2 * k - (n - 1)) * FX_ONE) >> 1, width);
-    const [gx, gz] = snapOpen(world, (x - fxMul(dz, off)) | 0, (z + fxMul(dx, off)) | 0);
+    const [gx, gz] = snapOpen(world, (x - fxMul(dz, off)) | 0, (z + fxMul(dx, off)) | 0, team);
     Battalion.goalX[b] = gx;
     Battalion.goalZ[b] = gz;
     Battalion.fieldX[b] = x;
     Battalion.fieldZ[b] = z;
     Battalion.active[b] = 1;
     Battalion.stall[b] = 0;
+    Battalion.bestDist[b] = 0x7fffffff;
+    Battalion.mode[b] = mode;
+    Battalion.targetBattalion[b] = 0;
+    Battalion.engaged[b] = 0;
   });
   // Alanı emir anında hesapla (önbelleğe girer; tick içinde tekrar hesaplanmaz).
-  world.fields.get(x, z);
+  world.fields.get(x, z, team);
+};
+
+/** Kare ızgara ofseti (serbest birimler için): i. eleman için (dx, dz), merkezlenmiş. */
+const gridOffset = (i: number, n: number, spacing: Fx): [Fx, Fx] => {
+  let cols = 1;
+  while (cols * cols < n) cols++;
+  const rows = Math.ceil(n / cols);
+  const col = i % cols;
+  const row = (i / cols) | 0;
+  return [
+    fxMul(fxFromInt(2 * col - (cols - 1)), spacing) >> 1,
+    fxMul(fxFromInt(2 * row - (rows - 1)), spacing) >> 1,
+  ];
 };
 
 export const applyCommand = (world: SimWorld, sc: StampedCommand): void => {
   const { cmd } = sc;
-  const { MoveTarget, Velocity } = world.c;
+  const team = teamOf(sc.player);
+  const { MoveTarget, Velocity, Battalion, Position, Team } = world.c;
   switch (cmd.type) {
     case 'spawn': {
       // Geçersiz komutlar her istemcide aynı şekilde yok sayılır (worker'ı çökertmez).
-      if (UNIT_SPEED[cmd.unitType] === undefined || cmd.team < 0 || cmd.team > 3) break;
+      if (!isUnitType(cmd.unitType) || cmd.team < 0 || cmd.team > 3) break;
       const n = Math.min(cmd.count, 2000);
       for (let i = 0; i < n; i++) {
         const [dx, dz] = gridOffset(i, n, cmd.spacing);
@@ -219,40 +283,54 @@ export const applyCommand = (world: SimWorld, sc: StampedCommand): void => {
       break;
     }
     case 'spawnBattalion': {
-      if (UNIT_SPEED[cmd.unitType] === undefined || cmd.team < 0 || cmd.team > 3) break;
-      const n = Math.min(cmd.count, 64);
-      const width = battalionWidth(cmd.unitType);
-      // Taburları bakış yönüne dik bir hatta diz: sağ = (−sin, cos).
-      const rx = -fxSin(cmd.facing);
-      const rz = fxCos(cmd.facing);
-      for (let k = 0; k < n; k++) {
-        const off = fxMul(((2 * k - (n - 1)) * FX_ONE) >> 1, width);
-        spawnBattalion(
-          world,
-          cmd.team,
-          cmd.unitType,
-          (cmd.x + fxMul(rx, off)) | 0,
-          (cmd.z + fxMul(rz, off)) | 0,
-          cmd.facing,
-        );
-      }
+      if (!isUnitType(cmd.unitType) || cmd.team < 0 || cmd.team > 3) break;
+      spawnBattalionRow(world, cmd.team, cmd.unitType, cmd.x, cmd.z, cmd.count, cmd.facing);
       break;
     }
     case 'move': {
       const split = splitOwned(world, sc.player, cmd.units);
-      orderBattalions(world, split.battalions, cmd.x, cmd.z);
-      const units = split.free;
-      units.forEach((eid, i) => {
-        const [dx, dz] = gridOffset(i, units.length, cmd.spacing);
+      orderBattalions(world, split.battalions, cmd.x, cmd.z, team, BattalionMode.Move);
+      split.free.forEach((eid, i) => {
+        const [dx, dz] = gridOffset(i, split.free.length, cmd.spacing);
         MoveTarget.x[eid] = (cmd.x + dx) | 0;
         MoveTarget.z[eid] = (cmd.z + dz) | 0;
         MoveTarget.active[eid] = 1;
       });
       break;
     }
+    case 'attack': {
+      const t = cmd.target;
+      if (
+        !Number.isInteger(t) ||
+        t <= 0 ||
+        !entityExists(world, t) ||
+        !hasComponent(world, t, Battalion) ||
+        Team.id[t] === team ||
+        (Battalion.count[t] as number) === 0
+      )
+        break;
+      const split = splitOwned(world, sc.player, cmd.units);
+      for (const b of split.battalions) {
+        Battalion.mode[b] = BattalionMode.Attack;
+        Battalion.targetBattalion[b] = t;
+        Battalion.goalX[b] = Position.x[t] as number;
+        Battalion.goalZ[b] = Position.z[t] as number;
+        Battalion.fieldX[b] = Position.x[t] as number;
+        Battalion.fieldZ[b] = Position.z[t] as number;
+        Battalion.active[b] = 1;
+        Battalion.stall[b] = 0;
+        Battalion.bestDist[b] = 0x7fffffff;
+        Battalion.engaged[b] = 0;
+      }
+      world.fields.get(Position.x[t] as number, Position.z[t] as number, team);
+      break;
+    }
     case 'stop': {
       const split = splitOwned(world, sc.player, cmd.units);
-      for (const b of split.battalions) world.c.Battalion.active[b] = 0;
+      for (const b of split.battalions) {
+        Battalion.active[b] = 0;
+        Battalion.mode[b] = BattalionMode.Idle;
+      }
       for (const eid of split.free) {
         MoveTarget.active[eid] = 0;
         Velocity.x[eid] = 0;

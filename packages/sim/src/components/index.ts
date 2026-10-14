@@ -14,11 +14,28 @@ export const createComponents = (capacity = MAX_ENTITIES) => ({
   UnitType: { id: new Uint8Array(capacity) },
   /** Yürüme hızı, m/s (Q16.16). */
   Speed: { value: new Int32Array(capacity) },
-  /** Aktif hareket hedefi. */
+  /** Aktif hareket hedefi (serbest birimler). */
   MoveTarget: { x: new Int32Array(capacity), z: new Int32Array(capacity), active: new Uint8Array(capacity) },
-  Health: { hp: new Int32Array(capacity), max: new Int32Array(capacity) },
+  /** Can; lastHit = son hasar tick'i + 1 (0 = hiç). */
+  Health: { hp: new Int32Array(capacity), max: new Int32Array(capacity), lastHit: new Uint32Array(capacity) },
   /** Animasyon durumu ve başladığı tick (render faz hesabı için). */
   Anim: { state: new Uint8Array(capacity), startTick: new Uint32Array(capacity) },
+  /**
+   * Savaş (GDD §6.4). target: birim veya yapı eid'i (0 = yok). Süreler tick, menzil Fx.
+   * dmgType / armor: DAMAGE_TYPES / ARMOR_CLASSES indeksleri.
+   */
+  Combat: {
+    target: new Int32Array(capacity),
+    cooldown: new Int32Array(capacity),
+    damage: new Int32Array(capacity),
+    dmgType: new Uint8Array(capacity),
+    armor: new Uint8Array(capacity),
+    interval: new Uint16Array(capacity),
+    range: new Int32Array(capacity),
+    ranged: new Uint8Array(capacity),
+  },
+  /** Ölü etiketi: ölüm tick'i (ceset animasyonu sonrası temizlenir). */
+  Dead: { at: new Uint32Array(capacity) },
   /**
    * Tabur (GDD §6.1): kendi Position/Facing'i olan "sancak noktası" entity'si.
    * Askerler formasyon yuvalarını bu noktaya göre hesaplar.
@@ -39,11 +56,21 @@ export const createComponents = (capacity = MAX_ENTITIES) => ({
     fieldZ: new Int32Array(capacity),
     /** Önceki tick'te yuvasından uzak kalan asker sayısı (tabur onları bekler). */
     lagging: new Uint16Array(capacity),
-    /** Grup hedef bölgesinde geçen tick (kalabalıkta sonsuz itişmeyi önleyen sabır sayacı). */
+    /** İlerleme kaydedilmeden geçen tick (kalabalıkta / ulaşılamaz noktada sonsuz itişmeyi önler). */
     stall: new Uint8Array(capacity),
+    /** Emir başından beri kişisel hedefe en yakın mesafe (ilerleme takibi). */
+    bestDist: new Int32Array(capacity),
     /** Facing'in cos/sin'i (Fx), formasyon sistemi için tick başına bir kez. */
     cos: new Int32Array(capacity),
     sin: new Int32Array(capacity),
+    /** Emir kipi (BattalionMode). */
+    mode: new Uint8Array(capacity),
+    /** Saldırı emrinin hedef taburu ve saldırılacak yapı (kapı). */
+    targetBattalion: new Int32Array(capacity),
+    targetStructure: new Int32Array(capacity),
+    /** Çatışmada mı (sancak durur, askerler hedef seçer) ve en yakın/ilgili düşman taburu. */
+    engaged: new Uint8Array(capacity),
+    enemy: new Int32Array(capacity),
   },
   /** Tabur askeri: hangi tabur, hangi yuva, yuva sapması (Fx). */
   Soldier: {
@@ -52,6 +79,37 @@ export const createComponents = (capacity = MAX_ENTITIES) => ({
     jx: new Int32Array(capacity),
     jz: new Int32Array(capacity),
   },
+  /** Yapı (kapı): can, saldırılabilir yarıçap (Fx), MapDef.gates indeksi. */
+  Structure: {
+    hp: new Int32Array(capacity),
+    max: new Int32Array(capacity),
+    radius: new Int32Array(capacity),
+    gateIndex: new Uint8Array(capacity),
+  },
+  /** Analitik mermi (GDD §6.4): uçuş önceden bilinir, isabet impact tick'inde çözülür. */
+  Projectile: {
+    fromX: new Int32Array(capacity),
+    fromZ: new Int32Array(capacity),
+    toX: new Int32Array(capacity),
+    toZ: new Int32Array(capacity),
+    fireTick: new Uint32Array(capacity),
+    flight: new Uint16Array(capacity),
+    target: new Int32Array(capacity),
+    damage: new Int32Array(capacity),
+    dmgType: new Uint8Array(capacity),
+  },
 });
 
 export type Components = ReturnType<typeof createComponents>;
+
+/** Tabur emir kipleri. */
+export const BattalionMode = {
+  /** Beklemede: menzile giren düşmanla çatışır, yerinden ayrılmaz. */
+  Idle: 0,
+  /** Oyuncu hareket emri: hedefe varana kadar çatışmaya girmez (BFME2 varsayılanı). */
+  Move: 1,
+  /** Saldırarak ilerle (yapay zekâ dalgaları): yoldaki düşmanla çatışır, sonra devam eder. */
+  AttackMove: 2,
+  /** Belirli bir düşman taburuna saldır. */
+  Attack: 3,
+} as const;

@@ -1,5 +1,5 @@
 import type { Fx } from '@bulwark/shared';
-import { cellAt, type NavGrid, nearestOpenCell } from './grid';
+import { blockedFor, cellAt, type NavGrid, nearestOpenCell } from './grid';
 
 /**
  * Akış alanı (flow field, GDD §2.4): hedef hücre kümesinden tüm ızgaraya tamsayı Dijkstra.
@@ -94,15 +94,15 @@ class MinHeap {
   }
 }
 
-const canStep = (grid: NavGrid, c: number, r: number, dc: number, dr: number): boolean => {
+const canStep = (grid: NavGrid, team: number, c: number, r: number, dc: number, dr: number): boolean => {
   const nc = c + dc;
   const nr = r + dr;
   if (nc < 0 || nr < 0 || nc >= grid.cols || nr >= grid.rows) return false;
   const cols = grid.cols;
-  if (grid.blocked[nr * cols + nc]) return false;
+  if (blockedFor(grid, nr * cols + nc, team)) return false;
   if (dc !== 0 && dr !== 0) {
     // Köşe kesme yok: çapraz adımda iki ortogonal komşu da açık olmalı.
-    if (grid.blocked[r * cols + nc] || grid.blocked[nr * cols + c]) return false;
+    if (blockedFor(grid, r * cols + nc, team) || blockedFor(grid, nr * cols + c, team)) return false;
   }
   return true;
 };
@@ -111,6 +111,7 @@ const canStep = (grid: NavGrid, c: number, r: number, dc: number, dr: number): b
 export const computeFlowField = (
   grid: NavGrid,
   goals: readonly number[],
+  team: number,
   key = goals[0] ?? -1,
 ): FlowField => {
   const n = grid.cols * grid.rows;
@@ -119,7 +120,7 @@ export const computeFlowField = (
   const heap = new MinHeap(1024);
   const top = new Int32Array(2);
   for (const g of goals) {
-    if (g < 0 || grid.blocked[g] || cost[g] === 0) continue;
+    if (g < 0 || blockedFor(grid, g, team) || cost[g] === 0) continue;
     cost[g] = 0;
     next[g] = g;
     heap.push(0, g);
@@ -134,7 +135,7 @@ export const computeFlowField = (
     const r = (i / cols) | 0;
     for (const [dc, dr, w] of DIRS) {
       // Ters yön: komşudan bu hücreye adım geçerli mi (simetrik ızgarada aynı koşul).
-      if (!canStep(grid, c, r, dc, dr)) continue;
+      if (!canStep(grid, team, c, r, dc, dr)) continue;
       const j = (r + dr) * cols + (c + dc);
       const nc = cc + w;
       if (nc < (cost[j] as number)) {
@@ -152,7 +153,7 @@ export const computeFlowField = (
     let best = -1;
     let bestCost = ci;
     for (const [dc, dr] of DIRS) {
-      if (!canStep(grid, c, r, dc, dr)) continue;
+      if (!canStep(grid, team, c, r, dc, dr)) continue;
       const j = (r + dr) * cols + (c + dc);
       const cj = cost[j] as number;
       if (cj < bestCost) {
@@ -166,7 +167,7 @@ export const computeFlowField = (
 };
 
 /** Hedef noktası etrafında (yarıçap hücre) açık hücreler; hiçbiri yoksa en yakın açık hücre. */
-export const goalCellsAround = (grid: NavGrid, x: Fx, z: Fx, radiusCells = 1): number[] => {
+export const goalCellsAround = (grid: NavGrid, x: Fx, z: Fx, team: number, radiusCells = 1): number[] => {
   const center = cellAt(grid, x, z);
   if (center < 0) return [];
   const c0 = center % grid.cols;
@@ -178,10 +179,10 @@ export const goalCellsAround = (grid: NavGrid, x: Fx, z: Fx, radiusCells = 1): n
       const r = r0 + dr;
       if (c < 0 || r < 0 || c >= grid.cols || r >= grid.rows) continue;
       const i = r * grid.cols + c;
-      if (!grid.blocked[i]) out.push(i);
+      if (!blockedFor(grid, i, team)) out.push(i);
     }
   if (out.length === 0) {
-    const near = nearestOpenCell(grid, center);
+    const near = nearestOpenCell(grid, center, team);
     if (near >= 0) out.push(near);
   }
   return out;
@@ -199,15 +200,19 @@ export class FlowFieldCache {
     readonly capacity = 24,
   ) {}
 
-  /** Hedef noktaya alan; hedef ızgara dışında veya tamamen kapalıysa null. Anahtar = hedefin merkez hücresi. */
-  get(x: Fx, z: Fx): FlowField | null {
-    const key = cellAt(this.grid, x, z);
-    if (key < 0) return null;
+  /**
+   * Takımın hedef noktaya alanı; hedef ızgara dışında veya tamamen kapalıysa null.
+   * Anahtar = takım × hücre sayısı + hedefin merkez hücresi.
+   */
+  get(x: Fx, z: Fx, team: number): FlowField | null {
+    const cell = cellAt(this.grid, x, z);
+    if (cell < 0) return null;
+    const key = team * this.grid.cols * this.grid.rows + cell;
     const hit = this.fields.get(key);
     if (hit) return hit;
-    const goals = goalCellsAround(this.grid, x, z);
+    const goals = goalCellsAround(this.grid, x, z, team);
     if (goals.length === 0) return null;
-    const field = computeFlowField(this.grid, goals, key);
+    const field = computeFlowField(this.grid, goals, team, key);
     this.computed++;
     if (this.fields.size >= this.capacity) {
       const oldest = this.fields.keys().next().value as number;
@@ -219,5 +224,10 @@ export class FlowFieldCache {
 
   byKey(key: number): FlowField | undefined {
     return this.fields.get(key);
+  }
+
+  /** Nav ızgarası değiştiğinde (yıkılan kapı vb.) tüm alanları geçersiz kıl. */
+  clear(): void {
+    this.fields.clear();
   }
 }

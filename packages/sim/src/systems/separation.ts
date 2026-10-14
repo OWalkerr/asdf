@@ -6,7 +6,7 @@ import type { SimWorld } from '../world';
 
 /**
  * Ayrışma / yumuşak çarpışma (GDD §2.4 katman 3): askerler birbirinin içinden geçmez.
- * Uzamsal hash = nav ızgarası (2 m hücre); yalnızca 3×3 komşu hücre taranır.
+ * spatialSystem'in kurduğu hash (2 m hücre, yalnızca canlılar) kullanılır; 3×3 komşu taranır.
  * Itmeler önce biriktirilir, sonra uygulanır → sonuç sorgu sırasından bağımsızdır.
  * Tamamen tamsayı: mesafe karesi < 2^53, karekök kesin (isqrt).
  */
@@ -15,24 +15,18 @@ const RADIUS_SQ = RADIUS * RADIUS;
 /** İtme kazancı: örtüşme (m) başına m/s. */
 const GAIN = 6;
 
-let head = new Int32Array(0);
-const next = new Int32Array(MAX_ENTITIES);
 const pushX = new Int32Array(MAX_ENTITIES);
 const pushZ = new Int32Array(MAX_ENTITIES);
 const units: number[] = [];
 
 export const separationSystem = (world: SimWorld): void => {
-  const { Position, Velocity, UnitType } = world.c;
+  const { Position, Velocity, UnitType, Dead } = world.c;
   const grid = world.nav;
-  const cells = grid.cols * grid.rows;
-  if (head.length !== cells) head = new Int32Array(cells);
-  head.fill(-1);
+  const head = world.hashHead;
+  const next = world.hashNext;
   units.length = 0;
   for (const e of query(world, [Position, Velocity, UnitType])) {
-    const c = cellAt(grid, Position.x[e] as number, Position.z[e] as number);
-    if (c < 0) continue;
-    next[e] = head[c] as number;
-    head[c] = e;
+    if (Dead.at[e] !== 0) continue;
     units.push(e);
     pushX[e] = 0;
     pushZ[e] = 0;
@@ -41,6 +35,7 @@ export const separationSystem = (world: SimWorld): void => {
     const ex = Position.x[e] as number;
     const ez = Position.z[e] as number;
     const c = cellAt(grid, ex, ez);
+    if (c < 0) continue;
     const c0 = c % grid.cols;
     const r0 = (c / grid.cols) | 0;
     for (let dr = -1; dr <= 1; dr++) {
@@ -50,7 +45,7 @@ export const separationSystem = (world: SimWorld): void => {
         const cc = c0 + dc;
         if (cc < 0 || cc >= grid.cols) continue;
         for (let o = head[r * grid.cols + cc] as number; o !== -1; o = next[o] as number) {
-          if (o <= e) continue; // her çift bir kez
+          if (o <= e || Dead.at[o] !== 0) continue; // her çift bir kez
           const dx = (Position.x[o] as number) - ex;
           const dz = (Position.z[o] as number) - ez;
           if (dx >= RADIUS || dx <= -RADIUS || dz >= RADIUS || dz <= -RADIUS) continue;
@@ -65,7 +60,6 @@ export const separationSystem = (world: SimWorld): void => {
             nz = (o + e) & 1 ? RADIUS >> 1 : -(RADIUS >> 1);
             d = RADIUS;
           }
-          // İtme hızı = örtüşme · GAIN, yön = normal. (dx/d)·(R−d)·GAIN
           const px = Math.trunc((nx * (RADIUS - d) * GAIN) / d);
           const pz = Math.trunc((nz * (RADIUS - d) * GAIN) / d);
           pushX[e] = ((pushX[e] as number) - px) | 0;

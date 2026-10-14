@@ -240,10 +240,43 @@ export const urukHai = (): BufferGeometry => {
   return b.build(1.08);
 };
 
+/**
+ * Gondor Archers: Gondor askerinin hafif zırhlı hali — siyah tabard, Beyaz Ağaç, açık miğfer,
+ * sırtta sadak, sol elde uzun yay. Yay, kol öne kalktığında (yay germe pozunda) dik durur;
+ * dinlenme pozunda kolla birlikte ileri yatık taşınır. Takım rengi: pelerin.
+ */
+export const gondorArcher = (): BufferGeometry => {
+  const b = new ModelBuilder();
+  legs(b, 'sootBlack', 'leather');
+  b.add(Part.Body, box(0.34, 0.6, 0.48), 'sootBlack', [0, 1.13, 0]);
+  b.add(Part.Body, box(0.06, 0.38, 0.4), 'leather', [0.17, 1.18, 0]);
+  b.add(Part.Body, box(0.03, 0.2, 0.1), 'gondorWhite', [0.21, 1.2, 0]);
+  b.add(Part.Body, box(0.36, 0.3, 0.5), 'sootBlack', [0, 0.82, 0]);
+  b.add(Part.Body, box(0.05, 0.75, 0.46), 'team0', [-0.2, 1.02, 0]); // pelerin
+  // Sadak: sırtta çapraz, ok uçları omuz üstünden görünür.
+  b.add(Part.Body, cyl(0.07, 0.07, 0.6, 5), 'leather', [-0.24, 1.3, 0.12], [0.35, 0, 0]);
+  b.add(Part.Body, box(0.1, 0.12, 0.1), 'gondorWhite', [-0.24, 1.66, 0.24], [0.35, 0, 0]);
+  b.add(Part.Head, box(0.2, 0.2, 0.2), 'sand', [0.02, 1.6, 0]);
+  b.add(Part.Head, cyl(0.13, 0.17, 0.16, 6), 'steel', [0, 1.72, 0]);
+  b.add(Part.Head, cyl(0.2, 0.2, 0.025, 6), 'steel', [0, 1.65, 0]);
+  arm(b, Part.ArmR, 0.3, 'sootBlack', 'leather');
+  arm(b, Part.ArmL, -0.3, 'sootBlack', 'leather');
+  // Uzun yay: elden ileri uzanan, uçları yukarı-aşağı kıvrık üç parça + kiriş.
+  const hx = 0.04;
+  const hy = 0.72;
+  const hz = -0.3;
+  b.add(Part.ArmL, box(0.7, 0.05, 0.04), 'woodDark', [hx + 0.02, hy, hz]);
+  b.add(Part.ArmL, box(0.55, 0.045, 0.04), 'woodDark', [hx + 0.62, hy - 0.08, hz], [0, 0, -0.3]);
+  b.add(Part.ArmL, box(0.55, 0.045, 0.04), 'woodDark', [hx - 0.58, hy - 0.08, hz], [0, 0, 0.3]);
+  b.add(Part.ArmL, box(1.6, 0.012, 0.012), 'sand', [hx + 0.02, hy - 0.2, hz]);
+  return b.build();
+};
+
 /** Birim tipi id → model üreticisi (UNIT_DEFS ile aynı sıra). */
 export const UNIT_MODELS: Record<number, () => BufferGeometry> = {
   0: gondorSoldier,
   1: orcWarrior,
   2: towerGuard,
   3: urukHai,
+  4: gondorArcher,
 };

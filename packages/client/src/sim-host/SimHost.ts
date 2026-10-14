@@ -149,11 +149,7 @@ export class SimHost {
   private onMessage(msg: FromWorker): void {
     switch (msg.type) {
       case 'frame':
-        this.scratch.tick = msg.tick;
-        this.scratch.count = msg.count;
-        this.scratch.simMicros = msg.simMicros;
-        this.scratch.units.set(msg.units);
-        this.rotate(performance.now());
+        if (readLatestSnapshot(msg.snap, this.scratch)) this.rotate(performance.now());
         break;
       case 'hash':
         this.lastHash = { tick: msg.tick, hash: msg.hash };

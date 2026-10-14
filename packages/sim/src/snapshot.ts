@@ -1,37 +1,58 @@
 import {
   bufferOffset,
+  FLAG_HIT,
   G_ACTIVE,
   G_CAPACITY,
+  G_PROJ_CAPACITY,
   G_PUBLISH,
   H_COUNT,
+  H_ENEMIES_ALIVE,
+  H_GATE_HP,
+  H_GATE_MAX,
+  H_MATCH_STATE,
+  H_NEXT_WAVE_TICK,
+  H_PROJ_COUNT,
   H_SIM_MICROS,
   H_TICK,
   H_VERSION,
+  H_WAVE_COUNT,
+  H_WAVE_INDEX,
   packAnim,
+  packFlight,
   packYawTypeTeam,
+  projOffset,
   SNAP_HEADER_INTS,
+  SNAP_MAX_GATES,
+  SNAP_PROJ_INTS,
   SNAP_UNIT_INTS,
 } from '@bulwark/shared';
 import { query } from 'bitecs';
+import { nextWaveTick } from './systems/match';
 import type { SimWorld } from './world';
+
+/** Bu kadar tick içinde hasar alan birim "vurulmuş" bayrağı taşır (render parıltısı). */
+const HIT_FLASH_TICKS = 3;
 
 /**
  * Render snapshot'ını aktif olmayan buffer'a yazar ve yayınlar (seqlock + double buffer).
- * Render ara değerleme için iki ardışık snapshot'ı eid ile eşler.
+ * Birimler (canlı + ceset), oklar ve maç durumu tek seferde yazılır.
  */
 export const writeSnapshot = (world: SimWorld, view: Int32Array, simMicros = 0): number => {
-  const { Position, Facing, Team, UnitType, Health, Anim, Soldier } = world.c;
+  const { Position, Facing, Team, UnitType, Health, Anim, Soldier, Projectile, Structure } = world.c;
   const capacity = view[G_CAPACITY] as number;
+  const projCapacity = view[G_PROJ_CAPACITY] as number;
   const index = 1 - Atomics.load(view, G_ACTIVE);
-  const base = bufferOffset(capacity, index);
+  const base = bufferOffset(view, index);
   Atomics.add(view, base + H_VERSION, 1); // tek → yazılıyor
   let o = base + SNAP_HEADER_INTS;
   let count = 0;
   for (const eid of query(world, [Position, Facing, Team, UnitType])) {
     if (count >= capacity) break;
     const max = Health.max[eid] as number;
-    const hp8 = max > 0 ? (((Health.hp[eid] as number) * 255) / max) | 0 : 255;
-    const animTick = ((world.tick - (Anim.startTick[eid] as number)) & 0xff) >>> 0;
+    const hp8 = max > 0 ? ((Math.max(0, Health.hp[eid] as number) * 255) / max) | 0 : 255;
+    const animTick = (world.tick - (Anim.startTick[eid] as number)) & 0xff;
+    const last = Health.lastHit[eid] as number;
+    const flags = last !== 0 && world.tick - (last - 1) < HIT_FLASH_TICKS ? FLAG_HIT : 0;
     view[o] = eid;
     view[o + 1] = Position.x[eid] as number;
     view[o + 2] = Position.z[eid] as number;
@@ -40,14 +61,39 @@ export const writeSnapshot = (world: SimWorld, view: Int32Array, simMicros = 0):
       UnitType.id[eid] as number,
       Team.id[eid] as number,
     );
-    view[o + 4] = packAnim(Anim.state[eid] as number, 0, hp8, animTick);
+    view[o + 4] = packAnim(Anim.state[eid] as number, flags, hp8, animTick);
     view[o + 5] = Soldier.battalion[eid] as number;
     o += SNAP_UNIT_INTS;
     count++;
   }
+  let p = projOffset(view, base);
+  let projCount = 0;
+  for (const eid of query(world, [Projectile])) {
+    if (projCount >= projCapacity) break;
+    view[p] = eid;
+    view[p + 1] = Projectile.fromX[eid] as number;
+    view[p + 2] = Projectile.fromZ[eid] as number;
+    view[p + 3] = Projectile.toX[eid] as number;
+    view[p + 4] = Projectile.toZ[eid] as number;
+    view[p + 5] = packFlight(Projectile.fireTick[eid] as number, Projectile.flight[eid] as number);
+    p += SNAP_PROJ_INTS;
+    projCount++;
+  }
+  const m = world.match;
   view[base + H_TICK] = world.tick;
   view[base + H_COUNT] = count;
   view[base + H_SIM_MICROS] = simMicros | 0;
+  view[base + H_PROJ_COUNT] = projCount;
+  view[base + H_MATCH_STATE] = m.state;
+  view[base + H_WAVE_INDEX] = m.waveIndex;
+  view[base + H_WAVE_COUNT] = m.waveCount;
+  view[base + H_NEXT_WAVE_TICK] = nextWaveTick(world);
+  view[base + H_ENEMIES_ALIVE] = m.enemiesAlive;
+  for (let g = 0; g < SNAP_MAX_GATES; g++) {
+    const gate = m.gates[g];
+    view[base + H_GATE_HP + g] = gate !== undefined ? (Structure.hp[gate] as number) : 0;
+    view[base + H_GATE_MAX + g] = gate !== undefined ? (Structure.max[gate] as number) : 0;
+  }
   Atomics.add(view, base + H_VERSION, 1); // çift → tamam
   Atomics.store(view, G_ACTIVE, index);
   Atomics.add(view, G_PUBLISH, 1);

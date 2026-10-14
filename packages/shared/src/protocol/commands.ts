@@ -18,6 +18,8 @@ export type Command =
    * hedefte yan yana dizilir; serbest birimler kare formasyonla doğrudan yürür.
    */
   | { type: 'move'; units: readonly number[]; x: Fx; z: Fx; spacing: Fx }
+  /** Taburlarla düşman taburuna saldır (hedef, ölene veya emir değişene kadar izlenir). */
+  | { type: 'attack'; units: readonly number[]; target: number }
   | { type: 'stop'; units: readonly number[] };
 
 export interface StampedCommand {

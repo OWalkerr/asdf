@@ -59,7 +59,7 @@ describe('tabur hareketi', () => {
     for (let t = 0; t < 900; t++) {
       sim.step();
       for (const s of soldiers)
-        expect(isBlockedAt(sim.world.nav, Position.x[s] as number, Position.z[s] as number)).toBe(false);
+        expect(isBlockedAt(sim.world.nav, Position.x[s] as number, Position.z[s] as number, 0)).toBe(false);
     }
     expect(sim.world.c.Battalion.active[b]).toBe(0);
     // Sancak noktası hedefte.
@@ -249,7 +249,7 @@ describe("Helm's Deep rotaları (regresyon)", () => {
       sim.step();
       if (t % 20 === 0)
         for (const s of soldiers)
-          expect(isBlockedAt(grid, Position.x[s] as number, Position.z[s] as number)).toBe(false);
+          expect(isBlockedAt(grid, Position.x[s] as number, Position.z[s] as number, 1)).toBe(false);
     }
     for (const b of all) {
       const [tx, tz] = targets.get(b) as [number, number];

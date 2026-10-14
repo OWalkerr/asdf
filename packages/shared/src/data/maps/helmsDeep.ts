@@ -1,4 +1,5 @@
 import type { MapDef, SlotDef, Vec2 } from '../../map/types';
+import { UnitTypeId } from '../units';
 
 /**
  * Helm's Deep — sadeleştirilmiş FD haritası (GDD §10.1, Phase 1 / Adım 4).
@@ -21,6 +22,8 @@ const WALL_Z = -24;
 const WALL_X0 = -40;
 const WALL_X1 = 88;
 const WALL_HEIGHT = 9;
+/** Deeping Wall menfezinin x konumu. */
+const CULVERT_X = 20;
 
 const HORNBURG: Vec2 = [-62, -30];
 const HORNBURG_RADIUS = 22;
@@ -79,7 +82,11 @@ export const HELMS_DEEP: MapDef = {
   seed: 3019,
   camera: { home: [8, -10], yaw: 0, distance: 175 },
   citadel: { id: 'glittering_caves', pos: [15, -140], radius: 10, hp: 10_000 },
-  gates: [{ id: 'hornburg_gate', pos: GATE_POS, facing: GATE_FACING, width: 6, hp: 3000 }],
+  gates: [
+    { id: 'hornburg_gate', pos: GATE_POS, facing: GATE_FACING, width: 6, hp: 3000 },
+    // Deeping Wall menfezi (culvert): savunucuların çıkış kapısı, düşmanın kırmaya çalıştığı zayıf nokta.
+    { id: 'culvert', pos: [CULVERT_X, WALL_Z], facing: 90, width: 4, hp: 2500 },
+  ],
   walls: [
     {
       id: 'deeping_wall',
@@ -114,20 +121,20 @@ export const HELMS_DEEP: MapDef = {
       points: [
         [-100, 176],
         [-62, 95],
-        [-16, 30],
-        [-14, WALL_Z + 6],
+        [-6, 30],
+        [CULVERT_X - 4, WALL_Z + 5],
       ],
-      target: 'deeping_wall',
+      target: 'culvert',
     },
     {
       id: 'wall_east',
       points: [
         [120, 176],
         [92, 95],
-        [60, 30],
-        [56, WALL_Z + 6],
+        [48, 30],
+        [CULVERT_X + 4, WALL_Z + 5],
       ],
-      target: 'deeping_wall',
+      target: 'culvert',
     },
   ],
   nav: {
@@ -189,8 +196,58 @@ export const HELMS_DEEP: MapDef = {
         label: 'Deeping Wall',
         shape: { type: 'capsule', a: [WALL_X0, WALL_Z], b: [WALL_X1, WALL_Z], halfWidth: 3.5 },
       },
+      // Arka kapılar: kapı/menfez hücreleri savunucuya açık, düşmana kapalı (GDD §4.2 Postern Gate).
+      // Hornburg kapısı ekseni = GATE_POS ± 3·(cos 45°, sin 45°), önceden hesaplandı.
+      {
+        op: 'open',
+        label: 'Hornburg kapısı',
+        shape: { type: 'capsule', a: [-50.69, -18.69], b: [-46.45, -14.45], halfWidth: 2.6 },
+      },
+      {
+        op: 'block',
+        label: 'Hornburg kapısı (düşman)',
+        teams: [1],
+        shape: { type: 'capsule', a: [-50.69, -18.69], b: [-46.45, -14.45], halfWidth: 2.6 },
+      },
+      {
+        op: 'open',
+        label: 'menfez',
+        shape: { type: 'capsule', a: [CULVERT_X, WALL_Z - 4], b: [CULVERT_X, WALL_Z + 4], halfWidth: 2 },
+      },
+      {
+        op: 'block',
+        label: 'menfez (düşman)',
+        teams: [1],
+        shape: { type: 'capsule', a: [CULVERT_X, WALL_Z - 4], b: [CULVERT_X, WALL_Z + 4], halfWidth: 2 },
+      },
     ],
   },
+  waves: [
+    {
+      name: 'Öncü birlikler',
+      groups: [
+        { atSec: 25, spawn: 'S_main', unitType: UnitTypeId.OrcWarrior, battalions: 3 },
+        { atSec: 32, spawn: 'S_west', unitType: UnitTypeId.OrcWarrior, battalions: 2 },
+      ],
+    },
+    {
+      name: 'Beyaz El',
+      groups: [
+        { atSec: 95, spawn: 'S_east', unitType: UnitTypeId.UrukHai, battalions: 3 },
+        { atSec: 100, spawn: 'S_main', unitType: UnitTypeId.OrcWarrior, battalions: 5 },
+        { atSec: 108, spawn: 'S_west', unitType: UnitTypeId.OrcWarrior, battalions: 2 },
+      ],
+    },
+    {
+      name: 'Isengard ordusu',
+      groups: [
+        { atSec: 170, spawn: 'S_main', unitType: UnitTypeId.UrukHai, battalions: 4 },
+        { atSec: 175, spawn: 'S_west', unitType: UnitTypeId.UrukHai, battalions: 3 },
+        { atSec: 180, spawn: 'S_east', unitType: UnitTypeId.OrcWarrior, battalions: 4 },
+        { atSec: 190, spawn: 'S_main', unitType: UnitTypeId.OrcWarrior, battalions: 2 },
+      ],
+    },
+  ],
   terrain: {
     plateaus: [{ id: 'hornburg_rock', center: HORNBURG, radius: HORNBURG_RADIUS, height: HORNBURG_HEIGHT }],
     ramps: [

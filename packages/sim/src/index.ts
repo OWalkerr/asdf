@@ -6,4 +6,6 @@ export * from './nav/grid';
 export * from './simulation';
 export * from './snapshot';
 export * from './systems/commands';
+export * from './systems/match';
+export * from './unitStats';
 export * from './world';

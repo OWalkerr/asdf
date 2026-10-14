@@ -90,3 +90,100 @@ body {
   border: 1px solid #f2cf63;
   background: rgba(242, 207, 99, 0.12);
 }
+#matchbar {
+  position: fixed;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: calc(100vw - 24px);
+  pointer-events: none;
+}
+#matchbar > div {
+  background: var(--panel);
+  border: 1px solid rgba(201, 162, 58, 0.45);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 13px;
+}
+#matchbar .wave {
+  color: var(--ink);
+  letter-spacing: 0.02em;
+}
+#matchbar .gate {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+#matchbar .gate .bar {
+  width: 110px;
+  height: 8px;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 4px;
+  overflow: hidden;
+}
+#matchbar .gate .bar i {
+  display: block;
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(90deg, #8fbf5a, #c9e08a);
+  transition: width 0.2s;
+}
+#matchbar .gate.danger .bar i {
+  background: linear-gradient(90deg, #c2281e, #e36b5a);
+}
+#matchbar .gate .hp {
+  font:
+    12px ui-monospace,
+    Menlo,
+    monospace;
+  color: var(--ink-dim);
+  min-width: 3.5em;
+  text-align: right;
+}
+#endscreen {
+  position: fixed;
+  inset: 0;
+  display: none;
+  place-items: center;
+  background: rgba(10, 9, 8, 0.55);
+}
+#endscreen.show {
+  display: grid;
+}
+#endscreen .card {
+  background: var(--panel);
+  border: 1px solid var(--gold);
+  border-radius: 10px;
+  padding: 28px 40px;
+  text-align: center;
+  max-width: calc(100vw - 32px);
+}
+#endscreen h1 {
+  margin: 0 0 8px;
+  letter-spacing: 0.3em;
+  font-size: 40px;
+}
+#endscreen .victory h1 {
+  color: var(--gold);
+}
+#endscreen .defeat h1 {
+  color: #e36b5a;
+}
+#endscreen p {
+  color: var(--ink-dim);
+  margin: 0 0 18px;
+}
+#endscreen button {
+  font: inherit;
+  color: #1a1916;
+  background: var(--gold);
+  border: 0;
+  border-radius: 6px;
+  padding: 8px 18px;
+  cursor: pointer;
+}

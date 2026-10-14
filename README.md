@@ -20,7 +20,7 @@ Tasarım ve mimari: [`GDD.md`](GDD.md).
 
 URL parametreleri: `?map=helms_deep` (varsayılan) veya `?map=lookdev`, `?gallery` birim galerisi
 (her birim tipi × boşta/yürüme/saldırı/ölüm × iki takım), `?webgl` WebGL2 backend'ini zorlar,
-`?debug=0` tweak panelini gizler, `?nosab` SharedArrayBuffer yerine postMessage yedek yolunu zorlar. Debug panelindeki "Koridor/spawn katmanı" düşman rotalarını gösterir.
+`?debug` tweak panelini ve teknik HUD'u açar, `?nosab` SharedArrayBuffer yerine postMessage yedek yolunu zorlar. Debug panelindeki "Koridor/spawn katmanı" düşman rotalarını gösterir.
 
 ## Paketler
 | Paket | İçerik |
@@ -33,8 +33,15 @@ URL parametreleri: `?map=helms_deep` (varsayılan) veya `?map=lookdev`, `?galler
 WASD / ok tuşları / ekran kenarı: kaydır · Orta tuş sürükle: kaydır · Q/E veya Alt+sol sürükle: döndür ·
 Tekerlek: imlece doğru zoom · Space/Home: başlangıç görünümü.
 
+## Nasıl oynanır (Helm's Deep, Phase 1)
+Üç düşman dalgası güneyden gelir; Orc ve Uruk-hai taburları causeway'den **Hornburg kapısına**, ovadan
+**Deeping Wall menfezine** saldırır. Kapılardan biri düşerse yenilirsiniz, üç dalgayı temizlerseniz kazanırsınız.
+Kapılar yalnızca sizin birliklerinize açıktır (arka kapı): piyadeyi dışarı çıkarıp saldıranları dağıtın.
+Okçular menzildeki düşmana kendiliğinden ateş eder.
+
 ## Birim kontrolleri
-Sol tık: tabur seç (Shift ile ekle/çıkar) · Sol sürükle: kutu seçimi · Sağ tık: seçili taburları yürüt ·
+Sol tık: tabur seç (Shift ile ekle/çıkar) · Sol sürükle: kutu seçimi · Sağ tık: seçili taburları yürüt
+(düşman askerinin üstünde: saldır) ·
 Esc: seçimi temizle · Asker olmayan yere sol tık: inşa slotu seç. Taburlar akış alanıyla (flow field)
-engellerin etrafından dolaşır, dar geçitte formasyonu daraltır. Debug panelinde "Nav ızgarası sınırı",
-sim hızı ve düşman dalgası / stres testi düğmeleri var.
+engellerin etrafından dolaşır, dar geçitte formasyonu daraltır. `?debug` panelinde "Nav ızgarası sınırı"
+ve sim hızı ayarı var.

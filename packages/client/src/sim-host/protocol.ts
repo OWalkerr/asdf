@@ -16,8 +16,8 @@ export type ToWorker =
 
 export type FromWorker =
   | { type: 'ready'; shared: boolean }
-  /** Yalnızca SharedArrayBuffer yoksa: kompakt snapshot (transfer edilir). */
-  | { type: 'frame'; tick: number; count: number; simMicros: number; units: Int32Array }
+  /** Yalnızca SharedArrayBuffer yoksa: tek buffer'lık snapshot (transfer edilir). */
+  | { type: 'frame'; snap: Int32Array }
   | { type: 'hash'; tick: number; hash: number }
   | { type: 'error'; message: string };
 

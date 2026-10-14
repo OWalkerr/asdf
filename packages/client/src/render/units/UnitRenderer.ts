@@ -1,9 +1,11 @@
 import {
   AnimState,
+  FLAG_HIT,
   SNAP_UNIT_INTS,
   UNIT_DEFS,
   unpackAnimState,
   unpackAnimTick,
+  unpackFlags,
   unpackTeam,
   unpackUnitType,
   unpackYaw,
@@ -57,7 +59,8 @@ export class UnitRenderer {
       const animAttr = new InstancedBufferAttribute(anim, 4).setUsage(DynamicDrawUsage);
       geo.setAttribute('iPose', poseAttr);
       geo.setAttribute('iAnim', animAttr);
-      const mat = createUnitMaterial(palette, params, { attackStyle: def.attackStyle === 'thrust' ? 1 : 0 });
+      const style = def.attackStyle === 'thrust' ? 1 : def.attackStyle === 'bow' ? 2 : 0;
+      const mat = createUnitMaterial(palette, params, { attackStyle: style });
       const mesh = new InstancedMesh(geo, mat, capacityPerType);
       mesh.name = `units:${def.key}`;
       // Konum shader'da hesaplandığı için CPU frustum testi anlamsız; GPU culling Phase 2'de.
@@ -185,7 +188,7 @@ export class UnitRenderer {
         yaw * ANGLE_TO_RAD,
         state,
         t,
-        0,
+        unpackFlags(animPacked) & FLAG_HIT ? 1 : 0,
         unpackTeam(packed),
         u[o + 5] as number,
       );

@@ -10,7 +10,7 @@ import type { Selection } from './Selection';
  * Oyuncu fare girdisi (GDD §11.2, BFME2 varsayılanları):
  *   Sol tık        → tabur seç (Shift: ekle/çıkar); asker yoksa inşa slotu seç; boşsa seçimi temizle
  *   Sol sürükle    → kutu seçimi (Shift: ekle)
- *   Sağ tık        → seçili taburlara hareket emri
+ *   Sağ tık        → seçili taburlara hareket emri; düşman askerinin üstündeyse saldırı emri
  *   Esc            → seçimi temizle
  * Alt + sol sürükle ve orta tuş kameraya aittir (RTSCamera).
  */
@@ -129,6 +129,11 @@ export class PlayerInput {
     const { selection, picker, cam, scenario, marker } = this.d;
     if (selection.selected.size === 0) return;
     const { w, h } = this.size;
+    const enemy = selection.pickAny(cam.camera, sx, sy, w, h);
+    if (enemy && enemy.team !== selection.team) {
+      scenario.attack(selection.selected, enemy.battalion);
+      return;
+    }
     const hit = picker.pick(cam.camera, sx, sy, w, h);
     if (!hit) return;
     scenario.order(selection.selected, hit.point.x, hit.point.z);

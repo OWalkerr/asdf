@@ -1,7 +1,8 @@
 import { FX_ONE, type Fx, type MapDef, type NavShape, type Vec2 } from '@bulwark/shared';
 
 /**
- * Navigasyon ızgarası (GDD §2.4). Hücre başına 1 bayt: 1 = kapalı.
+ * Navigasyon ızgarası (GDD §2.4). Hücre başına 1 bayt bit maskesi: bit t = takım t için kapalı
+ * (BLOCK_ALL = herkese kapalı). Arka kapılar (postern) yalnızca düşman bitini taşır.
  * Harita verisindeki NavOp listesi yalnızca + − × ÷ ve karşılaştırma ile çizilir
  * (trigonometri/karekök yok) → her istemcide bit-bit aynı ızgara.
  */
@@ -13,8 +14,9 @@ export interface NavGrid {
   cellFx: Fx;
   /** Izgaranın sol-üst köşesi (x = z = -size/2), Fx. */
   originFx: Fx;
+  /** Takım bit maskesi (bit t = takım t için kapalı). */
   blocked: Uint8Array;
-  /** En yakın kapalı hücreye uzaklık (hücre, 255'te doyar) — formasyon genişliği için. */
+  /** En yakın (herhangi bir takıma) kapalı hücreye uzaklık (hücre, 255'te doyar) — formasyon genişliği için. */
   clearance: Uint8Array;
 }
 
@@ -38,6 +40,12 @@ const distSqToSegment = (x: number, z: number, a: Vec2, b: Vec2): number => {
   const dz = z - (a[1] + abz * t);
   return dx * dx + dz * dz;
 };
+
+/** 4 takımın hepsine kapalı. */
+export const BLOCK_ALL = 0x0f;
+
+export const teamMask = (teams?: readonly number[]): number =>
+  teams ? teams.reduce((m, t) => m | (1 << t), 0) & BLOCK_ALL : BLOCK_ALL;
 
 export const shapeContains = (shape: NavShape, x: number, z: number): boolean => {
   switch (shape.type) {
@@ -77,13 +85,16 @@ export const buildNavGrid = (map: Pick<MapDef, 'size' | 'nav'>): NavGrid => {
   const { cellSize, ops } = map.nav;
   const grid = allocGrid(map.size, cellSize);
   const half = map.size / 2;
-  grid.blocked.fill(1);
+  const masks = ops.map((op) => teamMask(op.teams));
   for (let r = 0; r < grid.rows; r++) {
     const z = -half + (r + 0.5) * cellSize;
     for (let c = 0; c < grid.cols; c++) {
       const x = -half + (c + 0.5) * cellSize;
-      let blocked = 1;
-      for (const op of ops) if (shapeContains(op.shape, x, z)) blocked = op.op === 'block' ? 1 : 0;
+      let blocked = BLOCK_ALL;
+      ops.forEach((op, k) => {
+        if (!shapeContains(op.shape, x, z)) return;
+        blocked = op.op === 'open' ? 0 : blocked | (masks[k] as number);
+      });
       grid.blocked[r * grid.cols + c] = blocked;
     }
   }
@@ -144,9 +155,13 @@ export const cellAt = (grid: NavGrid, x: Fx, z: Fx): number => {
   return r * grid.cols + c;
 };
 
-export const isBlockedAt = (grid: NavGrid, x: Fx, z: Fx): boolean => {
+/** Hücre takım için kapalı mı. */
+export const blockedFor = (grid: NavGrid, i: number, team: number): boolean =>
+  (((grid.blocked[i] as number) >> team) & 1) === 1;
+
+export const isBlockedAt = (grid: NavGrid, x: Fx, z: Fx, team: number): boolean => {
   const i = cellAt(grid, x, z);
-  return i < 0 || grid.blocked[i] === 1;
+  return i < 0 || blockedFor(grid, i, team);
 };
 
 /** Hücre merkezinin Fx koordinatları. */
@@ -156,9 +171,9 @@ export const cellCenterZ = (grid: NavGrid, i: number): Fx =>
   grid.originFx + ((i / grid.cols) | 0) * grid.cellFx + (grid.cellFx >> 1);
 
 /** En yakın açık hücre (BFS, deterministik komşu sırası). Bulunamazsa -1. */
-export const nearestOpenCell = (grid: NavGrid, start: number, maxSteps = 4096): number => {
+export const nearestOpenCell = (grid: NavGrid, start: number, team: number, maxSteps = 4096): number => {
   if (start < 0) return -1;
-  if (!grid.blocked[start]) return start;
+  if (!blockedFor(grid, start, team)) return start;
   const seen = new Uint8Array(grid.cols * grid.rows);
   const queue = new Int32Array(Math.min(maxSteps * 8, grid.cols * grid.rows));
   let head = 0;
@@ -167,7 +182,7 @@ export const nearestOpenCell = (grid: NavGrid, start: number, maxSteps = 4096): 
   seen[start] = 1;
   while (head < tail && head < maxSteps) {
     const i = queue[head++] as number;
-    if (!grid.blocked[i]) return i;
+    if (!blockedFor(grid, i, team)) return i;
     const c = i % grid.cols;
     const r = (i / grid.cols) | 0;
     for (const [dc, dr] of NEIGHBORS4) {

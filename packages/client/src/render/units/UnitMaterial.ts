@@ -56,7 +56,7 @@ export const ANIM_ATTACK = 2;
 export const ANIM_DIE = 3;
 
 export interface UnitMaterialOptions {
-  /** 0 = kılıç savurma, 1 = mızrak dürtme. */
+  /** 0 = kılıç savurma, 1 = mızrak dürtme, 2 = yay germe. */
   attackStyle: number;
   /** Yürüme adım frekansı (Hz). */
   stepRate?: number;
@@ -115,13 +115,20 @@ export const createUnitMaterial = (
   const slashAngle = mix(mix(mix(0.2, 2.5, raise), -0.25, strike), 0.2, recover);
   // Mızrak: kol hafif sabit, silah ileri-geri kayar (dürtme), döngü 0.8 s.
   const thrustPulse = pow(sin(fract(t.div(0.8)).mul(Math.PI)), 3);
-  const armRAttack = mix(slashAngle, 0.12, style);
+  // Yay: iki kol öne kalkar, sağ el kirişi geri çeker (0–0.7), bırakır (0.85–1), döngü 1.6 s.
+  const bowPh = fract(t.div(1.6));
+  const bowDraw = smoothstep(0, 0.7, bowPh).mul(float(1).sub(step(0.85, bowPh)));
+  const isSlash = isEq(style, 0);
+  const isThrust = isEq(style, 1);
+  const isBow = isEq(style, 2);
+  const armRAttack = isSlash.mul(slashAngle).add(isThrust.mul(0.12)).add(isBow.mul(1.38));
+  const armLAttack = isSlash.add(isThrust).mul(0.45).add(isBow.mul(1.5));
 
   const armR = walk
     .mul(cycle.mul(-0.32))
     .add(attack.mul(armRAttack))
     .add(idle.mul(sin(t.mul(1.7)).mul(0.04)));
-  const armL = walk.mul(cycle.mul(0.28)).add(attack.mul(0.45)).add(idle.mul(0.06));
+  const armL = walk.mul(cycle.mul(0.28)).add(attack.mul(armLAttack)).add(idle.mul(0.06));
   const headNod = idle.mul(sin(t.mul(0.9)).mul(0.05)).add(attack.mul(strike.sub(recover).mul(0.12)));
 
   const angle = isEq(part, Part.LegL)
@@ -133,7 +140,10 @@ export const createUnitMaterial = (
 
   // --- Parça dönüşümü (eklem etrafında) ----------------------------------------------
   const local = rotZ(positionGeometry.sub(pivot), angle).add(pivot);
-  const thrust = isEq(part, Part.ArmR).mul(attack).mul(style).mul(thrustPulse).mul(0.5);
+  // Sağ kol: mızrakta ileri dürtme, yayda kirişi geri çekme.
+  const thrust = isEq(part, Part.ArmR)
+    .mul(attack)
+    .mul(isThrust.mul(thrustPulse).mul(0.5).sub(isBow.mul(bowDraw).mul(0.32)));
   const bob = abs(cycle).mul(0.05).mul(walk);
   const posPart = local.add(vec3(thrust, bob, 0));
   const nrmPart = rotZ(normalGeometry, angle);

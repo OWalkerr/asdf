@@ -1,97 +1,56 @@
-import {
-  fxFromFloat,
-  type MapDef,
-  SNAP_UNIT_INTS,
-  type SnapshotFrame,
-  UnitTypeId,
-  unpackTeam,
-  type Vec2,
-} from '@bulwark/shared';
+import { fxFromFloat, type MapDef, UnitTypeId } from '@bulwark/shared';
 import type { SimHost } from '../sim-host/SimHost';
 
 /**
- * Phase 1 test senaryosu: savunan Gondor taburları ve rotalar boyunca gelen Isengard/Mordor
- * taburları. Adım 8'de dalga sistemi (WaveSpawnSystem) bunun yerini alacak.
+ * Oyuncu tarafı kurulum ve emirler. Düşman dalgaları artık simülasyonda (WaveSpawnSystem,
+ * harita verisindeki dalga programı); burada yalnızca savunucular yerleştirilir ve oyuncu
+ * emirleri komuta çevrilir.
  */
 export const PLAYER = 0;
-export const ENEMY_PLAYER = 1;
 
-/** uint16 açılar: 0 = +X (doğu), 16384 = +Z (güney), 49152 = −Z (kuzey). */
+/** uint16 açılar: 0 = +X (doğu), 16384 = +Z (güney). */
 const FACE_SOUTH = 16384;
-const FACE_NORTH = 49152;
-
-/** Karede görülen, verilen takıma ait tabur eid'leri. */
-export const battalionsOfTeam = (frame: SnapshotFrame, team: number): Set<number> => {
-  const out = new Set<number>();
-  for (let i = 0; i < frame.count; i++) {
-    const o = i * SNAP_UNIT_INTS;
-    const b = frame.units[o + 5] as number;
-    if (b !== 0 && unpackTeam(frame.units[o + 3] as number) === team) out.add(b);
-  }
-  return out;
-};
 
 export class Scenario {
-  private pendingEnemyTargets: Vec2[] = [];
-  private orderedEnemies = new Set<number>();
-  private waveIndex = 0;
-
   constructor(
     private readonly sim: SimHost,
     private readonly def: MapDef | undefined,
-  ) {
-    sim.onFrame((frame) => this.onFrame(frame));
-  }
+  ) {}
 
-  private spawn(
-    team: number,
-    unitType: number,
-    x: number,
-    z: number,
-    count: number,
-    facing: number,
-    player: number,
-  ) {
+  private spawn(unitType: number, x: number, z: number, count: number) {
     this.sim.send(
-      { type: 'spawnBattalion', team, unitType, x: fxFromFloat(x), z: fxFromFloat(z), count, facing },
-      player,
+      {
+        type: 'spawnBattalion',
+        team: 0,
+        unitType,
+        x: fxFromFloat(x),
+        z: fxFromFloat(z),
+        count,
+        facing: FACE_SOUTH,
+      },
+      PLAYER,
     );
   }
 
+  /** Başlangıç savunması (GDD §10.1): sur arkasında okçular + piyade, Hornburg'da garnizon. */
   start(): void {
     if (!this.def) {
-      this.spawn(0, UnitTypeId.GondorSoldier, 0, 40, 2, FACE_SOUTH, PLAYER);
-      this.spawn(0, UnitTypeId.TowerGuard, 0, 52, 2, FACE_SOUTH, PLAYER);
+      this.spawn(UnitTypeId.GondorSoldier, 0, 40, 2);
+      this.spawn(UnitTypeId.GondorArcher, 0, 52, 2);
       return;
     }
-    // Deeping Wall arkasında Gondor askerleri + Tower Guard'lar, Hornburg avlusunda bir tabur.
     const wallZ = this.def.walls[0]?.points[0]?.[1] ?? 0;
-    this.spawn(0, UnitTypeId.GondorSoldier, 0, wallZ - 16, 2, FACE_SOUTH, PLAYER);
-    this.spawn(0, UnitTypeId.TowerGuard, 45, wallZ - 16, 2, FACE_SOUTH, PLAYER);
+    // Okçular surun hemen arkasında (menfez önünü ve sur önünü menzilde tutar).
+    this.spawn(UnitTypeId.GondorArcher, 20, wallZ - 9, 2);
+    // Piyade ikinci hatta: menfezden çıkış (sortie) için hazır.
+    this.spawn(UnitTypeId.GondorSoldier, 2, wallZ - 22, 2);
+    this.spawn(UnitTypeId.TowerGuard, 46, wallZ - 22, 2);
     const plateau = this.def.terrain.plateaus[0];
-    if (plateau)
-      this.spawn(
-        0,
-        UnitTypeId.GondorSoldier,
-        plateau.center[0] + 3,
-        plateau.center[1] + 3,
-        1,
-        FACE_SOUTH,
-        PLAYER,
-      );
-    this.sendWave(3);
-  }
-
-  /** Sıradaki spawn noktasından `battalions` adet düşman taburu çıkarır (Orc / Uruk-hai dönüşümlü). */
-  sendWave(battalions: number): void {
-    if (!this.def) return;
-    const unitType = this.waveIndex % 2 === 0 ? UnitTypeId.OrcWarrior : UnitTypeId.UrukHai;
-    const spawn = this.def.spawns[this.waveIndex++ % this.def.spawns.length];
-    if (!spawn) return;
-    const lane = this.def.lanes.find((l) => l.id === spawn.lane);
-    const target = lane?.points[lane.points.length - 1] ?? this.def.citadel.pos;
-    this.spawn(1, unitType, spawn.pos[0], spawn.pos[1] - 10, battalions, FACE_NORTH, ENEMY_PLAYER);
-    this.pendingEnemyTargets.push(target);
+    if (plateau) {
+      const [px, pz] = plateau.center;
+      this.spawn(UnitTypeId.GondorArcher, px + 6, pz + 6, 1);
+      this.spawn(UnitTypeId.GondorSoldier, px - 4, pz - 2, 2);
+    }
   }
 
   /** Seçili taburlara hareket emri. */
@@ -104,21 +63,10 @@ export class Scenario {
     );
   }
 
-  private onFrame(frame: SnapshotFrame): void {
-    if (this.pendingEnemyTargets.length === 0) return;
-    const fresh = [...battalionsOfTeam(frame, 1)].filter((b) => !this.orderedEnemies.has(b));
-    if (fresh.length === 0) return;
-    const target = this.pendingEnemyTargets.shift() as Vec2;
-    for (const b of fresh) this.orderedEnemies.add(b);
-    this.sim.send(
-      {
-        type: 'move',
-        units: fresh,
-        x: fxFromFloat(target[0]),
-        z: fxFromFloat(target[1]),
-        spacing: fxFromFloat(1.5),
-      },
-      ENEMY_PLAYER,
-    );
+  /** Seçili taburlarla düşman taburuna saldır. */
+  attack(battalions: Iterable<number>, target: number): void {
+    const units = [...battalions];
+    if (units.length === 0 || target <= 0) return;
+    this.sim.send({ type: 'attack', units, target }, PLAYER);
   }
 }

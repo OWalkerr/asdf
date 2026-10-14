@@ -97,6 +97,11 @@ export type NavShape =
 export interface NavOp {
   op: 'open' | 'block';
   shape: NavShape;
+  /**
+   * Yalnızca `block` için: bu takımlar için kapat (diğerleri geçebilir). Verilmezse herkes.
+   * Arka kapı (postern, GDD §4.2): savunucu çıkar, düşman giremez.
+   */
+  teams?: readonly number[];
   /** Debug / test için açıklama. */
   label?: string;
 }
@@ -105,6 +110,19 @@ export interface NavDef {
   /** Hücre kenarı (m, tamsayı). */
   cellSize: number;
   ops: readonly NavOp[];
+}
+
+/** Bir dalga grubu (GDD §4.1): `atSec` saniyesinde spawn noktasından tabur(lar). */
+export interface WaveGroupDef {
+  atSec: number;
+  spawn: string;
+  unitType: number;
+  battalions: number;
+}
+
+export interface WaveDef {
+  name: string;
+  groups: readonly WaveGroupDef[];
 }
 
 export interface MapDef {
@@ -123,6 +141,8 @@ export interface MapDef {
   lanes: readonly LaneDef[];
   terrain: { plateaus: readonly PlateauDef[]; ramps: readonly RampDef[] };
   nav: NavDef;
+  /** Düşman dalgaları (sırayla); savunan takım 0, saldıran takım 1. */
+  waves: readonly WaveDef[];
 }
 
 /** Haritanın iç tutarlılığını kontrol eder; hata mesajları listesi döner (boş = geçerli). */
@@ -173,6 +193,14 @@ export const validateMap = (map: MapDef): string[] => {
   if (!Number.isInteger(map.nav.cellSize) || map.nav.cellSize < 1)
     errors.push('nav.cellSize pozitif tamsayı olmalı');
   if (map.size % map.nav.cellSize !== 0) errors.push('harita boyu nav.cellSize katı olmalı');
+  const spawnIds = new Set(map.spawns.map((s) => s.id));
+  map.waves.forEach((w, i) => {
+    if (w.groups.length === 0) errors.push(`dalga ${i + 1} boş`);
+    for (const g of w.groups) {
+      if (!spawnIds.has(g.spawn)) errors.push(`dalga ${i + 1}: bilinmeyen spawn ${g.spawn}`);
+      if (g.battalions < 1) errors.push(`dalga ${i + 1}: tabur sayısı ≥ 1 olmalı`);
+    }
+  });
   for (const r of map.terrain.ramps) {
     unique(r.id, 'ramp');
     if (!inBounds(r.from) || !inBounds(r.to)) errors.push(`${r.id} harita dışında`);

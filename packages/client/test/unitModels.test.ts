@@ -1,5 +1,7 @@
+import { UNIT_DEFS } from '@bulwark/shared';
 import { describe, expect, it } from 'vitest';
 import {
+  gondorArcher,
   gondorSoldier,
   orcWarrior,
   Part,
@@ -14,6 +16,7 @@ const BUDGET: [string, () => import('three/webgpu').BufferGeometry, number][] = 
   ['Orc Warrior', orcWarrior, 300],
   ['Tower Guard', towerGuard, 450],
   ['Uruk-hai', urukHai, 450],
+  ['Gondor Archer', gondorArcher, 300],
 ];
 
 describe('birim modelleri', () => {
@@ -37,6 +40,6 @@ describe('birim modelleri', () => {
   }
 
   it('her birim tipi için model kayıtlı', () => {
-    expect(Object.keys(UNIT_MODELS).map(Number)).toEqual([0, 1, 2, 3]);
+    expect(Object.keys(UNIT_MODELS).map(Number)).toEqual(UNIT_DEFS.map((d) => d.id));
   });
 });
