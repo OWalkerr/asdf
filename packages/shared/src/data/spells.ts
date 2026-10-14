@@ -4,7 +4,7 @@
  */
 
 /** Tabur rütbesi: rütbe r'ye çıkmak için gereken toplam XP (indeks = rütbe; 1 başlangıç). */
-export const RANK_XP: readonly number[] = [0, 0, 60, 150, 300, 500];
+export const RANK_XP: readonly number[] = [0, 0, 120, 300, 600, 1000];
 export const MAX_RANK = 5;
 /** Rütbe başına hasar ve dayanıklılık artışı (%). */
 export const RANK_BONUS_PERCENT = 10;
@@ -90,5 +90,5 @@ export const RALLY_DURATION = 30;
 export const RALLY_DAMAGE_PERCENT = 25;
 /** Ok Yağmuru: dalga sayısı, dalga arası (s), dalga başına ok, ok hasarı. */
 export const VOLLEY = { waves: 3, gap: 0.8, arrows: 30, damage: 30 } as const;
-/** Güç Puanı kazancı: öldürülen birimin asker başı değeri / 50 (GDD §9.1), dalga başı +2. */
-export const PP = { perValue: 50, waveBonus: 2 } as const;
+/** Güç Puanı kazancı: öldürülen birimin asker başı değeri / 100, dalga başı +2 (GDD §9.1 oranı yarıya indirildi: 3 büyülük kitapta PP taşmasın). */
+export const PP = { perValue: 100, waveBonus: 2 } as const;

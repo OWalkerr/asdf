@@ -51,6 +51,14 @@ kılıca açıktır — piyadeyle kapının önüne çıkın. Hasar alan kapıy�
 (300 altın, 10 sn'de +%25) onarabilirsiniz. Sağ alttaki mini haritaya tıklayınca kamera oraya kayar.
 Sesler prosedürel olarak üretilir (ilk tıklamada açılır, **M** ile sessize alınır).
 
+**Kahraman ve Spellbook (Phase 3):** Panelin üstündeki çubuktan **Aragorn**'u çağırın (1200 altın, **F**).
+20 m içindeki taburlara +%25 hasar aurası verir; seçiliyken *Elendil'in Kılıcı* (10 sn çift hasar) ve
+rütbe 3'te *Athelas* (alan iyileştirme) yeteneklerini kullanır. Ölürse 45 sn sonra yeniden çağrılabilir.
+Düşman öldürmek ve dalga başları **Güç Puanı** verir: **1 2 3** ile *Şifa*, *Toplanma Çağrısı* ve
+*Ok Yağmuru* büyülerini açın/kullanın (alan büyülerinde zeminde hedef seçilir, Esc iptal). Taburlar
+öldürdükçe deneyim kazanır ve 5 rütbeye kadar yükselir (rütbe başına +%10 hasar ve dayanıklılık;
+rütbe 3'ten itibaren sancak altına döner).
+
 ## Birim kontrolleri
 Sol tık: tabur seç (Shift ile ekle/çıkar) · Sol sürükle: kutu seçimi · Sağ tık: seçili taburları yürüt
 (düşman askerinin üstünde: saldır) ·
