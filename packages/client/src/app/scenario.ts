@@ -50,10 +50,14 @@ export class Scenario {
     this.spawn(UnitTypeId.Worker, door[0], door[1], FREE_BUILD.startWorkers);
   }
 
+  /** Emir verildi (birim cevabı için): hareket / saldırı ve emir alan taburlar. */
+  onCommand: ((kind: 'move' | 'attack', units: readonly number[]) => void) | null = null;
+
   /** Seçili taburlara hareket emri. */
   order(battalions: Iterable<number>, x: number, z: number): void {
     const units = [...battalions];
     if (units.length === 0) return;
+    this.onCommand?.('move', units);
     this.sim.send(
       { type: 'move', units, x: fxFromFloat(x), z: fxFromFloat(z), spacing: fxFromFloat(1.5) },
       PLAYER,
@@ -149,6 +153,7 @@ export class Scenario {
   attack(battalions: Iterable<number>, target: number): void {
     const units = [...battalions];
     if (units.length === 0 || target <= 0) return;
+    this.onCommand?.('attack', units);
     this.sim.send({ type: 'attack', units, target }, PLAYER);
   }
 }

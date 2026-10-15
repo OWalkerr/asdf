@@ -23,6 +23,8 @@ import { SpeedControl } from './app/ui/SpeedControl';
 import { TopHud } from './app/ui/TopHud';
 import { AudioEngine } from './audio/AudioEngine';
 import { GameAudio } from './audio/GameAudio';
+import { Music } from './audio/Music';
+import { Voices } from './audio/Voices';
 import { createDebugPanel } from './debug/DebugPanel';
 import { GroundPicker } from './input/GroundPicker';
 import { PlayerInput } from './input/PlayerInput';
@@ -156,6 +158,11 @@ const boot = async () => {
   // --- Ses (prosedürel WebAudio; ilk tıklamada açılır, M: sessiz) ---------------------
   const audioEngine = new AudioEngine();
   const sfx = new GameAudio(audioEngine);
+  // Uyarlanır müzik (F7) ve birim cevapları (F8).
+  const music = new Music(audioEngine);
+  music.setFaction(factionDef(faction).evil === true);
+  const voices = new Voices();
+  voices.muted = () => audioEngine.isMuted;
   if (lightning) lightning.onStrike = () => sfx.thunder();
   impacts.onHit = (x, z) => sfx.clash(x, z);
   if (hud) {
@@ -167,11 +174,25 @@ const boot = async () => {
       const f = structures?.fortress;
       return f ? f.hp / Math.max(1, f.max) : 1;
     };
-    hud.onWave = () => sfx.horn(true);
-    hud.onEnd = (victory) => sfx.horn(!victory);
+    hud.onWave = () => {
+      sfx.horn(true);
+      music.waveStart();
+    };
+    hud.onEnd = (victory) => {
+      sfx.horn(!victory);
+      music.finale(victory);
+    };
   }
   window.addEventListener('keydown', (e) => {
-    if (e.code === 'KeyM' && !e.repeat) audioEngine.setMuted(!audioEngine.isMuted);
+    if (e.repeat) return;
+    if (e.code === 'KeyM') audioEngine.setMuted(!audioEngine.isMuted);
+    else if (e.code === 'F7') {
+      music.toggle();
+      e.preventDefault();
+    } else if (e.code === 'F8') {
+      voices.toggle();
+      e.preventDefault();
+    }
   });
   const minimap = world.def && !gallery ? new Minimap(world.def, world.heightAt, cam) : null;
   const selection = new Selection(units, PLAYER);
@@ -247,6 +268,30 @@ const boot = async () => {
   // --- Kahraman + Spellbook ----------------------------------------------------------
   const spellFx = new SpellFx();
   scene.add(...spellFx.meshes);
+  // Müzik yoğunluğu (kaleye yakın düşman taburu) ve birim cevapları (seçim değişince).
+  let audioAcc = 0;
+  let lastSel = '';
+  const citadelPos = world.def?.citadel.pos ?? [0, 0];
+  const audioTick = (m: MatchInfo) => {
+    const selKey = [...selection.selected].join(',');
+    if (selKey !== lastSel) {
+      lastSel = selKey;
+      const first = [...selection.selected][0];
+      const info = first !== undefined ? units.battalionInfo.get(first) : undefined;
+      if (info && info.team === 0) voices.say(info.type, 'select');
+    }
+    if (++audioAcc % 15 !== 0) return;
+    let near = 0;
+    for (const info of units.battalionInfo.values())
+      if (info.team !== 0 && (info.x - citadelPos[0]) ** 2 + (info.z - citadelPos[1]) ** 2 < 110 * 110)
+        near++;
+    const busy = m.enemiesAlive > 0 ? 0.25 : 0;
+    music.setIntensity(m.state !== 0 ? 0.05 : busy + Math.min(0.75, near / 10));
+  };
+  scenario.onCommand = (kind, list) => {
+    const info = list[0] !== undefined ? units.battalionInfo.get(list[0]) : undefined;
+    if (info) voices.say(info.type, kind);
+  };
   // Kahraman seviye atlaması: altın sütun, çan, ekranda duyuru (yeni yetenek açıldıysa adıyla).
   const levelUps = {
     prev: [0, 0, 0],
@@ -531,6 +576,7 @@ const boot = async () => {
             });
       }
       levelUps.check(mi);
+      audioTick(mi);
       arrows.update(sim, now);
       structures?.update(sim.frame);
       ladders?.update(sim.frame);

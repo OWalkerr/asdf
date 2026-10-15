@@ -1,4 +1,4 @@
-import { SNAP_PROJ_INTS, type SnapshotFrame } from '@bulwark/shared';
+import { SNAP_PROJ_INTS, SNAP_STRUCT_INTS, type SnapshotFrame } from '@bulwark/shared';
 import type { AudioEngine } from './AudioEngine';
 
 /**
@@ -333,7 +333,7 @@ export class GameAudio {
     });
     const st = frame.structures;
     for (let i = 0; i < frame.structCount; i++) {
-      const o = i * 6;
+      const o = i * SNAP_STRUCT_INTS;
       const eid = st[o] as number;
       const left = st[o + 4] as number;
       const kind = ((st[o + 1] as number) >>> 16) & 0xff;

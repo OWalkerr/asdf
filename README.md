@@ -165,6 +165,12 @@ Karanlık, Warg Akını, Yer Yarılır, Balrog'u Uyandır, Fell Beast Dalışı,
 tarafa göre temalanır: Gondor Beyaz Ağaç, Rohan altın at, Lórien altın yaprak sancakları ve altın süsler; Isengard
 Beyaz El, Mordor kızıl Göz sancakları, kara taş, demir diken taç ve kor uçlar, şifa sancakları ateş renginde.
 
+**Müzik ve birim sesleri:** prosedürel, savaşa göre yoğunlaşan müzik (dosya yok): sakinken yaylı pad, düşman
+kaleye yaklaştıkça yaylı ostinato, taiko savaş davulları ve koro; dalga başında boru çağrısı, zaferde majör, yenilgide
+karanlık kapanış. Kötü taraflarda frig (karanlık) akor dizisi. Birimler seçilince ve emir alınca Türkçe konuşur
+(tarayıcının konuşma sentezi; Gondor "Gondor için!", Uruklar "Et geri döndü!", Gandalf "Geçemezsin!", Cadı Kral…).
+**F7** müzik, **F8** birim sesleri, **M** tüm sesler.
+
 **Kahraman seviyeleri (1–10):** kahramanlar öldürdükçe ve savaş alanında kaldıkça (saniyede +2 XP) deneyim kazanır;
 her seviye +%10 hasar ve dayanıklılık verir. Her kahramanın 4 yeteneği 1., 3., 6. ve 10. seviyede açılır — ör.
 Aragorn: Elendil'in Kılıcı, Athelas, Andúril Savuruşu, **Yeminbozanlar** (Ölüleri çağırır); Gandalf: Asa Patlaması,
@@ -210,4 +216,5 @@ Ateş Ejderi), halka menü, bekleme sayaçları, palantír mini harita, portrele
    dövüş + okçu bonusu var.
 4. Kahraman Yarat (Create-a-Hero), binekli kahramanlar (seviye 1–10 ve 4 yetenek var).
 5. Sur inşası, komuta noktası (nüfus) sınırı, deniz birimleri (işçiyle serbest inşa var).
-6. Seslendirme (birim cevapları) ve müzik; War of the Ring kampanya modu; harita editörü.
+6. Kayıtlı seslendirme ve orkestra müziği (burada prosedürel müzik + konuşma sentezi var), War of the Ring kampanya
+   modu, harita editörü.
