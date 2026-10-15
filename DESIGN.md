@@ -56,7 +56,7 @@ Sonuç olarak ritim şu: **saldır → sek → saldır → sek**. Yürümek yava
 5. Ölünce topladığın **ruh parçaları** kalıcı olarak saklanır; Ruh Sunağı'ndan kalıcı güç alırsın.
 6. Oyun sonsuz; amaç en iyi oda rekorunu kırmak.
 
-## 4. Düşmanlar
+## 5. Düşmanlar
 
 | Düşman | Davranış | Karşı strateji |
 |---|---|---|
@@ -74,7 +74,7 @@ Sonuç olarak ritim şu: **saldır → sek → saldır → sek**. Yürümek yava
 
 Zorluk: oda başına düşman canı +%20, hasar +%8, hız +%1.5. Altın halka = düşman sökümle ölür (Kalista'daki öldürme göstergesi gibi).
 
-## 5. Güçler (26 adet, 3 nadirlik)
+## 6. Güçler (26 adet, 3 nadirlik)
 
 - **Mızrak:** Keskin Uç, Hızlı El, Uzak Hedef, Ölümcül Göz, Çatallı Mızrak, Delip Geçen, Ağır Mızrak, Buz Uç, Mızrak Fırtınası
 - **Sekme:** Uzun Sekme, Hayalet Adım (sekmede hasarsızlık), Ruh İzi (yakan iz), İniş Şoku, Ritim (art arda sekme hasar çarpanı), Gölge Mızrak (sekmede bedava mızrak), Hafif Ayak
@@ -96,7 +96,7 @@ Nadirlik ağırlıkları: Sıradan 10, Nadir 5, Destansı 2, Efsanevi 6 (yalnız
 - **Söküm infazcısı:** Ağır Mızrak + Çatallı Mızrak + Yırtıcı + İnfaz + Bulaşıcı Yemin → zincirleme Söküm sıfırlamaları.
 - **Ruh ordusu:** Yeminli Ruh ×3 + Hızlı El + Kan Yemini.
 
-## 6. Kalıcı ilerleme (Ruh Sunağı)
+## 7. Kalıcı ilerleme (Ruh Sunağı)
 
 | Güç | Etki | Seviye |
 |---|---|---|
@@ -107,7 +107,7 @@ Nadirlik ağırlıkları: Sıradan 10, Nadir 5, Destansı 2, Efsanevi 6 (yalnız
 
 Kayıt tarayıcının yerel depolamasında tutulur.
 
-## 7. Sıradaki adımlar (yol haritası)
+## 8. Sıradaki adımlar (yol haritası)
 
 Tamamlananlar: 4 mızrakçı, Unutuş Ritüeli (güç silme), Yükselmiş muhafızlar, PWA (ana ekrana ekleme + çevrimdışı önbellek), Ruh Tüccarı kapısı, üçüncü muhafız Yas Kraliçesi, üretken müzik (dron + minör pentatonik arpej; savaşta davul, muhafızda hızlanır), Kader Çağrısı (R), kapı seçimi (Savaş/Elit/Lanetli/Ruh Pınarı), elit düşmanlar, ikinci muhafız Gölge Atlı, 5 efsanevi sinerji, vuruş durması (hit-stop) ve titreşim.
 
@@ -116,7 +116,7 @@ Sıradakiler:
 2. Mızrakçılara özel efsanevi kartlar.
 3. Günlük meydan okuma (sabit tohumlu av).
 
-## 8. Oyun hissi (Metal Slug esinli)
+## 9. Oyun hissi (Metal Slug esinli)
 
 Hedef: eski arcade oyunlarındaki gibi her öldürmenin "tatmin edici" hissettirmesi.
 
@@ -143,7 +143,7 @@ Hedef: eski arcade oyunlarındaki gibi her öldürmenin "tatmin edici" hissettir
 
 Erişilebilirlik: cihazda "hareketi azalt" açıksa titreme %30'a, ekran parlaması %25'e düşer.
 
-## 9. Görsel yön
+## 10. Görsel yön
 
 Tema: **ruhani mezar arenası**. Karanlık taş zemin, turkuaz ruh ışığı, yıpranmış altın süslemeler.
 
@@ -155,11 +155,11 @@ Tema: **ruhani mezar arenası**. Karanlık taş zemin, turkuaz ruh ışığı, y
 - **Ekran sonrası:** Vinyet, film greni, hasar alınca ve can %30'un altındayken kırmızı kenar.
 - **Arayüz:** İkonlu yetenek düğmeleri (dairesel bekleme süresi), gecikmeli (beyaz iz bırakan) can barı, muhafız barı ve sinematik siyah şeritli giriş, seri sayacı, ikonlu ve nadirliğe göre renklenen kartlar.
 
-## 10. Telefona kurulum (PWA)
+## 11. Telefona kurulum (PWA)
 
 `game/` klasörü herhangi bir statik sunucuda (ör. GitHub Pages) yayınlanınca tarayıcının "Ana ekrana ekle" seçeneğiyle tam ekran uygulama gibi kurulur; `sw.js` dosyaları önbelleğe alır, oyun çevrimdışı açılır. Claude artifact sürümünde servis çalışanı devre dışıdır.
 
-## 11. Teknik
+## 12. Teknik
 
 - Tek dosya HTML5 Canvas + saf JavaScript, kütüphane yok.
 - Dünya: 820 birim yarıçaplı dairesel arena, kamera oyuncuyu takip eder, zoom ekran boyutuna göre ölçeklenir.
