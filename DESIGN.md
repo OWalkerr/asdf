@@ -118,7 +118,19 @@ Hedef: eski arcade oyunlarındaki gibi her öldürmenin "tatmin edici" hissettir
 
 Erişilebilirlik: cihazda "hareketi azalt" açıksa titreme %30'a, ekran parlaması %25'e düşer.
 
-## 9. Teknik
+## 9. Görsel yön
+
+Tema: **ruhani mezar arenası**. Karanlık taş zemin, turkuaz ruh ışığı, yıpranmış altın süslemeler.
+
+- **Işık:** Sahne yarı çözünürlüklü bir ışık haritasıyla karartılır; oyuncu, mızraklar, mermiler, meşaleler, patlamalar ve doğma çemberleri bu karanlığı oyar. Ardından gözler, mızrak uçları, alevler ve mermiler toplamalı (additive) parıltıyla karanlığın üstüne çizilir.
+- **Zemin:** Oyun başında bir kez çizilip önbelleğe alınır: halkalar halinde döşenmiş taşlar, çatlaklar, yosun, ortada üç mızraklı rün mührü, kenarda blok duvar ve 10 turkuaz meşale.
+- **Karakterler:** 3/4 bakış; her varlığın yerde gölgesi var ve derinlik sırasına göre çizilir. Mızrakçı pelerinli, başlıklı; sekerken havaya kalkar, inişte ezilir, pelerini harekete göre savrulur. Düşmanlar vuruşta esner ve beyaz yanar, yerden yükselerek doğar.
+- **Okunabilirlik:** Tehlike bölgeleri dolan kırmızı/mor şeritlerle; sökümle ölecek düşmanlar altın dönen halkayla; elitler taç ve altın ışıltıyla; kalkanlar mavi baloncukla gösterilir.
+- **Kamera:** Bakış yönüne hafif önden bakar; büyük öldürmelerde ve Kader inişinde kısa bir zoom vuruşu yapar.
+- **Ekran sonrası:** Vinyet, film greni, hasar alınca ve can %30'un altındayken kırmızı kenar.
+- **Arayüz:** İkonlu yetenek düğmeleri (dairesel bekleme süresi), gecikmeli (beyaz iz bırakan) can barı, muhafız barı ve sinematik siyah şeritli giriş, seri sayacı, ikonlu ve nadirliğe göre renklenen kartlar.
+
+## 10. Teknik
 
 - Tek dosya HTML5 Canvas + saf JavaScript, kütüphane yok.
 - Dünya: 820 birim yarıçaplı dairesel arena, kamera oyuncuyu takip eder, zoom ekran boyutuna göre ölçeklenir.
