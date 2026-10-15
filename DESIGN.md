@@ -39,8 +39,9 @@ Sonuç olarak ritim şu: **saldır → sek → saldır → sek**. Yürümek yava
    | Elit Oda | Orta: düşmanların %35'i elit | Nadir ağırlıklı güçler, +5 ruh parçası |
    | Lanetli Oda | Yüksek: %60 elit, düşmanlar %15 hızlı | 2 güç seçimi, +8 ruh parçası |
    | Ruh Pınarı | Savaş yok | %40 can, +1 yeniden çekme; güç yok |
+   | Ruh Tüccarı | Savaş yok | Bu avın ruh parçalarıyla alışveriş: 3 güç (Sıradan 15, Nadir 25, Destansı 40, Efsanevi 55), Ruh İksiri (%50 can, 12), Kehanet Kartı (+1 yeniden çekme, 10). Harcanan parçalar kalıcı birikime eklenmez. |
 
-4. Her 5. oda **Muhafız** odası; muhafızlar sırayla Kemik Lordu ve Gölge Atlı.
+4. Her 5. oda **Muhafız** odası; muhafızlar sırayla Kemik Lordu, Gölge Atlı ve Yas Kraliçesi.
 5. Ölünce topladığın **ruh parçaları** kalıcı olarak saklanır; Ruh Sunağı'ndan kalıcı güç alırsın.
 6. Oyun sonsuz; amaç en iyi oda rekorunu kırmak.
 
@@ -53,8 +54,9 @@ Sonuç olarak ritim şu: **saldır → sek → saldır → sek**. Yürümek yava
 | Okçu | 320 birim mesafe korur, nişan alıp atış yapar (sarı kenar = nişan) | Yana sekerek mermiden kaç |
 | Dev | Yavaş; kırmızı çizgiyle işaret verip hücum eder | Çizginin dışına sek |
 | Tükürgen | Durur, çevresine halka halinde mermi saçar (çekirdek dolunca) | Halkalar arasındaki boşluğa sek |
-| **Kemik Lordu** (5., 15., 25. oda) | Hücum, mermi novası, çağırma; %50 canın altında öfke (çift hücum, yoğun nova) | Mızrak biriktir, Söküm ile büyük hasar |
-| **Gölge Atlı** (10., 20. oda) | Arka arkaya 3–4 dörtnala hücum ve arkasında yakan mor iz; çift kollu spiral mermi; yelpaze şeklinde mızrak hatları (önce çizgiyle uyarır) | Hatların arasına sek, Kader Çağrısı ile sersemlet |
+| **Kemik Lordu** (5., 20. oda) | Hücum, mermi novası, çağırma; %50 canın altında öfke (çift hücum, yoğun nova) | Mızrak biriktir, Söküm ile büyük hasar |
+| **Yas Kraliçesi** (15., 30. oda) | Süzülen hayalet kraliçe. Çığlık dalgası (genişleyen mor halka: yerdeyken vurur, **üstünden sekerek atlanır**), oyuncuyu takip eden ruh mermileri, mor halkayla işaretlenen ışınlanma, ateş ruhu çağırma; %50 altında 3'lü çığlık | Dalga yaklaşınca sek, Kader Çağrısı ile havada kal |
+| **Gölge Atlı** (10., 25. oda) | Arka arkaya 3–4 dörtnala hücum ve arkasında yakan mor iz; çift kollu spiral mermi; yelpaze şeklinde mızrak hatları (önce çizgiyle uyarır) | Hatların arasına sek, Kader Çağrısı ile sersemlet |
 
 **Elit düşmanlar** (altın kesikli halka): can ×1.8, hasar ×1.2 ve bir özellik: *Kalkanlı* (canın %40'ı kadar mavi kalkan), *Hızlı* (+%35 hız), *Patlayan* (ölünce 8 mermi saçar). Elit başına 3 ruh parçası.
 
@@ -95,13 +97,12 @@ Kayıt tarayıcının yerel depolamasında tutulur.
 
 ## 7. Sıradaki adımlar (yol haritası)
 
-Tamamlananlar: Kader Çağrısı (R), kapı seçimi (Savaş/Elit/Lanetli/Ruh Pınarı), elit düşmanlar, ikinci muhafız Gölge Atlı, 5 efsanevi sinerji, vuruş durması (hit-stop) ve titreşim.
+Tamamlananlar: Ruh Tüccarı kapısı, üçüncü muhafız Yas Kraliçesi, üretken müzik (dron + minör pentatonik arpej; savaşta davul, muhafızda hızlanır), Kader Çağrısı (R), kapı seçimi (Savaş/Elit/Lanetli/Ruh Pınarı), elit düşmanlar, ikinci muhafız Gölge Atlı, 5 efsanevi sinerji, vuruş durması (hit-stop) ve titreşim.
 
 Sıradakiler:
-1. **Dükkan kapısı:** av içi para birimi ile güç satın alma / güç silme.
-2. **Üçüncü muhafız** ve 15. odadan sonra muhafızların birleşik saldırı desenleri.
+1. **Muhafız sırası sonrası:** 15. odadan sonra muhafızların birleşik saldırı desenleri.
+2. **Tüccarda güç silme** ve nadir eşya stoku.
 3. **Karakter seçimi:** farklı başlangıç gücüyle 2–3 mızrakçı varyantı.
-4. **Ses:** sentez efektlerine basit bir müzik döngüsü.
 5. **PWA:** ana ekrana eklenip çevrimdışı oynanabilmesi.
 6. Dengeleme için oda başına istatistik kaydı.
 
@@ -120,7 +121,7 @@ Hedef: eski arcade oyunlarındaki gibi her öldürmenin "tatmin edici" hissettir
 
 | Efekt | Ne zaman | Nasıl görünür |
 |---|---|---|
-| **Gökyüzüne uçuş** ("roket takımı") | Delici Mızrak, Kader inişi, İniş Şoku, 5+ mızraklı Söküm ile ölüm; kritik öldürmelerin %35'i; elitlerin %50'si | Düşman beyaz yanıp dönerek ekranın üstüne fırlar, arkasında parıltı izi bırakarak küçülür. Kaybolduğu yerde "ding" sesiyle minik bir yıldız belirir, ardından ekranı boydan boya kesen dev bir parlama: yatay ışık şeridi, dönen 8 ışın, beyaz ve renkli halkalar, ekranın ortasına doğru mercek yansımaları. |
+| **Yıldız parlaması** (çizgi film "ding") | Delici Mızrak, Kader inişi, İniş Şoku, 5+ mızraklı Söküm ile ölüm; kritik öldürmelerin %35'i; elitlerin %50'si | Düşman öldüğü yerde parçalanır; aynı noktada "ding" sesiyle minik bir yıldız belirir, ardından ekranı boydan boya kesen dev bir parlama: yatay ışık şeridi, dönen 8 ışın, beyaz ve renkli halkalar, ekranın ortasına doğru mercek yansımaları. |
 | Vuruş yıldızı | Her mızrak isabetinde | Çarpma noktasında anlık beyaz 4 köşeli yıldız (kritikte altın, daha büyük). |
 | Söküm ruhları | Söküm kullanılınca | Sökülen mızraklar parlayan ruh izleri olarak oyuncuya akar; oyuncudan büyük bir şok halkası yayılır. 3+ öldürmede siyah-beyaz darbe karesi, hız çizgileri ve parlama. |
 | Ruh parçası mıknatısı | Her öldürmede | Altın elmaslar sekerek düşer, sonra oyuncuya çekilir; toplanınca tını sesi (seri arttıkça incelir) ve sayaç zıplar. |
