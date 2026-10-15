@@ -12,10 +12,12 @@ export interface GameSettings {
   scroll: number;
   /** Oyuncu adı (çok oyunculu). */
   nick: string;
+  /** Yağmur ve şimşek (varsayılan kapalı). */
+  weather: boolean;
 }
 
 const KEY = 'bulwark.settings';
-const DEFAULTS: GameSettings = { music: 70, sfx: 80, voices: true, scroll: 1, nick: '' };
+const DEFAULTS: GameSettings = { music: 70, sfx: 80, voices: true, scroll: 1, nick: '', weather: false };
 
 export const loadSettings = (): GameSettings => {
   try {
@@ -29,6 +31,7 @@ export const loadSettings = (): GameSettings => {
         voices: v.voices !== false,
         scroll: clamp(v.scroll, 0.5, 2, 1),
         nick: typeof v.nick === 'string' ? v.nick.slice(0, 20) : '',
+        weather: v.weather === true,
       };
     }
   } catch {

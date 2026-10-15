@@ -172,10 +172,13 @@ const boot = async () => {
   const half = world.size / 2;
   const light = createLighting(scene, half);
   // Atmosfer: gökyüzü kubbesi, yağmur, şimşek (look-dev galerisinde sade gökyüzü).
-  const sky = createSky(FOG_COLOR, '#262e3c', '#d98a4e');
+  // Yağmur ve şimşek yalnızca Seçenekler'den açılırsa (varsayılan kapalı); açık havada gökyüzü ve sis aydınlık.
+  const weather = !lookdev && loadSettings().weather;
+  const horizon = weather ? FOG_COLOR : '#9fb0c2';
+  if (!weather) light.fog.color.set(horizon);
+  const sky = createSky(horizon, weather ? '#262e3c' : '#46679a', '#e8a860');
   sky.sunDir.value.copy(light.sun.position).normalize();
   scene.add(sky.mesh);
-  const weather = !lookdev;
   const rain = weather ? createRain() : null;
   if (rain) scene.add(rain.mesh);
   const lightning = weather ? new Lightning(scene, light.hemi, sky.flash) : null;
@@ -245,7 +248,7 @@ const boot = async () => {
   const hud = world.def && !gallery ? new MatchHud(world.def) : null;
   // --- Ses (prosedürel WebAudio; ilk tıklamada açılır, M: sessiz) ---------------------
   const audioEngine = new AudioEngine();
-  const sfx = new GameAudio(audioEngine);
+  const sfx = new GameAudio(audioEngine, weather);
   // Uyarlanır müzik (F7) ve birim cevapları (F8).
   const settings = loadSettings();
   audioEngine.setLevel(settings.sfx / 100);

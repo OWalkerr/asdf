@@ -14,8 +14,12 @@ export class GameAudio {
   private built = new Map<number, number>();
   private upgrades = 0;
 
-  constructor(private readonly a: AudioEngine) {
-    a.onStart(() => this.startRain());
+  /** rain: yağmur ses döngüsü (Seçenekler → Hava efektleri). */
+  constructor(
+    private readonly a: AudioEngine,
+    rain = false,
+  ) {
+    if (rain) a.onStart(() => this.startRain());
   }
 
   setListener(x: number, z: number, zoom01: number): void {

@@ -471,7 +471,8 @@ const showMainMenu = (init: {
                   `<button type="button" data-q="${k}" class="${k === q ? 'sel' : ''}">${QUALITY_NAMES[k]}</button>`,
               )
               .join('')}</div>
-            <p class="dim">Kasma olursa Düşük ya da Orta seç (piksel oranı, gölgeler, kenar yumuşatma).</p></div>
+            <p class="dim">Kasma olursa Düşük ya da Orta seç (piksel oranı, gölgeler, kenar yumuşatma).</p>
+            <label class="check"><input type="checkbox" data-k="weather" ${st.weather ? 'checked' : ''}> Hava efektleri (yağmur ve şimşek)</label></div>
           <div class="frame"><h3>Ses</h3>
             <label>Müzik <input type="range" min="0" max="100" data-k="music" value="${st.music}"></label>
             <label>Efektler <input type="range" min="0" max="100" data-k="sfx" value="${st.sfx}"></label>
@@ -497,6 +498,7 @@ const showMainMenu = (init: {
         if (k === 'music' || k === 'sfx') st[k] = Number(t.value);
         else if (k === 'scroll') st.scroll = Number(t.value) / 100;
         else if (k === 'voices') st.voices = t.checked;
+        else if (k === 'weather') st.weather = t.checked;
         else if (k === 'nick') st.nick = t.value.trim().slice(0, 20);
         saveSettings(st);
       });
