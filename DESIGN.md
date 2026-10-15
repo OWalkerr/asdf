@@ -178,6 +178,19 @@ Erişilebilirlik: cihazda "hareketi azalt" açıksa titreme %30'a, ekran parlama
 
 ## 11. Görsel yön
 
+### Ruh evreni (görsel güncelleme 2)
+
+- **Boşluk:** Arena, ruh boşluğunda süzülen bir ada. Arkada mor/turkuaz bulutsu, göz kırpan yıldızlar ve hilal biçimli soluk bir ay (kamera ile yavaş paralaks).
+- **Uzak adalar:** Yıkık sütunlu, kristalli ve fenerli kuru ağaçlı 10 yüzen ada; derinliğe göre küçülür, ağır ağır salınır.
+- **Uçurum:** Adanın altı görünür: katmanlı kaya, sarkıtlar, turkuaz ve mor parlayan kristal damarları; çevresinde dönen kaya parçaları.
+- **Cadı zindanı:** Mor taş döşeme, dönen iki mor rün çemberi (yedi köşeli yıldız ve rünler), zeminde sürünen sis, duvarda 20 mum kümesi, mor-turkuaz cadı ateşli mangallardan yükselen duman.
+- **Gümüş ruh dumanı:** Ortak bir duman sistemi (en fazla 460 parçacık): mızrakçı, uçan mızraklar, ruh müttefikleri ve mangallar gümüş; düşmanlar koyu; muhafızlar mor; elitler altın duman salar. Ölümlerde duman patlaması.
+- **Ruh mızrağı:** Saydam sap, bağlı kabza, yaprak biçimli parlayan uç ve geri kancalar; uçarken arkasında dalgalanan iki ruh kurdelesi ve duman izi. Düşmana saplı mızraklar da ruh ucu taşır.
+- **Mızrakçı:** Havada süzülen hayalet savaşçı: alt gövdesi dumana karışır, harekete göre savrulan yırtık pelerin, gümüş zırh ve altın işleme, omuzluk, maskeli başlık, arkada alev saç ve büyük ruh mızrağı. Mızrakçının rengine göre parlar.
+- **Düşmanlar:** Kare ve üçgen şekiller kaldırıldı. Okçu: dalgalı cüppesi dumana karışan kapüşonlu iskelet, mor ruh yayı. Dev: kambur, kemik sırtlı, boynuzlu kafatası, kavisli kollar ve kemik yumruklar.
+- **Işık:** Karanlık mor tonlu; adanın dışı daha açık bırakılır ki boşluk görünsün.
+
+
 Tema: **ruhani mezar arenası**. Karanlık taş zemin, turkuaz ruh ışığı, yıpranmış altın süslemeler.
 
 - **Işık:** Sahne yarı çözünürlüklü bir ışık haritasıyla karartılır; oyuncu, mızraklar, mermiler, meşaleler, patlamalar ve doğma çemberleri bu karanlığı oyar. Ardından gözler, mızrak uçları, alevler ve mermiler toplamalı (additive) parıltıyla karanlığın üstüne çizilir.
