@@ -1,5 +1,6 @@
 import { DIFFICULTIES, FACTIONS, type MapDef, type MatchInfo, MatchState } from '@bulwark/shared';
 import { SIM_TICK_MS } from '../sim-host/protocol';
+import { CAMPAIGNS, completeMission, openCampaignTab, queueMission } from './campaign';
 import { saveRecord, starText } from './records';
 
 /**
@@ -27,6 +28,8 @@ export class MatchHud {
   /** Maç bağlamı (rekor anahtarı) ve sağlık oranı kaynağı (kale canı / kalan can). */
   difficulty = 1;
   faction = 0;
+  /** Sefer görevi (yoksa serbest savaş). */
+  campaign: { id: string; index: number } | null = null;
   health: () => number = () => 1;
   private tick = 0;
 
@@ -114,6 +117,23 @@ export class MatchHud {
         faction: this.faction,
       };
       const { entry, best, isNew } = saveRecord(this.def.id, stats);
+      // Sefer: zaferde sonraki görev açılır.
+      const camp = this.campaign ? CAMPAIGNS.find((c) => c.id === this.campaign?.id) : undefined;
+      const ci = this.campaign?.index ?? 0;
+      if (camp && victory) completeMission(camp.id, ci);
+      const hasNext = camp !== undefined && ci + 1 < camp.missions.length;
+      const actions = camp
+        ? `<div class="end-actions">
+            <button type="button" data-a="map">Sefer haritası</button>
+            ${
+              victory
+                ? hasNext
+                  ? `<button type="button" data-a="next" class="primary">Sonraki görev: ${camp.missions[ci + 1]?.title}</button>`
+                  : '<span class="camp-done">Sefer tamamlandı!</span>'
+                : '<button type="button" data-a="retry" class="primary">Tekrar dene</button>'
+            }
+          </div>`
+        : '<button type="button" data-a="restart">Yeniden başlat</button>';
       const mm = Math.floor(stats.seconds / 60);
       const ss = String(Math.floor(stats.seconds % 60)).padStart(2, '0');
       const row = (k: string, v: string | number) => `<div><span>${k}</span><b>${v}</b></div>`;
@@ -136,9 +156,18 @@ export class MatchHud {
               ? '<em>Yeni rekor!</em>'
               : `<span>Rekor ${best.score.toLocaleString('tr-TR')} ${starText(best.stars)}</span>`
           }</div>
-          <button type="button">Yeniden başlat</button>
+          ${camp ? `<p class="camp-line">${camp.name} · Görev ${ci + 1}: ${camp.missions[ci]?.title ?? ''}</p>` : ''}
+          ${actions}
         </div>`;
-      this.end.querySelector('button')?.addEventListener('click', () => location.reload());
+      this.end.querySelectorAll<HTMLButtonElement>('button[data-a]').forEach((b) => {
+        b.addEventListener('click', () => {
+          const a = b.dataset.a;
+          if (camp && a === 'next') queueMission(camp.id, ci + 1);
+          else if (camp && a === 'retry') queueMission(camp.id, ci);
+          else if (a === 'map') openCampaignTab();
+          location.reload();
+        });
+      });
       this.end.classList.add('show');
     }
   }

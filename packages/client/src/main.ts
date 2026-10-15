@@ -95,7 +95,8 @@ const boot = async () => {
   // Takım rengi: tarafın sancak rengi (Gondor mavi, Rohan yeşil).
   setTeamColor(palette, factionDef(faction).color);
   setPlayerBannerColor(factionDef(faction).color.main);
-  if (faction > 0) setPlayerMinimapColor(faction === 1 ? '#8be07a' : '#8fe0d0');
+  if (faction > 0)
+    setPlayerMinimapColor(['#8fb8ff', '#8be07a', '#8fe0d0', '#ecece4', '#ff8a5a'][faction] ?? '#8fb8ff');
   const mapId = choice.mapId;
   const difficulty = choice.difficulty;
   const world = buildMap(mapId, palette, toon, faction);
@@ -168,6 +169,7 @@ const boot = async () => {
   if (hud) {
     hud.difficulty = difficulty;
     hud.faction = faction;
+    hud.campaign = choice.campaign ?? null;
     hud.health = () => {
       const m = sim.frame.match;
       if (world.def?.mode === 'TD') return m.lives / Math.max(1, world.def.lives ?? 20);
