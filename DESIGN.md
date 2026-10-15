@@ -103,8 +103,8 @@ Sıradakiler:
 1. **Muhafız sırası sonrası:** 15. odadan sonra muhafızların birleşik saldırı desenleri.
 2. **Tüccarda güç silme** ve nadir eşya stoku.
 3. **Karakter seçimi:** farklı başlangıç gücüyle 2–3 mızrakçı varyantı.
-5. **PWA:** ana ekrana eklenip çevrimdışı oynanabilmesi.
-6. Dengeleme için oda başına istatistik kaydı.
+4. **PWA:** ana ekrana eklenip çevrimdışı oynanabilmesi.
+5. Dengeleme için oda başına istatistik kaydı.
 
 ## 8. Oyun hissi (Metal Slug esinli)
 
