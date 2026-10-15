@@ -51,6 +51,15 @@ export class Music {
     return this.enabled;
   }
 
+  /** Müzik düzeyi (Seçenekler, 0–1). */
+  private level = 0.3;
+
+  setLevel(v: number): void {
+    this.level = 0.3 * Math.max(0, Math.min(1, v));
+    const ctx = this.a.ctx;
+    if (this.gain && ctx && this.enabled) this.gain.gain.setTargetAtTime(this.level, ctx.currentTime, 0.2);
+  }
+
   setFaction(evil: boolean): void {
     this.evil = evil;
   }
@@ -63,7 +72,7 @@ export class Music {
       /* depolama yok */
     }
     const ctx = this.a.ctx;
-    if (this.gain && ctx) this.gain.gain.setTargetAtTime(this.enabled ? 0.3 : 0, ctx.currentTime, 0.4);
+    if (this.gain && ctx) this.gain.gain.setTargetAtTime(this.enabled ? this.level : 0, ctx.currentTime, 0.4);
     return this.enabled;
   }
 
@@ -94,7 +103,7 @@ export class Music {
     const out = this.a.out;
     if (!ctx || !out) return;
     this.gain = ctx.createGain();
-    this.gain.gain.value = this.enabled ? 0.3 : 0;
+    this.gain.gain.value = this.enabled ? this.level : 0;
     this.gain.connect(out);
     this.nextBeat = ctx.currentTime + 0.2;
     this.timer = window.setInterval(() => this.schedule(), 100);

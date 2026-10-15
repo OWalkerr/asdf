@@ -172,6 +172,8 @@ class LocalRoom implements Lobby, NamedRoom {
       else next[k] = v;
     }
     this.mine = next;
+    // Platform gibi: kendi presence'ın peers()'te hemen görünür.
+    this.rebuild();
     this.pending.updated.add(LOCAL_ID);
     this.post(false);
     this.queueFlush();

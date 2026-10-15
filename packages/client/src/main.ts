@@ -17,6 +17,7 @@ import { MatchHud } from './app/MatchHud';
 import { Minimap, setMinimapTeamColor, setPlayerMinimapColor } from './app/Minimap';
 import { chooseMatch } from './app/StartScreen';
 import { PLAYER, Scenario } from './app/scenario';
+import { loadSettings } from './app/settings';
 import { CommandBar } from './app/ui/CommandBar';
 import { HudController, UNIT_LABELS } from './app/ui/HudController';
 import { PowersColumn } from './app/ui/PowersColumn';
@@ -84,11 +85,11 @@ const buildMap = (
 };
 
 /** Çok oyunculu durum şeridi: oyuncular, bekleme, ayrılma, desync. */
-const mountNetStatus = (net: NetSession) => {
+const mountNetStatus = (net: NetSession, playerColors?: string[]) => {
   const el = document.createElement('div');
   el.id = 'net-status';
   document.body.appendChild(el);
-  const colors = ['#4a8fe0', '#e0c34a', '#59c06a', '#d0604a'];
+  const colors = playerColors ?? ['#4a8fe0', '#e0c34a', '#59c06a', '#d0604a'];
   const render = () => {
     const wait = net.waiting();
     const names = net.start.nicks
@@ -208,7 +209,14 @@ const boot = async () => {
   const net = choice.net ? new NetSession(choice.net.room, sim, choice.net.start) : null;
   if (net) {
     sim.player = net.start.me;
-    mountNetStatus(net);
+    mountNetStatus(
+      net,
+      vs
+        ? net.start.order.map(
+            (_, i) => PLAYER_COLORS[vs.colors[vs.setup.humans[i] ?? 0] ?? 0]?.main ?? '#999',
+          )
+        : undefined,
+    );
     // Hata ayıklama / otomatik test erişimi.
     Object.assign(globalThis, { __net: net });
   }
@@ -239,7 +247,11 @@ const boot = async () => {
   const audioEngine = new AudioEngine();
   const sfx = new GameAudio(audioEngine);
   // Uyarlanır müzik (F7) ve birim cevapları (F8).
+  const settings = loadSettings();
+  audioEngine.setLevel(settings.sfx / 100);
+  cam.panSpeed = 1.1 * settings.scroll;
   const music = new Music(audioEngine);
+  music.setLevel(settings.music / 100);
   music.setFaction(factionDef(faction).evil === true);
   const voices = new Voices();
   voices.muted = () => audioEngine.isMuted;

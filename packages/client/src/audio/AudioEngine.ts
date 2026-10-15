@@ -37,6 +37,15 @@ export class AudioEngine {
     else this.startHooks.push(cb);
   }
 
+  /** Efekt düzeyi (Seçenekler, 0–1). */
+  private level = 0.8;
+
+  setLevel(v: number): void {
+    this.level = 0.8 * Math.max(0, Math.min(1, v));
+    if (this.master && this.ctx && !this.muted)
+      this.master.gain.setTargetAtTime(this.level, this.ctx.currentTime, 0.05);
+  }
+
   setMuted(m: boolean): void {
     this.muted = m;
     try {
@@ -44,7 +53,8 @@ export class AudioEngine {
     } catch {
       /* depolama yoksa yalnızca bu oturum */
     }
-    if (this.master && this.ctx) this.master.gain.setTargetAtTime(m ? 0 : 0.8, this.ctx.currentTime, 0.05);
+    if (this.master && this.ctx)
+      this.master.gain.setTargetAtTime(m ? 0 : this.level, this.ctx.currentTime, 0.05);
   }
 
   private ensure(): void {
@@ -59,7 +69,7 @@ export class AudioEngine {
     const ctx = new Ctor();
     this.ctx = ctx;
     const master = ctx.createGain();
-    master.gain.value = this.muted ? 0 : 0.8;
+    master.gain.value = this.muted ? 0 : this.level;
     // Hafif kompresör: kalabalık savaşta patlamayı önler.
     const comp = ctx.createDynamicsCompressor();
     comp.threshold.value = -18;

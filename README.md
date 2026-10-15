@@ -205,10 +205,34 @@ sancakları, altın başlıklar; 3+ yükseltmede Gondor sancakları ve taç, 5't
 yuvarlak komut düğmeleri (**Z X C V B N**, ipucu için üzerine gelin), solda güçler, sol üstte kahraman ve
 kale portreleri, üstte dalga/kale/kapı durumu, sağ üstte kaynaklar. **?** yardım, **M** ses.
 
+## Ana menü (BFME2 düzeni)
+Solda oyun adı, sağda taş düğmeler: **Tek Oyunculu** (Sefer · Çatışma · Savunma Haritaları), **Çok Oyunculu**
+(çevrimiçi lobi), **Kahraman Yarat**, **Seçenekler** (görüntü kalitesi, müzik/efekt düzeyi, birim konuşmaları,
+kaydırma hızı, oyuncu adı), **Jenerik**. `?tab=skirmish` / `?tab=multi` doğrudan o ekranı açar.
+
+## Çatışma (PvP / bilgisayara karşı — BFME2 Skirmish)
+Kurulum ekranı BFME2'deki gibidir: solda oyuncu yuvaları (**Oyuncu** — sen / Açık / Kapalı / Bilgisayar
+Kolay·Orta·Zor·Acımasız, **Ordu** — taraf ya da Rastgele, **Renk**, **Takım**, **Konum**), sağda harita önizlemesi
+(numaralı başlangıç konumları; numaraya tıklayıp konum seçilir), harita listesi, **Başlangıç Kaynakları** ve
+**Komuta Puanı Sınırı**. Her oyuncu kendi başlangıç konumunda kalesi ve 2 işçiyle başlar; aynı takım numarasındakiler
+müttefiktir. Kalesi düşen oyuncu elenir (birlikleri dağılır, yapıları yıkılır); tek ittifak kalınca maç biter.
+Ordunu seçip sağ tıkla rakip birliğe, binaya ya da kaleye saldırırsın. Öldürülen birimlerin ödülü ve Güç Puanı
+öldüren oyuncuya gider.
+
+**Bilgisayar rakip** sim içinde ve deterministiktir (çok oyunculuda da aynı): inşa sırası (kışla, çiftlik, demirhane,
+kule, mancınık), kışlalarda sürekli birlik, kahraman çağırma, güç açma ve kullanma, üssünü savunma ve yeterince
+büyüyünce en yakın rakip kaleye saldırı dalgaları. Zor ve Acımasız daha hızlı düşünür ve daha çok gelir alır.
+
+**Çatışma haritaları:** *İsen Geçitleri* (2 oyuncu; nehir ve üç geçit), *Rohan Geçidi* (2 oyuncu; kayalıklarla
+bölünmüş vadi), *Yaban Topraklar* (4 oyuncu; köşelerde kaleler, ortada tepe). `?vs=vs_fords_of_isen&ai=hard`
+doğrudan bilgisayara karşı başlatır.
+
 ## Çok oyunculu (tarayıcı lobisi)
-Başlangıç ekranındaki **Çok Oyunculu** sekmesi lobidir: sayfayı açan herkes burada buluşur. **Oyun kur** ile
-oyun ilan edilir (harita, taraf, zorluk kurucuda); diğerleri listeden **katılır**, kurucu **Başlat** der.
-2–4 oyuncu **ortak savunma** oynar: aynı kale, ortak altın, ordu ve güçler; herkes her birime emir verebilir.
+**Çok Oyunculu** çevrimiçi lobidir (BFME2 lobisi gibi): solda açık oyunlar tablosu, sağda lobidekiler ve sohbet.
+**Oyun Kur** ile oyun odası açılır; oda çatışma kurulum ekranıdır. Kurucu haritayı, ayarları ve bilgisayar
+yuvalarını yönetir; her oyuncu kendi satırını (ordu, renk, takım, konum) seçip **Hazır** der; herkes hazır olunca
+kurucu başlatır. Çatışma haritasında oyuncular birbirine karşı (ve bilgisayarlara karşı, takımlar halinde) oynar;
+savunma haritasında 2–4 oyuncu **ortak savunma** yapar (aynı kale, ortak altın, ordu ve güçler).
 
 Ağ modeli deterministik **lockstep**: zaman 4 tick'lik turlara bölünür, her oyuncu her tur için komut paketini
 oda presence'ına yazar (son turlar tekrar taşınır, kayıp telafi edilir); sim herkesin turunu alınca ilerler
@@ -217,7 +241,7 @@ gösterilir. Çok oyunculuda oyun hızı sabittir ve duraklatma yoktur. Bir oyun
 (durum şeridinde gösterilir). Yerel deneme: `?netlocal` ile aynı tarayıcıda iki sekme.
 
 Sınırlar: oda, claude.ai'de oturum açmış ve sayfaya erişimi olan kişileri bağlar; arka plana alınan sekme
-diğerlerini yavaşlatabilir. PvP (karşı karşıya) yok — yalnızca ortak savunma.
+diğerlerini yavaşlatabilir; maç sırasında ayrılan oyuncunun yerine bilgisayar geçmez (oyun bekler).
 
 **Grafik kalitesi:** başlangıç ekranında Düşük / Orta / Yüksek (piksel oranı, gölge, kenar yumuşatma).
 Kasma olursa Düşük seçin. Birim portreleri artık açılışta tek seferde değil, boşta parça parça üretilir.
@@ -257,8 +281,7 @@ Kartallar, Sel, Deprem, Güneş Parlaması dahil), komuta puanı, birime özgü 
 Ateş Ejderi), halka menü, bekleme sayaçları, palantír mini harita, portreler, oyun hızı, istatistik ve rekorlar.
 
 **Eksik (BFME2'de olup henüz olmayan):**
-1. Çok oyunculuda PvP ve ayrı ordular (ortak savunma var), ayrılan oyuncunun yerini yapay zekânın alması.
+1. Çok oyunculuda ayrılan oyuncunun yerini yapay zekânın alması; 4'ten fazla oyuncu ve daha çok çatışma haritası.
 2. Sur inşası (işçiyle serbest bina ve kule inşası var), deniz birimleri, binekli kahramanlar.
 3. Kahraman Yarat'ta görünüm/renk düzenleyicisi ve ek sınıflar (3 sınıf, ad var); ayrı bir 4. kahraman yuvası.
-4. Kayıtlı seslendirme ve orkestra müziği (prosedürel müzik + konuşma sentezi var), War of the Ring'in
-   strateji haritası (doğrusal sefer var), harita editörü.
+4. Kayıtlı seslendirme ve orkestra müziği (prosedürel müzik + konuşma sentezi var), harita editörü.
