@@ -116,6 +116,20 @@ Hedef: eski arcade oyunlarındaki gibi her öldürmenin "tatmin edici" hissettir
 | Muhafız ölümü | Muhafız yerinde donar ve beyaz yanıp söner; 1.8 sn boyunca gövdesinde art arda küçük yıldız patlamaları; sonunda 8 köşeli dev yıldız patlaması, tam ekran beyaz parlama, ağır çekim ve parçalanma. Kalan tüm düşmanlar da parçalanır. |
 | Oyuncu ölümü | Mızrakçı ruh renginde parçalanır, sahne ağır çekimde söner. |
 
+### Çizgi film parlamaları ve diğer tatmin efektleri
+
+| Efekt | Ne zaman | Nasıl görünür |
+|---|---|---|
+| **Gökyüzüne uçuş** ("roket takımı") | Delici Mızrak, Kader inişi, İniş Şoku, 5+ mızraklı Söküm ile ölüm; kritik öldürmelerin %35'i; elitlerin %50'si | Düşman beyaz yanıp dönerek ekranın üstüne fırlar, arkasında parıltı izi bırakarak küçülür. Kaybolduğu yerde "ding" sesiyle minik bir yıldız belirir, ardından ekranı boydan boya kesen dev bir parlama: yatay ışık şeridi, dönen 8 ışın, beyaz ve renkli halkalar, ekranın ortasına doğru mercek yansımaları. |
+| Vuruş yıldızı | Her mızrak isabetinde | Çarpma noktasında anlık beyaz 4 köşeli yıldız (kritikte altın, daha büyük). |
+| Söküm ruhları | Söküm kullanılınca | Sökülen mızraklar parlayan ruh izleri olarak oyuncuya akar; oyuncudan büyük bir şok halkası yayılır. 3+ öldürmede siyah-beyaz darbe karesi, hız çizgileri ve parlama. |
+| Ruh parçası mıknatısı | Her öldürmede | Altın elmaslar sekerek düşer, sonra oyuncuya çekilir; toplanınca tını sesi (seri arttıkça incelir) ve sayaç zıplar. |
+| Seri övgüsü | 10, 20, 35, 50, 75, 100 seri | Ekranın ortasında eğik altın yazı (Harika, Müthiş, Efsane, Durdurulamaz, Tanrısal, Yemin tutuldu) ve parlama. |
+| Son vuruş | Odanın son düşmanı | Ağır çekim, zoom ve son düşmanın yerinde dev parlama. |
+| Darbe karesi | Muhafız ölümü, çoklu Söküm | Bir anlığına renkler tersine döner (anime "impact frame"). |
+| Hız çizgileri | Kader uçuşu, muhafız ölümü | Ekran kenarlarından merkeze doğru beyaz çizgiler. |
+| Güç ışını | Güç seçildikten sonra odaya girişte | Oyuncunun üstüne inen ruh ışığı sütunu. |
+
 Erişilebilirlik: cihazda "hareketi azalt" açıksa titreme %30'a, ekran parlaması %25'e düşer.
 
 ## 9. Görsel yön
