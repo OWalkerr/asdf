@@ -105,7 +105,20 @@ Sıradakiler:
 5. **PWA:** ana ekrana eklenip çevrimdışı oynanabilmesi.
 6. Dengeleme için oda başına istatistik kaydı.
 
-## 8. Teknik
+## 8. Oyun hissi (Metal Slug esinli)
+
+Hedef: eski arcade oyunlarındaki gibi her öldürmenin "tatmin edici" hissettirmesi.
+
+| Olay | Efekt |
+|---|---|
+| Sıradan düşman ölümü | Gövde 6–10 parçaya ayrılır; parçalar dönerek havaya fırlar, yere düşüp seker, gölgeleri yerde görünür. Saplı mızraklar da fırlar. Yerde birkaç saniye kalan leke. Küçük ekran titremesi ve gürültülü "çatırtı" sesi. |
+| Dev / elit düşman ölümü | Daha çok parça, **beyaz yıldız patlaması** (4/6 köşeli yıldız + çapraz parıltı + genişleyen halka), kısa **beyaz ekran parlaması**, 0.35 sn **ağır çekim** (×0.25), güçlü titreme ve derin patlama sesi. |
+| Muhafız ölümü | Muhafız yerinde donar ve beyaz yanıp söner; 1.8 sn boyunca gövdesinde art arda küçük yıldız patlamaları; sonunda 8 köşeli dev yıldız patlaması, tam ekran beyaz parlama, ağır çekim ve parçalanma. Kalan tüm düşmanlar da parçalanır. |
+| Oyuncu ölümü | Mızrakçı ruh renginde parçalanır, sahne ağır çekimde söner. |
+
+Erişilebilirlik: cihazda "hareketi azalt" açıksa titreme %30'a, ekran parlaması %25'e düşer.
+
+## 9. Teknik
 
 - Tek dosya HTML5 Canvas + saf JavaScript, kütüphane yok.
 - Dünya: 820 birim yarıçaplı dairesel arena, kamera oyuncuyu takip eder, zoom ekran boyutuna göre ölçeklenir.
