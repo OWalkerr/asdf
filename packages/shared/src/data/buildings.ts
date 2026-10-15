@@ -291,3 +291,36 @@ export const SIEGE_TOWER = {
   passHalfWidth: 2.6,
   troops: 1,
 } as const;
+
+/**
+ * Serbest inşa (BFME2): kale maçın başında 2 işçi verir; işçi seçilince izin verilen yapılar
+ * haritada uygun her yere kurulabilir (sabit zemin arsaları yok; sur üstü kule soketleri kalır).
+ * İnşaat yalnızca başında bir işçi varken ilerler (2+ işçi daha hızlı).
+ */
+export const FREE_BUILD = {
+  /** Başlangıç işçisi, kaleden yetiştirme maliyeti / bekleme (s), aynı anda en fazla işçi. */
+  startWorkers: 2,
+  workerCost: 100,
+  workerCooldown: 8,
+  maxWorkers: 6,
+  /** İşçinin inşaata katkı yaptığı mesafe (yapı yarıçapına eklenir, m). */
+  reach: 5,
+  /** Boştaki işçinin kendiliğinden yardıma gittiği yarım kalmış inşaat mesafesi (m). */
+  autoAssign: 45,
+  /** Yerleşim kuralları (m): koridor çizgisinden, düşman doğuş noktasından, kapı/kaleden, diğer yapılardan uzaklık. */
+  lanePad: 6,
+  spawnPad: 40,
+  gatePad: 10,
+  structPad: 1.5,
+  /** Haritada aynı anda en fazla serbest yapı. */
+  max: 120,
+} as const;
+
+/** Yapı türüne göre yerleşim yarıçapı (m; nav'da kapatılan taban). */
+export const BUILD_RADIUS: Readonly<Record<BuildingKind, number>> = {
+  arrow_tower: 2.6,
+  barracks: 5.2,
+  forge: 4.6,
+  catapult: 2.8,
+  farm: 5.0,
+};

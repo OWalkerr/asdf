@@ -128,6 +128,14 @@ kademe kademe açılır (10 güç):
 
 Taburlar öldürdükçe 5 rütbeye kadar yükselir. Son dalgada boss **Lurtz** gelir.
 
+**İşçiler ve serbest inşa (BFME2):** sabit zemin arsaları yok. Kale maçın başında **2 işçi** verir; kaleden
+yenisi yetiştirilir (100 altın, 8 sn bekleme, en fazla 6). İşçiyi seç → komut çubuğundan yapıyı seç (kule, kışla,
+demirhane, mancınık, çiftlik) → haritada yeri seç: yarı saydam hayalet bina ve halka yeşilse uygun, kırmızıysa değil
+(düşman yolu, doğuş bölgesi, kapı/kale yakını, başka yapı, engebeli zemin). Shift ile art arda yerleştir, sağ tık /
+Esc iptal. İnşaat yalnızca başında işçi varken ilerler (2 işçi daha hızlı); boştaki işçiler yakındaki yarım inşaata
+kendiliğinden gider. Kule Savaşı haritalarında yolun dışındaki arazinin her yerine kurulur. Sur üstündeki altın
+halkalı kule soketleri yerinde kalır.
+
 **Demirhane donanımı (tabur başına, BFME2 gibi):** demirhanedeki araştırma yükseltmeyi **açar**; sonra her tabur
 kendi donanımını komut çubuğundan alır — Dövme Kılıçlar (yakın dövüş, 120 altın, +%25 hasar), Ağır Zırh (her tabur,
 120 altın, −%25 alınan hasar), Ateşli Oklar (okçular, 100 altın; kuleler araştırmayla doğrudan alır). Alınan
@@ -180,5 +188,5 @@ Ateş Ejderi), halka menü, bekleme sayaçları, palantír mini harita, portrele
 3. Birim türüne özgü sürü kombinasyonları (BFME2'deki ör. Gondor askeri + Kule Muhafızı) — burada genel yakın
    dövüş + okçu bonusu var.
 4. Kahraman Yarat (Create-a-Hero), binekli kahramanlar (seviye 1–10 ve 4 yetenek var).
-5. Serbest inşa ve sur inşası, komuta noktası (nüfus) sınırı, deniz birimleri.
+5. Sur inşası, komuta noktası (nüfus) sınırı, deniz birimleri (işçiyle serbest inşa var).
 6. Seslendirme (birim cevapları) ve müzik; War of the Ring kampanya modu; harita editörü.

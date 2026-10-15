@@ -7,6 +7,7 @@ import {
   type BuildingKind,
   ECONOMY,
   FORTRESS_UPGRADES,
+  FREE_BUILD,
   factionDef,
   GEAR_DEFS,
   HERO_XP,
@@ -63,6 +64,7 @@ export const UNIT_LABELS: Record<number, string> = {
   27: 'Lórien Okçuları',
   28: 'Haldir',
   29: 'Elrond',
+  30: 'İşçi',
 };
 const UNIT_ICON: Record<number, string> = {
   0: 'sword',
@@ -95,6 +97,7 @@ const UNIT_ICON: Record<number, string> = {
   27: 'bow',
   28: 'bow',
   29: 'leaf',
+  30: 'hammer',
 };
 const GEAR_BODY = [
   'Bu taburun kılıçları dövülür: +%25 yakın dövüş hasarı.',
@@ -137,6 +140,7 @@ const UNIT_DESC: Record<number, string> = {
   25: 'Ezen süvari: hücumda yoldaki düşmanı çiğner; Ork sürülerine karşı yıkıcı.',
   26: 'Az ama keskin elf piyadesi: yüksek hasar ve dayanıklılık; Uruk saflarını yarar.',
   27: 'En uzun menzilli okçular (38 m); kulelerin ardından düşmanı erkenden avlar.',
+  30: 'İşçi: bir yapı seç, haritada uygun yere yerleştir (Shift: art arda). İnşaat işçi başındayken ilerler.',
 };
 const BUILD_ICON: Record<BuildingKind, string> = {
   arrow_tower: 'tower',
@@ -182,6 +186,8 @@ export interface HudDeps {
   groundY: (x: number, z: number) => number;
   /** Render edilmiş birim portreleri (yoksa ikon). */
   portrait?: (unitType: number) => string | undefined;
+  /** İşçiyle yerleştirme modunu başlat (BUILDING_KINDS indeksi, seçili işçiler). */
+  beginPlacement?: (kind: number, workers: number[]) => void;
 }
 
 export class HudController {
@@ -240,11 +246,11 @@ export class HudController {
       lines: fd
         ? [
             'Kapıları tut, kaleyi koru. Kale düşerse savaş biter.',
-            'Altın halkalı yuvalara kule ve bina kur; kaleyi seçip (K) yükselt.',
+            'İşçini seç, kule ve binaları haritada istediğin uygun yere kur; surdaki halkalara kule koy. Kaleyi (K) yükselt, yeni işçi yetiştir.',
           ]
         : [
             'Düşman yolu izleyip çıkışa yürür; sızan her tabur can götürür.',
-            'Yolun kenarındaki yuvalara okçu kulesi ve mancınık kur.',
+            'İşçiyle yolun kenarına istediğin yere okçu kulesi ve mancınık kur.',
           ],
       buttons: [],
     };
@@ -336,10 +342,30 @@ export class HudController {
         });
       });
     });
+    // İşçiler: serbest inşa menüsü (BFME2).
+    const workers = [...sel].filter((b) => this.d.units.battalionInfo.get(b)?.type === UnitTypeId.Worker);
+    if (workers.length > 0)
+      BUILDING_KINDS.forEach((k, ki) => {
+        const bd = BUILDING_DEFS[k];
+        buttons.push({
+          icon: BUILD_ICON[k],
+          label: bd.name,
+          state: this.gold >= bd.cost ? 'ready' : 'off',
+          badge: `${bd.cost}`,
+          tip: {
+            title: bd.name,
+            meta: `◆ ${bd.cost} · ${bd.buildTime} sn (işçiyle)`,
+            body: `${BUILD_DESC[k]} Haritada yeri seç: yeşil = uygun. Shift ile art arda kur, sağ tık/Esc iptal.`,
+          },
+          run: () => this.d.beginPlacement?.(ki, workers),
+        });
+      });
     // BFME2 duruşları ve sancaktar (kahraman/çağrılmış birlik dışı taburlar).
     const regular = [...sel].filter((b) => {
       const info = this.d.units.battalionInfo.get(b);
-      return info && !STAT_HERO.has(info.type) && !UNIT_DEFS[info.type]?.summoned;
+      return (
+        info && !STAT_HERO.has(info.type) && !UNIT_DEFS[info.type]?.summoned && !UNIT_DEFS[info.type]?.worker
+      );
     });
     if (regular.length > 0) {
       const stances = new Set(regular.map((b) => this.d.units.battalionInfo.get(b)?.stance ?? 0));
@@ -485,7 +511,12 @@ export class HudController {
         ...base,
         key: `build:${slot}:${left}`,
         subtitle: `İnşa ediliyor · %${Math.round(st.built * 100)}`,
-        lines: [BUILD_DESC[kind]],
+        lines: st.free
+          ? [
+              BUILD_DESC[kind],
+              'İnşaat yalnızca başında işçi varken ilerler (2 işçi daha hızlı). Boştaki işçiler yardıma gelir.',
+            ]
+          : [BUILD_DESC[kind]],
         buttons: [
           {
             icon: 'repair',
@@ -671,6 +702,26 @@ export class HudController {
         run: () => this.d.scenario.fortressUpgrade(i),
       };
     });
+    // İşçi yetiştir (BFME2: kale işçi çıkarır).
+    {
+      const wait = m ? secs(m.workerReady - this.tick) : 0;
+      const full = (m?.workers ?? 0) >= FREE_BUILD.maxWorkers;
+      buttons.unshift({
+        icon: 'hammer',
+        img: this.d.portrait?.(UnitTypeId.Worker),
+        label: 'İşçi',
+        state: full ? 'done' : wait > 0 ? 'busy' : this.gold >= FREE_BUILD.workerCost ? 'ready' : 'off',
+        badge: full ? `${m?.workers}/${FREE_BUILD.maxWorkers}` : `${FREE_BUILD.workerCost}`,
+        cooldown: !full && wait > 0 ? wait : undefined,
+        progress: !full && wait > 0 ? 1 - wait / FREE_BUILD.workerCooldown : undefined,
+        tip: {
+          title: 'İşçi yetiştir',
+          meta: `◆ ${FREE_BUILD.workerCost} · ${m?.workers ?? 0}/${FREE_BUILD.maxWorkers} işçi`,
+          body: 'Kalenin kapısından bir işçi çıkar. İşçiyle kule, kışla, demirhane, mancınık ve çiftliği haritada istediğin uygun yere kurarsın.',
+        },
+        run: () => this.d.scenario.trainWorker(),
+      });
+    }
     // Kahramanlar
     factionDef(this.d.faction).heroes.forEach((def, k) => {
       const unit = UNIT_DEFS[def.unitType];

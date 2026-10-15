@@ -45,6 +45,7 @@ const P: Record<string, string> = {
   help: '<path d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20zm-1 14v2h2v-2zm1-10a4 4 0 0 0-4 4h2a2 2 0 1 1 3 1.7c-1 .6-2 1.4-2 3.3h2c0-1 .4-1.4 1.2-2A4 4 0 0 0 12 6z"/>',
   sound:
     '<path d="M3 9h4l5-5v16l-5-5H3zM15 8a5 5 0 0 1 0 8M17.5 5.5a8.5 8.5 0 0 1 0 13" stroke="currentColor" stroke-width="1.6" fill-rule="evenodd"/>',
+  hammer: '<path d="M4 4h9l2 2v3l-2 1-2-2H9v1L5 9H4zM10 11h3l-1 11h-1z"/>',
   sun: '<circle cx="12" cy="12" r="5"/><path d="M11 1h2v4h-2zM11 19h2v4h-2zM1 11h4v2H1zM19 11h4v2h-4zM4.2 5.6l1.4-1.4 2.8 2.8-1.4 1.4zM15.6 17l1.4-1.4 2.8 2.8-1.4 1.4zM4.2 18.4l2.8-2.8 1.4 1.4-2.8 2.8zM15.6 7l2.8-2.8 1.4 1.4-2.8 2.8z"/>',
   quake:
     '<path d="M2 14h7l2-3 2 4 2-3 1 2h6v8H2zM11 15l-1 3 2 1-1 3h1l1-3-2-1 1-3z" fill-rule="evenodd"/><path d="M5 10l2-3 2 2zM15 9l3-4 2 4z"/>',
@@ -100,6 +101,7 @@ const THEME: Record<string, [string, string, string]> = {
   ladder: ['#9a7a4a', '#2a1c0c', '#fff0d4'],
   castle: ['#c9a23a', '#3a2a08', '#fff6cc'],
   lock: ['#6a6a6a', '#1a1a1a', '#d0d0d0'],
+  hammer: ['#b08a4a', '#2e1e0a', '#fff0d4'],
   sun: ['#ffd25a', '#5a3a06', '#fffbe0'],
   quake: ['#9a7448', '#2a1a0a', '#ffe8c8'],
   eagle: ['#c08a3a', '#2e1a06', '#fff0d0'],

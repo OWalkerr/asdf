@@ -70,6 +70,8 @@ export interface UnitDef {
   ladder?: boolean;
   /** Ateş aurası (Balrog): her saniye `radius` içindeki düşmanlara `damage` ateş hasarı. */
   fireAura?: { radius: number; damage: number };
+  /** İşçi (BFME2 inşaatçı): yapı kurar; çatışmaya girmez. */
+  worker?: boolean;
 }
 
 export const UNIT_DEFS: readonly UnitDef[] = [
@@ -785,6 +787,29 @@ export const UNIT_DEFS: readonly UnitDef[] = [
     jitter: 0,
     hero: true,
   },
+  {
+    // İşçi (BFME2 inşaatçı): deri önlüklü, çekiçli, sırtında kereste taşıyan usta.
+    id: 30,
+    key: 'worker',
+    name: 'İşçi',
+    faction: 'gondor',
+    speed: 5.5,
+    hp: 220,
+    armor: 'light',
+    attackStyle: 'slash',
+    damage: 4,
+    damageType: 'crush',
+    attackInterval: 1.5,
+    range: 1.4,
+    ranged: false,
+    battalionSize: 1,
+    cost: 100,
+    trainTime: 8,
+    files: 1,
+    spacing: 1.4,
+    jitter: 0,
+    worker: true,
+  },
 ];
 
 export const UnitTypeId = {
@@ -818,6 +843,7 @@ export const UnitTypeId = {
   LorienArcherTrained: 27,
   Haldir: 28,
   Elrond: 29,
+  Worker: 30,
 } as const;
 
 export const unitDef = (id: number): UnitDef => {

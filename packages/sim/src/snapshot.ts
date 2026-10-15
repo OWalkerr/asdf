@@ -35,6 +35,8 @@ import {
   H_VERSION,
   H_WAVE_COUNT,
   H_WAVE_INDEX,
+  H_WORKER_READY,
+  H_WORKERS,
   H_ZONE,
   MAX_ABILITIES,
   packAnim,
@@ -61,6 +63,7 @@ import { QUEUE_STRIDE, StructureKind } from './components';
 import { SIM_HZ } from './constants';
 import { fortressPct } from './systems/fortress';
 import { nextWaveTick } from './systems/match';
+import { countWorkers } from './systems/workers';
 import { STAT } from './unitStats';
 import type { SimWorld } from './world';
 
@@ -153,11 +156,15 @@ export const writeSnapshot = (world: SimWorld, view: Int32Array, simMicros = 0):
     view[s + 3] = Structure.max[eid] as number;
     view[s + 4] = Structure.buildLeft[eid] as number;
     view[s + 5] = packQueue(qLen, head, pct);
+    view[s + 6] = world.c.Position.x[eid] as number;
+    view[s + 7] = world.c.Position.z[eid] as number;
     s += SNAP_STRUCT_INTS;
     structCount++;
   }
   const m = world.match;
   view[base + H_STRUCT_COUNT] = structCount;
+  view[base + H_WORKER_READY] = m.workerReady;
+  view[base + H_WORKERS] = countWorkers(world, 0);
   view[base + H_GOLD] = m.gold[0] as number;
   view[base + H_FORTRESS] = m.fortress;
   view[base + H_FORT_UP] =

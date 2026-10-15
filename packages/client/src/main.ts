@@ -1,5 +1,14 @@
-import { factionDef, MAP_DEFS, type MatchInfo, type SlotDef, UNIT_DEFS, UnitTypeId } from '@bulwark/shared';
-import { buildNavGrid, createOpenGrid } from '@bulwark/sim';
+import {
+  BUILD_RADIUS,
+  BUILDING_KINDS,
+  factionDef,
+  MAP_DEFS,
+  type MatchInfo,
+  type SlotDef,
+  UNIT_DEFS,
+  UnitTypeId,
+} from '@bulwark/shared';
+import { buildNavGrid, createOpenGrid, placementError } from '@bulwark/sim';
 import { Scene, type Texture, Timer, Vector3 } from 'three/webgpu';
 import { GALLERY_CENTER, updateGallery } from './app/gallery';
 import { MatchHud } from './app/MatchHud';
@@ -40,10 +49,11 @@ import { buildNavOverlay } from './render/map/NavOverlay';
 import { createToonParams, type ToonParams } from './render/materials/ToonMaterial';
 import { createPaletteTexture, setTeamColor } from './render/palette';
 import { createRenderContext } from './render/renderer';
+import { BuildGhost } from './render/structures/BuildGhost';
 import { FortressRenderer } from './render/structures/FortressRenderer';
 import { GateRenderer } from './render/structures/GateRenderer';
 import { LadderRenderer } from './render/structures/LadderRenderer';
-import { StructureRenderer } from './render/structures/StructureRenderer';
+import { faceYaw, StructureRenderer } from './render/structures/StructureRenderer';
 import { BannerCarriers } from './render/units/BannerCarriers';
 import { Portraits } from './render/units/Portraits';
 import { UnitRenderer } from './render/units/UnitRenderer';
@@ -266,7 +276,57 @@ const boot = async () => {
   spellShow.onShake = (amp, dur) => cam.shake(amp, dur);
   spellShow.onSound = (kind) => sfx.spell(kind);
   input.onTargetHover = (x, y, z, r) => spellFx.showTarget(x, y, z, r);
-  input.onTargetEnd = () => spellFx.hideTarget();
+  // İşçiyle serbest inşa: hayalet önizleme + yerleşim kuralı (sim ile aynı fonksiyon).
+  const ghost = new BuildGhost(palette, toon);
+  scene.add(...ghost.meshes);
+  input.onTargetEnd = () => {
+    spellFx.hideTarget();
+    ghost.hide();
+  };
+  const placeGrid = world.def ? buildNavGrid(world.def) : null;
+  const placementOk = (kind: number, x: number, z: number): boolean => {
+    const k = BUILDING_KINDS[kind];
+    if (!k || !world.def || !placeGrid) return false;
+    const others = [...(structures?.bySlot.values() ?? [])].map((st) => ({
+      x: st.x,
+      z: st.z,
+      r: BUILD_RADIUS[BUILDING_KINDS[st.kind] ?? 'arrow_tower'],
+    }));
+    return placementError(world.def, placeGrid, x, z, BUILD_RADIUS[k], others) === null;
+  };
+  const beginPlacement = (kind: number, workers: number[]) => {
+    const k = BUILDING_KINDS[kind];
+    const def = world.def;
+    if (!k || !def) return;
+    const r = BUILD_RADIUS[k];
+    input.beginTargeting({
+      radius: r,
+      repeat: true,
+      onHover: (x, y, z) => {
+        const ok = placementOk(kind, x, z);
+        ghost.show(kind, x, y, z, faceYaw(def, x, z), ok);
+        spellFx.showTarget(x, y, z, r, ok);
+      },
+      canPick: (x, z) => placementOk(kind, x, z),
+      onPick: (x, z) => {
+        // Seçili işçilerden yere en yakını kurar; diğer boştaki işçiler kendiliğinden yardıma gelir.
+        let best = 0;
+        let bestD = Number.POSITIVE_INFINITY;
+        for (const w of workers) {
+          const info = units.battalionInfo.get(w);
+          if (!info) continue;
+          const d = (info.x - x) ** 2 + (info.z - z) ** 2;
+          if (d < bestD) {
+            bestD = d;
+            best = w;
+          }
+        }
+        if (best === 0) return;
+        scenario.construct(best, kind, x, z);
+        sfx.click();
+      },
+    });
+  };
   // --- BFME2 tarzı arayüz: komut çubuğu, güçler sütunu, üst arayüz ----------------------
   const ui = world.def && structures && world.slots && !gallery;
   const bar = ui ? new CommandBar() : null;
@@ -290,6 +350,7 @@ const boot = async () => {
           radial: radial ?? undefined,
           groundY: (x, z) => ground.sample(x, z),
           portrait: (t) => portraits.get(t),
+          beginPlacement,
         })
       : null;
   if (hudCtl)
@@ -449,6 +510,18 @@ const boot = async () => {
       units.glowBattalion = buffed >= 0 ? (mi.heroes[buffed] ?? 0) : 0;
       units.updateFromSim(sim, now);
       bannerCarriers.update(units, now);
+      // Serbest yapılar seçilebilsin: konumlarını slot işaretçisine ek slot olarak ver.
+      if (world.slots && structures) {
+        world.slots.extra.clear();
+        for (const st of structures.bySlot.values())
+          if (st.free)
+            world.slots.extra.set(st.slot, {
+              x: st.x,
+              y: st.y,
+              z: st.z,
+              r: BUILD_RADIUS[BUILDING_KINDS[st.kind] ?? 'arrow_tower'],
+            });
+      }
       levelUps.check(mi);
       arrows.update(sim, now);
       structures?.update(sim.frame);

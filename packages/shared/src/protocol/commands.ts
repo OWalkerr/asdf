@@ -25,6 +25,10 @@ export type Command =
   | { type: 'stance'; units: readonly number[]; stance: number }
   /** Tabura sancaktar al (BANNER.cost altın). */
   | { type: 'buyBanner'; units: readonly number[] }
+  /** İşçiyle serbest inşa: (x, z) noktasına BUILDING_KINDS[kind] yapısını kur. */
+  | { type: 'construct'; worker: number; kind: number; x: Fx; z: Fx }
+  /** Kaleden işçi yetiştir. */
+  | { type: 'trainWorker' }
   /** Taburlara demirhane donanımı al (UPGRADE_DEFS indeksi; araştırılmış olmalı). */
   | { type: 'buyGear'; units: readonly number[]; upgrade: number }
   /** Haritanın `slot` indeksli inşa yerine yapı kur (BUILDING_KINDS indeksi). */

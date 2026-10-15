@@ -21,6 +21,7 @@ import { arrowDmgType, fireProjectile, fireStone } from './combat';
 import { spawnBattalion } from './commands';
 import { treasuryIncome } from './fortress';
 import { forEachMember } from './spatial';
+import { releaseFootprint } from './workers';
 
 /**
  * Ekonomi ve yapılar (GDD §4, §5.1):
@@ -92,6 +93,7 @@ export const buildStructure = (
   Structure.qProgress[e] = 0;
   Structure.level[e] = 1;
   Structure.invested[e] = def.cost;
+  Structure.needsWorker[e] = 0;
   world.match.slots[slotIndex] = e;
   return e;
 };
@@ -154,6 +156,8 @@ const removeBuilding = (world: SimWorld, e: number): void => {
   const m = world.match;
   const slot = Structure.slot[e] as number;
   if (slot >= 0 && m.slots[slot] === e) m.slots[slot] = 0;
+  releaseFootprint(world, e);
+  Structure.needsWorker[e] = 0;
   if ((Structure.kind[e] as number) === StructureKind.Forge && (Structure.qLen[e] as number) > 0) {
     const team = Team.id[e] as number;
     m.researching[team] =
@@ -259,7 +263,8 @@ export const structureSystem = (world: SimWorld): void => {
       continue;
     }
     if ((Structure.buildLeft[e] as number) > 0) {
-      Structure.buildLeft[e] = (Structure.buildLeft[e] as number) - 1;
+      // Serbest inşaat: ilerleme workerSystem'de (işçi başındayken).
+      if (Structure.needsWorker[e] !== 1) Structure.buildLeft[e] = (Structure.buildLeft[e] as number) - 1;
       continue;
     }
     const team = Team.id[e] as number;

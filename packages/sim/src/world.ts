@@ -36,6 +36,7 @@ import { animStateSystem, moveToTargetSystem } from './systems/moveToTarget';
 import { separationSystem } from './systems/separation';
 import { spatialSystem } from './systems/spatial';
 import { economySystem, structureSystem } from './systems/structures';
+import { workerSystem } from './systems/workers';
 
 /** Dalga programının düzleştirilmiş hali (tick sırasına göre). */
 export interface ScheduledGroup {
@@ -103,6 +104,10 @@ export interface MatchContext {
   heroBuff: Int32Array;
   /** Bekleyen zamanlı büyü etkileri (Ok Yağmuru dalgaları, Deprem, Kartallar, Sel). */
   volleys: { kind: number; x: number; z: number; team: number; next: number; left: number }[];
+  /** Kaleden işçi yetiştirmenin yeniden mümkün olduğu tick. */
+  workerReady: number;
+  /** Serbest yapıların nav'da kapattığı hücreler ve eski maskeleri (yapı eid'i → taban). */
+  footprints: Map<number, { cells: number[]; orig: number[] }>;
   /** MapDef.slots sırasıyla inşa edilmiş yapı eid'i (0 = boş). */
   slots: Int32Array;
 }
@@ -185,6 +190,8 @@ export const createSimWorld = (
       abilityReady: new Int32Array(4 * MAX_HEROES * MAX_ABILITIES),
       heroBuff: new Int32Array(4 * MAX_HEROES),
       volleys: [],
+      workerReady: 0,
+      footprints: new Map(),
       slots: new Int32Array(map?.slots.length ?? 0),
     },
     hashHead: new Int32Array(nav.cols * nav.rows),
@@ -210,6 +217,7 @@ export const stepWorld = (world: SimWorld): void => {
   battalionSpacingSystem(world);
   formationSystem(world);
   combatSystem(world);
+  workerSystem(world);
   structureSystem(world);
   heroSystem(world);
   fortressSystem(world);
@@ -304,6 +312,8 @@ export const hashWorld = (world: SimWorld): number => {
   h = hashInt(h, world.match.kills);
   h = hashInt(h, world.match.losses);
   h = hashInt(h, world.match.goldEarned);
+  h = hashInt(h, world.match.workerReady);
+  for (const [e, fp] of world.match.footprints) h = hashInt(h, e + fp.cells.length);
   for (const u of world.match.upgrades) h = hashInt(h, u);
   for (const u of world.match.researching) h = hashInt(h, u);
   const m = world.match;

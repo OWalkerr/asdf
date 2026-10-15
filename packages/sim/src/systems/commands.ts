@@ -32,6 +32,7 @@ import {
   trainUnit,
   upgradeBuilding,
 } from './structures';
+import { constructAt, trainWorker } from './workers';
 
 /** Oyuncu → takım eşlemesi (Phase 1: oyuncu N = takım N). Co-op'ta lobi belirleyecek. */
 const teamOf = (player: number): number => player;
@@ -419,6 +420,14 @@ export const applyCommand = (world: SimWorld, sc: StampedCommand): void => {
         m.gold[team] = (m.gold[team] as number) - BANNER.cost;
         Battalion.banner[b] = 1;
       }
+      break;
+    }
+    case 'construct': {
+      constructAt(world, team, cmd.worker, cmd.kind, cmd.x, cmd.z);
+      break;
+    }
+    case 'trainWorker': {
+      trainWorker(world, team);
       break;
     }
     case 'buyGear': {

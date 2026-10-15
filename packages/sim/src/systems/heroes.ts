@@ -513,7 +513,13 @@ const hordeSystem = (world: SimWorld): void => {
   for (const b of query(world, [Battalion, Position])) {
     Battalion.horde[b] = 0;
     const t = Battalion.unitType[b] as number;
-    if (STAT.hero[t] === 1 || STAT.summoned[t] === 1 || (Battalion.count[b] as number) === 0) continue;
+    if (
+      STAT.hero[t] === 1 ||
+      STAT.summoned[t] === 1 ||
+      STAT.worker[t] === 1 ||
+      (Battalion.count[b] as number) === 0
+    )
+      continue;
     list.push(b);
   }
   for (let i = 0; i < list.length; i++) {

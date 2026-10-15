@@ -29,6 +29,7 @@ export const STAT = {
   hero: UNIT_DEFS.map((d) => (d.hero ? 1 : 0)) as readonly number[],
   boss: UNIT_DEFS.map((d) => (d.boss ? 1 : 0)) as readonly number[],
   summoned: UNIT_DEFS.map((d) => (d.summoned ? 1 : 0)) as readonly number[],
+  worker: UNIT_DEFS.map((d) => (d.worker ? 1 : 0)) as readonly number[],
   charger: UNIT_DEFS.map((d) => (d.charger ? 1 : 0)) as readonly number[],
   invulnerable: UNIT_DEFS.map((d) => (d.invulnerable ? 1 : 0)) as readonly number[],
   /** Yarma (alan) vuruş yarıçapı (Fx; 0 = yok) ve yapılara ateşli ok atan okçu. */

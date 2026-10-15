@@ -22,6 +22,7 @@
  *   0 eid · 1 fromX · 2 fromZ · 3 toX · 4 toZ · 5 fireTick:20|flightTicks:12 · 6 yükseklik (cm):16|tür:8 (0 ok, 1 taş)
  * Yapı kaydı (6 × int32) — kapılar da (kind 0, slot = kapı indeksi, 4 = kalan onarım tick'i):
  *   0 eid · 1 seviye:4|kind:8|slot:8|team:8 · 2 hp · 3 max · 4 kalan inşa tick'i · 5 kuyruk (packQueue)
+ *   · 6 x (Q16.16) · 7 z (Q16.16) — serbest inşa edilen yapıların konumu (slot ≥ harita slot sayısı)
  *
  * Konumlar ham Q16.16 olarak taşınır; float'a çeviri render tarafında (GDD §13.7).
  */
@@ -29,9 +30,9 @@ export const SNAP_GLOBAL_INTS = 4;
 export const SNAP_HEADER_INTS = 72;
 export const SNAP_UNIT_INTS = 6;
 export const SNAP_PROJ_INTS = 7;
-export const SNAP_STRUCT_INTS = 6;
+export const SNAP_STRUCT_INTS = 8;
 /** Snapshot'ta taşınan en fazla inşa edilmiş yapı. */
-export const SNAP_MAX_STRUCTS = 48;
+export const SNAP_MAX_STRUCTS = 160;
 /** Snapshot'ta taşınan en fazla kapı sayısı. */
 export const SNAP_MAX_GATES = 4;
 
@@ -86,6 +87,9 @@ export const H_ELENDIL_UNTIL = 28;
 export const H_HERO_BUFF = 60;
 /** Kahraman yuvası k'nın toplam XP'si (24–26). */
 export const H_HERO_XP = 24;
+/** İşçi: kaleden yeniden yetiştirilebileceği tick (27) ve yaşayan işçi sayısı (62). */
+export const H_WORKER_READY = 27;
+export const H_WORKERS = 62;
 /** Maç istatistikleri: öldürülen düşman, kayıp, kazanılan altın (64–66). */
 export const H_KILLS = 64;
 export const H_LOSSES = 65;
@@ -213,6 +217,9 @@ export interface MatchInfo {
   heroBuff: number[];
   /** Kahraman yuvası başına toplam XP (seviye ilerlemesi). */
   heroXp: number[];
+  /** Kaleden işçi yetiştirme hazır tick'i ve yaşayan işçi sayısı. */
+  workerReady: number;
+  workers: number;
   rallyUntil: number;
   fortress: number;
   fortUp: number;
@@ -268,6 +275,8 @@ export const createFrame = (capacity: number, projCapacity = 2048): SnapshotFram
     heroReady: [0, 0, 0],
     abilityReady: new Array(SNAP_HEROES * 4).fill(0),
     heroXp: [0, 0, 0],
+    workerReady: 0,
+    workers: 0,
     heroBuff: [0, 0, 0],
     rallyUntil: 0,
     fortress: 0,
@@ -313,6 +322,8 @@ export const readMatchHeader = (view: Int32Array, base: number, out: MatchInfo):
   out.fortResearch = ((fu >>> 8) & 0xff) - 1;
   out.fortPct = ((fu >>> 16) & 0x7f) / 100;
   out.lives = view[base + H_LIVES] as number;
+  out.workerReady = view[base + H_WORKER_READY] as number;
+  out.workers = view[base + H_WORKERS] as number;
   out.zone = view[base + H_ZONE] as number;
   out.kills = view[base + H_KILLS] as number;
   out.losses = view[base + H_LOSSES] as number;

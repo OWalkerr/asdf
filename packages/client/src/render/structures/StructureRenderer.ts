@@ -2,6 +2,7 @@ import {
   BUILDING_DEFS,
   BUILDING_KINDS,
   BUILDING_LEVEL,
+  FREE_BUILD,
   type MapDef,
   SNAP_STRUCT_INTS,
   type SnapshotFrame,
@@ -37,17 +38,27 @@ export interface StructInfo {
   x: number;
   y: number;
   z: number;
+  /** İşçiyle serbest inşa edildi (harita slotu değil). */
+  free: boolean;
   /** Yapının üst noktası (can çubuğu yüksekliği). */
   top: number;
 }
 
-const MODELS: Record<string, { build: () => BufferGeometry; height: number; footprint: [number, number] }> = {
+export const MODELS: Record<
+  string,
+  { build: () => BufferGeometry; height: number; footprint: [number, number] }
+> = {
   arrow_tower: { build: arrowTowerModel, height: 12.5, footprint: [2.2, 2.2] },
   barracks: { build: barracksModel, height: 8.2, footprint: [5.4, 4.2] },
   forge: { build: forgeModel, height: 7.5, footprint: [4.6, 3.6] },
   catapult: { build: catapultModel, height: 5.5, footprint: [2.6, 2.6] },
   farm: { build: farmModel, height: 5.8, footprint: [4.6, 4.2] },
 };
+
+const UP = new Vector3(0, 1, 0);
+/** Serbest yapının yönü: ön yüzü (+Z) kaleye dönük. */
+export const faceYaw = (def: MapDef, x: number, z: number): number =>
+  Math.atan2(def.citadel.pos[0] - x, def.citadel.pos[1] - z);
 
 /**
  * İnşa edilmiş yapıların render'ı (GDD §13.5): yapı türü başına bir InstancedMesh + ortak
@@ -76,7 +87,8 @@ export class StructureRenderer {
     params: ToonParams,
   ) {
     const mat = createToonMaterial(palette, params);
-    const cap = Math.max(1, def.slots.length);
+    // Harita slotları + serbest inşa edilen yapılar (işçiyle).
+    const cap = Math.max(1, def.slots.length) + FREE_BUILD.max;
     for (const kind of BUILDING_KINDS) {
       const model = MODELS[kind];
       if (!model) throw new Error(`Yapı modeli yok: ${kind}`);
@@ -121,11 +133,16 @@ export class StructureRenderer {
       const kindKey = BUILDING_KINDS[kind];
       const slotDef = this.def.slots[slot];
       const mesh = this.kindMeshes[kind];
-      if (!kindKey || !slotDef || !mesh) continue;
+      if (!kindKey || !mesh) continue;
       const bdef = BUILDING_DEFS[kindKey];
       const model = MODELS[kindKey] as (typeof MODELS)[string];
-      const [x, z] = slotDef.pos;
-      const y = this.heightAt(x, z) + slotDef.elevation;
+      // Harita slotu: tanımlı konum; serbest yapı: snapshot konumu (zeminde, kaleye dönük).
+      const free = !slotDef;
+      const x = free ? (st[o + 6] as number) / 65536 : slotDef.pos[0];
+      const z = free ? (st[o + 7] as number) / 65536 : slotDef.pos[1];
+      const y = this.heightAt(x, z) + (slotDef?.elevation ?? 0);
+      if (free) this.q.setFromAxisAngle(UP, faceYaw(this.def, x, z));
+      else this.q.identity();
       const buildLeft = st[o + 4] as number;
       const level = unpackStructLevel(kp);
       // Seviye > 1 iken buildLeft yükseltme süresidir: bina tam boy kalır, iskele görünür.
@@ -148,6 +165,7 @@ export class StructureRenderer {
         x,
         y,
         z,
+        free,
         top: y + model.height * Math.max(0.15, built) * (1 + 0.09 * (level - 1)),
       };
       this.bySlot.set(slot, info);
@@ -155,12 +173,12 @@ export class StructureRenderer {
       const rise = built >= 1 ? 1 : 0.08 + 0.92 * built;
       // Seviye: her seviyede biraz daha iri ve yüksek (BFME2'de yükseltilen yapı büyür).
       const grow = 1 + 0.09 * (level - 1);
-      this.m.compose(this.p.set(x, y, z), this.q.identity(), this.s.set(grow, rise * grow, grow));
+      this.m.compose(this.p.set(x, y, z), this.q, this.s.set(grow, rise * grow, grow));
       mesh.setMatrixAt(counts[kind] as number, this.m);
       counts[kind] = (counts[kind] as number) + 1;
       if (built < 1 || upgrading >= 0) {
         const [fx, fz] = model.footprint;
-        this.m.compose(this.p.set(x, y, z), this.q.identity(), this.s.set(fx, model.height / 6, fz));
+        this.m.compose(this.p.set(x, y, z), this.q, this.s.set(fx, model.height / 6, fz));
         this.scaffold.setMatrixAt(scaffolds++, this.m);
       }
     }

@@ -4,6 +4,7 @@ export * from './constants';
 export * from './nav/flowField';
 export * from './nav/grid';
 export * from './nav/ladders';
+export * from './nav/placement';
 export * from './simulation';
 export * from './snapshot';
 export * from './systems/commands';

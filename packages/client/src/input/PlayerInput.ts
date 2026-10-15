@@ -38,6 +38,12 @@ export interface Targeting {
   radius: number;
   onPick: (x: number, z: number) => void;
   onCancel?: () => void;
+  /** Kendi önizlemesini çizer (verilirse hedefleme halkası yerine). */
+  onHover?: (x: number, y: number, z: number) => void;
+  /** Nokta seçilebilir mi (uygunsuz yerde tık yok sayılır). */
+  canPick?: (x: number, z: number) => boolean;
+  /** Shift basılıyken seçimden sonra hedefleme sürer (art arda inşa). */
+  repeat?: boolean;
 }
 
 export class PlayerInput {
@@ -88,7 +94,8 @@ export class PlayerInput {
     if (this.targeting) {
       slots?.setHovered(-1);
       cursor.hide();
-      this.onTargetHover?.(hit.point.x, hit.point.y, hit.point.z, this.targeting.radius);
+      if (this.targeting.onHover) this.targeting.onHover(hit.point.x, hit.point.y, hit.point.z);
+      else this.onTargetHover?.(hit.point.x, hit.point.y, hit.point.z, this.targeting.radius);
       return;
     }
     const slot = slots ? slots.nearest(hit.point.x, hit.point.y, hit.point.z) : -1;
@@ -144,6 +151,11 @@ export class PlayerInput {
         const hit = this.d.picker.pick(this.d.cam.camera, e.offsetX, e.offsetY, w, h);
         if (hit) {
           const t = this.targeting;
+          if (t.canPick && !t.canPick(hit.point.x, hit.point.z)) return;
+          if (t.repeat && e.shiftKey) {
+            t.onPick(hit.point.x, hit.point.z);
+            return;
+          }
           this.targeting = null;
           this.d.canvas.style.cursor = '';
           this.onTargetEnd?.();

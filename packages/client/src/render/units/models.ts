@@ -1147,6 +1147,34 @@ export const elrond = (): BufferGeometry => {
 };
 
 /** Birim tipi id → model üreticisi (UNIT_DEFS ile aynı sıra). */
+/**
+ * İşçi (BFME2 inşaatçısı): deri önlüklü usta — sarı keçe şapka, kısa sakal, sağ elde çekiç,
+ * sırtında bağlı kereste ve testere, belde alet kemeri.
+ */
+export const worker = (): BufferGeometry => {
+  const b = new ModelBuilder();
+  legs(b, 'woodDark', 'leather');
+  b.add(Part.Body, box(0.36, 0.58, 0.48), 'rust', [0, 1.12, 0]); // tunik
+  b.add(Part.Body, box(0.06, 0.62, 0.38), 'leather', [0.19, 1.02, 0]); // önlük
+  b.add(Part.Body, box(0.38, 0.08, 0.5), 'woodDark', [0, 0.88, 0]); // kemer
+  b.add(Part.Body, box(0.1, 0.14, 0.1), 'iron', [0.16, 0.86, 0.2]); // alet kesesi
+  b.add(Part.Body, box(0.08, 0.12, 0.08), 'wood', [0.16, 0.86, -0.2]);
+  // Sırtta kereste demeti ve testere.
+  for (const dz of [-0.1, 0, 0.1])
+    b.add(Part.Body, box(0.08, 1.1, 0.08), 'wood', [-0.3, 1.25, dz], [0, 0, 0.18]);
+  b.add(Part.Body, box(0.1, 0.06, 0.36), 'leather', [-0.28, 1.3, 0]); // bağ
+  b.add(Part.Body, box(0.03, 0.5, 0.16), 'steel', [-0.38, 1.12, 0.16], [0, 0, 0.18]); // testere
+  b.add(Part.Head, box(0.2, 0.2, 0.2), 'sand', [0.02, 1.6, 0]);
+  b.add(Part.Head, box(0.08, 0.1, 0.18), 'woodDark', [0.1, 1.52, 0]); // sakal
+  b.add(Part.Head, cyl(0.13, 0.15, 0.14, 7), 'gold', [0, 1.74, 0]); // keçe şapka
+  b.add(Part.Head, cyl(0.24, 0.24, 0.03, 8), 'gold', [0, 1.67, 0]); // şapka kenarı
+  arm(b, Part.ArmR, 0.3, 'rust', 'sand');
+  b.add(Part.ArmR, box(0.05, 0.5, 0.05), 'wood', [0.12, 0.8, 0.3], [0, 0, 0.5]); // çekiç sapı
+  b.add(Part.ArmR, box(0.12, 0.12, 0.22), 'iron', [0.26, 1.0, 0.3], [0, 0, 0.5]); // çekiç başı
+  arm(b, Part.ArmL, -0.3, 'rust', 'sand');
+  return b.build();
+};
+
 export const UNIT_MODELS: Record<number, () => BufferGeometry> = {
   0: gondorSoldier,
   1: orcWarrior,
@@ -1181,4 +1209,5 @@ export const UNIT_MODELS: Record<number, () => BufferGeometry> = {
   27: lorienArcher,
   28: haldir,
   29: elrond,
+  30: worker,
 };

@@ -1,4 +1,4 @@
-import { factionDef, fxFromFloat, type MapDef, UnitTypeId } from '@bulwark/shared';
+import { FREE_BUILD, factionDef, fxFromFloat, type MapDef, UnitTypeId } from '@bulwark/shared';
 import type { SimHost } from '../sim-host/SimHost';
 
 /**
@@ -44,6 +44,10 @@ export class Scenario {
     const map = factionDef(this.faction).garrison;
     for (const g of this.def.garrison ?? [])
       this.spawn(map[g.unitType] ?? g.unitType, g.pos[0], g.pos[1], g.count);
+    // BFME2: kale maçın başında işçi verir (serbest inşa için).
+    const c = this.def.citadel;
+    const door = c.door ?? [c.pos[0], c.pos[1] + c.radius + 4];
+    this.spawn(UnitTypeId.Worker, door[0], door[1], FREE_BUILD.startWorkers);
   }
 
   /** Seçili taburlara hareket emri. */
@@ -117,6 +121,16 @@ export class Scenario {
   buyBanner(battalions: Iterable<number>): void {
     const units = [...battalions];
     if (units.length > 0) this.sim.send({ type: 'buyBanner', units }, PLAYER);
+  }
+
+  /** İşçiyle serbest inşa. */
+  construct(worker: number, kind: number, x: number, z: number): void {
+    this.sim.send({ type: 'construct', worker, kind, x: fxFromFloat(x), z: fxFromFloat(z) }, PLAYER);
+  }
+
+  /** Kaleden işçi yetiştir. */
+  trainWorker(): void {
+    this.sim.send({ type: 'trainWorker' }, PLAYER);
   }
 
   /** Taburlara demirhane donanımı al. */
