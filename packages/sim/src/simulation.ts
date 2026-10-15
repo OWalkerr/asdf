@@ -17,9 +17,17 @@ export class Simulation {
    * nav: haritanın navigasyon ızgarası (buildNavGrid); verilmezse açık ızgara.
    * map: verilirse kapılar ve dalga programı kurulur (FD maçı).
    * difficulty: DIFFICULTIES indeksi (varsayılan Normal); faction: FACTIONS indeksi (0 Gondor, 1 Rohan).
+   * cah: Kahraman Yarat sınıfı (-1 = yok).
    */
-  constructor(seed: number, nav?: NavGrid, map?: MapDef, difficulty = DEFAULT_DIFFICULTY, faction = 0) {
-    this.world = createSimWorld(seed, nav, map ?? null, difficulty, faction);
+  constructor(
+    seed: number,
+    nav?: NavGrid,
+    map?: MapDef,
+    difficulty = DEFAULT_DIFFICULTY,
+    faction = 0,
+    cah = -1,
+  ) {
+    this.world = createSimWorld(seed, nav, map ?? null, difficulty, faction, cah);
   }
 
   get tick(): number {

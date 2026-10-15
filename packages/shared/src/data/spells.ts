@@ -953,3 +953,152 @@ export const GOBLIN_HEROES: readonly HeroDef[] = [
     ],
   },
 ];
+
+/**
+ * Kahraman Yarat (BFME2 Create-a-Hero): üç sınıf. Seçilirse tarafın 3. kahramanının (J) yerini
+ * alır; adı oyuncu verir (yalnızca görünüm).
+ */
+export const CAH_CLASSES = [
+  { key: 'warrior', name: 'Savaşçı', desc: 'Ağır zırh, iki elli kılıç; yakın dövüşte çevresini biçer.' },
+  { key: 'archer', name: 'Okçu', desc: 'Uzun menzilli iz sürücü; ok fırtınası ve nişancı atışı.' },
+  {
+    key: 'wizard',
+    name: 'Büyücü',
+    desc: 'Ateş patlaması, şifa ve kör edici ışık; 10. seviyede Kudret Sözü.',
+  },
+] as const;
+
+export const CAH_HEROES: readonly HeroDef[] = [
+  {
+    unitType: 49,
+    key: 'KeyJ',
+    icon: 'sword',
+    abilities: [
+      {
+        key: 'elendil',
+        name: 'Savaş Çılgınlığı',
+        rank: 1,
+        cooldown: 45,
+        icon: 'blade',
+        desc: '10 sn boyunca çift hasar.',
+      },
+      {
+        key: 'shieldmaiden',
+        name: 'Demir İrade',
+        rank: 3,
+        cooldown: 60,
+        icon: 'armor',
+        desc: 'Yaralarını sarar ve 10 sn boyunca çift hasar verir.',
+      },
+      {
+        key: 'kings_glory',
+        name: 'Savaş Narası',
+        rank: 6,
+        cooldown: 75,
+        icon: 'rally',
+        desc: '15 sn boyunca bütün ordunuz +%25 hasar verir.',
+      },
+      {
+        key: 'slayer',
+        name: 'Ölüm Darbesi',
+        rank: 10,
+        cooldown: 60,
+        radius: 12,
+        damage: 900,
+        icon: 'blade',
+        desc: '12 m içindeki en güçlü düşmana (önce boss) 900 hasar.',
+      },
+    ],
+  },
+  {
+    unitType: 50,
+    key: 'KeyJ',
+    icon: 'bow',
+    abilities: [
+      {
+        key: 'arrow_wind',
+        name: 'Ok Fırtınası',
+        rank: 1,
+        cooldown: 35,
+        radius: 30,
+        count: 20,
+        damage: 40,
+        icon: 'volley',
+        desc: '30 m içindeki düşmanlara 20 ok (ok başı 40 hasar).',
+      },
+      {
+        key: 'train_archers',
+        name: 'Okçu Ustası',
+        rank: 3,
+        cooldown: 90,
+        icon: 'bow',
+        desc: 'Yakındaki dost okçu taburları bir rütbe kazanır.',
+      },
+      {
+        key: 'slayer',
+        name: 'Nişancı Atışı',
+        rank: 6,
+        cooldown: 40,
+        radius: 36,
+        damage: 500,
+        icon: 'blade',
+        desc: '36 m içindeki en güçlü düşmana (önce boss) 500 hasar.',
+      },
+      {
+        key: 'arrow_wind',
+        name: 'Gökyüzünü Karart',
+        rank: 10,
+        cooldown: 90,
+        radius: 40,
+        count: 60,
+        damage: 50,
+        icon: 'volley',
+        desc: '40 m içindeki düşmanlara 60 ok (ok başı 50 hasar).',
+      },
+    ],
+  },
+  {
+    unitType: 51,
+    key: 'KeyJ',
+    icon: 'staff',
+    abilities: [
+      {
+        key: 'wizard_blast',
+        name: 'Ateş Patlaması',
+        rank: 1,
+        cooldown: 30,
+        radius: 9,
+        damage: 200,
+        icon: 'flame',
+        desc: '9 m içindeki düşmanlara 200 büyü hasarı.',
+      },
+      {
+        key: 'athelas',
+        name: 'Şifa Işığı',
+        rank: 3,
+        cooldown: 50,
+        icon: 'heal',
+        desc: 'Çevresindeki dost birlikleri iyileştirir.',
+      },
+      {
+        key: 'istar_light',
+        name: 'Kör Edici Işık',
+        rank: 6,
+        cooldown: 70,
+        radius: 22,
+        icon: 'sun',
+        desc: '22 m içindeki düşmanlar kamaşır: −%40 hasar verir, +%25 hasar alır.',
+      },
+      {
+        key: 'word_of_power',
+        name: 'Kudret Sözü',
+        rank: 10,
+        cooldown: 150,
+        radius: 32,
+        damage: 500,
+        icon: 'blast',
+        desc: '32 m içindeki bütün düşmanlara 500 büyü hasarı.',
+      },
+    ],
+  },
+];

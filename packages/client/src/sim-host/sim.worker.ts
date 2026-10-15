@@ -93,7 +93,7 @@ self.onmessage = (e: MessageEvent<ToWorker>) => {
         {
           const def = msg.mapId ? MAP_DEFS[msg.mapId] : undefined;
           const nav = def ? buildNavGrid(def) : createOpenGrid(msg.mapSize);
-          sim = new Simulation(msg.seed, nav, def, msg.difficulty, msg.faction);
+          sim = new Simulation(msg.seed, nav, def, msg.difficulty, msg.faction, msg.cah ?? -1);
           // Çok oyunculu: kapı ilk tick'ten önce kurulur; bütün insan oyuncular takım 0 (ortak savunma).
           gate = msg.players && msg.players > 1 ? new TurnGate(msg.players) : null;
           if (gate) sim.world.match.coop = true;

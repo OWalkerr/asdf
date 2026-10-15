@@ -27,6 +27,7 @@ import type { SlotMarkers } from '../../render/map/SlotMarkers';
 import type { StructureRenderer } from '../../render/structures/StructureRenderer';
 import type { UnitRenderer } from '../../render/units/UnitRenderer';
 import { SIM_TICK_MS } from '../../sim-host/protocol';
+import { roster } from '../cah';
 import type { Scenario } from '../scenario';
 import type { CommandBar, CommandButton, CommandContext } from './CommandBar';
 import type { RadialAnchor, RadialMenu } from './RadialMenu';
@@ -83,6 +84,9 @@ export const UNIT_LABELS: Record<number, string> = {
   46: 'Gorkil',
   47: 'Drogoth',
   48: 'Shelob',
+  49: 'Kılıçlı Kahraman',
+  50: 'Okçu Kahraman',
+  51: 'Büyücü Kahraman',
 };
 const UNIT_ICON: Record<number, string> = {
   0: 'sword',
@@ -131,6 +135,9 @@ const UNIT_ICON: Record<number, string> = {
   46: 'crown',
   47: 'flame',
   48: 'spider',
+  49: 'sword',
+  50: 'bow',
+  51: 'staff',
 };
 const GEAR_BODY = [
   'Bu taburun kılıçları dövülür: +%25 yakın dövüş hasarı.',
@@ -172,6 +179,9 @@ const HERO_DESC: Record<number, string> = {
   46: 'Gorkil, Goblin Kralı: Goblin Sürüsü, Kralın Kamçısı (ordu +%25); 10. seviyede Dağın Karanlığı.',
   47: 'Drogoth, Ejder Lordu: uzaktan alev püskürtür; Alev Nefesi, Ejder Öfkesi; 10. seviyede Kızıl Yangın.',
   48: 'Shelob: Zehirli İğne, Yavrular (örümcek binicileri), Ağ; 10. seviyede Zehir Bulutu.',
+  49: 'Kendi kahramanın (Savaşçı): Savaş Çılgınlığı, Demir İrade, Savaş Narası; 10. seviyede Ölüm Darbesi.',
+  50: 'Kendi kahramanın (Okçu): Ok Fırtınası, Okçu Ustası, Nişancı Atışı; 10. seviyede Gökyüzünü Karart.',
+  51: 'Kendi kahramanın (Büyücü): Ateş Patlaması, Şifa Işığı, Kör Edici Işık; 10. seviyede Kudret Sözü.',
 };
 const UNIT_DESC: Record<number, string> = {
   43: 'Ucuz ve kalabalık goblin sürüsü (20 asker); hızlı koşar, tek tek zayıftır.',
@@ -332,7 +342,7 @@ export class HudController {
   /** Tek kahraman seçiliyse seviye rozeti ve sonraki seviyeye XP ilerlemesi. */
   private heroLevel(type: number, level: number, single: boolean): { level?: number; xp?: number } {
     if (!single || !STAT_HERO.has(type)) return {};
-    const k = factionDef(this.d.faction).heroes.findIndex((h) => h.unitType === type);
+    const k = roster(this.d.faction).findIndex((h) => h.unitType === type);
     const xp = k >= 0 ? (this.match?.heroXp[k] ?? 0) : 0;
     const lo = HERO_XP[level] ?? 0;
     const hi = HERO_XP[level + 1];
@@ -370,7 +380,7 @@ export class HudController {
     const hp = cap > 0 ? hpSum / cap : 1;
     const buttons: CommandButton[] = [];
     // Seçili kahramanların yetenekleri (yuva sırasıyla).
-    factionDef(this.d.faction).heroes.forEach((def, k) => {
+    roster(this.d.faction).forEach((def, k) => {
       const hero = m?.heroes[k] ?? 0;
       if (hero === 0 || !sel.has(hero)) return;
       const heroRank = counts.get(def.unitType)?.rank ?? 1;
@@ -789,7 +799,7 @@ export class HudController {
       });
     }
     // Kahramanlar
-    factionDef(this.d.faction).heroes.forEach((def, k) => {
+    roster(this.d.faction).forEach((def, k) => {
       const unit = UNIT_DEFS[def.unitType];
       const cost = unit?.cost ?? 0;
       const alive = (m?.heroes[k] ?? 0) !== 0;

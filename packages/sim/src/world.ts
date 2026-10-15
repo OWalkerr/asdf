@@ -52,6 +52,8 @@ export interface MatchContext {
   difficulty: number;
   /** Oyuncunun tarafı (FACTIONS indeksi). */
   faction: number;
+  /** Kahraman Yarat sınıfı (CAH_HEROES indeksi; -1 = yok). */
+  cah: number;
   /** Kale yapısı eid'i (0 = yok), yükseltme bitleri, araştırılan (−1 = yok) ve kalan tick. */
   fortress: number;
   fortressUp: Uint8Array;
@@ -146,6 +148,7 @@ export const createSimWorld = (
   map: MapDef | null = null,
   difficulty = DEFAULT_DIFFICULTY,
   faction = 0,
+  cah = -1,
 ): SimWorld => {
   const world = createWorld<SimContext>({
     c: createComponents(),
@@ -160,6 +163,7 @@ export const createSimWorld = (
       state: MatchState.Playing,
       difficulty: DIFFICULTIES[difficulty] ? difficulty : DEFAULT_DIFFICULTY,
       faction: FACTIONS[faction] ? faction : 0,
+      cah,
       fortress: 0,
       fortressUp: new Uint8Array(4),
       fortResearch: new Int8Array(4).fill(-1),

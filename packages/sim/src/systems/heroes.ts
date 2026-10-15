@@ -20,6 +20,7 @@ import {
   HERO_XP,
   HORDE,
   HORDE_COMBOS,
+  heroRoster,
   KINGS_GLORY_DURATION,
   MAX_ABILITIES,
   MAX_HERO_LEVEL,
@@ -81,7 +82,7 @@ const DMG_MAGIC = DAMAGE_TYPES.indexOf('magic');
 const DMG_FIRE = DAMAGE_TYPES.indexOf('fire');
 
 /** Oyuncu tarafının kahraman kadrosu. */
-const heroesOf = (world: SimWorld) => factionDef(world.match.faction).heroes;
+const heroesOf = (world: SimWorld) => heroRoster(world.match.faction, world.match.cah);
 /** Kahraman tipinin yuvası (taraf kadrosu indeksi; -1 = bu tarafın kahramanı değil). */
 export const heroSlot = (world: SimWorld, unitType: number): number =>
   heroesOf(world).findIndex((h) => h.unitType === unitType);

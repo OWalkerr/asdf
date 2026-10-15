@@ -1,7 +1,8 @@
-import { DEFAULT_DIFFICULTY, DIFFICULTIES, FACTIONS, MAP_DEFS } from '@bulwark/shared';
+import { CAH_CLASSES, DEFAULT_DIFFICULTY, DIFFICULTIES, FACTIONS, MAP_DEFS } from '@bulwark/shared';
 import type { NetStart } from '../net/NetSession';
 import type { NamedRoom } from '../net/room';
 import { getQuality, QUALITY_NAMES, type Quality, setQuality } from '../render/quality';
+import { loadCah, saveCah } from './cah';
 import { CAMPAIGNS, type Campaign, campaignProgress, takeCampaignTab, takeQueuedMission } from './campaign';
 import { mountLobby } from './Lobby';
 import { bestForMap, starText } from './records';
@@ -18,6 +19,9 @@ export interface MatchChoice {
   faction: number;
   /** Sefer görevi (yoksa serbest savaş). */
   campaign?: { id: string; index: number };
+  /** Kahraman Yarat sınıfı ve adı (serbest savaş). */
+  cah?: number;
+  cahName?: string;
   /** Çok oyunculu ortak savunma (lobi başlattı). */
   net?: { room: NamedRoom; start: NetStart };
 }
@@ -79,12 +83,18 @@ export const chooseMatch = (): Promise<MatchChoice> => {
     } catch {
       /* depolama yok */
     }
-  if (fromUrl >= 0 && urlMap) return Promise.resolve({ mapId: mapPick, difficulty: fromUrl, faction });
+  const cahPick = () => {
+    const c = loadCah();
+    return c.on ? { cah: c.cls, cahName: c.name } : {};
+  };
+  if (fromUrl >= 0 && urlMap)
+    return Promise.resolve({ mapId: mapPick, difficulty: fromUrl, faction, ...cahPick() });
   if (navigator.webdriver && !params.has('intro'))
     return Promise.resolve({
       mapId: urlMap && MAP_DEFS[urlMap] ? urlMap : 'helms_deep',
       difficulty: fromUrl >= 0 ? fromUrl : DEFAULT_DIFFICULTY,
       faction,
+      ...cahPick(),
     });
   // Maç sonu "Sonraki görev": anlatı ekranıyla doğrudan sefer görevine.
   const queued = takeQueuedMission();
@@ -110,6 +120,7 @@ export const chooseMatch = (): Promise<MatchChoice> => {
   } catch {
     /* depolama yok */
   }
+  const cah = loadCah();
   return new Promise((resolve) => {
     const root = document.createElement('div');
     root.id = 'startscreen';
@@ -177,6 +188,15 @@ export const chooseMatch = (): Promise<MatchChoice> => {
             </button>`,
           ).join('')}
         </div>
+        <div class="cah ${cah.on ? 'on' : ''}">
+          <label class="cah-toggle"><input type="checkbox" class="cah-on" ${cah.on ? 'checked' : ''}> <b>Kahraman Yarat</b></label>
+          <input class="cah-name" maxlength="24" placeholder="Kahramanının adı" value="${cah.name.replace(/"/g, '&quot;')}">
+          <div class="cah-cls">${CAH_CLASSES.map(
+            (c, i) =>
+              `<button type="button" data-c="${i}" class="${i === cah.cls ? 'sel' : ''}"><b>${c.name}</b><span>${c.desc}</span></button>`,
+          ).join('')}</div>
+          <small>Açıksa kendi kahramanın tarafının 3. kahramanının (J) yerini alır.</small>
+        </div>
         <button type="button" class="go">Savunmayı başlat</button>
         </div>
         <div class="quality">Grafik: ${(['low', 'medium', 'high'] as const)
@@ -189,6 +209,25 @@ export const chooseMatch = (): Promise<MatchChoice> => {
       </div>`;
     document.body.appendChild(root);
     let pick = fromUrl >= 0 ? fromUrl : saved;
+    const cahEl = root.querySelector('.cah') as HTMLDivElement;
+    root.querySelector<HTMLInputElement>('.cah-on')?.addEventListener('change', (e) => {
+      cah.on = (e.target as HTMLInputElement).checked;
+      cahEl.classList.toggle('on', cah.on);
+      saveCah(cah);
+    });
+    root.querySelector<HTMLInputElement>('.cah-name')?.addEventListener('input', (e) => {
+      cah.name = (e.target as HTMLInputElement).value.slice(0, 24);
+      saveCah(cah);
+    });
+    root.querySelectorAll<HTMLButtonElement>('.cah-cls button').forEach((b) => {
+      b.addEventListener('click', () => {
+        cah.cls = Number(b.dataset.c);
+        root.querySelectorAll('.cah-cls button').forEach((x) => {
+          x.classList.toggle('sel', x === b);
+        });
+        saveCah(cah);
+      });
+    });
     root.querySelectorAll<HTMLButtonElement>('.maps button').forEach((b) => {
       b.addEventListener('click', () => {
         mapPick = b.dataset.map ?? mapPick;
@@ -275,7 +314,12 @@ export const chooseMatch = (): Promise<MatchChoice> => {
       }
       root.classList.add('out');
       setTimeout(() => root.remove(), 400);
-      resolve({ mapId: mapPick, difficulty: pick, faction });
+      resolve({
+        mapId: mapPick,
+        difficulty: pick,
+        faction,
+        ...(cah.on ? { cah: cah.cls, cahName: cah.name } : {}),
+      });
     };
     root.querySelector('.go')?.addEventListener('click', go);
   });

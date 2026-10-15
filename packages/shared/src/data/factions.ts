@@ -1,4 +1,5 @@
 import {
+  CAH_HEROES,
   ELF_HEROES,
   GOBLIN_HEROES,
   HEROES,
@@ -329,3 +330,11 @@ export const FACTIONS: readonly FactionDef[] = [
 ];
 
 export const factionDef = (f: number): FactionDef => FACTIONS[f] ?? (FACTIONS[0] as FactionDef);
+
+/** Tarafın kahraman kadrosu; `cah` ≥ 0 ise Kahraman Yarat sınıfı 3. kahramanın (J) yerini alır. */
+export const heroRoster = (faction: number, cah = -1): readonly HeroDef[] => {
+  const heroes = factionDef(faction).heroes;
+  const custom = CAH_HEROES[cah];
+  if (!custom) return heroes;
+  return heroes.map((h, i) => (i === heroes.length - 1 ? custom : h));
+};

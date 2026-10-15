@@ -1553,6 +1553,60 @@ export const gorkil = (): BufferGeometry => {
 /** Drogoth, Ejder Lordu: Ateş Ejderi siluetinin büyük, kızıl pullu hali. */
 export const drogoth = (): BufferGeometry => wyrm({ rust: 'eyeRed', sootBlack: 'rust' }, 1.4);
 
+/** Kahraman Yarat — Savaşçı: takım renkli tabard, ağır plaka, boynuzlu miğfer, iki elli kılıç. */
+export const cahWarrior = (): BufferGeometry => {
+  const b = new ModelBuilder();
+  legs(b, 'ironDark', 'iron');
+  b.add(Part.Body, box(0.46, 0.66, 0.56), 'steel', [0, 1.12, 0]); // plaka göğüs
+  b.add(Part.Body, box(0.48, 0.5, 0.4), 'team0', [0.02, 0.92, 0]); // tabard
+  b.add(Part.Body, box(0.06, 1.1, 0.66), 'team0Dark', [-0.26, 0.9, 0]); // pelerin
+  for (const z of [-0.34, 0.34]) b.add(Part.Body, box(0.3, 0.16, 0.24), 'iron', [0, 1.42, z]); // omuzluk
+  b.add(Part.Head, box(0.26, 0.28, 0.26), 'steel', [0.02, 1.64, 0]); // miğfer
+  b.add(Part.Head, box(0.04, 0.06, 0.2), 'sootBlack', [0.15, 1.64, 0]); // vizör
+  for (const z of [-1, 1])
+    b.add(Part.Head, new ConeGeometry(0.05, 0.3, 4), 'gondorWhite', [-0.02, 1.86, z * 0.14], [z * 0.6, 0, 0]); // boynuz
+  arm(b, Part.ArmR, 0.32, 'steel', 'iron');
+  b.add(Part.ArmR, box(0.08, 0.06, 0.28), 'gold', [0.08, 0.72, 0.32]); // balçak
+  b.add(Part.ArmR, box(1.25, 0.1, 0.05), 'silver', [0.72, 0.74, 0.32], [0, 0, 0.3]); // iki elli kılıç
+  arm(b, Part.ArmL, -0.32, 'steel', 'iron');
+  return b.build(1.1);
+};
+
+/** Kahraman Yarat — Okçu: takım renkli kukuletalı pelerin, deri zırh, uzun yay. */
+export const cahArcher = (): BufferGeometry => {
+  const b = new ModelBuilder();
+  legs(b, 'leather', 'woodDark');
+  b.add(Part.Body, box(0.4, 0.62, 0.5), 'leather', [0, 1.12, 0]);
+  b.add(Part.Body, box(0.07, 1.2, 0.6), 'team0', [-0.24, 0.88, 0]); // pelerin
+  b.add(Part.Body, cyl(0.07, 0.07, 0.6, 5), 'woodDark', [-0.2, 1.26, 0.14], [0.3, 0, -0.25]); // sadak
+  b.add(Part.Head, box(0.21, 0.22, 0.21), 'sand', [0.03, 1.61, 0]);
+  b.add(Part.Head, box(0.3, 0.3, 0.3), 'team0', [-0.02, 1.66, 0]); // kukuleta
+  b.add(Part.Head, box(0.05, 0.14, 0.18), 'sootBlack', [0.14, 1.6, 0]); // gölgeli yüz
+  arm(b, Part.ArmR, 0.3, 'leather', 'sand');
+  arm(b, Part.ArmL, -0.3, 'leather', 'sand');
+  b.add(Part.ArmL, box(0.05, 1.5, 0.05), 'woodDark', [0.18, 0.86, -0.34], [0, 0, 0.05]); // uzun yay
+  b.add(Part.ArmL, box(0.012, 1.42, 0.012), 'sand', [0.12, 0.86, -0.34]);
+  return b.build(1.08);
+};
+
+/** Kahraman Yarat — Büyücü: takım renkli cüppe, sivri şapka, küre başlı asa. */
+export const cahWizard = (): BufferGeometry => {
+  const b = new ModelBuilder();
+  legs(b, 'team0Dark', 'leather');
+  b.add(Part.Body, cyl(0.24, 0.44, 0.95, 7), 'team0', [0, 0.5, 0]); // cüppe eteği
+  b.add(Part.Body, box(0.36, 0.62, 0.48), 'team0', [0, 1.13, 0]);
+  b.add(Part.Body, box(0.4, 0.08, 0.52), 'gold', [0, 0.9, 0]); // kuşak
+  b.add(Part.Head, box(0.2, 0.22, 0.2), 'sand', [0.02, 1.61, 0]);
+  b.add(Part.Head, box(0.08, 0.3, 0.18), 'snow', [0.12, 1.46, 0]); // sakal
+  b.add(Part.Head, cyl(0.28, 0.28, 0.04, 8), 'team0Dark', [0, 1.72, 0]); // şapka siperi
+  b.add(Part.Head, new ConeGeometry(0.17, 0.62, 7), 'team0Dark', [-0.04, 2.04, 0], [0, 0, 0.2]); // sivri şapka
+  arm(b, Part.ArmR, 0.3, 'team0', 'sand');
+  arm(b, Part.ArmL, -0.3, 'team0', 'sand');
+  b.add(Part.ArmL, cyl(0.035, 0.035, 2.0, 5), 'woodDark', [0.12, 1.1, -0.34]); // asa
+  b.add(Part.ArmL, new IcosahedronGeometry(0.12, 0), 'magic', [0.12, 2.16, -0.34]); // küre
+  return b.build(1.1);
+};
+
 export const UNIT_MODELS: Record<number, () => BufferGeometry> = {
   0: gondorSoldier,
   1: orcWarrior,
@@ -1607,4 +1661,7 @@ export const UNIT_MODELS: Record<number, () => BufferGeometry> = {
   46: gorkil,
   47: drogoth,
   48: shelob,
+  49: cahWarrior,
+  50: cahArcher,
+  51: cahWizard,
 };

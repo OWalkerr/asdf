@@ -222,6 +222,21 @@ diğerlerini yavaşlatabilir. PvP (karşı karşıya) yok — yalnızca ortak sa
 **Grafik kalitesi:** başlangıç ekranında Düşük / Orta / Yüksek (piksel oranı, gölge, kenar yumuşatma).
 Kasma olursa Düşük seçin. Birim portreleri artık açılışta tek seferde değil, boşta parça parça üretilir.
 
+**Komuta puanı (BFME2 nüfus sınırı):** her tabur maliyetinin onda biri kadar puan tutar (işçi 5; kahraman,
+çağrılan birlik puansız). Tavan 400'dür, kurulu her çiftlik seviyesi +60 ekler (en fazla 1000). Sağ üstte
+`kullanılan/tavan` görünür; tavan doluysa kışla düğmeleri kapanır.
+
+**Sürü kombinasyonları:** belirli iki tabur yan yana (18 m) durursa ikisi de bonus alır — *Kalkan Duvarı*
+(Gondor askeri + Kule Muhafızı), *Mızrak ve Mahmuz* (Rohan mızrakçısı + süvari), *Galadhrim Dansı*,
+*Uruk Falanksı* (Uruk + arbaletçi), *Trol Kırbacı* (ork + trol), *Mağara Sürüsü* (goblin + örümcek).
+Seçili taburun satırında görünür.
+
+**Goblinler (6. taraf, kötü):** goblin savaşçıları ve okçuları, örümcek biniciler; kahramanlar Gorkil
+(Goblin Kralı), Drogoth (ejder, uzaktan alev) ve Shelob. Gondor ve Rohan saldırır.
+
+**Kahraman Yarat:** Serbest Savaş ekranında aç, adını yaz ve sınıf seç (Savaşçı, Okçu, Büyücü). Kendi
+kahramanın tarafın 3. kahramanının (J) yerini alır; 10 seviye, 4 yetenek.
+
 **Güçler:** maç 5 güç puanıyla başlar (1. kademe hemen açılabilir); kilitli bir güce tıklayınca neden açılamadığı
 (eksik puan veya önceki kademe) gösterilir.
 
@@ -237,16 +252,13 @@ ve sim hızı ayarı var.
 **Var:** Kale (FD) ve Kule (TD) savunması, klasik Tower Wars / Fortress Defence haritaları, Minas Tirith,
 İsen Geçitleri ve Helm's Deep, tarayıcı lobisi ile 2–4 kişilik çok oyunculu ortak savunma, işlevsel ve gelişen kale,
 kale yükseltmeleri, bina seviyeleri ve satış, çiftlik, kışla / demirhane, 3 iyi taraf (Gondor, Rohan, Lothlórien) + 2 kötü taraf (Isengard, Mordor) ve
-9 kahraman (10 seviye, 4 yetenek), 4 kademeli 10 güç (Kartallar, Sel, Deprem, Güneş Parlaması dahil), tabur duruşları, sancaktar ve tabur başına donanım, birleşik ordu bonusu, rütbe sistemi, kuşatma (koçbaşı, merdiven, kule), boss'lar (Lurtz, Balrog, Su Gözcüsü,
+6 taraf, 18 kahraman + Kahraman Yarat (10 seviye, 4 yetenek), 4 kademeli 12 güç (Tom Bombadil, Ent Toplantısı,
+Kartallar, Sel, Deprem, Güneş Parlaması dahil), komuta puanı, birime özgü sürü kombinasyonları, tabur duruşları, sancaktar ve tabur başına donanım, birleşik ordu bonusu, rütbe sistemi, kuşatma (koçbaşı, merdiven, kule), boss'lar (Lurtz, Balrog, Su Gözcüsü,
 Ateş Ejderi), halka menü, bekleme sayaçları, palantír mini harita, portreler, oyun hızı, istatistik ve rekorlar.
 
 **Eksik (BFME2'de olup henüz olmayan):**
-1. Goblinler'in oynanabilir olması (Isengard ve Mordor var); çok oyunculuda PvP ve ayrı ordular (ortak
-   savunma var), ayrılan oyuncunun yerini yapay zekânın alması.
-2. Güç kitabının kalanı (Tom Bombadil, Kale Kuşatması, Ölülerin Çağrısı…; BFME2'de ~15, burada 10).
-3. Birim türüne özgü sürü kombinasyonları (BFME2'deki ör. Gondor askeri + Kule Muhafızı) — burada genel yakın
-   dövüş + okçu bonusu var.
-4. Kahraman Yarat (Create-a-Hero), binekli kahramanlar (seviye 1–10 ve 4 yetenek var).
-5. Sur inşası, komuta noktası (nüfus) sınırı, deniz birimleri (işçiyle serbest inşa var).
-6. Kayıtlı seslendirme ve orkestra müziği (burada prosedürel müzik + konuşma sentezi var), War of the Ring'in
-   strateji haritası (burada doğrusal sefer var), harita editörü.
+1. Çok oyunculuda PvP ve ayrı ordular (ortak savunma var), ayrılan oyuncunun yerini yapay zekânın alması.
+2. Sur inşası (işçiyle serbest bina ve kule inşası var), deniz birimleri, binekli kahramanlar.
+3. Kahraman Yarat'ta görünüm/renk düzenleyicisi ve ek sınıflar (3 sınıf, ad var); ayrı bir 4. kahraman yuvası.
+4. Kayıtlı seslendirme ve orkestra müziği (prosedürel müzik + konuşma sentezi var), War of the Ring'in
+   strateji haritası (doğrusal sefer var), harita editörü.

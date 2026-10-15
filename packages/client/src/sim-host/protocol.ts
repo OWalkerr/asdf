@@ -16,6 +16,8 @@ export type ToWorker =
       faction: number;
       /** Çok oyunculu lockstep oyuncu sayısı (yoksa tek oyunculu). */
       players?: number;
+      /** Kahraman Yarat sınıfı (-1 = yok). */
+      cah?: number;
     }
   | { type: 'commands'; commands: StampedCommand[] }
   /** Bir oyuncunun bir tur paketi (komutlar o turun ilk tick'ine damgalı). */

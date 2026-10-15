@@ -13,6 +13,7 @@ import type { RTSCamera } from '../../render/camera/RTSCamera';
 import type { StructureRenderer } from '../../render/structures/StructureRenderer';
 import type { UnitRenderer } from '../../render/units/UnitRenderer';
 import { SIM_TICK_MS } from '../../sim-host/protocol';
+import { roster } from '../cah';
 import type { Scenario } from '../scenario';
 import { icon, richIcon } from './icons';
 
@@ -55,7 +56,7 @@ export class TopHud {
   private heroPos: ({ x: number; z: number } | null)[] = [];
 
   constructor(private readonly d: TopHudDeps) {
-    this.heroDefs = factionDef(d.faction).heroes;
+    this.heroDefs = roster(d.faction);
     this.heroes = document.createElement('div');
     this.heroes.id = 'heroes';
     this.heroes.innerHTML = `${this.heroDefs.map(() => '<button type="button" class="portrait hero"></button>').join('')}<button type="button" class="portrait fort"></button>`;

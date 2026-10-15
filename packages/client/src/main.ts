@@ -10,13 +10,14 @@ import {
 } from '@bulwark/shared';
 import { buildNavGrid, createOpenGrid, placementError } from '@bulwark/sim';
 import { Scene, type Texture, Timer, Vector3 } from 'three/webgpu';
+import { CAH_UNITS, cahName, roster, setActiveCah } from './app/cah';
 import { GALLERY_CENTER, updateGallery } from './app/gallery';
 import { MatchHud } from './app/MatchHud';
 import { Minimap, setPlayerMinimapColor } from './app/Minimap';
 import { chooseMatch } from './app/StartScreen';
 import { PLAYER, Scenario } from './app/scenario';
 import { CommandBar } from './app/ui/CommandBar';
-import { HudController } from './app/ui/HudController';
+import { HudController, UNIT_LABELS } from './app/ui/HudController';
 import { PowersColumn } from './app/ui/PowersColumn';
 import { RadialMenu } from './app/ui/RadialMenu';
 import { SpeedControl } from './app/ui/SpeedControl';
@@ -122,6 +123,9 @@ const boot = async () => {
   const lookdev = gallery || params.get('map') === 'lookdev';
   const choice = lookdev ? { mapId: 'lookdev', difficulty: 1, faction: 0 } : await chooseMatch();
   const faction = choice.faction;
+  // Kahraman Yarat: seçilen sınıf J kahramanının yerini alır; adı arayüzde görünür.
+  setActiveCah(choice.cah ?? -1, choice.cahName ?? '');
+  for (const u of CAH_UNITS) UNIT_LABELS[u] = cahName(u) ?? '';
   // Takım rengi: tarafın sancak rengi (Gondor mavi, Rohan yeşil).
   setTeamColor(palette, factionDef(faction).color);
   setPlayerBannerColor(factionDef(faction).color.main);
@@ -166,6 +170,7 @@ const boot = async () => {
     mapId: world.def?.id ?? null,
     mapSize: world.size,
     players: choice.net?.start.order.length,
+    cah: choice.cah ?? -1,
   });
   // Çok oyunculu: komutlar tur paketlerine (lockstep); oyuncu numarası başlatma sırası.
   const net = choice.net ? new NetSession(choice.net.room, sim, choice.net.start) : null;
@@ -341,7 +346,7 @@ const boot = async () => {
     prev: [0, 0, 0],
     el: null as HTMLDivElement | null,
     check(m: MatchInfo) {
-      const heroes = factionDef(faction).heroes;
+      const heroes = roster(faction);
       for (let k = 0; k < 3; k++) {
         const b = m.heroes[k] ?? 0;
         const info = b !== 0 ? units.battalionInfo.get(b) : undefined;
@@ -554,7 +559,7 @@ const boot = async () => {
   if (!gallery)
     void portraits
       .build(ctx.renderer, palette, toon, [
-        ...factionDef(faction).heroes.map((h) => h.unitType),
+        ...roster(faction).map((h) => h.unitType),
         ...factionDef(faction).trains,
         UnitTypeId.Worker,
       ])

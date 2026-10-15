@@ -30,6 +30,8 @@ export interface SimHostOptions {
   inputDelay?: number;
   /** Çok oyunculu lockstep oyuncu sayısı (yoksa tek oyunculu). */
   players?: number;
+  /** Kahraman Yarat sınıfı (-1 = yok). */
+  cah?: number;
 }
 
 export class SimHost {
@@ -84,6 +86,7 @@ export class SimHost {
         difficulty: opts.difficulty ?? 1,
         faction: opts.faction ?? 0,
         players: opts.players,
+        cah: opts.cah ?? -1,
       });
     });
     return host;
