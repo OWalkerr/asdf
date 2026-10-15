@@ -1,4 +1,4 @@
-import { type MatchInfo, MatchState, SPELL_DEFS } from '@bulwark/shared';
+import { factionDef, type MatchInfo, MatchState, SPELL_DEFS, type SpellDef } from '@bulwark/shared';
 import type { PlayerInput } from '../../input/PlayerInput';
 import type { RTSCamera } from '../../render/camera/RTSCamera';
 import type { SpellFx } from '../../render/fx/SpellFx';
@@ -50,6 +50,8 @@ const KEYS = [
 ];
 
 export interface PowersDeps {
+  /** FACTIONS indeksi: tarafa özgü güç adları ve ikonları (Isengard). */
+  faction?: number;
   scenario: Scenario;
   input: PlayerInput;
   fx: SpellFx;
@@ -59,6 +61,16 @@ export interface PowersDeps {
   groundY: (x: number, z: number) => number;
   onClick?: () => void;
 }
+
+/** Tarafa göre güç adı/açıklama/ikon (etki aynı). */
+const spellView = (faction: number, def: SpellDef) => {
+  const o = factionDef(faction).spells?.[def.key];
+  return {
+    name: o?.name ?? def.name,
+    desc: o?.desc ?? def.desc,
+    icon: o?.icon ?? SPELL_ICON[def.key] ?? 'power',
+  };
+};
 
 export class PowersColumn {
   private readonly root: HTMLDivElement;
@@ -108,7 +120,8 @@ export class PowersColumn {
     const def = SPELL_DEFS[i];
     if (!def) return;
     const unlocked = ((this.match?.spells ?? 0) & (1 << i)) !== 0;
-    this.tip.innerHTML = `<b>${def.name}</b><em>Kademe ${ROMAN[def.tier]} · ${unlocked ? `bekleme ${def.cooldown} sn` : `açmak için ${def.cost} PP`}</em><p>${def.desc}</p>`;
+    const view = spellView(this.d.faction ?? 0, def);
+    this.tip.innerHTML = `<b>${view.name}</b><em>Kademe ${ROMAN[def.tier]} · ${unlocked ? `bekleme ${def.cooldown} sn` : `açmak için ${def.cost} PP`}</em><p>${view.desc}</p>`;
     this.tip.style.top = `${el.offsetTop}px`;
     this.tip.classList.add('show');
   }
@@ -165,7 +178,7 @@ export class PowersColumn {
       const state = !unlocked ? (this.canUnlock(i) ? 'open' : 'locked') : cd > 0 ? 'cd' : 'ready';
       const prog = cd > 0 ? 1 - left / (def.cooldown * 20) : 1;
       const label = !unlocked ? `${def.cost}` : '';
-      const h = `${richIcon(SPELL_ICON[def.key] ?? 'power')}${!unlocked ? `<i class="lock">${icon('lock')}</i>` : ''}${label ? `<small>${label}</small>` : ''}${cd > 0 ? `<b class="cdn">${cd}</b>` : ''}<kbd>${(i + 1) % 10}</kbd>`;
+      const h = `${richIcon(spellView(this.d.faction ?? 0, def).icon)}${!unlocked ? `<i class="lock">${icon('lock')}</i>` : ''}${label ? `<small>${label}</small>` : ''}${cd > 0 ? `<b class="cdn">${cd}</b>` : ''}<kbd>${(i + 1) % 10}</kbd>`;
       if (b.innerHTML !== h) b.innerHTML = h;
       b.dataset.state = state;
       b.style.setProperty('--p', `${prog * 360}deg`);

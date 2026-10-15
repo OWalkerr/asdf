@@ -1,6 +1,7 @@
 import {
   DIFFICULTIES,
   type Fx,
+  factionDef,
   fxAtan2,
   fxDiv,
   fxFromFloat,
@@ -48,8 +49,11 @@ export const setupMatch = (world: SimWorld, map: MapDef): void => {
   });
   setupFortress(world);
   const schedule: ScheduledGroup[] = [];
+  // Kötü taraf oynanıyorsa dalgalar iyi tarafların karşılık birimleriyle gelir.
+  const enemyMap = factionDef(world.match.faction).enemyMap ?? {};
   map.waves.forEach((wave, wi) => {
-    for (const g of wave.groups) {
+    for (const g0 of wave.groups) {
+      const g = { ...g0, unitType: enemyMap[g0.unitType] ?? g0.unitType };
       schedule.push({
         tick: Math.round(g.atSec * SIM_HZ),
         wave: wi + 1,

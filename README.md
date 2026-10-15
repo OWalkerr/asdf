@@ -144,6 +144,15 @@ donanım taburun sancağının altında küçük işaretler olarak görünür (k
 **Birleşik ordu:** yakın dövüş taburu ile okçu taburu 18 m içinde birlikte durursa piyade %15 daha az hasar alır,
 okçular %15 daha fazla verir (sancakta altın elmas; komut çubuğunda yeşil "Birleşik ordu" satırı).
 
+**Isengard (oynanabilir kötü taraf):** başlangıç ekranından seçilir (`?faction=isengard`). Kale Orthanc'tır
+(kara kule, dört boynuzlu taç, Beyaz El sancakları); kışla Uruk-hai, Uruk Arbaletçileri ve Warg Binicileri
+yetiştirir; kahramanlar Saruman (Ateş Topu, Söz Ustalığı, Ak Divan'ın Laneti, Orthanc Yıldırımı), Lurtz (Uruk Öfkesi,
+Kara Ok Yağmuru, Biçen Kılıç, Kral Avcısı) ve Sharku (Warg Uluması, Warg Sürüsü, Boğaz Avcısı, Kurt Ordusu).
+Dalgalar bu kez iyi taraflardan gelir: orklar yerine Gondor askerleri, Uruklar yerine Kule Muhafızları, ork okçuları
+yerine Gondor okçuları, warglar yerine Rohirrim, troller yerine Galadhrim; Lurtz yerine Su Gözcüsü. Güç kitabı aynı
+etkilerle Isengard'a uyarlanır: Ateşleri Körükle, Savaş Davulları, Arbalet Yaylımı, Uruk Takviyesi, Kara Duman,
+Warg Akını, Uruk Barutu, Balrog'u Uyandır, Crebain Sürüsü, Kara Fırtına.
+
 **Kahraman seviyeleri (1–10):** kahramanlar öldürdükçe ve savaş alanında kaldıkça (saniyede +2 XP) deneyim kazanır;
 her seviye +%10 hasar ve dayanıklılık verir. Her kahramanın 4 yeteneği 1., 3., 6. ve 10. seviyede açılır — ör.
 Aragorn: Elendil'in Kılıcı, Athelas, Andúril Savuruşu, **Yeminbozanlar** (Ölüleri çağırır); Gandalf: Asa Patlaması,
@@ -177,12 +186,12 @@ ve sim hızı ayarı var.
 ## BFME2 ile karşılaştırma (yol haritası)
 
 **Var:** Kale (FD) ve Kule (TD) savunması, klasik Tower Wars / Fortress Defence haritaları, işlevsel ve gelişen kale,
-kale yükseltmeleri, bina seviyeleri ve satış, çiftlik, kışla / demirhane, 3 iyi taraf (Gondor, Rohan, Lothlórien) ve
+kale yükseltmeleri, bina seviyeleri ve satış, çiftlik, kışla / demirhane, 3 iyi taraf (Gondor, Rohan, Lothlórien) + Isengard ve
 9 kahraman (10 seviye, 4 yetenek), 4 kademeli 10 güç (Kartallar, Sel, Deprem, Güneş Parlaması dahil), tabur duruşları, sancaktar ve tabur başına donanım, birleşik ordu bonusu, rütbe sistemi, kuşatma (koçbaşı, merdiven, kule), boss'lar (Lurtz, Balrog, Su Gözcüsü,
 Ateş Ejderi), halka menü, bekleme sayaçları, palantír mini harita, portreler, oyun hızı, istatistik ve rekorlar.
 
 **Eksik (BFME2'de olup henüz olmayan):**
-1. Kötü tarafların oynanabilir olması (Mordor, Isengard, Goblinler) ve çok oyunculu / PvP (deterministik lockstep
+1. Mordor ve Goblinler'in oynanabilir olması (Isengard var) ve çok oyunculu / PvP (deterministik lockstep
    altyapısı hazır, ağ katmanı yok).
 2. Güç kitabının kalanı (Tom Bombadil, Kale Kuşatması, Ölülerin Çağrısı…; BFME2'de ~15, burada 10).
 3. Birim türüne özgü sürü kombinasyonları (BFME2'deki ör. Gondor askeri + Kule Muhafızı) — burada genel yakın

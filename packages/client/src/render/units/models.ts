@@ -579,7 +579,7 @@ export const orcArcher = (): BufferGeometry => {
  * çene, dik kulaklar) ve üstünde eğri kılıçlı ork binici. Kurdun çapraz bacak çiftleri
  * LegL/LegR (koşu); binici kılıcı sağ kol.
  */
-export const wargRider = (): BufferGeometry => {
+const wargRiderBuilder = (hero = false): ModelBuilder => {
   const b = new ModelBuilder();
   // Kurt: omuzda yüksek, kalçada alçak (sırt eğimi), kalın boyun, iri baş.
   b.add(Part.Body, box(1.5, 0.66, 0.6), 'rockDark', [0, 1.0, 0], [0, 0, 0.12]);
@@ -619,7 +619,82 @@ export const wargRider = (): BufferGeometry => {
   b.add(Part.ArmR, box(0.7, 0.08, 0.04), 'iron', [0.3, 1.46, 0.28], [0, 0, 0.35], [1, 1, 1], shR); // pala
   b.add(Part.ArmR, box(0.26, 0.1, 0.04), 'iron', [0.66, 1.62, 0.28], [0, 0, 0.8], [1, 1, 1], shR);
   b.add(Part.ArmL, box(0.12, 0.44, 0.12), 'orcSkin', [0.06, 1.7, -0.24], [0, 0, -0.5], [1, 1, 1], shL); // dizgin
-  return b.build();
+  if (hero) {
+    // Sharku: kemik omuzluklar, kafatası miğfer tüyü, kurdun yelesinde kemik takılar ve kırmızı bez.
+    for (const z of [-0.26, 0.26]) {
+      b.add(
+        Part.Body,
+        new ConeGeometry(0.1, 0.32, 4),
+        'gondorWhite',
+        [0.02, 1.98, z],
+        [z > 0 ? 0.7 : -0.7, 0, 0],
+      );
+      b.add(Part.Body, box(0.22, 0.08, 0.16), 'gondorWhite', [0.02, 1.9, z]);
+    }
+    b.add(Part.Head, box(0.06, 0.24, 0.24), 'eyeRed', [-0.06, 2.34, 0], [0, 0, 0], [1, 1, 1], neck); // tüy
+    b.add(Part.Head, box(0.14, 0.1, 0.18), 'gondorWhite', [0.18, 2.14, 0], [0, 0, 0], [1, 1, 1], neck); // kafatası maske
+    for (const x of [0.36, 0.56, 0.76])
+      b.add(Part.Body, new ConeGeometry(0.05, 0.22, 4), 'gondorWhite', [x, 1.5, 0], [0, 0, -0.3]); // yele takıları
+    b.add(Part.Body, box(0.5, 0.3, 0.64), 'team0', [-0.2, 1.2, 0], [0, 0, 0.12]); // eyer örtüsü
+  }
+  return b;
+};
+
+export const wargRider = (): BufferGeometry => wargRiderBuilder().build();
+
+/** Sharku (Isengard kahramanı): iri, yaşlı warg ve kemik zırhlı binicisi. */
+export const sharku = (): BufferGeometry => wargRiderBuilder(true).build(1.25);
+
+/**
+ * Saruman (BFME2): Ak Divan'ın başı — yere değen beyaz cüppe, gümüş kuşak, uzun beyaz saç ve
+ * sakal, sağda siyah-beyaz Orthanc asası (dört çatallı başlık içinde kristal küre).
+ */
+export const saruman = (): BufferGeometry => {
+  const b = new ModelBuilder();
+  legs(b, 'gondorWhite', 'sootBlack');
+  b.add(Part.Body, cyl(0.26, 0.46, 0.98, 8), 'snow', [0, 0.5, 0]);
+  b.add(Part.Body, box(0.38, 0.64, 0.5), 'snow', [0, 1.13, 0]);
+  b.add(Part.Body, box(0.06, 0.66, 0.16), 'silver', [0.2, 1.1, 0]); // ön şerit
+  b.add(Part.Body, box(0.42, 0.07, 0.54), 'silver', [0, 0.92, 0]); // kuşak
+  b.add(Part.Body, box(0.08, 1.4, 0.7), 'gondorWhite', [-0.23, 0.84, 0]); // pelerin
+  b.add(Part.Body, box(0.2, 0.1, 0.62), 'silver', [-0.04, 1.42, 0]); // omuz yakası
+  b.add(Part.Head, box(0.2, 0.22, 0.2), 'sand', [0.02, 1.62, 0]);
+  b.add(Part.Head, box(0.24, 0.26, 0.25), 'snow', [-0.05, 1.69, 0]); // saç
+  b.add(Part.Head, box(0.1, 0.5, 0.26), 'snow', [-0.1, 1.42, 0]); // sırta dökülen saç
+  b.add(Part.Head, box(0.08, 0.46, 0.18), 'snow', [0.13, 1.32, 0], [0, 0, 0.08]); // çatallı uzun sakal
+  arm(b, Part.ArmR, 0.31, 'snow', 'sand');
+  b.add(Part.ArmR, cyl(0.04, 0.04, 2.2, 5), 'sootBlack', [0.12, 1.12, 0.34]); // Orthanc asası
+  for (const [dx, dz] of [
+    [0.07, 0],
+    [-0.07, 0],
+    [0, 0.07],
+    [0, -0.07],
+  ] as const)
+    b.add(Part.ArmR, box(0.03, 0.3, 0.03), 'sootBlack', [0.12 + dx, 2.32, 0.34 + dz], [dz * 4, 0, -dx * 4]);
+  b.add(Part.ArmR, new OctahedronGeometry(0.09, 1), 'magic', [0.12, 2.3, 0.34]); // kristal
+  arm(b, Part.ArmL, -0.31, 'snow', 'sand');
+  b.add(Part.ArmL, box(0.04, 0.12, 0.08), 'eyeRed', [0.06, 0.74, -0.31]); // yüzük
+  return b.build(1.12);
+};
+
+/** Uruk arbaletçisi: Uruk zırhı, açık miğfer, iki elde ağır arbalet, sırtta cıvata kılıfı. */
+export const urukCrossbow = (): BufferGeometry => {
+  const b = new ModelBuilder({ ...HUMAN, shoulderZ: 0.34 });
+  legs(b, 'leather', 'ironDark', 0.15);
+  b.add(Part.Body, box(0.42, 0.64, 0.58), 'ironDark', [0, 1.14, 0]);
+  b.add(Part.Body, box(0.4, 0.34, 0.56), 'urukSkin', [0, 0.82, 0]);
+  b.add(Part.Body, box(0.44, 0.08, 0.6), 'team0', [0, 0.98, 0]);
+  b.add(Part.Body, box(0.14, 0.62, 0.16), 'leather', [-0.27, 1.22, 0.12], [-0.25, 0, 0]); // cıvata kılıfı
+  b.add(Part.Head, box(0.22, 0.22, 0.22), 'urukSkin', [0.03, 1.62, 0]);
+  b.add(Part.Head, box(0.02, 0.12, 0.06), 'whiteHand', [0.15, 1.62, 0.03]);
+  b.add(Part.Head, box(0.24, 0.1, 0.24), 'ironDark', [0, 1.75, 0]);
+  arm(b, Part.ArmR, 0.34, 'ironDark', 'urukSkin', 0.62);
+  arm(b, Part.ArmL, -0.34, 'ironDark', 'urukSkin', 0.62);
+  // Arbalet: sol elde gövde, üstte yay kolu.
+  b.add(Part.ArmL, box(0.7, 0.08, 0.08), 'woodDark', [0.32, 0.82, -0.34]);
+  b.add(Part.ArmL, box(0.06, 0.05, 0.7), 'iron', [0.6, 0.86, -0.34]);
+  b.add(Part.ArmL, box(0.04, 0.03, 0.04), 'iron', [0.66, 0.9, -0.34]);
+  return b.build(1.05);
 };
 
 /**
@@ -1210,4 +1285,8 @@ export const UNIT_MODELS: Record<number, () => BufferGeometry> = {
   28: haldir,
   29: elrond,
   30: worker,
+  31: lurtz,
+  32: saruman,
+  33: sharku,
+  34: urukCrossbow,
 };

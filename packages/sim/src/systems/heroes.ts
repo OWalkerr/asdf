@@ -353,6 +353,8 @@ export const castSpell = (world: SimWorld, team: number, spell: number, x: numbe
   const slot = team * MAX_SPELLS + spell;
   if (world.tick < (m.spellReady[slot] as number)) return false;
   m.spellReady[slot] = world.tick + ticks(def.cooldown);
+  // Tarafa özgü çağrılan birim / sayı (Isengard: Uruk takviyesi, warg akını, Balrog).
+  const fs = factionDef(m.faction).spells?.[def.key];
   switch (def.key) {
     case 'heal':
       healArea(world, team, x, z, fxFromFloat(def.radius), 60);
@@ -386,10 +388,10 @@ export const castSpell = (world: SimWorld, team: number, spell: number, x: numbe
       summonAt(
         world,
         team,
-        UnitTypeId.LorienArcher,
+        fs?.unit ?? UnitTypeId.LorienArcher,
         x,
         z,
-        SUMMONS.elvenAllies.battalions,
+        fs?.count ?? SUMMONS.elvenAllies.battalions,
         SUMMONS.elvenAllies.duration,
         16384,
       );
@@ -398,10 +400,10 @@ export const castSpell = (world: SimWorld, team: number, spell: number, x: numbe
       summonAt(
         world,
         team,
-        UnitTypeId.DeadArmy,
+        fs?.unit ?? UnitTypeId.DeadArmy,
         x,
         z,
-        SUMMONS.armyOfDead.battalions,
+        fs?.count ?? SUMMONS.armyOfDead.battalions,
         SUMMONS.armyOfDead.duration,
         16384,
       );
@@ -415,10 +417,10 @@ export const castSpell = (world: SimWorld, team: number, spell: number, x: numbe
       const bs = summonAt(
         world,
         team,
-        UnitTypeId.Rohirrim,
+        fs?.unit ?? UnitTypeId.Rohirrim,
         sx,
         z,
-        SUMMONS.rohirrim.battalions,
+        fs?.count ?? SUMMONS.rohirrim.battalions,
         SUMMONS.rohirrim.duration,
         32768,
       );

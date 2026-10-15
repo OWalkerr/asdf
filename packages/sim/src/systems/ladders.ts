@@ -1,4 +1,4 @@
-import { fxFromFloat, fxLen, LADDER, MatchState, SIEGE_TOWER, UnitTypeId } from '@bulwark/shared';
+import { factionDef, fxFromFloat, fxLen, LADDER, MatchState, SIEGE_TOWER, UnitTypeId } from '@bulwark/shared';
 import { addComponent, addEntity, entityExists, query, removeEntity } from 'bitecs';
 import { BattalionMode, StructureKind } from '../components';
 import { SIM_HZ } from '../constants';
@@ -73,7 +73,8 @@ export const ladderSystem = (world: SimWorld): void => {
     if (tower) {
       // Kulenin içindeki Uruk'lar dış ayakta iner ve koridorun hedefine yürür.
       const [ox, oz] = fx2(spot.o);
-      const troops = spawnBattalionRow(world, ENEMY, UnitTypeId.UrukHai, ox, oz, SIEGE_TOWER.troops, 0);
+      const troopType = factionDef(world.match.faction).enemyMap?.[UnitTypeId.UrukHai] ?? UnitTypeId.UrukHai;
+      const troops = spawnBattalionRow(world, ENEMY, troopType, ox, oz, SIEGE_TOWER.troops, 0);
       for (const t of troops) Battalion.lane[t] = lane + 1;
     }
     // Nokta doluysa (merdiven/kule) yeni yapı kurulmaz; kulenin askerleri yine de iner.

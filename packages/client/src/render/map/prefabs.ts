@@ -397,6 +397,71 @@ export const rohanKeep = (): BufferGeometry => {
 };
 
 /**
+ * Isengard kalesi (Orthanc): siyah taş kaide üstünde sekizgen, yukarı doğru incelen kara kule;
+ * tepede dört boynuzlu taç; köşelerde demir dikenli siyah kuleler, önde Beyaz El sancakları.
+ * fortressKeep ile aynı ölçüler (köşe kuleleri ±7.5, teras 11.6).
+ */
+export const isengardKeep = (): BufferGeometry => {
+  const parts: BufferGeometry[] = [
+    paint(place(new BoxGeometry(19, 1.6, 19), 0, 0.8, 0), 'sootBlack'),
+    paint(place(new CylinderGeometry(7.6, 8.4, 11, 8), 0, 6.5, 0), 'rockDark'),
+    paint(place(new CylinderGeometry(8.0, 8.0, 0.8, 8), 0, 11.6, 0), 'sootBlack'),
+    // Orthanc gövdesi: üç kademede incelen sekizgen kara kule.
+    paint(place(new CylinderGeometry(4.6, 5.6, 9, 8), 0, 16.4, 0), 'sootBlack'),
+    paint(place(new CylinderGeometry(3.8, 4.6, 8, 8), 0, 24.9, 0), 'rockDark'),
+    paint(place(new CylinderGeometry(3.4, 3.8, 3, 8), 0, 30.4, 0), 'sootBlack'),
+    // Kapı + basamaklar
+    paint(place(new BoxGeometry(4, 5.6, 0.6), 0, 4, 7.9), 'ironDark'),
+    paint(place(new BoxGeometry(6.4, 0.8, 2.4), 0, 0.9, 9.4), 'rockDark'),
+    // Gövde boyunca dikey kaburgalar (Orthanc'ın yivli yüzü).
+    ...[0, 1, 2, 3, 4, 5, 6, 7].map((k) => {
+      const a = (k / 8) * Math.PI * 2 + Math.PI / 8;
+      return paint(
+        place(new BoxGeometry(0.6, 16, 0.6), Math.cos(a) * 4.5, 21, Math.sin(a) * 4.5, -a),
+        'rockDark',
+      );
+    }),
+  ];
+  // Tepedeki dört boynuz (dışa ve yukarı kıvrık sivri kayalar).
+  for (let k = 0; k < 4; k++) {
+    const a = (k / 4) * Math.PI * 2 + Math.PI / 4;
+    const horn = new ConeGeometry(0.7, 6, 5);
+    horn.rotateZ(-0.35);
+    horn.rotateY(-a);
+    horn.translate(Math.cos(a) * 2.8, 34.6, Math.sin(a) * 2.8);
+    parts.push(paint(horn, 'sootBlack'));
+  }
+  // Köşe kuleleri: siyah taş + demir dikenler.
+  for (const [x, z] of [
+    [-7.5, -7.5],
+    [7.5, -7.5],
+    [-7.5, 7.5],
+    [7.5, 7.5],
+  ] as const) {
+    parts.push(paint(place(new CylinderGeometry(2.3, 2.8, 15, 8), x, 7.5, z), 'sootBlack'));
+    parts.push(paint(place(new CylinderGeometry(2.9, 2.3, 0.8, 8), x, 15.4, z), 'ironDark'));
+    for (let k = 0; k < 6; k++) {
+      const a = (k / 6) * Math.PI * 2;
+      parts.push(
+        paint(
+          place(new ConeGeometry(0.25, 1.8, 4), x + Math.cos(a) * 2.5, 16.6, z + Math.sin(a) * 2.5),
+          'iron',
+        ),
+      );
+    }
+    parts.push(paint(place(new ConeGeometry(1.6, 4.2, 8), x, 18, z), 'ironDark'));
+  }
+  // Beyaz El sancakları (siyah zemin, beyaz el) ön yüzde.
+  for (const x of [-5.2, 5.2]) {
+    parts.push(paint(place(new BoxGeometry(2.2, 5, 0.12), x, 8.6, 8.2), 'sootBlack'));
+    parts.push(paint(place(new BoxGeometry(1.0, 1.2, 0.14), x, 8.4, 8.25), 'whiteHand'));
+    for (let f = 0; f < 4; f++)
+      parts.push(paint(place(new BoxGeometry(0.18, 0.8, 0.14), x - 0.38 + f * 0.25, 9.4, 8.25), 'whiteHand'));
+  }
+  return verticalShade(merge(parts), 0.72, 1.0);
+};
+
+/**
  * Lothlórien kalesi (Caras Galadhon): dev gümüş gövdeli mallorn, altın taç yaprakları ve gövdeye
  * sarılan ahşap flet platformları; dört köşede ince mallorn kuleleri (±7.5, külah tepesi ~20) —
  * kale yükseltme parçalarıyla aynı ölçüler.

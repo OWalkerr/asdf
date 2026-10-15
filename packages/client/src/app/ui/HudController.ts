@@ -65,6 +65,10 @@ export const UNIT_LABELS: Record<number, string> = {
   28: 'Haldir',
   29: 'Elrond',
   30: 'İşçi',
+  31: 'Lurtz',
+  32: 'Saruman',
+  33: 'Sharku',
+  34: 'Uruk Arbaletçileri',
 };
 const UNIT_ICON: Record<number, string> = {
   0: 'sword',
@@ -98,6 +102,10 @@ const UNIT_ICON: Record<number, string> = {
   28: 'bow',
   29: 'leaf',
   30: 'hammer',
+  31: 'club',
+  32: 'staff',
+  33: 'wolf',
+  34: 'bow',
 };
 const GEAR_BODY = [
   'Bu taburun kılıçları dövülür: +%25 yakın dövüş hasarı.',
@@ -130,6 +138,9 @@ const HERO_DESC: Record<number, string> = {
   24: 'Éowyn: Kalkan Kızı (çift hasar, iyileşme) ve boss avcısı "Ben Erkek Değilim!".',
   28: 'Haldir: menzilli kahraman; Lórien Ok Yağmuru ve Galadhrim Öfkesi.',
   29: 'Elrond: Elf Şifası ve Imladris Selleri (30 m, 450 hasar).',
+  31: 'Lurtz: Uruk Öfkesi, Kara Ok Yağmuru; 10. seviyede Kral Avcısı.',
+  32: 'Saruman: Ateş Topu, Söz Ustalığı (ordu +%25); 10. seviyede Orthanc Yıldırımı.',
+  33: 'Sharku: warg binici komutanı; Warg Uluması ve Warg Sürüsü çağırır.',
 };
 const UNIT_DESC: Record<number, string> = {
   0: 'Kılıç ve kalkanlı çok yönlü piyade. Orklara karşı güçlü.',
@@ -140,6 +151,9 @@ const UNIT_DESC: Record<number, string> = {
   25: 'Ezen süvari: hücumda yoldaki düşmanı çiğner; Ork sürülerine karşı yıkıcı.',
   26: 'Az ama keskin elf piyadesi: yüksek hasar ve dayanıklılık; Uruk saflarını yarar.',
   27: 'En uzun menzilli okçular (38 m); kulelerin ardından düşmanı erkenden avlar.',
+  3: 'Ağır zırhlı Uruk-hai: yakın dövüşte güçlü, insan piyadesini ezer.',
+  12: 'Hızlı warg binicileri: okçuları ve kaçan birlikleri avlar.',
+  34: 'Ağır cıvatalı Uruk arbaletçileri: zırhı deler, yavaş ama sert vurur.',
   30: 'İşçi: bir yapı seç, haritada uygun yere yerleştir (Shift: art arda). İnşaat işçi başındayken ilerler.',
 };
 const BUILD_ICON: Record<BuildingKind, string> = {
@@ -151,7 +165,7 @@ const BUILD_ICON: Record<BuildingKind, string> = {
 };
 const BUILD_DESC: Record<BuildingKind, string> = {
   arrow_tower: 'Menzildeki düşman taburlarına 3 oklu yaylım atar.',
-  barracks: 'Gondor piyadesi, okçu ve Kule Muhafızı yetiştirir.',
+  barracks: 'Tarafının piyade, okçu ve özel birliklerini yetiştirir.',
   forge: 'Yükseltmeleri araştırır; sonra her tabur kendi kılıcını, zırhını, ateşli okunu alır.',
   catapult: 'Uzaktaki düşman kümelerine alan hasarlı taş atar; koçbaşı ve Uruk saflarına etkili.',
   farm: 'Kaynak binası: saniyede +1 altın (seviye başına). Düşman onu hedef alır — koruyun.',

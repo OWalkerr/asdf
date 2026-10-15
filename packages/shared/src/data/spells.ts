@@ -56,6 +56,8 @@ export interface AbilityDef {
   count?: number;
   /** Yetenek ikonu (yoksa etkinin ikonu). */
   icon?: string;
+  /** Çağrılan birim (eored / çağırma etkileri; yoksa etkinin varsayılanı). */
+  unit?: number;
 }
 
 /**
@@ -516,3 +518,142 @@ export const EARTHQUAKE = { pulses: 8, gap: 0.5, damage: 45, structureDamage: 26
 export const EAGLES = { dives: 3, delay: 1.2, gap: 1.1, radius: 8, damage: 220 } as const;
 /** Sel: dalga halkası sayısı, aralığı (s), hasar, sürükleme (m). */
 export const FLOOD = { rings: 6, gap: 0.45, damage: 200, push: 3 } as const;
+
+/** Isengard kahramanları (Saruman F, Lurtz G, Sharku J). */
+export const ISENGARD_HEROES: readonly HeroDef[] = [
+  {
+    unitType: 32,
+    key: 'KeyF',
+    icon: 'staff',
+    abilities: [
+      {
+        key: 'wizard_blast',
+        name: 'Ateş Topu',
+        rank: 1,
+        cooldown: 35,
+        radius: 9,
+        damage: 200,
+        icon: 'flame',
+        desc: "Saruman'ın asasından patlayan ateş: 9 m içindeki düşmanlara 200 hasar.",
+      },
+      {
+        key: 'kings_glory',
+        name: 'Söz Ustalığı',
+        rank: 3,
+        cooldown: 75,
+        icon: 'rally',
+        desc: "Saruman'ın sesi orduyu coşturur: 15 sn boyunca bütün ordunuz +%25 hasar verir.",
+      },
+      {
+        key: 'istar_light',
+        name: 'Ak Divan’ın Laneti',
+        rank: 6,
+        cooldown: 75,
+        radius: 20,
+        icon: 'eye',
+        desc: '20 m içindeki düşmanlar lanetlenir: −%40 hasar verir, +%25 hasar alır.',
+      },
+      {
+        key: 'word_of_power',
+        name: 'Orthanc Yıldırımı',
+        rank: 10,
+        cooldown: 150,
+        radius: 32,
+        damage: 500,
+        icon: 'blast',
+        desc: '32 m içindeki bütün düşmanlara 500 büyü hasarı.',
+      },
+    ],
+  },
+  {
+    unitType: 31,
+    key: 'KeyG',
+    icon: 'club',
+    abilities: [
+      {
+        key: 'elendil',
+        name: 'Uruk Öfkesi',
+        rank: 1,
+        cooldown: 45,
+        icon: 'blade',
+        desc: '10 sn boyunca Lurtz çift hasar verir.',
+      },
+      {
+        key: 'arrow_wind',
+        name: 'Kara Ok Yağmuru',
+        rank: 3,
+        cooldown: 40,
+        radius: 35,
+        count: 25,
+        damage: 40,
+        icon: 'volley',
+        desc: 'Lurtz yayını çeker: 35 m içindeki düşmanlara 25 ok (ok başı 40 hasar).',
+      },
+      {
+        key: 'wizard_blast',
+        name: 'Biçen Kılıç',
+        rank: 6,
+        cooldown: 35,
+        radius: 8,
+        damage: 240,
+        icon: 'blade',
+        desc: '8 m içindeki düşmanlara 240 hasar.',
+      },
+      {
+        key: 'slayer',
+        name: 'Kral Avcısı',
+        rank: 10,
+        cooldown: 120,
+        radius: 30,
+        damage: 1500,
+        icon: 'bow',
+        desc: '30 m içindeki en güçlü düşmana (önce boss) 1500 hasar.',
+      },
+    ],
+  },
+  {
+    unitType: 33,
+    key: 'KeyJ',
+    icon: 'wolf',
+    abilities: [
+      {
+        key: 'shieldmaiden',
+        name: 'Warg Uluması',
+        rank: 1,
+        cooldown: 45,
+        icon: 'wolf',
+        desc: "Sharku 10 sn çift hasar verir ve canının %30'unu yeniler.",
+      },
+      {
+        key: 'eored',
+        name: 'Warg Sürüsü',
+        rank: 3,
+        cooldown: 80,
+        unit: 12,
+        count: 1,
+        icon: 'wolf',
+        desc: "Sharku'nun yanına 40 sn için bir warg binici bölüğü gelir.",
+      },
+      {
+        key: 'slayer',
+        name: 'Boğaz Avcısı',
+        rank: 6,
+        cooldown: 50,
+        radius: 15,
+        damage: 650,
+        icon: 'blade',
+        desc: '15 m içindeki en güçlü düşmana 650 hasar.',
+      },
+      {
+        key: 'eored',
+        name: 'Kurt Ordusu',
+        rank: 10,
+        cooldown: 150,
+        unit: 12,
+        count: 3,
+        icon: 'wolf',
+        desc: "Sharku'nun yanına 40 sn için üç warg binici bölüğü gelir.",
+      },
+    ],
+  },
+];

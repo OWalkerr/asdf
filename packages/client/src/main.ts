@@ -391,6 +391,7 @@ const boot = async () => {
   if (speedUi) speedUi.onClick = () => sfx.click();
   const powers = ui
     ? new PowersColumn({
+        faction,
         scenario,
         input,
         fx: spellFx,

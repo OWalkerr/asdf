@@ -3,6 +3,7 @@ import {
   HELMS_DEEP,
   type MapDef,
   RANK_XP,
+  SPELL_DEFS,
   type StampedCommand,
   UnitTypeId,
 } from '@bulwark/shared';
@@ -119,5 +120,45 @@ describe('Lothlórien tarafı', () => {
     const types = [0, 1, 2].map((k) => sim.world.c.Battalion.unitType[h[k] as number]);
     expect(types).toEqual([UnitTypeId.Haldir, UnitTypeId.Elrond, UnitTypeId.Legolas]);
     expect(battalionsOf(sim, 0, UnitTypeId.Aragorn).length).toBe(0);
+  });
+});
+
+describe('Isengard tarafı (kötü)', () => {
+  const ISEN = 3;
+  const map: MapDef = {
+    ...HELMS_DEEP,
+    garrison: [],
+    waves: [
+      {
+        name: 'erken',
+        groups: [
+          { atSec: 1, spawn: 'S_main', unitType: UnitTypeId.OrcWarrior, battalions: 1 },
+          { atSec: 1, spawn: 'S_main', unitType: UnitTypeId.UrukHai, battalions: 1 },
+        ],
+      },
+    ],
+  };
+
+  it('dalgalar iyi tarafların karşılık birimleriyle gelir', () => {
+    const sim = new Simulation(6, buildNavGrid(map), map, 1, ISEN);
+    run(sim, 40);
+    expect(battalionsOf(sim, 1, UnitTypeId.GondorSoldier).length).toBeGreaterThan(0);
+    expect(battalionsOf(sim, 1, UnitTypeId.TowerGuard).length).toBeGreaterThan(0);
+    expect(battalionsOf(sim, 1, UnitTypeId.OrcWarrior).length).toBe(0);
+  });
+
+  it('Saruman çağrılır; Uruk Takviyesi Uruk-hai çağırır; Balrog tek gelir', () => {
+    const sim = new Simulation(7, buildNavGrid(QUIET), QUIET, 1, ISEN);
+    sim.world.match.gold[0] = 99_999;
+    send(sim, { type: 'summonHero', unitType: UnitTypeId.Saruman });
+    run(sim);
+    expect(battalionsOf(sim, 0, UnitTypeId.Saruman).length).toBe(1);
+    const idx = (k: string) => SPELL_DEFS.findIndex((s) => s.key === k);
+    sim.world.match.spells[0] = (1 << idx('elven_allies')) | (1 << idx('army_of_dead'));
+    send(sim, { type: 'castSpell', spell: idx('elven_allies'), x: F(10), z: F(-60) });
+    send(sim, { type: 'castSpell', spell: idx('army_of_dead'), x: F(-10), z: F(-60) });
+    run(sim);
+    expect(battalionsOf(sim, 0, UnitTypeId.UrukHai).length).toBe(2);
+    expect(battalionsOf(sim, 0, UnitTypeId.Balrog).length).toBe(1);
   });
 });

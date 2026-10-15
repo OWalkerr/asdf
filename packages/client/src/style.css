@@ -1648,3 +1648,13 @@ body.debug #hud {
   color: #9fe07a;
   font-weight: 600;
 }
+#startscreen .factions button.isengard {
+  border-color: #7a2a24;
+  background: linear-gradient(160deg, rgba(60, 20, 18, 0.55), rgba(10, 8, 8, 0.6));
+}
+#startscreen .factions button.isengard b::after {
+  content: " · Kötü taraf";
+  color: #e06a5a;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+}
