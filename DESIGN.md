@@ -70,6 +70,8 @@ Her gün için tarihten üretilen sabit bir tohum: herkes aynı mızrakçıyla, 
    | Elit Oda | Orta: düşmanların %35'i elit | Nadir ağırlıklı güçler, +5 ruh parçası |
    | Lanetli Oda | Yüksek: %60 elit, düşmanlar %15 hızlı | 2 güç seçimi, +8 ruh parçası |
    | Ruh Pınarı | Savaş yok | %40 can, +1 yeniden çekme; güç yok |
+   | Ruh Sandığı | Düşük: az düşman ve ortada bir sandık | Sandığı kır: 12 parça ve yalnızca nadir+ güç teklifleri. %30 ihtimalle sandık **Mimik** çıkar: zıplayarak üstüne atlayan (kırmızı daireyle uyarır) güçlü bir canavar; yenince 20 parça |
+   | Kan Sunağı | Bedeli can | Kan Bağışı: canının %30'u → 1 nadir+ güç. Ruh Bağışı: azami can kalıcı -20 → 2 nadir+ güç. İstersen geçebilirsin |
    | Ruh Tüccarı | Savaş yok | Bu avın ruh parçalarıyla alışveriş: 3 güç (Sıradan 15, Nadir 25, Destansı 40, Efsanevi 55), Ruh İksiri (%50 can, 12), Kehanet Kartı (+1 yeniden çekme, 10). Unutuş Ritüeli (15): bir gücün bir seviyesini siler; tüm istatistikler baştan hesaplanır. Harcanan parçalar kalıcı birikime eklenmez. |
 
 4. Her 5. oda **Muhafız** odası; muhafızlar sırayla Kemik Lordu, Gölge Atlı ve Yas Kraliçesi.
@@ -92,6 +94,8 @@ Her gün için tarihten üretilen sabit bir tohum: herkes aynı mızrakçıyla, 
 
 | **Kalkanlı Şövalye** (7. oda+) | Kalkanını yavaşça oyuncuya çevirir; önden gelen mızrakları engeller (BLOK). Yakındayken kısa kalkan hamlesi yapar (kırmızı şeritle uyarır) | Sekerek yanına/arkasına geç; Delici Mızrak kalkanı deler; Kader ile sersemletilmişken engelleyemez |
 | **Kemik Bombası** (6. oda+, ikili gelir) | Hızla koşar, yaklaşınca fitili yanar (turuncu daire dolar), 0.8 sn sonra 95 birim alanda patlar | Fitil bitmeden öldür: erken patlama sadece düşmanlara hasar verir; ya da dairenin dışına sek |
+
+**İkinci form (10. oda ve sonrası):** Muhafızın canı ilk bittiğinde ölmek yerine 1.4 sn hasar almayan bir dirilişe girer (mor duman, ekran parlaması, "İkinci form" yazısı), canının yarısıyla "Öfke" adıyla döner: %20 hızlı, %10 daha sert, Yükselmiş muhafızlar gibi diğer muhafızların saldırılarını da kullanır.
 
 **Elit düşmanlar** (altın kesikli halka): can ×1.8, hasar ×1.2 ve bir özellik: *Kalkanlı* (canın %40'ı kadar mavi kalkan), *Hızlı* (+%35 hız), *Patlayan* (ölünce 8 mermi saçar). Elit başına 3 ruh parçası.
 
@@ -154,12 +158,12 @@ Sonuç (32 bot avı): medyan ölüm odası 6–7, ilk muhafız ~%62 geçiliyor, 
 
 ## 9. Sıradaki adımlar (yol haritası)
 
-Tamamlananlar: Kalkanlı Şövalye ve Kemik Bombası, grafik kalitesi ayarı (otomatik / yüksek / düşük), Günün Avı sonuç paylaşımı, akıllı bot ile denge ayarı, mızrakçıya özel efsanevi kartlar, Günün Avı (tohumlu), son avlar listesi, bot ile denge ölçümü ve ayarı, 4 mızrakçı, Unutuş Ritüeli (güç silme), Yükselmiş muhafızlar, PWA (ana ekrana ekleme + çevrimdışı önbellek), Ruh Tüccarı kapısı, üçüncü muhafız Yas Kraliçesi, üretken müzik (dron + minör pentatonik arpej; savaşta davul, muhafızda hızlanır), Kader Çağrısı (R), kapı seçimi (Savaş/Elit/Lanetli/Ruh Pınarı), elit düşmanlar, ikinci muhafız Gölge Atlı, 5 efsanevi sinerji, vuruş durması (hit-stop) ve titreşim.
+Tamamlananlar: Ruh Sandığı ve Mimik, Kan Sunağı, muhafız ikinci formu, Kalkanlı Şövalye ve Kemik Bombası, grafik kalitesi ayarı (otomatik / yüksek / düşük), Günün Avı sonuç paylaşımı, akıllı bot ile denge ayarı, mızrakçıya özel efsanevi kartlar, Günün Avı (tohumlu), son avlar listesi, bot ile denge ölçümü ve ayarı, 4 mızrakçı, Unutuş Ritüeli (güç silme), Yükselmiş muhafızlar, PWA (ana ekrana ekleme + çevrimdışı önbellek), Ruh Tüccarı kapısı, üçüncü muhafız Yas Kraliçesi, üretken müzik (dron + minör pentatonik arpej; savaşta davul, muhafızda hızlanır), Kader Çağrısı (R), kapı seçimi (Savaş/Elit/Lanetli/Ruh Pınarı), elit düşmanlar, ikinci muhafız Gölge Atlı, 5 efsanevi sinerji, vuruş durması (hit-stop) ve titreşim.
 
 Sıradakiler:
-1. Yeni oda olayları: sandık odası, lanetli sunak (can karşılığı güç).
-2. Muhafızlara ikinci form (ölünce dönüşen son evre).
-3. Bot verisiyle 15+ oda dengesi.
+1. Bot verisiyle 15+ oda dengesi (bot ikinci formları da test etsin).
+2. Ses tasarımı: her muhafıza kendi müzik teması.
+3. Başarımlar ve kozmetik pelerin renkleri (Ruh Sunağı'nda).
 
 ## 10. Oyun hissi (Metal Slug esinli)
 

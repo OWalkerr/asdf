@@ -281,7 +281,7 @@ p{margin:0;line-height:1.45;color:var(--ink)}
       <li><span class="k"><span>Q</span></span><div><h3>Delici Mızrak</h3><p>Uzun menzilli güçlü atış. Öldürdüğü düşmanın içinden geçip mızraklarını sonraki hedefe aktarır. Atıştan sonra da sekebilirsin.</p></div></li>
       <li><span class="k"><span>R</span></span><div><h3>Kader Çağrısı</h3><p>Ruhun seni havaya kaldırır, sonra tuttuğun yöne (ya da en yakın düşmana) fırlatır. İndiğin yerde düşmanları sersemletir, iter ve 2 mızrak saplar. Havadayken hasar almazsın.</p></div></li>
     </ul>
-    <p class="fine">Her odadan sonra 3 güçten birini seç. Odalar arasında kapı seçersin: Savaş, Elit, Lanetli, Ruh Pınarı ya da Ruh Tüccarı. Her 5. odada bir muhafız var: Kemik Lordu, Gölge Atlı ve Yas Kraliçesi; 20. odadan sonra Yükselmiş halleri birbirlerinin saldırılarını da kullanır. Kraliçe'nin çığlık dalgalarının üstünden sekerek atla. Kalkanlı Şövalye'yi yandan ya da arkadan vur (Delici Mızrak kalkanı deler). Kemik Bombası'nı fitili bitmeden öldürürsen patlaması yalnızca düşmanlara zarar verir. Ölünce topladığın ruh parçalarıyla Ruh Sunağı'ndan kalıcı güç al.</p>
+    <p class="fine">Her odadan sonra 3 güçten birini seç. Odalar arasında kapı seçersin: Savaş, Elit, Lanetli, Ruh Pınarı ya da Ruh Tüccarı. Her 5. odada bir muhafız var: Kemik Lordu, Gölge Atlı ve Yas Kraliçesi; 20. odadan sonra Yükselmiş halleri birbirlerinin saldırılarını da kullanır. Kraliçe'nin çığlık dalgalarının üstünden sekerek atla. Kalkanlı Şövalye'yi yandan ya da arkadan vur (Delici Mızrak kalkanı deler). Kemik Bombası'nı fitili bitmeden öldürürsen patlaması yalnızca düşmanlara zarar verir. 10. odadan sonra muhafızlar ölünce bir kez ikinci formlarıyla dirilir. Ölünce topladığın ruh parçalarıyla Ruh Sunağı'ndan kalıcı güç al.</p>
     <div class="btns"><button class="btn" data-back>Geri</button></div>
   </div>
 </section>
@@ -310,6 +310,16 @@ p{margin:0;line-height:1.45;color:var(--ink)}
     <div class="eyebrow" id="pathEyebrow">Sıradaki kapı</div>
     <h2>Yolunu seç</h2>
     <div class="cards" id="doors"></div>
+  </div>
+</section>
+
+<section class="screen" id="scrAltar" hidden>
+  <div class="panel">
+    <div class="eyebrow">Kan Sunağı</div>
+    <h2>Bedel öde</h2>
+    <p class="fine">Sunak yalnızca nadir veya daha iyi güçler sunar.</p>
+    <div class="cards" id="altarOpts"></div>
+    <div class="btns"><button class="btn" id="btnAltarLeave">Sunağı geç</button></div>
   </div>
 </section>
 
@@ -529,6 +539,8 @@ const DOORS = {
   fight:  { n: 'Savaş Odası', r: 'common', risk: 'Risk: düşük', d: 'Sıradan düşmanlar. Oda sonunda 1 güç seçimi.' },
   elite:  { n: 'Elit Oda', r: 'rare', risk: 'Risk: orta', d: 'Kalkanlı, hızlı ya da patlayan elitler. Ödül: nadir ağırlıklı güçler ve +5 ruh parçası.' },
   cursed: { n: 'Lanetli Oda', r: 'leg', risk: 'Risk: yüksek', d: 'Düşmanların çoğu elit ve daha hızlı. Ödül: 2 güç seçimi ve +8 ruh parçası.' },
+  chest:  { n: 'Ruh Sandığı', r: 'epic', risk: 'Risk: düşük', d: 'Az düşman ve bir sandık. Sandığı kır: nadir veya daha iyi güçler ve 12 parça. Ama her sandık sandık değildir.' },
+  altar:  { n: 'Kan Sunağı', r: 'leg', risk: 'Bedeli can', d: 'Savaş yok. Canından ya da azami canından vererek nadir veya daha iyi güçler seç.' },
   shop:   { n: 'Ruh Tüccarı', r: 'rare', risk: 'Savaş yok', d: 'Bu avda topladığın ruh parçalarıyla güç, can ya da yeniden çekme hakkı satın al. Harcadığın parçalar kalıcı birikimine eklenmez.' },
   rest:   { n: 'Ruh Pınarı', r: 'epic', risk: 'Savaş yok', d: 'Canının %40\'ını yenile ve +1 yeniden çekme hakkı kazan. Bu odadan güç çıkmaz.' },
 };
@@ -570,7 +582,7 @@ function baseStats() {
     rCd: 20, rStun: 1, rR: 150, rendPer: .6, trailMul: 1, shockR: 0, spiritRate: 1, postIframe: 0, rRend: false };
 }
 function recomputeStats() {
-  const s = baseStats(), dummy = { hp: 0 }; G.hero.a(s); if (G.daily && G.daily.mod.s) G.daily.mod.s(s);
+  const s = baseStats(), dummy = { hp: 0 }; G.hero.a(s); s.maxHp -= G.maxHpPenalty || 0; if (G.daily && G.daily.mod.s) G.daily.mod.s(s);
   for (const [id, n] of Object.entries(G.ups)) { const u = UPS.find(x => x.id === id); for (let i = 0; i < n; i++) u.a(s, dummy); }
   const ratio = G.p.hp / G.s.maxHp; G.s = s; G.p.hp = Math.max(1, Math.min(s.maxHp, s.maxHp * ratio));
 }
@@ -606,6 +618,7 @@ function roomWaves(r) {
   }
   return waves;
 }
+function chestWaves(r) { const w = roomWaves(Math.max(1, r - 2)); return [['chest', ...w[0].slice(0, Math.ceil(w[0].length * .6))]]; }
 function bossWaves(r) { const esc = r >= 10 ? ['archer', 'archer', 'spitter'] : ['ghoul', 'ghoul', 'archer']; return [['boss'], esc]; }
 
 const bossKind = r => ['lord', 'rider', 'queen'][(Math.floor(r / 5) - 1) % 3];
@@ -614,8 +627,8 @@ function nextRoom(type = 'fight') {
   G.room++; const r = G.room, boss = r % 5 === 0; G.roomType = boss ? 'boss' : type; G.hazards.length = 0; G.gibs.length = 0; G.decals.length = 0; G.booms.length = 0; G.orbs.length = 0; G.twinkles.length = 0; G.rings.length = 0; G.hitstars.length = 0;
   G.enemies.length = 0; G.eshots.length = 0; G.spears.length = 0; G.spawns.length = 0; G.trails.length = 0;
   G.p.x = 0; G.p.y = 0; G.p.state = 'idle'; G.p.qQueued = false;
-  G.waves = boss ? bossWaves(r) : roomWaves(r); G.waveIdx = 0; G.waveT = 1.1; G.phase = 'fight'; G.clearT = 0; G.isBoss = boss;
-  banner(boss ? bossName(r) : type === 'elite' ? 'Elit Oda' : type === 'cursed' ? 'Lanetli Oda' : 'Oda ' + r); if (boss) cinematic();
+  G.waves = boss ? bossWaves(r) : type === 'chest' ? chestWaves(r) : roomWaves(r); G.waveIdx = 0; G.waveT = 1.1; G.phase = 'fight'; G.clearT = 0; G.isBoss = boss;
+  banner(boss ? bossName(r) : type === 'elite' ? 'Elit Oda' : type === 'cursed' ? 'Lanetli Oda' : type === 'chest' ? 'Ruh Sandığı' : 'Oda ' + r); if (boss) cinematic();
   $('hint').style.opacity = r === 1 && G.hops < 4 ? 1 : 0;
 }
 
@@ -627,6 +640,8 @@ const EDEF = {
   spitter: { hp: 85,  r: 18, spd: 40,  dmg: 8 },
   knight:  { hp: 130, r: 18, spd: 66,  dmg: 14 },
   bomb:    { hp: 22,  r: 11, spd: 150, dmg: 0 },
+  chest:   { hp: 70,  r: 18, spd: 0,   dmg: 0 },
+  mimic:   { hp: 300, r: 22, spd: 80,  dmg: 16 },
   boss:    { hp: 1050, r: 46, spd: 74, dmg: 15 },
 };
 function makeEnemy(type, x, y, elite) {
@@ -654,10 +669,10 @@ function spawnWave() {
   const w = G.waves[G.waveIdx++]; if (!w) return;
   for (const type of w) {
     let x, y, tries = 0;
-    do { const a = crange(0, TAU), rr = type === 'boss' ? 380 : crange(200, ARENA - 60); x = Math.cos(a) * rr; y = Math.sin(a) * rr; tries++; }
+    do { const a = crange(0, TAU), rr = type === 'boss' ? 380 : crange(200, ARENA - 60); x = Math.cos(a) * rr; y = Math.sin(a) * rr; tries++; if (type === 'chest') { x = 0; y = -220; break; } }
     while (hyp(x - G.p.x, y - G.p.y) < (type === 'boss' ? 300 : 280) && tries < 20);
     const ec = (G.roomType === 'elite' ? .35 : G.roomType === 'cursed' ? .6 : G.room >= 6 ? .08 : 0) + (G.mod.elite || 0);
-    G.spawns.push({ x, y, type, t: type === 'boss' ? 1.4 : rand(.7, 1.1), elite: type !== 'boss' && type !== 'wisp' && crand() < ec });
+    G.spawns.push({ x, y, type, t: type === 'boss' ? 1.4 : rand(.7, 1.1), elite: !['boss', 'wisp', 'chest'].includes(type) && crand() < ec, mimic: type === 'chest' && crand() < .3 });
   }
   G.waveT = 16;
 }
@@ -770,7 +785,7 @@ function castRend() {
 const rendDmg = e => G.s.dmg * (1 + G.s.rendPer * (e.stacks - 1)) * G.s.rendMul;
 function heal(n) { const p = G.p; const before = p.hp; p.hp = Math.min(G.s.maxHp, p.hp + n); if (p.hp - before >= 1) txt(p.x, p.y - 26, '+' + Math.round(p.hp - before), COL.mist); }
 function dmgEnemy(e, amt, crit, src) {
-  if (e.dead || e.dying) return;
+  if (e.dead || e.dying || e.reform > 0) return;
   if (e.shield > 0) { const ab = Math.min(e.shield, amt); e.shield -= ab; amt -= ab; if (amt <= 0) { e.flash = .05; txt(e.x, e.y - e.r - 6, Math.round(ab), COL.q); return; } }
   e.hp -= amt; e.flash = .09; e.hitT = .12;
   txt(e.x, e.y - e.r - 6, Math.round(amt) + (crit ? '!' : ''), src === 'rend' ? COL.gold : crit ? '#ffd27a' : COL.spear, crit || src === 'rend');
@@ -785,6 +800,11 @@ function bombBlast(e, hitsPlayer) {
   for (const o of G.enemies) if (o !== e && !o.dead && !o.dying && hyp(o.x - e.x, o.y - e.y) < R + o.r) dmgEnemy(o, 45 * (1 + .17 * (G.room - 1)), false, 'launch');
 }
 function killEnemy(e, src, crit) {
+  if (e.boss && !e.dying && !e.form2 && G.room >= 10) {
+    e.form2 = true; e.hp = 1; e.reform = 1.4; e.stacks = 0; G.eshots.length = 0; G.rings.length = 0; G.hazards.length = 0;
+    flashScreen(.5); slowmo(.6, .35); G.shake = 16; G.speedT = .8; sfx('bigboom'); banner('İkinci form'); twinkleWorld(e.x, e.y - e.r, Math.min(W, H) * .6);
+    return;
+  }
   if (e.boss && !e.dying) {
     // Metal Slug style boss death: freeze in place, chain of explosions, then the final blast
     e.dying = 1.8; e.hp = 0; e.stacks = 0; G.kills++; G.shards += 30;
@@ -797,6 +817,11 @@ function killEnemy(e, src, crit) {
   if (G.s.boneBurst && Math.max(e.stacks, e.lastStacks || 0) >= 5) { for (let i = 0; i < 6; i++) fireSpear(i * TAU / 6 + rand(0, .5), .6, 'spear', e.x, e.y); G.parts.push({ ring: true, x: e.x, y: e.y, r: 60, life: .25, max: .25, c: '#ffd8a8' }); }
   const sh = (e.elite ? 3 * (G.mod.eliteShards || 1) : e.type === 'brute' ? 2 : 1) * (G.mod.shards || 1); G.shards += sh;
   if (e.type === 'bomb' && !e.blew) bombBlast(e, false);
+  if (e.type === 'chest') {
+    if (e.mimic) { const m = makeEnemyFull('mimic', e.x, e.y, false); m.cd = 1; G.enemies.push(m); banner('Mimik!'); G.shake = 12; sfx('scream'); }
+    else { dropOrbs(e, 5); G.shards += 12; twinkleWorld(e.x, e.y, Math.min(W, H) * .4); G.chestOpened = true; }
+  }
+  if (e.type === 'mimic') { dropOrbs(e, 5); G.shards += 20; G.chestOpened = true; }
   if (e.elite === 'burst') { for (let i = 0; i < 8; i++) eshot(e.x, e.y, i * TAU / 8 + .2, 190, e.dmg * .6, 8); }
   G.lastKill = { x: e.x, y: e.y }; dropOrbs(e, sh);
   if (PRAISE[G.combo]) praise(G.combo);
@@ -805,7 +830,7 @@ function killEnemy(e, src, crit) {
   if (launch) popFlare(e);
 }
 const GIBC = { ghoul: ['#7d3a3f', '#e0525f', '#ffd9c9'], wisp: ['#e98a5a', '#ffd27a'], archer: ['#5d3348', '#e0525f', '#c98aa8'], brute: ['#4a2a2c', '#d9cba8', '#8a5a4a'],
-  spitter: ['#3c2e22', '#e98a5a', '#ff9a6a'], boss: ['#3a1f24', '#d9cba8', '#ffd27a'], rider: ['#271d36', '#b59cff', '#d9cba8'], queen: ['#7a68b8', '#e8e0ff', '#3a2a5a'], player: ['#1d4a44', '#8fe3cf', '#e4fbf3'], knight: ['#3a3f52', '#9aa6c8', '#b9c9ff'], bomb: ['#e2d5b2', '#ff9a50', '#3a2a18'] };
+  spitter: ['#3c2e22', '#e98a5a', '#ff9a6a'], boss: ['#3a1f24', '#d9cba8', '#ffd27a'], rider: ['#271d36', '#b59cff', '#d9cba8'], queen: ['#7a68b8', '#e8e0ff', '#3a2a5a'], player: ['#1d4a44', '#8fe3cf', '#e4fbf3'], knight: ['#3a3f52', '#9aa6c8', '#b9c9ff'], chest: ['#7a4a22', '#d8b25a', '#3a2410'], mimic: ['#7a4a22', '#d8b25a', '#c43a4a'], bomb: ['#e2d5b2', '#ff9a50', '#3a2a18'] };
 function shatter(e, big) {
   for (let i = 0; i < (big ? 12 : 6); i++) puff(e.x + rand(-.5, .5) * e.r, e.y - e.r, e.type === 'player' ? 's' : 'd', e.r * .6, { vx: rand(-70, 70), vy: rand(-70, -10), a: .5, life: rand(.9, 1.5) });
   const cols = GIBC[e.kind === 'rider' || e.kind === 'queen' ? e.kind : e.type];
@@ -866,7 +891,7 @@ function update(dt) {
       if (!G.isBoss && G.lastKill) { twinkleWorld(G.lastKill.x, G.lastKill.y, Math.min(W, H) * .5, .15); slowmo(.7, .25); G.zp = Math.max(G.zp, .08); }
       G.hazards.length = 0; banner('Temizlendi'); G.shards += 2 + Math.floor(G.room / 3) + (G.roomType === 'elite' ? 5 : G.roomType === 'cursed' ? 8 : 0); }
   } else if (G.phase === 'clear') { G.clearT -= dt; if (G.clearT <= 0) showDraft(); }
-  for (let i = G.spawns.length - 1; i >= 0; i--) { const sp = G.spawns[i]; sp.t -= dt; if (sp.t <= 0) { G.enemies.push(makeEnemyFull(sp.type, sp.x, sp.y, sp.elite)); burst(sp.x, sp.y, COL.ember, 10, 160, .4); G.spawns.splice(i, 1); } }
+  for (let i = G.spawns.length - 1; i >= 0; i--) { const sp = G.spawns[i]; sp.t -= dt; if (sp.t <= 0) { { const ne = makeEnemyFull(sp.type, sp.x, sp.y, sp.elite); ne.mimic = sp.mimic; G.enemies.push(ne); } burst(sp.x, sp.y, COL.ember, 10, 160, .4); G.spawns.splice(i, 1); } }
 
   // player state machine (Martial Poise)
   const wantHop = inp.m > .3;
@@ -1000,6 +1025,12 @@ function segDist(x1, y1, x2, y2, px, py) {
 }
 
 function updEnemy(e, dt) {
+  if (e.reform > 0) {
+    e.reform -= dt; e.hp = Math.min(e.maxHp * .5, e.hp + e.maxHp * .5 * dt / 1.4); e.flash = Math.sin(e.reform * 30) > 0 ? .05 : 0;
+    if (Math.random() < .5) puff(e.x + rand(-e.r, e.r), e.y - e.r, 'v', e.r * .6, { vy: rand(-80, -30), a: .5 });
+    if (e.reform <= 0) { e.hp = e.maxHp * .5; e.asc = true; e.spd *= 1.2; e.dmg *= 1.1; e.name += ' · Öfke'; e.st = 'walk'; e.xst = null; e.t = .8; e.fade = 1; starBoom(e.x, e.y, 170); G.shake = 14; sfx('boom'); G.impactT = .06; }
+    return;
+  }
   if (e.dying) {
     e.dying -= dt; e.flash = Math.sin(e.dying * 40) > 0 ? .05 : 0; e.boomT = (e.boomT || 0) - dt;
     if (e.boomT <= 0) { e.boomT = .13; starBoom(e.x + rand(-1, 1) * e.r, e.y + rand(-1, 1) * e.r, rand(34, 64)); burst(e.x, e.y, '#ffe9d6', 6, 260, .4); G.shake = Math.max(G.shake, 10); sfx('boom'); }
@@ -1036,6 +1067,18 @@ function updEnemy(e, dt) {
       else if (e.st === 'dash') { e.x += e.ax * 520 * dt; e.y += e.ay * 520 * dt; if (e.t <= 0) { e.st = 'walk'; e.cd = rand(2.4, 3.2); } }
       break;
     }
+    case 'chest': break;
+    case 'mimic': {
+      if (e.st === 'walk') { mx = nx; my = ny; if (e.cd <= 0 && d < 380) { e.st = 'aim'; e.t = .5; e.tx = p.x; e.ty = p.y; } }
+      else if (e.st === 'aim') { if (e.t <= 0) { e.st = 'leap'; e.t = .45; e.sx = e.x; e.sy = e.y; } }
+      else if (e.st === 'leap') {
+        const k = clamp(1 - e.t / .45, 0, 1); e.x = e.sx + (e.tx - e.sx) * k; e.y = e.sy + (e.ty - e.sy) * k; e.hz = Math.sin(Math.PI * k) * 60;
+        if (e.t <= 0) { e.hz = 0; e.st = 'walk'; e.cd = rand(1.4, 2.2); G.shake = Math.max(G.shake, 8); sfx('boom'); G.parts.push({ ring: true, x: e.x, y: e.y, r: 70, life: .3, max: .3, c: '#ffd890' });
+          for (let i = 0; i < 6; i++) puff(e.x, e.y, 'd', 10, { vx: rand(-70, 70), vy: rand(-40, -5), a: .45 });
+          if (hyp(p.x - e.x, p.y - e.y) < 70) hurt(e.dmg * 1.2); }
+      }
+      break;
+    }
     case 'bomb': {
       if (e.st === 'walk') { e.wob += dt * 9; mx = nx + Math.cos(e.wob) * .3 * -ny; my = ny + Math.cos(e.wob) * .3 * nx; if (d < 75) { e.st = 'fuse'; e.t = .8; sfx('fuse'); } }
       else if (e.st === 'fuse' && e.t <= 0) { e.blew = true; bombBlast(e, true); killEnemy(e); }
@@ -1058,7 +1101,7 @@ function finishEnemy(e, dt, mx, my, sp, d, stunned) {
   const p = G.p; const ml = hyp(mx, my); if (ml > 0) { e.x += mx / ml * sp * dt; e.y += my / ml * sp * dt; }
   e.x += e.kx * dt; e.y += e.ky * dt; e.kx *= Math.pow(.02, dt); e.ky *= Math.pow(.02, dt);
   const l = hyp(e.x, e.y); if (l > ARENA - e.r) { e.x *= (ARENA - e.r) / l; e.y *= (ARENA - e.r) / l; }
-  if (d < e.r + 12 && !stunned) hurt(e.dmg);
+  if (d < e.r + 12 && !stunned && e.dmg > 0 && e.st !== 'leap') hurt(e.dmg);
 }
 // Ascended bosses (room 20+) borrow one attack from the other guardians.
 const EXTRA = { lord: ['xring', 'xlances'], rider: ['xring', 'xsouls'], queen: ['xlances', 'xnova'] };
@@ -1481,6 +1524,7 @@ function drawWorld(T, now) {
     }
     if (e.elite) emit('216,178,90', e.x, e.y, e.r * 2.2, .3);
     if (e.asc) emit('255,200,90', e.x, e.y - e.r, e.r * 3.2, .22 + .08 * Math.sin(now * 4));
+    if (e.form2) emit('255,50,120', e.x, e.y - e.r, e.r * (e.reform > 0 ? 5 + 2 * Math.sin(now * 20) : 3.6), e.reform > 0 ? .6 : .25);
     shadow(e.x, e.y, e.r * (e.type === 'wisp' ? .8 : 1.15), e.boss ? .6 : .5);
   }
   if (G.phase !== 'over') shadow(p.x, p.y, 14 * (1 - pz(p) / 120), .55);
@@ -1541,6 +1585,7 @@ function drawTelegraph(e, now) {
     ctx.beginPath(); ctx.arc(0, 0, e.r * (2 - k), 0, TAU); ctx.stroke(); ctx.restore(); emit('170,130,255', e.bx, e.by, e.r * 2, .5 * k);
   }
   if (e.xst && e.xst !== 'xlances') { const k = clamp(1 - e.t / .8, 0, 1); emit('255,200,90', e.x, e.y - e.r, e.r * (1.5 + 2 * k), .3 + .5 * k); }
+  if (e.type === 'mimic' && (e.st === 'aim' || e.st === 'leap')) { const k = e.st === 'aim' ? clamp(1 - e.t / .5, 0, 1) : 1; ctx.save(); ctx.translate(e.tx, e.ty); ctx.scale(1, .55); ctx.fillStyle = `rgba(232,80,94,${.12 + .2 * k})`; ctx.strokeStyle = 'rgba(232,80,94,.8)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(0, 0, 70, 0, TAU); ctx.fill(); ctx.beginPath(); ctx.arc(0, 0, 70 * k, 0, TAU); ctx.stroke(); ctx.restore(); }
   if (e.type === 'bomb' && e.st === 'fuse') { const k = clamp(1 - e.t / .8, 0, 1); ctx.save(); ctx.translate(e.x, e.y); ctx.scale(1, .55); ctx.fillStyle = `rgba(255,120,60,${.1 + .2 * k})`; ctx.strokeStyle = `rgba(255,140,80,${.5 + .4 * k})`; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(0, 0, 95, 0, TAU); ctx.fill(); ctx.beginPath(); ctx.arc(0, 0, 95 * k, 0, TAU); ctx.stroke(); ctx.restore(); }
   if (e.type === 'knight' && e.st === 'aim') zone(e.x, e.y, Math.atan2(e.ay, e.ax), 130, e.r * 1.6, clamp(1 - e.t / .45, 0, 1), '232,80,94', now);
   if (e.lanes && (e.st === 'lances' || e.xst === 'xlances')) { const k = clamp(1 - e.t / .8, 0, 1); for (const a of e.lanes) zone(e.x, e.y, a, 900, 16, k, '170,120,255', now); }
@@ -1575,6 +1620,7 @@ function drawEnemy(e, T, now) {
     case 'spitter': drawSpitter(e, r, bob, C, now); break;
     case 'knight': drawKnight(e, r, bob, C, now); break;
     case 'bomb': drawBomb(e, r, bob, C, now); break;
+    case 'chest': case 'mimic': drawChest(e, r, bob, C, now); break;
     case 'boss': if (e.kind === 'rider') drawRider(e, r, bob, C, now); else if (e.kind === 'queen') drawQueen(e, r, bob, C, now); else drawLord(e, r, bob, C, now); break;
   }
   ctx.restore(); ctx.lineCap = 'butt';
@@ -1711,6 +1757,27 @@ function drawKnight(e, r, bob, C, now) {
   ctx.strokeStyle = 'rgba(185,201,255,.9)'; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.moveTo(0, -r * .45); ctx.lineTo(0, r * .5); ctx.moveTo(-r * .22, -r * .1); ctx.lineTo(r * .22, -r * .1); ctx.stroke();
   ctx.restore();
   eye(sx, sy - r * .1, '150,175,255', r * 1.1, .35);
+}
+function drawChest(e, r, bob, C, now) {
+  const mim = e.type === 'mimic', open = mim ? (e.st === 'walk' ? .35 + .2 * Math.sin(now * 7) : e.st === 'aim' ? .9 : .6) : 0, cy = -r * .75 - (e.hz || 0);
+  const w = r * 1.15, hh = r * .7;
+  const g = ctx.createLinearGradient(0, cy - hh, 0, cy + hh); g.addColorStop(0, C('#9a6232')); g.addColorStop(1, C('#3e2412'));
+  ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(-w, cy - hh * .2); ctx.quadraticCurveTo(-w, cy + hh, -w * .85, cy + hh); ctx.lineTo(w * .85, cy + hh); ctx.quadraticCurveTo(w, cy + hh, w, cy - hh * .2); ctx.closePath(); ctx.fill(); ctx.strokeStyle = '#1e1008'; ctx.lineWidth = 2; ctx.stroke();
+  ctx.strokeStyle = C('#d8b25a'); ctx.lineWidth = 2.5; for (const x of [-w * .6, w * .6]) { ctx.beginPath(); ctx.moveTo(x, cy - hh * .2); ctx.lineTo(x, cy + hh); ctx.stroke(); }
+  if (mim) {
+    ctx.fillStyle = '#2a0608'; ctx.beginPath(); ctx.ellipse(0, cy - hh * .2, w * .9, hh * .5 * open + 2, 0, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#c43a4a'; ctx.beginPath(); ctx.ellipse(w * .2, cy - hh * .1, w * .35, hh * .2 * open + 1, .2, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#f2ead4'; for (let i = -3; i <= 3; i++) { const x = i * w * .25; ctx.beginPath(); ctx.moveTo(x - 3, cy - hh * .2); ctx.lineTo(x, cy - hh * .2 + 6 + open * 4); ctx.lineTo(x + 3, cy - hh * .2); ctx.fill(); }
+  }
+  ctx.save(); ctx.translate(0, cy - hh * .2); ctx.rotate(-open * .9);
+  const lg = ctx.createLinearGradient(0, -hh, 0, 0); lg.addColorStop(0, C('#b07440')); lg.addColorStop(1, C('#5a3418'));
+  ctx.fillStyle = lg; ctx.beginPath(); ctx.moveTo(-w, 0); ctx.bezierCurveTo(-w, -hh * 1.1, w, -hh * 1.1, w, 0); ctx.closePath(); ctx.fill(); ctx.strokeStyle = '#1e1008'; ctx.lineWidth = 2; ctx.stroke();
+  ctx.strokeStyle = C('#d8b25a'); ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(-w * .6, 0); ctx.quadraticCurveTo(-w * .6, -hh * .78, -w * .1, -hh * .82); ctx.moveTo(w * .6, 0); ctx.quadraticCurveTo(w * .6, -hh * .78, w * .1, -hh * .82); ctx.stroke();
+  if (mim) { ctx.fillStyle = '#f2ead4'; for (let i = -3; i <= 3; i++) { const x = i * w * .25; ctx.beginPath(); ctx.moveTo(x - 3, 0); ctx.lineTo(x, -6 - open * 4); ctx.lineTo(x + 3, 0); ctx.fill(); } }
+  ctx.restore();
+  ctx.fillStyle = C('#f0d27a'); ctx.beginPath(); ctx.ellipse(0, cy - hh * .05, r * .14, r * .17, 0, 0, TAU); ctx.fill();
+  if (mim) { eye(-w * .35, cy - hh * .45, '255,60,60', r * .5, .9); eye(w * .35, cy - hh * .45, '255,60,60', r * .5, .9); }
+  else { eye(0, cy - hh * .3, '255,210,120', r * 2.2, .35 + .15 * Math.sin(now * 3)); if (Math.random() < .08) puff(EX + rand(-r, r), EY - r, 'g', 4, { vy: rand(-30, -10), a: .5, life: .9 }); }
 }
 function drawBomb(e, r, bob, C, now) {
   const fuse = e.st === 'fuse', k = fuse ? 1 - clamp(e.t / .8, 0, 1) : 0, sw = 1 + k * .35 + (fuse ? Math.sin(now * 40) * .06 : 0), cy = -r * 1.1 + Math.abs(Math.sin(now * 14 + e.wob)) * -3;
@@ -2046,6 +2113,7 @@ function drawBody(e, r, bob, C, now) {
     case 'spitter': drawSpitter(e, r, bob, C, now); break;
     case 'knight': drawKnight(e, r, bob, C, now); break;
     case 'bomb': drawBomb(e, r, bob, C, now); break;
+    case 'chest': case 'mimic': drawChest(e, r, bob, C, now); break;
     case 'boss': if (e.kind === 'rider') drawRider(e, r, bob, C, now); else if (e.kind === 'queen') drawQueen(e, r, bob, C, now); else drawLord(e, r, bob, C, now); break;
   }
 }
@@ -2094,7 +2162,7 @@ function updHud() {
   hud.hp.style.width = f * 100 + '%'; hud.lag.style.width = hpLag * 100 + '%'; hud.hpn.textContent = Math.ceil(p.hp);
   if (p.hp < lastHp - .5) restartAnim(hud.hpbar, 'hit');
   lastHp = p.hp;
-  const tl = G.isBoss ? 'Muhafız' : G.roomType === 'elite' ? 'Elit oda' : G.roomType === 'cursed' ? 'Lanetli oda' : '';
+  const tl = G.isBoss ? 'Muhafız' : G.roomType === 'elite' ? 'Elit oda' : G.roomType === 'cursed' ? 'Lanetli oda' : G.roomType === 'chest' ? 'Sandık odası' : '';
   const rt = G.room + '|' + tl + '|' + G.waveIdx + '/' + G.waves.length;
   if (rt !== lastRoomTxt) {
     lastRoomTxt = rt; hud.room.innerHTML = 'Oda <b>' + G.room + '</b>'; hud.wave.textContent = tl; hud.wave.hidden = !tl;
@@ -2129,7 +2197,7 @@ const icon = k => `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" s
 
 
 // ---------- screens ----------
-const screens = ['scrTitle', 'scrHero', 'scrHow', 'scrShop', 'scrDraft', 'scrPath', 'scrMerchant', 'scrPause', 'scrOver'];
+const screens = ['scrTitle', 'scrHero', 'scrHow', 'scrShop', 'scrDraft', 'scrPath', 'scrMerchant', 'scrAltar', 'scrPause', 'scrOver'];
 let backTo = 'scrTitle';
 function show(id) { screens.forEach(s => $(s).hidden = s !== id); $('hud').hidden = !G || id === 'scrTitle' || id === 'scrHow' || id === 'scrShop'; }
 function titleScreen() {
@@ -2183,7 +2251,8 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) pause
 
 let draftOpts = [];
 function rollDraft() {
-  const avail = UPS.filter(u => (G.ups[u.id] || 0) < u.max && (!u.req || u.req(G.ups)) && !(u.id === 'ghost' && G.s.ghostHop)); const out = [];
+  let avail = UPS.filter(u => (G.ups[u.id] || 0) < u.max && (!u.req || u.req(G.ups)) && !(u.id === 'ghost' && G.s.ghostHop)); const out = [];
+  if (G.roomType === 'altar' || G.roomType === 'chest') { const rare = avail.filter(u => u.r !== 'common'); if (rare.length >= 3) avail = rare; }
   const boost = G.roomType !== 'fight', w = u => boost && u.r === 'common' ? 2 : RW[u.r];
   while (out.length < 3 && avail.length) {
     const tot = avail.reduce((a, u) => a + w(u), 0); let r = crand() * tot, i = 0;
@@ -2193,9 +2262,9 @@ function rollDraft() {
   return out;
 }
 function showDraft() {
-  G.phase = 'draft'; heal(G.s.maxHp * .15); $('banner').classList.remove('on'); G.pending = G.roomType === 'cursed' ? 2 : 1;
+  const altar = G.roomType === 'altar'; G.phase = 'draft'; if (!altar) heal(G.s.maxHp * .15); $('banner').classList.remove('on'); G.pending = G.roomType === 'cursed' ? 2 : altar ? G.altarPicks || 1 : 1;
   draftOpts = rollDraft(); renderDraft();
-  $('dEyebrow').textContent = (G.isBoss ? bossName(G.room) + ' yenildi' : 'Oda ' + G.room + ' temizlendi') + ' · +15% can' + (G.pending > 1 ? ' · 1/2' : '');
+  $('dEyebrow').textContent = altar ? 'Kan Sunağı' + (G.pending > 1 ? ' · 1/2' : '') : (G.isBoss ? bossName(G.room) + ' yenildi' : G.roomType === 'chest' ? 'Sandık açıldı' : 'Oda ' + G.room + ' temizlendi') + ' · +15% can' + (G.pending > 1 ? ' · 1/2' : '');
   show('scrDraft');
 }
 function renderDraft() {
@@ -2211,13 +2280,13 @@ function renderDraft() {
 $('btnReroll').addEventListener('click', () => { if (!G || G.rerolls <= 0) return; G.rerolls--; draftOpts = rollDraft(); renderDraft(); });
 function pick(u) {
   if (!G || G.phase !== 'draft') return; G.ups[u.id] = (G.ups[u.id] || 0) + 1; u.a(G.s, G.p); G.p.hp = Math.min(G.p.hp, G.s.maxHp); sfx('pick'); G.beamT = 1.1;
-  if (--G.pending > 0) { draftOpts = rollDraft(); renderDraft(); $('dEyebrow').textContent = 'Lanetli ödül · 2/2'; return; }
+  if (--G.pending > 0) { draftOpts = rollDraft(); renderDraft(); $('dEyebrow').textContent = (G.roomType === 'altar' ? 'Kan Sunağı' : 'Lanetli ödül') + ' · 2/2'; return; }
   showPath();
 }
 function showPath() {
   if ((G.room + 1) % 5 === 0) { show(null); nextRoom('fight'); return; }
   G.phase = 'path';
-  const pool = ['elite', 'cursed', 'rest', 'shop'], opts = ['fight'];
+  const pool = ['elite', 'cursed', 'rest', 'shop', 'chest', 'altar'], opts = ['fight'];
   while (opts.length < 3) opts.push(pool.splice(Math.floor(crand() * pool.length), 1)[0]);
   $('pathEyebrow').textContent = 'Oda ' + (G.room + 1) + ' · muhafıza ' + (5 - (G.room + 1) % 5) + ' oda';
   const c = $('doors'); c.innerHTML = '';
@@ -2282,8 +2351,23 @@ function purgeUp(id) {
   recomputeStats(); sfx('rend'); renderMerchant(); updHud();
 }
 $('btnLeave').addEventListener('click', () => { if (G && G.phase === 'shop') { sfx('pick'); showPath(); } });
+function renderAltar() {
+  const c = $('altarOpts'); c.innerHTML = ''; const p = G.p, s = G.s, cost = Math.round(s.maxHp * .3);
+  const opts = [
+    { n: 'Kan Bağışı', d: `${cost} can ver, 1 güç seç.`, ok: p.hp > cost + 1, go: () => { p.hp -= cost; G.altarPicks = 1; } },
+    { n: 'Ruh Bağışı', d: 'Azami canın kalıcı olarak 20 azalır, 2 güç seç.', ok: s.maxHp > 45, go: () => { G.maxHpPenalty = (G.maxHpPenalty || 0) + 20; s.maxHp -= 20; p.hp = Math.min(p.hp, s.maxHp); G.altarPicks = 2; } },
+  ];
+  for (const o of opts) {
+    const b = document.createElement('button'); b.className = 'card leg'; b.disabled = !o.ok;
+    b.innerHTML = `<span class="ic">${icon('cursed')}</span><span class="nm"></span><span class="rr">Bedel</span><span class="ds"></span>`;
+    b.querySelector('.nm').textContent = o.n; b.querySelector('.ds').textContent = o.d;
+    b.addEventListener('click', () => { if (!G || G.phase !== 'altar') return; o.go(); sfx('rend'); G.hurtA = 1; buzz(40); showDraft(); }); c.appendChild(b);
+  }
+}
+$('btnAltarLeave').addEventListener('click', () => { if (G && G.phase === 'altar') { sfx('pick'); showPath(); } });
 function chooseDoor(t) {
   if (!G || G.phase !== 'path') return; sfx('pick');
+  if (t === 'altar') { G.room++; G.roomType = 'altar'; G.phase = 'altar'; banner('Kan Sunağı'); updHud(); renderAltar(); show('scrAltar'); return; }
   if (t === 'shop') { G.room++; banner('Ruh Tüccarı'); updHud(); showMerchant(); return; }
   if (t === 'rest') { G.room++; heal(G.s.maxHp * .4); G.rerolls++; banner('Ruh Pınarı'); updHud(); showPath(); return; }
   show(null); nextRoom(t);
