@@ -4,6 +4,7 @@ import {
   FX_HALF,
   FX_ONE,
   type Fx,
+  factionDef,
   fxCos,
   fxDiv,
   fxFromFloat,
@@ -70,8 +71,10 @@ export const spawnUnit = (world: SimWorld, team: number, unitType: number, x: Fx
   UnitType.id[eid] = unitType;
   Speed.value[eid] = STAT.speed[unitType] as Fx;
   MoveTarget.active[eid] = 0;
-  // Zorluk: düşman canı (harita maçında).
-  const hpPct = world.map && team !== 0 ? (DIFFICULTIES[world.match.difficulty]?.enemyHpPercent ?? 100) : 100;
+  // Zorluk ve taraf: kötü taraf oynanırken saldıran iyi taraf birlikleri daha dayanıklıdır; denge için azaltılır.
+  const diffPct = DIFFICULTIES[world.match.difficulty]?.enemyHpPercent ?? 100;
+  const sidePct = factionDef(world.match.faction).enemyHpPercent ?? 100;
+  const hpPct = world.map && team !== 0 ? ((diffPct * sidePct) / 100) | 0 : 100;
   const hp = Math.max(1, (((STAT.hp[unitType] as number) * hpPct) / 100) | 0);
   Health.hp[eid] = hp;
   Health.max[eid] = hp;

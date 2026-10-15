@@ -38,15 +38,16 @@ const ladderGeometry = (): BufferGeometry => {
 };
 
 /** Sura yanaşmış kuşatma kulesi: yerel +x sura doğru, yükseklik 1 → ölçekle sur boyuna uzar. */
-const towerGeometry = (): BufferGeometry => {
+const towerGeometry = (good: boolean): BufferGeometry => {
+  // Kötü taraf oynanırken saldıran kule Gondor'undur: deri kaplama yerine mavi örtü.
+  const hide = good ? 'gondorBlue' : 'leather';
   const parts: BufferGeometry[] = [];
   for (const x of [-1.3, 1.3])
     for (const z of [-1.3, 1.3]) parts.push(paint(place(new BoxGeometry(0.24, 1, 0.24), x, 0.5, z), 'wood'));
   for (const y of [0.25, 0.5, 0.75])
     parts.push(paint(place(new BoxGeometry(2.9, 0.025, 2.8), 0, y, 0), 'woodDark'));
-  parts.push(paint(place(new BoxGeometry(0.12, 0.9, 2.7), -1.4, 0.5, 0), 'leather'));
-  for (const z of [-1.35, 1.35])
-    parts.push(paint(place(new BoxGeometry(2.7, 0.9, 0.1), 0, 0.5, z), 'leather'));
+  parts.push(paint(place(new BoxGeometry(0.12, 0.9, 2.7), -1.4, 0.5, 0), hide));
+  for (const z of [-1.35, 1.35]) parts.push(paint(place(new BoxGeometry(2.7, 0.9, 0.1), 0, 0.5, z), hide));
   parts.push(paint(place(new BoxGeometry(2.6, 0.03, 2.4), 2.4, 0.98, 0), 'woodDark')); // indirilmiş köprü
   for (const x of [-1.2, 1.2])
     for (const z of [-1.5, 1.5])
@@ -71,6 +72,7 @@ export class LadderRenderer {
     private readonly groundY: (x: number, z: number) => number,
     palette: Texture,
     params: ToonParams,
+    goodAttackers = false,
   ) {
     this.spots = ladderSpots(def, grid);
     this.mesh = new InstancedMesh(ladderGeometry(), createToonMaterial(palette, params), 24);
@@ -78,7 +80,7 @@ export class LadderRenderer {
     this.mesh.castShadow = true;
     this.mesh.frustumCulled = false;
     this.mesh.count = 0;
-    this.towers = new InstancedMesh(towerGeometry(), createToonMaterial(palette, params), 12);
+    this.towers = new InstancedMesh(towerGeometry(goodAttackers), createToonMaterial(palette, params), 12);
     this.towers.name = 'siege-towers';
     this.towers.castShadow = true;
     this.towers.frustumCulled = false;

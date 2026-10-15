@@ -8,6 +8,7 @@ import {
   bastionRing,
   beaconBowl,
   beaconFlame,
+  fortTheme,
   goldCaps,
   healingBanners,
   keepBanners,
@@ -61,7 +62,9 @@ export class FortressRenderer {
     private readonly heightAt: (x: number, z: number) => number,
     palette: Texture,
     params: ToonParams,
+    faction = 0,
   ) {
+    const theme = fortTheme(faction);
     const toon = createToonMaterial(palette, params);
     const glow = createFlameMaterial(palette).material;
     const k = def.mode === 'TD' ? 0.7 : 1;
@@ -93,14 +96,14 @@ export class FortressRenderer {
         done: false,
       });
     };
-    add(bit(FortressUpgrade.StoneWalls), bastionRing());
+    add(bit(FortressUpgrade.StoneWalls), bastionRing(theme));
     add(bit(FortressUpgrade.ArrowSlits), archerHoardings());
     add(bit(FortressUpgrade.Catapult), catapultModel(), [5.9, 11.6, 0], 0.7);
     add(bit(FortressUpgrade.Catapult), catapultModel(), [-5.9, 11.6, 0], 0.7);
-    add(bit(FortressUpgrade.Healing), healingBanners(), [0, 0, 0], 1, { emissive: true });
-    add(bit(FortressUpgrade.Treasury), goldCaps());
+    add(bit(FortressUpgrade.Healing), healingBanners(theme), [0, 0, 0], 1, { emissive: true });
+    add(bit(FortressUpgrade.Treasury), goldCaps(theme));
     add(bit(FortressUpgrade.Treasury), treasuryHouse(), [-18, 0, -6], 1, { onKeep: false });
-    add((b) => count(b) >= 3, keepBanners());
+    add((b) => count(b) >= 3, keepBanners(theme));
     add((b) => count(b) >= 5, beaconBowl());
     add((b) => count(b) >= 5, beaconFlame(), [0, 0, 0], 1, { emissive: true });
   }

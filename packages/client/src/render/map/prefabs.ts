@@ -8,6 +8,7 @@ import {
   OctahedronGeometry,
 } from 'three/webgpu';
 import { jitter, merge, paint, place, verticalShade } from '../geometry/lowpoly';
+import type { Swatch } from '../palette';
 
 /**
  * Placeholder low-poly prefab'lar (Phase 1). Kodla üretilir; Phase 2'de Blender
@@ -52,7 +53,7 @@ export const rock = (rand: Rand, size = 1): BufferGeometry => {
 };
 
 /** Mazgal dişleri (merlon) halkası. */
-export const merlonRing = (radius: number, y: number, count: number, swatch: 'gondorWhite' | 'helmStone') => {
+export const merlonRing = (radius: number, y: number, count: number, swatch: Swatch) => {
   const parts: BufferGeometry[] = [];
   for (let i = 0; i < count; i++) {
     const a = (i / count) * Math.PI * 2;

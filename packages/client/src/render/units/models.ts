@@ -58,6 +58,8 @@ const pivotOf = (rig: Rig, part: PartId): V3 => {
 /** Bir model inşa edicisi: parçaları toplar, sonunda tek geometri üretir. */
 class ModelBuilder {
   private parts: BufferGeometry[] = [];
+  /** Renk değişimi (aynı siluetin başka taraf sürümü: ör. Isengard koçbaşı → Gondor koçbaşı). */
+  remap: Partial<Record<Swatch, Swatch>> = {};
   constructor(private readonly rig: Rig = HUMAN) {}
 
   /** Primitive'i ölçekler → döndürür (Euler, radyan) → konumlandırır, boyar ve parça niteliklerini ekler. */
@@ -76,7 +78,7 @@ class ModelBuilder {
         .premultiply(new Matrix4().makeRotationFromEuler(new Euler(...rot)))
         .premultiply(new Matrix4().makeTranslation(...pos)),
     );
-    const g = paint(geo, swatch);
+    const g = paint(geo, this.remap[swatch] ?? swatch);
     const n = g.getAttribute('position').count;
     const [px, py, pz] = pivotOverride ?? pivotOf(this.rig, part);
     const pivot = new Float32Array(n * 3);
@@ -296,8 +298,18 @@ export const gondorArcher = (): BufferGeometry => {
  * üstte deri kaplı koruma çatısı. SPA: kütük = sağ kol (dürtme animasyonu ileri vurur),
  * taşıyıcı bacakları kendi kalçalarında döner (pivot override), kollar = sol kol.
  */
-export const batteringRam = (): BufferGeometry => {
+/** Gondor kuşatma birliği renkleri: insan taşıyıcılar, çelik başlık, mavi örtü, Beyaz Ağaç sancağı. */
+const GONDOR_SIEGE: Partial<Record<Swatch, Swatch>> = {
+  urukSkin: 'sand',
+  whiteHand: 'gondorWhite',
+  leather: 'gondorBlue',
+  iron: 'silver',
+  ironDark: 'steel',
+};
+
+export const batteringRam = (remap: Partial<Record<Swatch, Swatch>> = {}): BufferGeometry => {
   const b = new ModelBuilder();
+  b.remap = remap;
   const logY = 1.05;
   // Kütük + demir başlık
   b.add(
@@ -857,8 +869,9 @@ export const balrog = (): BufferGeometry => {
  * Uruk merdiven takımı (BFME2 Isengard, Helm's Deep): dört Uruk omuzlarında uzun ahşap kuşatma
  * merdivenini taşır. SPA: merdiven gövde (sabit), taşıyıcı bacakları kendi kalçalarında döner.
  */
-export const ladderTeam = (): BufferGeometry => {
+export const ladderTeam = (remap: Partial<Record<Swatch, Swatch>> = {}): BufferGeometry => {
   const b = new ModelBuilder();
+  b.remap = remap;
   const y = 1.72;
   // Merdiven: iki uzun direk + basamaklar, ileri (+x) uzanır.
   for (const z of [-0.36, 0.36]) b.add(Part.Body, box(6.4, 0.12, 0.12), 'wood', [0.2, y, z]);
@@ -1000,8 +1013,9 @@ export const wyrm = (): BufferGeometry => {
  * Isengard kuşatma kulesi (BFME2): tekerlekli, üç katlı ahşap kule; ön yüzü deri kaplı, tepede
  * kalkık köprü ve Ak El sancağı; arkada iten Uruk'lar. Model ~6.5 m (UNIT_SCALE ile ~8 m).
  */
-export const siegeTower = (): BufferGeometry => {
+export const siegeTower = (remap: Partial<Record<Swatch, Swatch>> = {}): BufferGeometry => {
   const b = new ModelBuilder({ hip: 0.7, shoulder: 1.3, neck: 6.4, shoulderZ: 0.5, hipZ: 0.4 });
+  b.remap = remap;
   // Şasi ve tekerlekler
   b.add(Part.Body, box(3.2, 0.4, 2.8), 'woodDark', [0, 0.8, 0]);
   for (const x of [-1.2, 1.2])
@@ -1325,7 +1339,7 @@ export const UNIT_MODELS: Record<number, () => BufferGeometry> = {
   2: towerGuard,
   3: urukHai,
   4: gondorArcher,
-  5: batteringRam,
+  5: () => batteringRam(),
   6: aragorn,
   7: lurtz,
   8: lorienArcher,
@@ -1338,10 +1352,10 @@ export const UNIT_MODELS: Record<number, () => BufferGeometry> = {
   14: gandalf,
   15: legolas,
   16: balrog,
-  17: ladderTeam,
+  17: () => ladderTeam(),
   18: watcher,
   19: wyrm,
-  20: siegeTower,
+  20: () => siegeTower(),
   21: rohanSpearman,
   22: rohanArcher,
   23: theoden,
@@ -1361,4 +1375,8 @@ export const UNIT_MODELS: Record<number, () => BufferGeometry> = {
   35: witchKing,
   36: gothmog,
   37: mouthOfSauron,
+  // Kötü taraf oynanırken saldıran Gondor kuşatma birlikleri (aynı siluet, Gondor renkleri).
+  38: () => batteringRam(GONDOR_SIEGE),
+  39: () => ladderTeam(GONDOR_SIEGE),
+  40: () => siegeTower(GONDOR_SIEGE),
 };

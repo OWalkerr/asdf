@@ -26,6 +26,8 @@ export interface FactionDef {
   color: { main: string; dark: string; accent: string };
   /** Kötü taraf: dalgalar iyi tarafların birlikleriyle gelir (enemyMap ile çevrilir). */
   evil?: boolean;
+  /** Saldıran birliklerin can yüzdesi (kötü taraflarda iyi taraf saldıranlarını dengelemek için). */
+  enemyHpPercent?: number;
   /** Dalga birimi → bu tarafa saldıran karşılığı (yoksa aynı birim). */
   enemyMap?: Readonly<Record<number, number>>;
   /** Güç kitabı: tarafa özgü ad/açıklama/ikon ve çağrılan birim (etki aynı). */
@@ -42,6 +44,9 @@ const GOOD_ATTACKERS: Readonly<Record<number, number>> = {
   [UnitTypeId.WargRider]: UnitTypeId.RohanRiders,
   [UnitTypeId.CaveTroll]: UnitTypeId.Galadhrim,
   [UnitTypeId.Lurtz]: UnitTypeId.Watcher,
+  [UnitTypeId.BatteringRam]: UnitTypeId.GondorRam,
+  [UnitTypeId.LadderTeam]: UnitTypeId.GondorLadder,
+  [UnitTypeId.SiegeTower]: UnitTypeId.GondorSiegeTower,
 };
 
 export const FACTIONS: readonly FactionDef[] = [
@@ -93,6 +98,7 @@ export const FACTIONS: readonly FactionDef[] = [
     },
     color: { main: '#d8d8d2', dark: '#3a3a3e', accent: '#c0302a' },
     evil: true,
+    enemyHpPercent: 82,
     enemyMap: GOOD_ATTACKERS,
     spells: {
       heal: {
@@ -158,6 +164,7 @@ export const FACTIONS: readonly FactionDef[] = [
     },
     color: { main: '#3b3431', dark: '#1c1817', accent: '#e0502a' },
     evil: true,
+    enemyHpPercent: 74,
     enemyMap: GOOD_ATTACKERS,
     spells: {
       heal: {

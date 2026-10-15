@@ -179,7 +179,14 @@ const boot = async () => {
   if (structures) scene.add(...structures.meshes);
   ladders =
     world.def?.mode === 'FD'
-      ? new LadderRenderer(world.def, buildNavGrid(world.def), ground.sample, palette, toon)
+      ? new LadderRenderer(
+          world.def,
+          buildNavGrid(world.def),
+          ground.sample,
+          palette,
+          toon,
+          factionDef(faction).evil === true,
+        )
       : null;
   if (ladders) scene.add(ladders.mesh, ladders.towers);
   // Kapı kanatları (kırılınca enkaz) ve kale yükseltme görselleri.
@@ -194,7 +201,7 @@ const boot = async () => {
   if (gates) scene.add(...gates.meshes);
   const fortressFx =
     world.def && world.def.id !== 'helms_deep'
-      ? new FortressRenderer(world.def, world.heightAt, palette, toon)
+      ? new FortressRenderer(world.def, world.heightAt, palette, toon, faction)
       : null;
   if (fortressFx) scene.add(...fortressFx.meshes);
   const banners = new BattalionHud(palette, toon);
