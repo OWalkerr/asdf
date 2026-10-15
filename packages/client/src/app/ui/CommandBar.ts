@@ -41,6 +41,10 @@ export interface CommandContext {
   hp?: number;
   /** Rütbe yıldızları (1–5). */
   rank?: number;
+  /** Kahraman seviyesi (1–10): yıldız yerine "Sv N" rozeti ve XP çubuğu. */
+  level?: number;
+  /** Sonraki seviyeye ilerleme [0, 1]. */
+  xp?: number;
   lines?: string[];
   buttons: CommandButton[];
 }
@@ -125,7 +129,11 @@ export class CommandBar {
         ? ''
         : `style="--hp:${Math.max(0, Math.min(1, hp)) * 360}deg;--hpc:${hp > 0.5 ? '#7fd05a' : hp > 0.25 ? '#e8c440' : '#e0442e'}"`;
     this.medal.innerHTML = `<div class="ring ${hp === undefined ? 'none' : ''}" ${ring}></div><div class="face">${ctx.portraitImg ? `<img class="pt" src="${ctx.portraitImg}" alt="">` : richIcon(ctx.portrait)}</div>${
-      ctx.rank && ctx.rank > 1 ? `<div class="stars">${'★'.repeat(ctx.rank - 1)}</div>` : ''
+      ctx.level
+        ? `<div class="lvl">Sv ${ctx.level}</div>${ctx.xp !== undefined ? `<div class="xpbar"><i style="width:${Math.round(ctx.xp * 100)}%"></i></div>` : ''}`
+        : ctx.rank && ctx.rank > 1
+          ? `<div class="stars">${'★'.repeat(ctx.rank - 1)}</div>`
+          : ''
     }`;
     this.info.innerHTML = `<h3>${ctx.title}</h3><div class="sub">${ctx.subtitle}</div>${(ctx.lines ?? []).map((l) => `<div class="line">${l}</div>`).join('')}`;
     this.grid.innerHTML = Array.from({ length: 12 }, (_, i) => {

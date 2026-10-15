@@ -50,6 +50,7 @@ interface Bucket {
 
 /** Tabur başına son karedeki durum ve sancaktarın (taburun ilk askeri) pozu. */
 export interface BattalionInfo {
+  rank: number;
   stance: number;
   banner: number;
   weak: number;
@@ -241,11 +242,24 @@ export class UnitRenderer {
       if (bat !== 0 && state !== AnimState.Die) {
         let info = this.battalionInfo.get(bat);
         if (!info) {
-          info = { stance: 0, banner: 0, weak: 0, team: 0, type: 0, x: 0, y: 0, z: 0, yaw: 0, frame: -1 };
+          info = {
+            rank: 0,
+            stance: 0,
+            banner: 0,
+            weak: 0,
+            team: 0,
+            type: 0,
+            x: 0,
+            y: 0,
+            z: 0,
+            yaw: 0,
+            frame: -1,
+          };
           this.battalionInfo.set(bat, info);
         }
         if (info.frame !== frame) {
           info.frame = frame;
+          info.rank = unpackRank(f5);
           info.stance = unpackStance(f5);
           info.banner = unpackBanner(f5);
           info.weak = weak;

@@ -6,6 +6,7 @@ import {
   fxDiv,
   HASH_SEED,
   hashInt,
+  MAX_ABILITIES,
   MAX_HEROES,
   MAX_SPELLS,
   type MapDef,
@@ -93,7 +94,7 @@ export interface MatchContext {
   hero: Int32Array;
   /**
    * Oyuncu kahraman yuvaları (HEROES sırası): [takım × MAX_HEROES + k] tabur (0 = yok),
-   * yeniden çağırma tick'i; yetenek hazır tick'leri [(takım × MAX_HEROES + k) × 2 + i].
+   * yeniden çağırma tick'i; yetenek hazır tick'leri [(takım × MAX_HEROES + k) × MAX_ABILITIES + i].
    */
   heroes: Int32Array;
   heroReady: Int32Array;
@@ -181,7 +182,7 @@ export const createSimWorld = (
       hero: new Int32Array(4),
       heroes: new Int32Array(4 * MAX_HEROES),
       heroReady: new Int32Array(4 * MAX_HEROES),
-      abilityReady: new Int32Array(4 * MAX_HEROES * 2),
+      abilityReady: new Int32Array(4 * MAX_HEROES * MAX_ABILITIES),
       heroBuff: new Int32Array(4 * MAX_HEROES),
       volleys: [],
       slots: new Int32Array(map?.slots.length ?? 0),

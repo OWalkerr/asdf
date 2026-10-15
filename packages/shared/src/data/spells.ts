@@ -6,6 +6,16 @@
 /** Tabur rütbesi: rütbe r'ye çıkmak için gereken toplam XP (indeks = rütbe; 1 başlangıç). */
 export const RANK_XP: readonly number[] = [0, 0, 120, 300, 600, 1000];
 export const MAX_RANK = 5;
+/**
+ * Kahraman seviyeleri (BFME2: 1–10). Kahraman öldürdükçe ve savaş alanında kaldıkça deneyim
+ * kazanır; her seviye rütbe gibi +%10 hasar ve dayanıklılık verir, 3. / 6. / 10. seviyede yeni yetenek açılır.
+ */
+export const HERO_XP: readonly number[] = [0, 0, 100, 250, 450, 700, 1000, 1400, 1900, 2500, 3200];
+export const MAX_HERO_LEVEL = 10;
+/** Kahramanın saniyede pasif kazandığı XP (savaş alanında bulunmak). */
+export const HERO_PASSIVE_XP = 2;
+/** Kahraman başına en fazla yetenek. */
+export const MAX_ABILITIES = 4;
 /** Rütbe başına hasar ve dayanıklılık artışı (%). */
 export const RANK_BONUS_PERCENT = 10;
 
@@ -28,12 +38,24 @@ export interface AbilityDef {
     | 'kings_glory'
     | 'eored'
     | 'shieldmaiden'
-    | 'slayer';
+    | 'slayer'
+    | 'summon_dead'
+    | 'eagle_call'
+    | 'istar_light'
+    | 'summon_elves'
+    | 'flood_call';
   name: string;
-  /** Açılması için gereken kahraman rütbesi. */
+  /** Açılması için gereken kahraman seviyesi. */
   rank: number;
   cooldown: number;
   desc: string;
+  /** Etki parametrelerinin bu yeteneğe özgü değerleri (yoksa etkinin varsayılanı). */
+  radius?: number;
+  damage?: number;
+  /** Ok sayısı / çağrılan tabur sayısı. */
+  count?: number;
+  /** Yetenek ikonu (yoksa etkinin ikonu). */
+  icon?: string;
 }
 
 /**
@@ -68,6 +90,24 @@ export const HEROES: readonly HeroDef[] = [
         cooldown: 60,
         desc: '15 m içindeki dost birimlerin canını %50 yeniler.',
       },
+      {
+        key: 'wizard_blast',
+        name: 'Andúril Savuruşu',
+        rank: 6,
+        cooldown: 40,
+        radius: 9,
+        damage: 260,
+        icon: 'blade',
+        desc: 'Aragorn yeniden dövülmüş kılıcıyla çevresini biçer: 9 m içindeki düşmanlara 260 hasar.',
+      },
+      {
+        key: 'summon_dead',
+        name: 'Yeminbozanlar',
+        rank: 10,
+        cooldown: 180,
+        count: 2,
+        desc: "Isildur'un varisi Ölüleri çağırır: 30 sn savaşan, hasar almayan iki hayalet tabur.",
+      },
     ],
   },
   {
@@ -89,6 +129,21 @@ export const HEROES: readonly HeroDef[] = [
         cooldown: 120,
         desc: '30 m içindeki bütün düşmanlara 450 büyü hasarı — dalgayı tek sözle kırar.',
       },
+      {
+        key: 'istar_light',
+        name: 'Beyaz Işık',
+        rank: 6,
+        cooldown: 75,
+        radius: 20,
+        desc: "Ak Gandalf'ın asasından taşan ışık: 20 m içindeki düşmanlar kamaşır (−%40 hasar, +%25 alınan hasar).",
+      },
+      {
+        key: 'eagle_call',
+        name: 'Kartalları Çağır',
+        rank: 10,
+        cooldown: 200,
+        desc: "Gwaihir ve kartallar Gandalf'ın çağrısıyla iner: çevresine üç ağır dalış.",
+      },
     ],
   },
   {
@@ -109,6 +164,27 @@ export const HEROES: readonly HeroDef[] = [
         rank: 3,
         cooldown: 60,
         desc: '30 m içindeki dost okçu taburları bir rütbe atlar.',
+      },
+      {
+        key: 'slayer',
+        name: 'Öldürücü Atış',
+        rank: 6,
+        cooldown: 45,
+        radius: 45,
+        damage: 600,
+        icon: 'bow',
+        desc: '45 m içindeki en güçlü düşmana (önce boss) tek okla 600 hasar.',
+      },
+      {
+        key: 'arrow_wind',
+        name: 'Elf Yayı Fırtınası',
+        rank: 10,
+        cooldown: 90,
+        radius: 50,
+        count: 70,
+        damage: 45,
+        icon: 'volley',
+        desc: '50 m içindeki düşmanlara 70 ok (ok başı 45 hasar).',
       },
     ],
   },
@@ -136,6 +212,25 @@ export const ROHAN_HEROES: readonly HeroDef[] = [
         cooldown: 90,
         desc: "Théoden'in yanına 40 sn için bir Rohirrim süvari bölüğü gelir.",
       },
+      {
+        key: 'wizard_blast',
+        name: 'Herugrim Hücumu',
+        rank: 6,
+        cooldown: 40,
+        radius: 10,
+        damage: 220,
+        icon: 'blade',
+        desc: 'Théoden kılıcı Herugrim ile atılır: 10 m içindeki düşmanlara 220 hasar.',
+      },
+      {
+        key: 'eored',
+        name: "Rohan'ın Bütün Atlıları",
+        rank: 10,
+        cooldown: 150,
+        count: 3,
+        icon: 'horse',
+        desc: "Mark'ın bütün süvarileri: Théoden'in yanına 40 sn için üç Rohirrim bölüğü.",
+      },
     ],
   },
   {
@@ -156,6 +251,26 @@ export const ROHAN_HEROES: readonly HeroDef[] = [
         rank: 3,
         cooldown: 90,
         desc: '15 m içindeki en güçlü düşmana (önce boss) 700 büyü hasarı.',
+      },
+      {
+        key: 'wizard_blast',
+        name: 'Kılıç Fırtınası',
+        rank: 6,
+        cooldown: 35,
+        radius: 8,
+        damage: 200,
+        icon: 'blade',
+        desc: 'Éowyn kalkanı ve kılıcıyla döner: 8 m içindeki düşmanlara 200 hasar.',
+      },
+      {
+        key: 'slayer',
+        name: 'Cadı Kral Katili',
+        rank: 10,
+        cooldown: 150,
+        radius: 25,
+        damage: 1600,
+        icon: 'crown',
+        desc: '25 m içindeki en güçlü düşmana (önce boss) 1600 hasar.',
       },
     ],
   },
@@ -191,6 +306,21 @@ export const ELF_HEROES: readonly HeroDef[] = [
         cooldown: 50,
         desc: '10 sn boyunca Haldir çift hasar verir.',
       },
+      {
+        key: 'train_archers',
+        name: 'Galadhrim Komutanı',
+        rank: 6,
+        cooldown: 60,
+        desc: '30 m içindeki dost okçu taburları bir rütbe atlar.',
+      },
+      {
+        key: 'summon_elves',
+        name: 'Lórien Muhafızları',
+        rank: 10,
+        cooldown: 150,
+        count: 2,
+        desc: "Haldir'in yanına 45 sn için iki tabur Lórien okçusu gelir.",
+      },
     ],
   },
   {
@@ -212,11 +342,30 @@ export const ELF_HEROES: readonly HeroDef[] = [
         cooldown: 120,
         desc: 'Bruinen selleri gibi: 30 m içindeki bütün düşmanlara 450 büyü hasarı.',
       },
+      {
+        key: 'istar_light',
+        name: "Vilya'nın Işığı",
+        rank: 6,
+        cooldown: 75,
+        radius: 20,
+        icon: 'sun',
+        desc: 'Hava Yüzüğü parlar: 20 m içindeki düşmanlar kamaşır (−%40 hasar, +%25 alınan hasar).',
+      },
+      {
+        key: 'flood_call',
+        name: 'Bruinen Taşkını',
+        rank: 10,
+        cooldown: 180,
+        desc: 'Elrond nehri çağırır: çevresinden dışa yayılan, düşmanı sürükleyen sel dalgası.',
+      },
     ],
   },
   HEROES[2] as HeroDef, // Legolas
 ];
 export const SLAYER = { radius: 15, damage: 700 } as const;
+/** Yeminbozanlar: çağrılan hayalet taburların süresi (s). Lórien Muhafızları süresi. */
+export const SUMMON_DEAD = { duration: 30 } as const;
+export const SUMMON_ELVES = { duration: 45 } as const;
 export const EORED = { duration: 40 } as const;
 export const KINGS_GLORY_DURATION = 15;
 export const SHIELDMAIDEN = { duration: 10, healPercent: 30 } as const;

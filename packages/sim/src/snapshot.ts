@@ -1,11 +1,12 @@
 import {
+  abilityReadyAt,
+  H_HERO_XP,
   bufferOffset,
   FLAG_HIT,
   G_ACTIVE,
   G_CAPACITY,
   G_PROJ_CAPACITY,
   G_PUBLISH,
-  H_ABILITY_READY,
   H_COUNT,
   H_ELENDIL_UNTIL,
   H_ENEMIES_ALIVE,
@@ -35,6 +36,7 @@ import {
   H_WAVE_COUNT,
   H_WAVE_INDEX,
   H_ZONE,
+  MAX_ABILITIES,
   packAnim,
   packBattalionRank,
   packFlight,
@@ -167,10 +169,16 @@ export const writeSnapshot = (world: SimWorld, view: Int32Array, simMicros = 0):
   view[base + H_SPELLS] = m.spells[0] as number;
   for (let i = 0; i < SNAP_SPELLS; i++) view[base + spellReadyAt(i)] = m.spellReady[i] as number;
   for (let k = 0; k < SNAP_HEROES; k++) {
+    const h = m.heroes[k] as number;
+    view[base + H_HERO_XP + k] = h !== 0 ? (world.c.Battalion.xp[h] as number) : 0;
+  }
+  for (let k = 0; k < SNAP_HEROES; k++) {
     view[base + H_HEROES + k] = m.heroes[k] as number;
     view[base + H_HERO_READY + k] = m.heroReady[k] as number;
   }
-  for (let i = 0; i < SNAP_HEROES * 2; i++) view[base + H_ABILITY_READY + i] = m.abilityReady[i] as number;
+  for (let k = 0; k < SNAP_HEROES; k++)
+    for (let i = 0; i < MAX_ABILITIES; i++)
+      view[base + abilityReadyAt(k, i)] = m.abilityReady[k * MAX_ABILITIES + i] as number;
   view[base + H_ELENDIL_UNTIL] = m.heroBuff[0] as number;
   view[base + H_HERO_BUFF] = m.heroBuff[1] as number;
   view[base + H_HERO_BUFF + 1] = m.heroBuff[2] as number;

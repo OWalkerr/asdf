@@ -1,7 +1,10 @@
 import {
   BANNER,
+  FACTIONS,
   fxFromFloat,
   HELMS_DEEP,
+  HERO_XP,
+  MAX_HERO_LEVEL,
   type MapDef,
   SPELL_DEFS,
   type StampedCommand,
@@ -11,7 +14,8 @@ import {
 import { query } from 'bitecs';
 import { describe, expect, it } from 'vitest';
 import { createOpenGrid, Simulation } from '../src';
-import { attackPercent, defensePercent } from '../src/systems/heroes';
+import { attackPercent, awardXp, defensePercent } from '../src/systems/heroes';
+import { SpellEffect } from '../src/world';
 
 const F = fxFromFloat;
 let seq = 0;
@@ -167,5 +171,64 @@ describe('tabur duruşları ve sancaktar', () => {
     const before = teamHp(sim, 0);
     for (let t = 0; t < 100; t++) sim.step();
     expect(teamHp(sim, 0)).toBeGreaterThan(before);
+  });
+});
+
+describe('kahraman seviyeleri (1–10) ve 4 yetenek', () => {
+  const heroSim = (unitType: number, faction = 0) => {
+    const sim = new Simulation(31, createOpenGrid(200), QUIET, 1, faction);
+    sim.world.match.gold[0] = 99999;
+    sim.schedule(stamp(0, { type: 'summonHero', unitType }));
+    sim.step();
+    const hero = [...sim.world.match.heroes].find((h) => h !== 0) ?? 0;
+    return { sim, hero };
+  };
+
+  it('kahraman 10. seviyeye çıkar, 5 rütbe sınırına takılmaz', () => {
+    const { sim, hero } = heroSim(UnitTypeId.Aragorn);
+    expect(hero).not.toBe(0);
+    expect(sim.world.c.Battalion.rank[hero]).toBe(1);
+    awardXp(sim.world, hero, HERO_XP[6] as number);
+    expect(sim.world.c.Battalion.rank[hero]).toBe(6);
+    awardXp(sim.world, hero, 99999);
+    expect(sim.world.c.Battalion.rank[hero]).toBe(MAX_HERO_LEVEL);
+    expect(attackPercent(sim.world, hero, 0, true)).toBe(190);
+  });
+
+  it('kahraman zamanla pasif deneyim kazanır', () => {
+    const { sim, hero } = heroSim(UnitTypeId.Aragorn);
+    const xp0 = sim.world.c.Battalion.xp[hero] as number;
+    for (let t = 0; t < 100; t++) sim.step();
+    expect(sim.world.c.Battalion.xp[hero]).toBeGreaterThan(xp0);
+  });
+
+  it('10. seviye yeteneği kilitliyken reddedilir, açılınca Yeminbozanları çağırır', () => {
+    const { sim, hero } = heroSim(UnitTypeId.Aragorn);
+    sim.schedule(stamp(sim.world.tick, { type: 'ability', unit: hero, ability: 3 }));
+    sim.step();
+    const dead = () =>
+      battalions(sim, 0).filter((b) => sim.world.c.Battalion.unitType[b] === UnitTypeId.DeadArmy);
+    expect(dead().length).toBe(0);
+    awardXp(sim.world, hero, 99999);
+    sim.schedule(stamp(sim.world.tick, { type: 'ability', unit: hero, ability: 3 }));
+    sim.step();
+    expect(dead().length).toBe(2);
+    // Bekleme süresi: hemen tekrar kullanılamaz.
+    sim.schedule(stamp(sim.world.tick, { type: 'ability', unit: hero, ability: 3 }));
+    sim.step();
+    expect(dead().length).toBe(2);
+  });
+
+  it('Gandalf 10: Kartalları Çağır kartal dalışlarını başlatır', () => {
+    const { sim, hero } = heroSim(UnitTypeId.Gandalf);
+    awardXp(sim.world, hero, 99999);
+    sim.schedule(stamp(sim.world.tick, { type: 'ability', unit: hero, ability: 3 }));
+    sim.step();
+    expect(sim.world.match.volleys.some((v) => v.kind === SpellEffect.Eagles)).toBe(true);
+  });
+
+  it('her kahramanın 4 yeteneği var: 1, 3, 6, 10. seviyede açılır', () => {
+    for (const f of FACTIONS)
+      for (const h of f.heroes) expect(h.abilities.map((a) => a.rank)).toEqual([1, 3, 6, 10]);
   });
 });

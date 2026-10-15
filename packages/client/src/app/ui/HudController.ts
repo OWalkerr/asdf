@@ -8,6 +8,8 @@ import {
   ECONOMY,
   FORTRESS_UPGRADES,
   factionDef,
+  HERO_XP,
+  MAX_ABILITIES,
   type MapDef,
   type MatchInfo,
   SLOT_BUILDS,
@@ -105,6 +107,11 @@ const ABILITY_ICON: Record<string, string> = {
   eored: 'horse',
   shieldmaiden: 'armor',
   slayer: 'blade',
+  summon_dead: 'ghost',
+  eagle_call: 'eagle',
+  istar_light: 'sun',
+  summon_elves: 'leaf',
+  flood_call: 'wave',
 };
 const HERO_DESC: Record<number, string> = {
   6: "Aragorn: liderlik aurası, Elendil'in Kılıcı ve Athelas.",
@@ -237,6 +244,16 @@ export class HudController {
     };
   }
 
+  /** Tek kahraman seçiliyse seviye rozeti ve sonraki seviyeye XP ilerlemesi. */
+  private heroLevel(type: number, level: number, single: boolean): { level?: number; xp?: number } {
+    if (!single || !STAT_HERO.has(type)) return {};
+    const k = factionDef(this.d.faction).heroes.findIndex((h) => h.unitType === type);
+    const xp = k >= 0 ? (this.match?.heroXp[k] ?? 0) : 0;
+    const lo = HERO_XP[level] ?? 0;
+    const hi = HERO_XP[level + 1];
+    return { level, xp: hi === undefined ? 1 : Math.max(0, Math.min(1, (xp - lo) / (hi - lo))) };
+  }
+
   private battalions(): CommandContext {
     const counts = new Map<number, { battalions: Set<number>; men: number; hp: number; rank: number }>();
     this.d.units.forEach((_x, _y, _z, b, _team, hp, type, rank) => {
@@ -273,19 +290,19 @@ export class HudController {
       if (hero === 0 || !sel.has(hero)) return;
       const heroRank = counts.get(def.unitType)?.rank ?? 1;
       def.abilities.forEach((a, i) => {
-        const left = secs((m?.abilityReady[k * 2 + i] ?? 0) - this.tick);
+        const left = secs((m?.abilityReady[k * MAX_ABILITIES + i] ?? 0) - this.tick);
         const locked = heroRank < a.rank;
         const active = (m?.heroBuff[k] ?? 0) > this.tick;
         buttons.push({
-          icon: ABILITY_ICON[a.key] ?? 'power',
+          icon: a.icon ?? ABILITY_ICON[a.key] ?? 'power',
           label: a.name,
           state: locked ? 'locked' : active ? 'busy' : left > 0 ? 'busy' : 'ready',
-          badge: locked ? `R${a.rank}` : undefined,
+          badge: locked ? `Sv${a.rank}` : undefined,
           progress: !locked && left > 0 ? 1 - left / a.cooldown : undefined,
           cooldown: !locked && left > 0 ? left : undefined,
           tip: {
             title: a.name,
-            meta: `${UNIT_LABELS[def.unitType] ?? ''} · bekleme ${a.cooldown} sn${locked ? ` · rütbe ${a.rank} gerekir` : ''}`,
+            meta: `${UNIT_LABELS[def.unitType] ?? ''} · bekleme ${a.cooldown} sn${locked ? ` · ${a.rank}. seviye gerekir` : ''}`,
             body: a.desc,
           },
           run: () => {
@@ -340,13 +357,14 @@ export class HudController {
       .join(' · ');
     const single = types.length === 1 ? UNIT_LABELS[main] : `${sel.size} tabur`;
     return {
-      key: `bat:${[...sel].join(',')}:${Math.round(hp * 40)}:${mc?.rank}:${buttons.map((b) => `${b.state}${b.badge}${b.cooldown ?? ''}`).join(',')}`,
+      key: `bat:${[...sel].join(',')}:${Math.round(hp * 40)}:${mc?.rank}:${Math.round((this.heroLevel(main, mc?.rank ?? 1, types.length === 1).xp ?? 0) * 20)}:${buttons.map((b) => `${b.state}${b.badge}${b.cooldown ?? ''}`).join(',')}`,
       portrait: UNIT_ICON[main] ?? 'sword',
       portraitImg: this.d.portrait?.(main),
       title: single ?? '?',
       subtitle: types.length === 1 ? `${mc?.battalions.size ?? 0} tabur · ${men} asker` : summary,
       hp,
       rank: types.length === 1 ? mc?.rank : undefined,
+      ...this.heroLevel(main, mc?.rank ?? 1, types.length === 1),
       lines: [
         STAT_HERO.has(main)
           ? 'Kahraman: liderlik aurası — 20 m içindeki taburlara +%25 hasar.'

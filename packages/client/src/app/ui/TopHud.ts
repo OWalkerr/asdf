@@ -132,7 +132,7 @@ export class TopHud {
       const pic = this.d.portrait?.(def.unitType);
       const face = pic ? `<img class="pt" src="${pic}" alt="">` : richIcon(def.icon);
       const html = `<span class="ring" style="--hp:${(b ? hp : 0) * 360}deg"></span>${face}<small>${
-        b ? `${'★'.repeat(Math.max(0, rank - 1)) || name}` : wait ? 'Düştü' : `◆${cost}`
+        b ? `Sv ${rank}` : wait ? 'Düştü' : `◆${cost}`
       }</small>${wait ? `<b class="cdn">${Math.ceil((left * SIM_TICK_MS) / 1000)}</b>` : ''}<kbd>${key}</kbd>`;
       btn.style.setProperty('--p', `${wait ? (1 - left / (HERO.reviveTime * 20)) * 360 : 360}deg`);
       if (btn.innerHTML !== html) btn.innerHTML = html;

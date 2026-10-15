@@ -1,4 +1,4 @@
-import { factionDef, MAP_DEFS, type SlotDef, UnitTypeId } from '@bulwark/shared';
+import { factionDef, MAP_DEFS, type MatchInfo, type SlotDef, UNIT_DEFS, UnitTypeId } from '@bulwark/shared';
 import { buildNavGrid, createOpenGrid } from '@bulwark/sim';
 import { Scene, type Texture, Timer, Vector3 } from 'three/webgpu';
 import { GALLERY_CENTER, updateGallery } from './app/gallery';
@@ -230,6 +230,36 @@ const boot = async () => {
   // --- Kahraman + Spellbook ----------------------------------------------------------
   const spellFx = new SpellFx();
   scene.add(...spellFx.meshes);
+  // Kahraman seviye atlaması: altın sütun, çan, ekranda duyuru (yeni yetenek açıldıysa adıyla).
+  const levelUps = {
+    prev: [0, 0, 0],
+    el: null as HTMLDivElement | null,
+    check(m: MatchInfo) {
+      const heroes = factionDef(faction).heroes;
+      for (let k = 0; k < 3; k++) {
+        const b = m.heroes[k] ?? 0;
+        const info = b !== 0 ? units.battalionInfo.get(b) : undefined;
+        const lvl = info?.rank ?? 0;
+        const was = this.prev[k] ?? 0;
+        this.prev[k] = lvl;
+        if (!info || was === 0 || lvl <= was) continue;
+        spellFx.pulse(info.x, info.y, info.z, 6, '#ffd75a', 1.4);
+        sfx.chime(true);
+        const def = heroes[k];
+        const ab = def?.abilities.find((a) => a.rank === lvl);
+        if (!ui) continue;
+        if (!this.el) {
+          this.el = document.createElement('div');
+          this.el.id = 'levelup';
+          document.body.appendChild(this.el);
+        }
+        this.el.innerHTML = `<b>${UNIT_DEFS[def?.unitType ?? 0]?.name ?? ''} · ${lvl}. seviye</b>${ab ? `<span>Yeni yetenek: ${ab.name}</span>` : ''}`;
+        this.el.classList.remove('on');
+        void this.el.offsetWidth;
+        this.el.classList.add('on');
+      }
+    },
+  };
   // Büyük güç gösterileri: kartallar, sel, deprem, güneş parlaması.
   const spellShow = new SpellShow(palette, toon);
   scene.add(...spellShow.meshes);
@@ -272,10 +302,26 @@ const boot = async () => {
         word_of_power: [30, '#ffffff', 1.6],
         arrow_wind: [40, '#ffd27a', 1.0],
         train_archers: [30, '#bff5d0', 1.0],
+        summon_dead: [10, '#5dffa8', 1.4],
+        summon_elves: [8, '#bff5d0', 1.2],
+        istar_light: [20, '#fff4c0', 1.2],
+        eagle_call: [14, '#ffe0a0', 1.2],
+        flood_call: [20, '#8fd0ff', 1.2],
       };
       const [r, color, dur] = fx[key] ?? [6, '#ffffff', 1];
+      // Büyük yetenekler güç gösterilerini kahramanın konumunda oynatır.
+      const show: Record<string, string> = {
+        istar_light: 'sun_flare',
+        eagle_call: 'eagles',
+        flood_call: 'flood',
+      };
+      let shown = false;
       units.forEach((x, y, z, b) => {
-        if (b === hero) spellFx.pulse(x, y, z, r, color, dur);
+        if (b !== hero || shown) return;
+        shown = true;
+        spellFx.pulse(x, y, z, r, color, dur);
+        const sk = show[key];
+        if (sk) spellShow.cast(sk, x, y, z, r);
       });
       if (key === 'word_of_power' || key === 'wizard_blast') sfx.thunder();
       else sfx.chime(true);
@@ -403,6 +449,7 @@ const boot = async () => {
       units.glowBattalion = buffed >= 0 ? (mi.heroes[buffed] ?? 0) : 0;
       units.updateFromSim(sim, now);
       bannerCarriers.update(units, now);
+      levelUps.check(mi);
       arrows.update(sim, now);
       structures?.update(sim.frame);
       ladders?.update(sim.frame);

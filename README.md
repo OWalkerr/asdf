@@ -128,6 +128,14 @@ kademe kademe açılır (10 güç):
 
 Taburlar öldürdükçe 5 rütbeye kadar yükselir. Son dalgada boss **Lurtz** gelir.
 
+**Kahraman seviyeleri (1–10):** kahramanlar öldürdükçe ve savaş alanında kaldıkça (saniyede +2 XP) deneyim kazanır;
+her seviye +%10 hasar ve dayanıklılık verir. Her kahramanın 4 yeteneği 1., 3., 6. ve 10. seviyede açılır — ör.
+Aragorn: Elendil'in Kılıcı, Athelas, Andúril Savuruşu, **Yeminbozanlar** (Ölüleri çağırır); Gandalf: Asa Patlaması,
+Kudret Sözü, Beyaz Işık, **Kartalları Çağır**; Legolas: Ok Rüzgârı, Okçu Eğitimi, Öldürücü Atış, Elf Yayı Fırtınası;
+Théoden: … **Rohan'ın Bütün Atlıları**; Éowyn: … **Cadı Kral Katili**; Haldir: … **Lórien Muhafızları**; Elrond: …
+Vilya'nın Işığı, **Bruinen Taşkını**. Seviye atlayınca altın halka, çan ve ekranda duyuru (yeni yetenekle); komut
+çubuğunda "Sv N" rozeti ve sonraki seviyeye XP çubuğu.
+
 **Tabur duruşları ve sancaktar:** bir tabur seçince komut çubuğunda BFME2 duruşları çıkar — **Normal**,
 **Saldırgan** (+%25 hasar verir, +%25 alır, düşmanı uzağa kovalar), **Mevzi Tut** (kalkan duvarı: %35 daha az hasar
 alır, %15 daha az verir, yerinden kopmaz). **Sancaktar** (150 altın / tabur) taburun bir askerine armalı uzun savaş
@@ -154,7 +162,7 @@ ve sim hızı ayarı var.
 
 **Var:** Kale (FD) ve Kule (TD) savunması, klasik Tower Wars / Fortress Defence haritaları, işlevsel ve gelişen kale,
 kale yükseltmeleri, bina seviyeleri ve satış, çiftlik, kışla / demirhane, 3 iyi taraf (Gondor, Rohan, Lothlórien) ve
-9 kahraman, 4 kademeli 10 güç (Kartallar, Sel, Deprem, Güneş Parlaması dahil), tabur duruşları ve sancaktar, rütbe sistemi, kuşatma (koçbaşı, merdiven, kule), boss'lar (Lurtz, Balrog, Su Gözcüsü,
+9 kahraman (10 seviye, 4 yetenek), 4 kademeli 10 güç (Kartallar, Sel, Deprem, Güneş Parlaması dahil), tabur duruşları ve sancaktar, rütbe sistemi, kuşatma (koçbaşı, merdiven, kule), boss'lar (Lurtz, Balrog, Su Gözcüsü,
 Ateş Ejderi), halka menü, bekleme sayaçları, palantír mini harita, portreler, oyun hızı, istatistik ve rekorlar.
 
 **Eksik (BFME2'de olup henüz olmayan):**
@@ -162,6 +170,6 @@ Ateş Ejderi), halka menü, bekleme sayaçları, palantír mini harita, portrele
    altyapısı hazır, ağ katmanı yok).
 2. Güç kitabının kalanı (Tom Bombadil, Kale Kuşatması, Ölülerin Çağrısı…; BFME2'de ~15, burada 10).
 3. Tabur başına demirhane yükseltmeleri (burada takım çapında), sürü (horde) bonusları.
-4. Kahramanların 10 seviyeye kadar gelişmesi ve 4–5 yeteneği, Kahraman Yarat (Create-a-Hero), binekli kahramanlar.
+4. Kahraman Yarat (Create-a-Hero), binekli kahramanlar (seviye 1–10 ve 4 yetenek var).
 5. Serbest inşa ve sur inşası, komuta noktası (nüfus) sınırı, deniz birimleri.
 6. Seslendirme (birim cevapları) ve müzik; War of the Ring kampanya modu; harita editörü.

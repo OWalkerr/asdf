@@ -16,7 +16,11 @@ import {
   fxLen,
   fxMul,
   HERO,
+  HERO_PASSIVE_XP,
+  HERO_XP,
   KINGS_GLORY_DURATION,
+  MAX_ABILITIES,
+  MAX_HERO_LEVEL,
   MAX_HEROES,
   MAX_RANK,
   MAX_SPELLS,
@@ -29,6 +33,8 @@ import {
   SLAYER,
   SPELL_DEFS,
   STANCE_DEFS,
+  SUMMON_DEAD,
+  SUMMON_ELVES,
   SUMMONS,
   SUN_FLARE,
   TRAIN_ARCHERS_RADIUS,
@@ -123,8 +129,12 @@ export const awardXp = (world: SimWorld, b: number, xp: number): void => {
   const gain = Battalion.banner[b] ? ((xp * BANNER.xpPercent) / 100) | 0 : xp;
   const total = (Battalion.xp[b] as number) + gain;
   Battalion.xp[b] = total;
+  // Kahramanlar 10 seviyeye kadar (HERO_XP), taburlar 5 rütbeye kadar (RANK_XP).
+  const hero = STAT.hero[Battalion.unitType[b] as number] === 1;
+  const table = hero ? HERO_XP : RANK_XP;
+  const max = hero ? MAX_HERO_LEVEL : MAX_RANK;
   let r = Battalion.rank[b] as number;
-  while (r < MAX_RANK && total >= (RANK_XP[r + 1] as number)) r++;
+  while (r < max && total >= (table[r + 1] as number)) r++;
   Battalion.rank[b] = r;
 };
 
@@ -187,7 +197,7 @@ export const useAbility = (world: SimWorld, team: number, unit: number, ability:
   for (let i = 0; i < MAX_HEROES; i++) if (m.heroes[team * MAX_HEROES + i] === unit) k = i;
   const def = heroesOf(world)[k]?.abilities[ability];
   if (!def || !entityExists(world, unit) || (Battalion.rank[unit] as number) < def.rank) return false;
-  const slot = (team * MAX_HEROES + k) * 2 + ability;
+  const slot = (team * MAX_HEROES + k) * MAX_ABILITIES + ability;
   if (world.tick < (m.abilityReady[slot] as number)) return false;
   m.abilityReady[slot] = world.tick + ticks(def.cooldown);
   const x = Position.x[unit] as number;
@@ -212,13 +222,62 @@ export const useAbility = (world: SimWorld, team: number, unit: number, ability:
       m.rallyUntil[team] = Math.max(m.rallyUntil[team] as number, world.tick + ticks(KINGS_GLORY_DURATION));
       break;
     case 'eored':
-      summonAt(world, team, UnitTypeId.RohanRiders, x, (z + fxFromFloat(6)) | 0, 1, EORED.duration, 16384);
+      summonAt(
+        world,
+        team,
+        UnitTypeId.RohanRiders,
+        x,
+        (z + fxFromFloat(6)) | 0,
+        def.count ?? 1,
+        EORED.duration,
+        16384,
+      );
+      break;
+    case 'summon_dead':
+      summonAt(
+        world,
+        team,
+        UnitTypeId.DeadArmy,
+        x,
+        (z + fxFromFloat(6)) | 0,
+        def.count ?? 2,
+        SUMMON_DEAD.duration,
+        16384,
+      );
+      break;
+    case 'summon_elves':
+      summonAt(
+        world,
+        team,
+        UnitTypeId.LorienArcher,
+        x,
+        (z - fxFromFloat(6)) | 0,
+        def.count ?? 2,
+        SUMMON_ELVES.duration,
+        16384,
+      );
+      break;
+    case 'istar_light':
+      weakenArea(world, team, x, z, fxFromFloat(def.radius ?? 20), SUN_FLARE.damage);
+      break;
+    case 'eagle_call':
+      m.volleys.push({
+        kind: SpellEffect.Eagles,
+        x,
+        z,
+        team,
+        next: world.tick + ticks(EAGLES.delay),
+        left: EAGLES.dives,
+      });
+      break;
+    case 'flood_call':
+      m.volleys.push({ kind: SpellEffect.Flood, x, z, team, next: world.tick + 2, left: FLOOD.rings });
       break;
     case 'slayer': {
       // En güçlü düşman: önce boss, sonra en yüksek azami can.
       let best = 0;
       let score = -1;
-      for (const e of enemiesNear(world, team, x, z, fxFromFloat(SLAYER.radius))) {
+      for (const e of enemiesNear(world, team, x, z, fxFromFloat(def.radius ?? SLAYER.radius))) {
         const t = UnitType.id[e] as number;
         const v = (STAT.boss[t] === 1 ? 1_000_000 : 0) + (world.c.Health.max[e] as number);
         if (v > score) {
@@ -226,7 +285,7 @@ export const useAbility = (world: SimWorld, team: number, unit: number, ability:
           best = e;
         }
       }
-      if (best !== 0) applyDamage(world, best, SLAYER.damage, DMG_MAGIC, unit);
+      if (best !== 0) applyDamage(world, best, def.damage ?? SLAYER.damage, DMG_MAGIC, unit);
       break;
     }
     case 'athelas':
@@ -235,17 +294,17 @@ export const useAbility = (world: SimWorld, team: number, unit: number, ability:
     case 'wizard_blast':
     case 'word_of_power': {
       const p = def.key === 'wizard_blast' ? WIZARD_BLAST : WORD_OF_POWER;
-      for (const e of enemiesNear(world, team, x, z, fxFromFloat(p.radius)))
-        applyDamage(world, e, p.damage, DMG_MAGIC, unit);
+      for (const e of enemiesNear(world, team, x, z, fxFromFloat(def.radius ?? p.radius)))
+        applyDamage(world, e, def.damage ?? p.damage, DMG_MAGIC, unit);
       break;
     }
     case 'arrow_wind': {
-      const targets = enemiesNear(world, team, x, z, fxFromFloat(ARROW_WIND.radius));
+      const targets = enemiesNear(world, team, x, z, fxFromFloat(def.radius ?? ARROW_WIND.radius));
       if (targets.length === 0) break;
       const dmgType = arrowDmgType(world, team, DMG_PIERCE);
-      for (let i = 0; i < ARROW_WIND.arrows; i++) {
+      for (let i = 0; i < (def.count ?? ARROW_WIND.arrows); i++) {
         const t = targets[world.rng.nextInt(targets.length)] as number;
-        fireProjectile(world, x, z, t, ARROW_WIND.damage, dmgType, 180, unit);
+        fireProjectile(world, x, z, t, def.damage ?? ARROW_WIND.damage, dmgType, 180, unit);
       }
       break;
     }
@@ -298,16 +357,9 @@ export const castSpell = (world: SimWorld, team: number, spell: number, x: numbe
     case 'arrow_volley':
       m.volleys.push({ kind: SpellEffect.Volley, x, z, team, next: world.tick + 4, left: VOLLEY.waves });
       break;
-    case 'sun_flare': {
-      const { Soldier, Battalion } = world.c;
-      const until = world.tick + ticks(SUN_FLARE.duration);
-      for (const e of enemiesNear(world, team, x, z, FLARE_R)) {
-        applyDamage(world, e, SUN_FLARE.damage, DMG_MAGIC);
-        const b = Soldier.battalion[e] as number;
-        if (b !== 0) Battalion.weakUntil[b] = until;
-      }
+    case 'sun_flare':
+      weakenArea(world, team, x, z, FLARE_R, SUN_FLARE.damage);
       break;
-    }
     case 'earthquake':
       m.volleys.push({ kind: SpellEffect.Quake, x, z, team, next: world.tick + 2, left: EARTHQUAKE.pulses });
       break;
@@ -397,6 +449,17 @@ const volleyWave = (world: SimWorld, team: number, x: Fx, z: Fx): void => {
     const fx = (x + fxMul(world.rng.nextFx() - FX_HALF, VOLLEY_BACK)) | 0;
     const fz = (z - VOLLEY_BACK) | 0;
     fireProjectile(world, fx, fz, t, VOLLEY.damage, dmgType, 2400, 0);
+  }
+};
+
+/** Güneş Parlaması / Beyaz Işık: alandaki düşmanlara hasar ve taburlarına zayıflık. */
+const weakenArea = (world: SimWorld, team: number, x: Fx, z: Fx, r: Fx, damage: number): void => {
+  const { Soldier, Battalion } = world.c;
+  const until = world.tick + ticks(SUN_FLARE.duration);
+  for (const e of enemiesNear(world, team, x, z, r)) {
+    applyDamage(world, e, damage, DMG_MAGIC);
+    const b = Soldier.battalion[e] as number;
+    if (b !== 0) Battalion.weakUntil[b] = until;
   }
 };
 
@@ -549,6 +612,11 @@ export const heroSystem = (world: SimWorld): void => {
     }
   // Sancaktar: çatışma dışındaki ve bir süredir vurulmayan askerler iyileşir.
   if (world.tick % SIM_HZ === 0) {
+    // Kahramanlar savaş alanında kaldıkça pasif deneyim kazanır.
+    for (let i = 0; i < m.heroes.length; i++) {
+      const h = m.heroes[i] as number;
+      if (h !== 0 && entityExists(world, h)) awardXp(world, h, HERO_PASSIVE_XP);
+    }
     const calm = ticks(BANNER.calm);
     for (const b of query(world, [Battalion])) {
       if (Battalion.banner[b] !== 1 || Battalion.engaged[b] === 1) continue;

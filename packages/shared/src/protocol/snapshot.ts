@@ -8,7 +8,7 @@
  *   [buffer 1: aynı]
  *
  * Buffer header: version (seqlock; tek = yazılıyor), tick, count, simMicros, projCount,
- *   matchState, waveIndex, waveCount, nextWaveTick, enemiesAlive, (10–15 boş),
+ *   matchState, waveIndex, waveCount, nextWaveTick, enemiesAlive, yetenek 3–4 hazır tick'leri ×6 (10–15),
  *   gold (oyuncu 0), structCount, upgrades (bitler; araştırılanlar << 8), PP (onda bir),
  *   açık büyüler, büyü hazır tick'leri ×3, kahraman taburu, kahraman hazır tick'i,
  *   yetenek hazır tick'leri ×2, Elendil bitiş tick'i, Toplanma bitiş tick'i, büyü hazır ×8,
@@ -76,9 +76,16 @@ export const SNAP_HEROES = 3;
 export const H_HEROES = 48;
 export const H_HERO_READY = 51;
 export const H_ABILITY_READY = 54;
+/** Yetenek 3–4'ün hazır tick'leri (10–15). */
+export const H_ABILITY_READY_HI = 10;
+/** Kahraman yuvası k, yetenek i (0–3) hazır tick'inin header konumu. */
+export const abilityReadyAt = (k: number, i: number): number =>
+  i < 2 ? H_ABILITY_READY + k * 2 + i : H_ABILITY_READY_HI + k * 2 + i - 2;
 /** Kahraman yuvası 0'ın güçlendirme bitişi (28); yuva 1–2: H_HERO_BUFF (60, 61). */
 export const H_ELENDIL_UNTIL = 28;
 export const H_HERO_BUFF = 60;
+/** Kahraman yuvası k'nın toplam XP'si (24–26). */
+export const H_HERO_XP = 24;
 /** Maç istatistikleri: öldürülen düşman, kayıp, kazanılan altın (64–66). */
 export const H_KILLS = 64;
 export const H_LOSSES = 65;
@@ -192,12 +199,14 @@ export interface MatchInfo {
   pp: number;
   spells: number;
   spellReady: number[];
-  /** Kahraman yuvaları (HEROES sırası): tabur eid'i, yeniden çağırma tick'i, yetenek hazır tick'leri (k × 2 + i). */
+  /** Kahraman yuvaları (HEROES sırası): tabur eid'i, yeniden çağırma tick'i, yetenek hazır tick'leri (k × 4 + i). */
   heroes: number[];
   heroReady: number[];
   abilityReady: number[];
   /** Kahraman yuvası başına çift hasar güçlendirmesinin bitiş tick'i. */
   heroBuff: number[];
+  /** Kahraman yuvası başına toplam XP (seviye ilerlemesi). */
+  heroXp: number[];
   rallyUntil: number;
   fortress: number;
   fortUp: number;
@@ -251,7 +260,8 @@ export const createFrame = (capacity: number, projCapacity = 2048): SnapshotFram
     spellReady: new Array(SNAP_SPELLS).fill(0),
     heroes: [0, 0, 0],
     heroReady: [0, 0, 0],
-    abilityReady: [0, 0, 0, 0, 0, 0],
+    abilityReady: new Array(SNAP_HEROES * 4).fill(0),
+    heroXp: [0, 0, 0],
     heroBuff: [0, 0, 0],
     rallyUntil: 0,
     fortress: 0,
@@ -283,8 +293,10 @@ export const readMatchHeader = (view: Int32Array, base: number, out: MatchInfo):
   for (let k = 0; k < SNAP_HEROES; k++) {
     out.heroes[k] = view[base + H_HEROES + k] as number;
     out.heroReady[k] = view[base + H_HERO_READY + k] as number;
+    out.heroXp[k] = view[base + H_HERO_XP + k] as number;
   }
-  for (let i = 0; i < SNAP_HEROES * 2; i++) out.abilityReady[i] = view[base + H_ABILITY_READY + i] as number;
+  for (let k = 0; k < SNAP_HEROES; k++)
+    for (let i = 0; i < 4; i++) out.abilityReady[k * 4 + i] = view[base + abilityReadyAt(k, i)] as number;
   out.heroBuff[0] = view[base + H_ELENDIL_UNTIL] as number;
   out.heroBuff[1] = view[base + H_HERO_BUFF] as number;
   out.heroBuff[2] = view[base + H_HERO_BUFF + 1] as number;
