@@ -18,6 +18,7 @@ import { SIM_HZ } from '../constants';
 import { STAT } from '../unitStats';
 import type { SimWorld } from '../world';
 import { arrowDmgType, fireProjectile, fireStone } from './combat';
+import { CP_OF, commandPoints } from './commandPoints';
 import { spawnBattalion } from './commands';
 import { treasuryIncome } from './fortress';
 import { forEachMember } from './spatial';
@@ -232,6 +233,8 @@ export const trainUnit = (world: SimWorld, team: number, building: number, unitT
   const len = Structure.qLen[building] as number;
   const cost = STAT.cost[unitType] as number;
   if (len >= ECONOMY.queueMax || (world.match.gold[team] as number) < cost) return false;
+  const cp = commandPoints(world, team);
+  if (cp.used + (CP_OF[unitType] ?? 0) > cp.cap) return false;
   world.match.gold[team] = (world.match.gold[team] as number) - cost;
   Structure.queue[building * QUEUE_STRIDE + len] = unitType;
   if (len === 0) Structure.qProgress[building] = trainTicksAt(world, building, unitType);

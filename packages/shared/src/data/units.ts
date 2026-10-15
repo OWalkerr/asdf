@@ -1094,6 +1094,13 @@ export const UnitTypeId = {
   GondorSiegeTower: 40,
 } as const;
 
+/** Bir taburun komuta puanı (COMMAND_POINTS). */
+export const unitCp = (def: UnitDef): number => {
+  if (def.hero || def.summoned || def.boss) return 0;
+  if (def.worker) return 5;
+  return Math.max(5, Math.round(def.cost / 10));
+};
+
 export const unitDef = (id: number): UnitDef => {
   const def = UNIT_DEFS[id];
   if (!def || def.id !== id) throw new Error(`Bilinmeyen birim tipi: ${id}`);

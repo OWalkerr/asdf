@@ -2092,3 +2092,6 @@ body.debug #hud {
   border-color: #c0503a;
   color: #ffb0a0;
 }
+#resources .cpfull b {
+  color: #ff9a7a;
+}

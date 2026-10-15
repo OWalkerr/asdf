@@ -27,7 +27,7 @@
  * Konumlar ham Q16.16 olarak taşınır; float'a çeviri render tarafında (GDD §13.7).
  */
 export const SNAP_GLOBAL_INTS = 4;
-export const SNAP_HEADER_INTS = 72;
+export const SNAP_HEADER_INTS = 76;
 export const SNAP_UNIT_INTS = 6;
 export const SNAP_PROJ_INTS = 7;
 export const SNAP_STRUCT_INTS = 8;
@@ -56,6 +56,9 @@ export const H_GATE_MAX = 44; // 44–47
 /** TD uç bölgesindeki düşman taburu sayısı. */
 export const H_ZONE = 38;
 export const H_GOLD = 16;
+/** Komuta puanı: kullanılan ve tavan (oyuncu 0). */
+export const H_CP_USED = 72;
+export const H_CP_CAP = 73;
 export const H_STRUCT_COUNT = 17;
 /** Oyuncu 0'ın tamamlanmış yükseltmeleri (bit maskesi) ve araştırılanlar (<< 8). */
 export const H_UPGRADES = 18;
@@ -201,6 +204,8 @@ export interface MatchInfo {
   gateHp: number[];
   gateMax: number[];
   gold: number;
+  cpUsed: number;
+  cpCap: number;
   /** Tamamlanmış yükseltme bitleri. */
   upgrades: number;
   /** Araştırılmakta olan yükseltme bitleri. */
@@ -266,6 +271,8 @@ export const createFrame = (capacity: number, projCapacity = 2048): SnapshotFram
     gateHp: [],
     gateMax: [],
     gold: 0,
+    cpUsed: 0,
+    cpCap: 0,
     upgrades: 0,
     researching: 0,
     pp: 0,
@@ -299,6 +306,8 @@ export const readMatchHeader = (view: Int32Array, base: number, out: MatchInfo):
   out.nextWaveTick = view[base + H_NEXT_WAVE_TICK] as number;
   out.enemiesAlive = view[base + H_ENEMIES_ALIVE] as number;
   out.gold = view[base + H_GOLD] as number;
+  out.cpUsed = view[base + H_CP_USED] as number;
+  out.cpCap = view[base + H_CP_CAP] as number;
   const up = view[base + H_UPGRADES] as number;
   out.upgrades = up & 0xff;
   out.researching = (up >>> 8) & 0xff;

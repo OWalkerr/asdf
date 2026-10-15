@@ -324,3 +324,9 @@ export const BUILD_RADIUS: Readonly<Record<BuildingKind, number>> = {
   catapult: 2.8,
   farm: 5.0,
 };
+
+/**
+ * Komuta puanı (BFME2 nüfus sınırı): her tabur maliyetinin onda biri kadar puan tutar (işçi 5;
+ * kahraman, çağrılan birlik ve boss puansız). Tavan çiftlik seviyeleriyle yükselir, en fazla 1000.
+ */
+export const COMMAND_POINTS = { base: 400, perFarmLevel: 60, max: 1000, worker: 5 } as const;

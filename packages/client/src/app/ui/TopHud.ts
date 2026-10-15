@@ -1,4 +1,5 @@
 import {
+  COMMAND_POINTS,
   ECONOMY,
   factionDef,
   HERO,
@@ -188,7 +189,7 @@ export class TopHud {
       }
     });
     const income = ECONOMY.income + ((m.fortUp & (1 << 4)) !== 0 ? 4 : 0);
-    const res = `<div>${icon('coin')}<b>${m.gold}</b><span>+${income}/sn</span></div><div>${icon('power')}<b>${(m.pp / 10).toFixed(1)}</b><span>güç</span></div><div>${icon('army')}<b>${army}</b><span>tabur</span></div>`;
+    const res = `<div>${icon('coin')}<b>${m.gold}</b><span>+${income}/sn</span></div><div>${icon('power')}<b>${(m.pp / 10).toFixed(1)}</b><span>güç</span></div><div title="Komuta puanı (${army} tabur). Tavan çiftliklerle yükselir, en fazla ${COMMAND_POINTS.max}." class="${m.cpUsed >= m.cpCap ? 'cpfull' : ''}">${icon('army')}<b>${m.cpUsed}/${m.cpCap}</b><span>komuta</span></div>`;
     if (this.res.innerHTML !== res) this.res.innerHTML = res;
   }
 }

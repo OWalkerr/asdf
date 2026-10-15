@@ -2,6 +2,7 @@ import {
   BUILD_RADIUS,
   BUILDING_DEFS,
   BUILDING_KINDS,
+  COMMAND_POINTS,
   FREE_BUILD,
   type Fx,
   fxDiv,
@@ -18,6 +19,7 @@ import { BLOCK_ALL } from '../nav/grid';
 import { type Footprint, footprintCells, placementError } from '../nav/placement';
 import { STAT } from '../unitStats';
 import type { SimWorld } from '../world';
+import { commandPoints } from './commandPoints';
 import { orderBattalions, spawnBattalion } from './commands';
 import { fortressDoor } from './fortress';
 
@@ -161,6 +163,8 @@ export const trainWorker = (world: SimWorld, team: number): boolean => {
   if ((world.c.Structure.hp[m.fortress] as number) <= 0) return false;
   if (countWorkers(world, team) >= FREE_BUILD.maxWorkers) return false;
   if ((m.gold[team] as number) < FREE_BUILD.workerCost) return false;
+  const cp = commandPoints(world, team);
+  if (cp.used + COMMAND_POINTS.worker > cp.cap) return false;
   m.gold[team] = (m.gold[team] as number) - FREE_BUILD.workerCost;
   m.workerReady = world.tick + ticks(FREE_BUILD.workerCooldown);
   const [x, z] = fortressDoor(world);

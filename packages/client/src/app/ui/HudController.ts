@@ -5,6 +5,7 @@ import {
   BUILDING_KINDS,
   BUILDING_LEVEL,
   type BuildingKind,
+  COMMAND_POINTS,
   ECONOMY,
   FORTRESS_UPGRADES,
   FREE_BUILD,
@@ -19,6 +20,7 @@ import {
   UNIT_DEFS,
   UnitTypeId,
   UPGRADE_DEFS,
+  unitCp,
 } from '@bulwark/shared';
 import type { SlotMarkers } from '../../render/map/SlotMarkers';
 import type { StructureRenderer } from '../../render/structures/StructureRenderer';
@@ -626,20 +628,25 @@ export class HudController {
     const full = st.queueLen >= ECONOMY.queueMax;
     const buttons: CommandButton[] = factionDef(this.d.faction).trains.map((u) => {
       const def = UNIT_DEFS[u];
+      const cp = def ? unitCp(def) : 0;
+      const m = this.match;
+      const cpOk = !m || m.cpUsed + cp <= m.cpCap;
       const head = st.queueLen > 0 && st.queueUnit === u;
       const train = ((def?.trainTime ?? 0) * (100 - BUILDING_LEVEL.trainTimePercent * (st.level - 1))) / 100;
       return {
         icon: UNIT_ICON[u] ?? 'sword',
         img: this.d.portrait?.(u),
         label: UNIT_LABELS[u] ?? '',
-        state: !full && this.gold >= (def?.cost ?? 0) ? 'ready' : 'off',
+        state: !full && cpOk && this.gold >= (def?.cost ?? 0) ? 'ready' : 'off',
         badge: `${def?.cost}`,
         progress: head ? st.queuePct : undefined,
         cooldown: head ? Math.max(1, Math.ceil(train * (1 - st.queuePct))) : undefined,
         tip: {
           title: UNIT_LABELS[u] ?? '',
-          meta: `◆ ${def?.cost} · ${def?.trainTime} sn · ${def?.battalionSize} asker`,
-          body: UNIT_DESC[u],
+          meta: `◆ ${def?.cost} · ${def?.trainTime} sn · ${def?.battalionSize} asker · ${cp} komuta puanı`,
+          body: cpOk
+            ? UNIT_DESC[u]
+            : `Komuta puanı yetmiyor (${m?.cpUsed}/${m?.cpCap}). Tavanı yükseltmek için çiftlik kur veya yükselt.`,
         },
         run: () => this.d.scenario.train(st.eid, u),
       };
@@ -736,7 +743,13 @@ export class HudController {
         icon: 'hammer',
         img: this.d.portrait?.(UnitTypeId.Worker),
         label: 'İşçi',
-        state: full ? 'done' : wait > 0 ? 'busy' : this.gold >= FREE_BUILD.workerCost ? 'ready' : 'off',
+        state: full
+          ? 'done'
+          : wait > 0
+            ? 'busy'
+            : this.gold >= FREE_BUILD.workerCost && (!m || m.cpUsed + COMMAND_POINTS.worker <= m.cpCap)
+              ? 'ready'
+              : 'off',
         badge: full ? `${m?.workers}/${FREE_BUILD.maxWorkers}` : `${FREE_BUILD.workerCost}`,
         cooldown: !full && wait > 0 ? wait : undefined,
         progress: !full && wait > 0 ? 1 - wait / FREE_BUILD.workerCooldown : undefined,

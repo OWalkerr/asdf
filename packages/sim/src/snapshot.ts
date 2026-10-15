@@ -7,6 +7,8 @@ import {
   G_PROJ_CAPACITY,
   G_PUBLISH,
   H_COUNT,
+  H_CP_CAP,
+  H_CP_USED,
   H_ELENDIL_UNTIL,
   H_ENEMIES_ALIVE,
   H_FORT_UP,
@@ -61,6 +63,7 @@ import {
 import { query } from 'bitecs';
 import { QUEUE_STRIDE, StructureKind } from './components';
 import { SIM_HZ } from './constants';
+import { commandPoints } from './systems/commandPoints';
 import { fortressPct } from './systems/fortress';
 import { nextWaveTick } from './systems/match';
 import { countWorkers } from './systems/workers';
@@ -174,6 +177,9 @@ export const writeSnapshot = (world: SimWorld, view: Int32Array, simMicros = 0):
   view[base + H_KILLS] = m.kills;
   view[base + H_LOSSES] = m.losses;
   view[base + H_GOLD_EARNED] = m.goldEarned;
+  const cp = commandPoints(world, 0);
+  view[base + H_CP_USED] = cp.used;
+  view[base + H_CP_CAP] = cp.cap;
   view[base + H_PP] = m.pp[0] as number;
   view[base + H_SPELLS] = m.spells[0] as number;
   for (let i = 0; i < SNAP_SPELLS; i++) view[base + spellReadyAt(i)] = m.spellReady[i] as number;
