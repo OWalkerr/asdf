@@ -90,6 +90,9 @@ Her gün için tarihten üretilen sabit bir tohum: herkes aynı mızrakçıyla, 
 | **Yükselmiş muhafızlar** (20. oda ve sonrası) | Can +%20, altın aura; saldırılarının %40'ında diğer muhafızlardan ödünç bir saldırı kullanır: Lord → çığlık dalgası / mızrak hatları, Atlı → çığlık / ruh mermileri, Kraliçe → mızrak hatları / mermi halkası | Altın parlama = ödünç saldırı geliyor |
 | **Gölge Atlı** (10., 25. oda) | Arka arkaya 3–4 dörtnala hücum ve arkasında yakan mor iz; çift kollu spiral mermi; yelpaze şeklinde mızrak hatları (önce çizgiyle uyarır) | Hatların arasına sek, Kader Çağrısı ile sersemlet |
 
+| **Kalkanlı Şövalye** (7. oda+) | Kalkanını yavaşça oyuncuya çevirir; önden gelen mızrakları engeller (BLOK). Yakındayken kısa kalkan hamlesi yapar (kırmızı şeritle uyarır) | Sekerek yanına/arkasına geç; Delici Mızrak kalkanı deler; Kader ile sersemletilmişken engelleyemez |
+| **Kemik Bombası** (6. oda+, ikili gelir) | Hızla koşar, yaklaşınca fitili yanar (turuncu daire dolar), 0.8 sn sonra 95 birim alanda patlar | Fitil bitmeden öldür: erken patlama sadece düşmanlara hasar verir; ya da dairenin dışına sek |
+
 **Elit düşmanlar** (altın kesikli halka): can ×1.8, hasar ×1.2 ve bir özellik: *Kalkanlı* (canın %40'ı kadar mavi kalkan), *Hızlı* (+%35 hız), *Patlayan* (ölünce 8 mermi saçar). Elit başına 3 ruh parçası.
 
 Zorluk: oda başına düşman canı +%20, hasar +%8, hız +%1.5. Altın halka = düşman sökümle ölür (Kalista'daki öldürme göstergesi gibi).
@@ -140,14 +143,23 @@ Kayıt tarayıcının yerel depolamasında tutulur.
 
 Sonuç (24 bot avı): ilk muhafız ~%55–65 geçiliyor, ölümler 4. ile 14. oda arasına yayılıyor. Bot kart seçmediği için geç odalar uzun sürüyor; gerçek oyuncuda daha kısa olması beklenir.
 
+### İkinci ölçüm (akıllı kart seçen bot, yeni düşmanlarla)
+
+Bot artık kartları öncelik sırasıyla seçiyor (efsanevi > destansı > hasar, saldırı hızı, çatallı mızrak, Söküm...). Yeni düşmanlar 4. odadan başlayınca ilk muhafızı geçme oranı ~%48'e düştü; ayarlar:
+
+- Kemik Bombası 6. odadan, Kalkanlı Şövalye 7. odadan başlıyor; bomba hasarı 18 → 14
+- Dördüncü dalga 8. oda yerine 11. odadan itibaren
+
+Sonuç (32 bot avı): medyan ölüm odası 6–7, ilk muhafız ~%62 geçiliyor, 6–9. odalar 60–100 sn sürüyor.
+
 ## 9. Sıradaki adımlar (yol haritası)
 
-Tamamlananlar: mızrakçıya özel efsanevi kartlar, Günün Avı (tohumlu), son avlar listesi, bot ile denge ölçümü ve ayarı, 4 mızrakçı, Unutuş Ritüeli (güç silme), Yükselmiş muhafızlar, PWA (ana ekrana ekleme + çevrimdışı önbellek), Ruh Tüccarı kapısı, üçüncü muhafız Yas Kraliçesi, üretken müzik (dron + minör pentatonik arpej; savaşta davul, muhafızda hızlanır), Kader Çağrısı (R), kapı seçimi (Savaş/Elit/Lanetli/Ruh Pınarı), elit düşmanlar, ikinci muhafız Gölge Atlı, 5 efsanevi sinerji, vuruş durması (hit-stop) ve titreşim.
+Tamamlananlar: Kalkanlı Şövalye ve Kemik Bombası, grafik kalitesi ayarı (otomatik / yüksek / düşük), Günün Avı sonuç paylaşımı, akıllı bot ile denge ayarı, mızrakçıya özel efsanevi kartlar, Günün Avı (tohumlu), son avlar listesi, bot ile denge ölçümü ve ayarı, 4 mızrakçı, Unutuş Ritüeli (güç silme), Yükselmiş muhafızlar, PWA (ana ekrana ekleme + çevrimdışı önbellek), Ruh Tüccarı kapısı, üçüncü muhafız Yas Kraliçesi, üretken müzik (dron + minör pentatonik arpej; savaşta davul, muhafızda hızlanır), Kader Çağrısı (R), kapı seçimi (Savaş/Elit/Lanetli/Ruh Pınarı), elit düşmanlar, ikinci muhafız Gölge Atlı, 5 efsanevi sinerji, vuruş durması (hit-stop) ve titreşim.
 
 Sıradakiler:
-1. Botun kartları akıllıca seçmesi ve kapı stratejisi; geç oda dengesinin buna göre ayarı.
-2. Günün Avı için paylaşılabilir sonuç kartı.
-3. Yeni düşman türleri (kalkanlı şövalye, intihar eden kemik bombası).
+1. Yeni oda olayları: sandık odası, lanetli sunak (can karşılığı güç).
+2. Muhafızlara ikinci form (ölünce dönüşen son evre).
+3. Bot verisiyle 15+ oda dengesi.
 
 ## 10. Oyun hissi (Metal Slug esinli)
 
@@ -205,7 +217,11 @@ Tema: **ruhani mezar arenası**. Karanlık taş zemin, turkuaz ruh ışığı, y
 
 `game/` klasörü herhangi bir statik sunucuda (ör. GitHub Pages) yayınlanınca tarayıcının "Ana ekrana ekle" seçeneğiyle tam ekran uygulama gibi kurulur; `sw.js` dosyaları önbelleğe alır, oyun çevrimdışı açılır. Claude artifact sürümünde servis çalışanı devre dışıdır.
 
-## 13. Teknik
+## 13. Performans
+
+Duraklat menüsünde **Grafik: otomatik / yüksek / düşük**. Otomatikte savaş sırasında 3 sn boyunca ortalama kare süresi 26 ms'yi (≈38 fps) aşarsa düşük kaliteye geçer. Düşük kalite: piksel yoğunluğu en fazla 1.25, uzak adalar, sis ve film greni kapalı, sıradan düşman dumanı kapalı, duman sınırı 130 parçacık.
+
+## 14. Teknik
 
 - Tek dosya HTML5 Canvas + saf JavaScript, kütüphane yok.
 - Dünya: 820 birim yarıçaplı dairesel arena, kamera oyuncuyu takip eder, zoom ekran boyutuna göre ölçeklenir.

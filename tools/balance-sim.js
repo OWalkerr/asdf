@@ -6,10 +6,10 @@ const RUNS = +process.argv[2] || 4;
 (async () => {
   const b = await chromium.launch(); const pg = await b.newPage({ viewport: { width: 390, height: 844 } });
   const errs = []; pg.on('pageerror', e => errs.push(e.message));
-  await pg.goto('file://' + require('path').resolve(__dirname, '../game/index.html')); await pg.waitForTimeout(300);
+  await pg.goto('file://' + require('path').resolve(__dirname, '../game/index.html'), { waitUntil: 'domcontentloaded' }); await pg.waitForTimeout(300);
   const out = await pg.evaluate(async (RUNS) => {
     // freeze rendering so only the simulation runs
-    window.draw = () => {}; buzz = () => {};
+    window.draw = () => {}; buzz = () => {}; puff = () => {};
     let bot = { x: 0, y: 0, m: 0 };
     inputDir = () => bot;
     const res = [];
@@ -19,7 +19,7 @@ const RUNS = +process.argv[2] || 4;
       while (G.phase !== 'over' && steps < 60 * 60 * 25 && G.room <= 30) {
         steps++;
         const p = G.p, s = G.s;
-        if (G.phase === 'draft') { pick(draftOpts[0]); continue; }
+        if (G.phase === 'draft') { const PR = ['dmg', 'as', 'multi', 'rend', 'pierce', 'heavy', 'crit', 'hp', 'leech', 'spirit', 'rendcd', 'exec', 'shadow', 'ghost', 'qup']; const sc = u => (u.r === 'leg' ? 100 : u.r === 'epic' ? 60 : 0) + (PR.includes(u.id) ? 40 - PR.indexOf(u.id) * 2 : 0); pick(draftOpts.slice().sort((a, b) => sc(b) - sc(a))[0]); continue; }
         if (G.phase === 'path') { chooseDoor('fight'); continue; }
         if (G.phase === 'shop') { showPath(); continue; }
         // steering: flee threats, keep off the wall, otherwise approach to range
