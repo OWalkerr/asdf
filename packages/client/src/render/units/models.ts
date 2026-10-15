@@ -8,6 +8,8 @@ import {
   IcosahedronGeometry,
   Matrix4,
   OctahedronGeometry,
+  Quaternion,
+  Vector3,
 } from 'three/webgpu';
 import { merge, paint, verticalShade } from '../geometry/lowpoly';
 import type { Swatch } from '../palette';
@@ -956,8 +958,9 @@ export const watcher = (): BufferGeometry => {
  * kuyruk, deri kanatlar, ağzında kor. SPA: boyun+baş = Head (püskürtme sallanması), kanatlar
  * kol, çapraz bacak çiftleri LegL/LegR.
  */
-export const wyrm = (): BufferGeometry => {
+export const wyrm = (remap: Partial<Record<Swatch, Swatch>> = {}, scale = 1.1): BufferGeometry => {
   const b = new ModelBuilder({ hip: 1.3, shoulder: 2.2, neck: 2.3, shoulderZ: 0.9, hipZ: 0.6 });
+  b.remap = remap;
   b.add(Part.Body, box(3.4, 1.3, 1.5), 'rust', [0, 1.7, 0]);
   b.add(Part.Body, box(3.0, 0.3, 1.2), 'ember', [0, 1.05, 0]); // karın
   for (let k = 0; k < 6; k++)
@@ -1006,7 +1009,7 @@ export const wyrm = (): BufferGeometry => {
     b.add(part, box(0.4, 1.3, 0.4), 'rust', [x, 0.7, z], [0, 0, 0], [1, 1, 1], hip);
     b.add(part, box(0.6, 0.14, 0.45), 'sootBlack', [x + 0.15, 0.07, z], [0, 0, 0], [1, 1, 1], hip);
   }
-  return b.build(1.1);
+  return b.build(scale);
 };
 
 /**
@@ -1333,6 +1336,223 @@ export const mouthOfSauron = (): BufferGeometry => {
   return b.build(1.1);
 };
 
+/**
+ * Tom Bombadil (BFME2 gücü): parlak mavi ceket, sarı çizmeler, tüylü uzun şapka, kahverengi gür
+ * sakal; elinde kısa sopa. Neşeli, tıknaz siluet.
+ */
+export const tomBombadil = (): BufferGeometry => {
+  const b = new ModelBuilder();
+  legs(b, 'leather', 'gold');
+  b.add(Part.Body, box(0.44, 0.66, 0.54), 'gondorBlue', [0, 1.1, 0]); // mavi ceket
+  b.add(Part.Body, cyl(0.26, 0.34, 0.36, 7), 'gondorBlue', [0, 0.8, 0]); // ceket eteği
+  b.add(Part.Body, box(0.46, 0.08, 0.56), 'leather', [0, 0.92, 0]); // kemer
+  b.add(Part.Body, box(0.06, 0.06, 0.08), 'gold', [0.24, 0.92, 0]); // toka
+  b.add(Part.Head, box(0.22, 0.22, 0.22), 'sand', [0.02, 1.61, 0]);
+  b.add(Part.Head, box(0.12, 0.26, 0.26), 'woodDark', [0.1, 1.48, 0]); // gür sakal
+  b.add(Part.Head, cyl(0.3, 0.3, 0.04, 8), 'leather', [0, 1.73, 0]); // şapka siperi
+  b.add(Part.Head, cyl(0.12, 0.15, 0.32, 7), 'leather', [0, 1.9, 0]); // uzun şapka
+  b.add(Part.Head, box(0.04, 0.38, 0.06), 'snow', [-0.08, 2.0, 0.12], [0.35, 0, 0.4]); // tüy
+  arm(b, Part.ArmR, 0.3, 'gondorBlue', 'sand');
+  b.add(Part.ArmR, cyl(0.04, 0.05, 0.8, 5), 'woodDark', [0.3, 0.74, 0.3], [0, 0, -1.1]); // sopa
+  arm(b, Part.ArmL, -0.3, 'gondorBlue', 'sand');
+  return b.build(1.05);
+};
+
+/**
+ * Ent (Ent Toplantısı): yürüyen yaşlı ağaç — kalın kabuklu gövde, kök ayaklar, dal kollar ve
+ * yapraklı taç, oyuk gözlerde yeşil ışık. ~5 m.
+ */
+export const ent = (): BufferGeometry => {
+  const b = new ModelBuilder({ hip: 1.6, shoulder: 3.4, neck: 3.6, shoulderZ: 0.8, hipZ: 0.42 });
+  for (const [part, z] of [
+    [Part.LegL, -0.42],
+    [Part.LegR, 0.42],
+  ] as const) {
+    b.add(part, cyl(0.28, 0.36, 1.6, 6), 'bark', [0, 0.8, z]);
+    for (const dx of [-0.3, 0.3])
+      b.add(part, box(0.5, 0.14, 0.18), 'woodDark', [dx, 0.07, z], [0, dx > 0 ? 0 : Math.PI, 0]); // kökler
+  }
+  b.add(Part.Body, cyl(0.62, 0.7, 2.2, 7), 'bark', [0, 2.6, 0]); // gövde
+  b.add(Part.Body, box(0.1, 1.4, 0.3), 'woodDark', [0.6, 2.5, 0.2]); // kabuk yarığı
+  b.add(Part.Body, box(0.1, 1.0, 0.24), 'woodDark', [0.62, 2.7, -0.3]);
+  b.add(Part.Head, cyl(0.46, 0.6, 0.9, 7), 'bark', [0.05, 4.0, 0]); // baş
+  b.add(Part.Head, box(0.08, 0.1, 0.5), 'magic', [0.5, 4.05, 0]); // gözler
+  b.add(Part.Head, box(0.2, 0.36, 0.3), 'woodDark', [0.5, 3.7, 0]); // yosun sakal
+  for (const [x, y, z, r] of [
+    [0, 4.9, 0, 0.9],
+    [0.4, 4.6, 0.6, 0.6],
+    [-0.4, 4.7, -0.5, 0.65],
+    [-0.2, 5.3, 0.3, 0.55],
+  ] as const)
+    b.add(Part.Head, new IcosahedronGeometry(r, 0), x > 0 ? 'leaf' : 'leafDark', [x, y, z]); // taç
+  const branch = (part: PartId, z: number) => {
+    b.add(part, cyl(0.16, 0.24, 1.6, 5), 'bark', [0, 2.6, z]);
+    b.add(part, cyl(0.1, 0.16, 0.9, 5), 'bark', [0.2, 1.5, z], [0, 0, 0.3]);
+    for (const [dx, rz] of [
+      [0.35, 0.9],
+      [0.1, -0.6],
+      [0.45, 0.2],
+    ] as const)
+      b.add(part, box(0.36, 0.08, 0.08), 'woodDark', [dx, 1.05, z], [0, 0, rz]); // parmak dallar
+    b.add(part, new IcosahedronGeometry(0.3, 0), 'leaf', [0, 3.3, z * 1.2]); // omuz yaprağı
+  };
+  branch(Part.ArmR, 0.8);
+  branch(Part.ArmL, -0.8);
+  return b.build(1.0);
+};
+
+/** Ortak goblin gövdesi: kısa, kambur, iri sivri kulaklı, sarı gözlü. */
+const goblinBody = (b: ModelBuilder, armor: Swatch) => {
+  legs(b, 'leather', 'dirtDark', 0.14);
+  b.add(Part.Body, box(0.36, 0.5, 0.44), 'orcSkin', [0.08, 1.08, 0], [0, 0, -0.45]);
+  b.add(Part.Body, box(0.26, 0.34, 0.46), armor, [0.04, 1.1, 0], [0, 0, -0.45]);
+  b.add(Part.Body, box(0.34, 0.24, 0.46), 'team0Dark', [0, 0.82, 0]); // bez etek
+  b.add(Part.Body, box(0.2, 0.22, 0.5), 'orcSkin', [-0.06, 1.32, 0], [0, 0, -0.6]); // kambur
+  b.add(Part.Head, box(0.24, 0.2, 0.24), 'orcSkin', [0.2, 1.38, 0]);
+  b.add(Part.Head, box(0.06, 0.05, 0.18), 'gold', [0.32, 1.42, 0]); // sarı gözler
+  b.add(Part.Head, box(0.1, 0.06, 0.08), 'orcSkin', [0.34, 1.34, 0]); // sivri burun
+  for (const z of [-1, 1])
+    b.add(Part.Head, new ConeGeometry(0.06, 0.32, 4), 'orcSkin', [0.14, 1.46, z * 0.2], [z * 1.3, 0, 0.3]); // kulak
+};
+
+/** Goblin savaşçısı (BFME2): kambur, iri kulaklı, paslı kısa pala ve yamalı kalkan. */
+export const goblinWarrior = (): BufferGeometry => {
+  const b = new ModelBuilder({ ...HUMAN, neck: 1.3, shoulder: 1.22 });
+  goblinBody(b, 'rust');
+  arm(b, Part.ArmR, 0.3, 'orcSkin', 'orcSkin', 0.66);
+  b.add(Part.ArmR, box(0.4, 0.08, 0.04), 'iron', [0.26, 0.66, 0.3], [0, 0, 0.3]); // kısa pala
+  arm(b, Part.ArmL, -0.3, 'orcSkin', 'orcSkin', 0.66);
+  b.add(Part.ArmL, box(0.05, 0.42, 0.34), 'woodDark', [0.24, 0.9, -0.36]); // yamalı kalkan
+  b.add(Part.ArmL, box(0.06, 0.16, 0.36), 'team0', [0.25, 0.98, -0.36]);
+  return b.build(0.78);
+};
+
+/** Goblin okçusu: deri kukuletalı, kısa eğri yaylı goblin. */
+export const goblinArcher = (): BufferGeometry => {
+  const b = new ModelBuilder({ ...HUMAN, neck: 1.3, shoulder: 1.22 });
+  goblinBody(b, 'leather');
+  b.add(Part.Head, box(0.28, 0.14, 0.28), 'team0', [0.12, 1.52, 0], [0, 0, 0.3]); // kukuleta
+  b.add(Part.Body, cyl(0.06, 0.06, 0.5, 5), 'woodDark', [-0.18, 1.22, 0.1], [0.35, 0, -0.3]); // sadak
+  arm(b, Part.ArmR, 0.28, 'orcSkin', 'orcSkin', 0.64);
+  arm(b, Part.ArmL, -0.28, 'orcSkin', 'orcSkin', 0.64);
+  b.add(Part.ArmL, box(0.38, 0.05, 0.05), 'woodDark', [0.26, 0.66, -0.28], [0, 0, -0.3]);
+  b.add(Part.ArmL, box(0.38, 0.05, 0.05), 'woodDark', [-0.14, 0.66, -0.28], [0, 0, 0.3]);
+  b.add(Part.ArmL, box(0.78, 0.012, 0.012), 'sand', [0.06, 0.58, -0.28]);
+  return b.build(0.78);
+};
+
+/** İki nokta arasında kutu (eklemli bacak parçası). */
+const segment = (b: ModelBuilder, part: PartId, a: V3, c: V3, t: number, sw: Swatch, pivot: V3) => {
+  const d = new Vector3(c[0] - a[0], c[1] - a[1], c[2] - a[2]);
+  const len = d.length();
+  const q = new Quaternion().setFromUnitVectors(new Vector3(0, 1, 0), d.normalize());
+  const e = new Euler().setFromQuaternion(q);
+  const mid: V3 = [(a[0] + c[0]) / 2, (a[1] + c[1]) / 2, (a[2] + c[2]) / 2];
+  b.add(part, box(t, len + t, t), sw, mid, [e.x, e.y, e.z], [1, 1, 1], pivot);
+};
+
+/** Dev örümcek gövdesi (örümcek binicisi, Shelob): iri karın, baş-göğüs, sekiz eklemli bacak. */
+const spiderBody = (b: ModelBuilder, skin: Swatch, mark: Swatch, eyes: Swatch, s: number) => {
+  b.add(
+    Part.Body,
+    new IcosahedronGeometry(0.62 * s, 1),
+    skin,
+    [-0.75 * s, 0.95 * s, 0],
+    [0, 0, 0.2],
+    [1.25, 0.85, 1],
+  ); // karın
+  b.add(Part.Body, box(0.5 * s, 0.06 * s, 0.24 * s), mark, [-0.75 * s, 1.47 * s, 0], [0, 0, 0.2]); // sırt deseni
+  b.add(Part.Body, box(0.6 * s, 0.4 * s, 0.56 * s), skin, [0.15 * s, 0.82 * s, 0]); // baş-göğüs
+  b.add(Part.Body, box(0.08 * s, 0.1 * s, 0.32 * s), eyes, [0.46 * s, 0.92 * s, 0]); // göz kümesi
+  for (const z of [-1, 1])
+    b.add(
+      Part.Body,
+      new ConeGeometry(0.05 * s, 0.3 * s, 4),
+      mark,
+      [0.52 * s, 0.66 * s, z * 0.1 * s],
+      [0, 0, -1.9],
+    ); // çene dişleri
+  const legX = [0.34, 0.16, -0.02, -0.2];
+  legX.forEach((x, i) => {
+    for (const z of [-1, 1]) {
+      const part = (i + (z > 0 ? 1 : 0)) % 2 === 0 ? Part.LegL : Part.LegR;
+      const sweep = (i - 1.5) * 0.45;
+      const hip: V3 = [x * s, 0.82 * s, z * 0.26 * s];
+      const knee: V3 = [(x + sweep * 0.35) * s, 1.3 * s, z * 0.85 * s];
+      const foot: V3 = [(x + sweep * 0.7) * s, 0, z * 1.3 * s];
+      segment(b, part, hip, knee, 0.08 * s, skin, hip);
+      segment(b, part, knee, foot, 0.065 * s, skin, hip);
+    }
+  });
+};
+
+/** Örümcek binicisi (BFME2 Goblinler): kara dev örümcek ve sırtında mızraklı goblin. */
+export const spiderRider = (): BufferGeometry => {
+  const b = new ModelBuilder();
+  spiderBody(b, 'sootBlack', 'eyeRed', 'eyeRed', 1);
+  b.add(Part.Body, box(0.4, 0.08, 0.5), 'team0Dark', [-0.25, 1.2, 0]); // eyer
+  b.add(Part.Body, box(0.28, 0.44, 0.34), 'orcSkin', [-0.2, 1.48, 0], [0, 0, -0.3]); // goblin
+  b.add(Part.Body, box(0.3, 0.22, 0.36), 'rust', [-0.2, 1.52, 0], [0, 0, -0.3]);
+  const neck: V3 = [-0.12, 1.72, 0];
+  b.add(Part.Head, box(0.2, 0.18, 0.2), 'orcSkin', [-0.04, 1.8, 0], [0, 0, 0], [1, 1, 1], neck);
+  b.add(Part.Head, box(0.05, 0.04, 0.14), 'gold', [0.06, 1.83, 0], [0, 0, 0], [1, 1, 1], neck);
+  for (const z of [-1, 1])
+    b.add(
+      Part.Head,
+      new ConeGeometry(0.05, 0.26, 4),
+      'orcSkin',
+      [-0.08, 1.86, z * 0.16],
+      [z * 1.3, 0, 0.3],
+      [1, 1, 1],
+      neck,
+    );
+  const shR: V3 = [-0.18, 1.66, 0.2];
+  b.add(Part.ArmR, box(0.1, 0.4, 0.1), 'orcSkin', [-0.16, 1.48, 0.2], [0, 0, 0], [1, 1, 1], shR);
+  b.add(Part.ArmR, cyl(0.025, 0.025, 1.7, 4), 'woodDark', [0.3, 1.4, 0.22], [0, 0, -1.35], [1, 1, 1], shR); // mızrak
+  b.add(
+    Part.ArmR,
+    new ConeGeometry(0.05, 0.18, 4),
+    'iron',
+    [1.12, 1.47, 0.22],
+    [0, 0, -Math.PI / 2],
+    [1, 1, 1],
+    shR,
+  );
+  return b.build(1.05);
+};
+
+/** Shelob: Cirith Ungol'un devasa örümceği — kabarık kara karın, solgun desen, kızıl göz kümesi. */
+export const shelob = (): BufferGeometry => {
+  const b = new ModelBuilder();
+  spiderBody(b, 'sootBlack', 'rockLight', 'eyeRed', 2.0);
+  return b.build(1.15);
+};
+
+/** Gorkil, Goblin Kralı: altın taç, kızıl pelerin, kemik asa ve kamçı. */
+export const gorkil = (): BufferGeometry => {
+  const b = new ModelBuilder({ ...HUMAN, neck: 1.3, shoulder: 1.22 });
+  goblinBody(b, 'gold');
+  b.add(Part.Body, box(0.06, 0.9, 0.56), 'team0', [-0.24, 0.98, 0]); // pelerin
+  b.add(Part.Head, cyl(0.13, 0.13, 0.1, 6), 'gold', [0.18, 1.52, 0]); // taç
+  for (let k = 0; k < 5; k++) {
+    const a = (k / 5) * Math.PI * 2;
+    b.add(Part.Head, new ConeGeometry(0.03, 0.1, 4), 'gold', [
+      0.18 + Math.cos(a) * 0.11,
+      1.61,
+      Math.sin(a) * 0.11,
+    ]);
+  }
+  arm(b, Part.ArmR, 0.3, 'orcSkin', 'orcSkin', 0.66);
+  b.add(Part.ArmR, box(0.04, 0.04, 0.7), 'leather', [0.12, 0.62, 0.55], [0.6, 0, 0]); // kamçı
+  arm(b, Part.ArmL, -0.3, 'orcSkin', 'orcSkin', 0.66);
+  b.add(Part.ArmL, cyl(0.03, 0.03, 1.5, 5), 'gondorWhite', [0.12, 0.95, -0.34]); // kemik asa
+  b.add(Part.ArmL, new IcosahedronGeometry(0.08, 0), 'gondorWhite', [0.12, 1.72, -0.34]); // kafatası
+  return b.build(0.95);
+};
+
+/** Drogoth, Ejder Lordu: Ateş Ejderi siluetinin büyük, kızıl pullu hali. */
+export const drogoth = (): BufferGeometry => wyrm({ rust: 'eyeRed', sootBlack: 'rust' }, 1.4);
+
 export const UNIT_MODELS: Record<number, () => BufferGeometry> = {
   0: gondorSoldier,
   1: orcWarrior,
@@ -1354,7 +1574,7 @@ export const UNIT_MODELS: Record<number, () => BufferGeometry> = {
   16: balrog,
   17: () => ladderTeam(),
   18: watcher,
-  19: wyrm,
+  19: () => wyrm(),
   20: () => siegeTower(),
   21: rohanSpearman,
   22: rohanArcher,
@@ -1379,4 +1599,12 @@ export const UNIT_MODELS: Record<number, () => BufferGeometry> = {
   38: () => batteringRam(GONDOR_SIEGE),
   39: () => ladderTeam(GONDOR_SIEGE),
   40: () => siegeTower(GONDOR_SIEGE),
+  41: tomBombadil,
+  42: ent,
+  43: goblinWarrior,
+  44: goblinArcher,
+  45: spiderRider,
+  46: gorkil,
+  47: drogoth,
+  48: shelob,
 };

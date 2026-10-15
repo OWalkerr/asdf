@@ -417,6 +417,30 @@ export const castSpell = (world: SimWorld, team: number, spell: number, x: numbe
         16384,
       );
       break;
+    case 'tom_bombadil':
+      summonAt(
+        world,
+        team,
+        fs?.unit ?? UnitTypeId.TomBombadil,
+        x,
+        z,
+        fs?.count ?? SUMMONS.tom.battalions,
+        SUMMONS.tom.duration,
+        16384,
+      );
+      break;
+    case 'ent_moot':
+      summonAt(
+        world,
+        team,
+        fs?.unit ?? UnitTypeId.Ent,
+        x,
+        z,
+        fs?.count ?? SUMMONS.entMoot.battalions,
+        SUMMONS.entMoot.duration,
+        16384,
+      );
+      break;
     case 'rohirrim': {
       // Doğudan batıya hat halinde dörtnal: hedefin `distance` doğusunda belirir, batısına geçer.
       const d = fxFromFloat(SUMMONS.rohirrim.distance);

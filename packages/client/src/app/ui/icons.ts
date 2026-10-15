@@ -52,6 +52,9 @@ const P: Record<string, string> = {
   eagle:
     '<path d="M12 6c1 0 2 1 2 2l8-3-3 5h2l-4 3h-3l1 3-1 4-2-2-2 2-1-4 1-3H7l-4-3h2L2 5l8 3c0-1 1-2 2-2z"/>',
   wave: '<path d="M2 15c3 0 4-6 9-6 3 0 4 2 4 4-1-1-3-1-4 0 2 0 4 1 5 3 2-1 4-1 6-1v7H2z"/>',
+  tree: '<path d="M12 2c3 0 5 2 5 4 2 0 4 2 4 4s-2 4-4 4h-3v3l3 3h-2l-3-2-3 2H7l3-3v-3H7c-2 0-4-2-4-4s2-4 4-4c0-2 2-4 5-4z"/>',
+  spider:
+    '<path d="M12 7a3 3 0 0 1 3 3 4 4 0 0 1-3 8 4 4 0 0 1-3-8 3 3 0 0 1 3-3zM2 4l6 5-1 1zM22 4l-6 5 1 1zM1 12h6v1H1zM23 12h-6v1h6zM2 20l5-5 1 1zM22 20l-5-5-1 1z"/>',
   charge:
     '<path d="M3 2l7 7-1.5 1.5L2 4.5V2zM21 2v2.5l-6.5 6L13 9l7-7zM8.5 12l3.5 3.5-5 5 1 1-1.5 1.5-4-4L4 17.5l1 1zM15.5 12l5 5 1-1 1.5 1.5-4 4L17.5 22l1-1-5-5z"/>',
   eye: '<path d="M12 5c5 0 9 4 10 7-1 3-5 7-10 7S3 15 2 12c1-3 5-7 10-7zm0 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8z"/>',
@@ -106,6 +109,8 @@ const THEME: Record<string, [string, string, string]> = {
   quake: ['#9a7448', '#2a1a0a', '#ffe8c8'],
   eagle: ['#c08a3a', '#2e1a06', '#fff0d0'],
   wave: ['#3a8ad0', '#08203a', '#e0f6ff'],
+  tree: ['#5a9a3a', '#16300c', '#eaffd0'],
+  spider: ['#6a5a7a', '#140e1a', '#ffd0d0'],
   charge: ['#d0503a', '#3a0e08', '#ffe0d8'],
   army: ['#8a9ab0', '#1c2230', '#f2f6fc'],
 };

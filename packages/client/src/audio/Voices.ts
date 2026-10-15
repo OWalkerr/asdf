@@ -121,6 +121,41 @@ const HERO: Record<number, VoiceDef> = {
     pitch: 0.3,
     rate: 0.8,
   },
+  [UnitTypeId.Gorkil]: {
+    select: ['Kral burada!', 'Ne istiyorsun?'],
+    move: ['Koşun, sürüngenler!', 'Dağdan inin!'],
+    attack: ['Parçalayın onları!', 'Hepsi bizim!'],
+    pitch: 1.4,
+    rate: 1.15,
+  },
+  [UnitTypeId.Drogoth]: {
+    select: ['Alev bekliyor.', 'Söyle.'],
+    move: ['Kanatlarım açık.'],
+    attack: ['Yanacaklar!', 'Küle dönsünler!'],
+    pitch: 0.25,
+    rate: 0.75,
+  },
+  [UnitTypeId.Shelob]: {
+    select: ['Ssss…', 'Aç…'],
+    move: ['Karanlıkta…'],
+    attack: ['Ziyafet!', 'Taze et…'],
+    pitch: 0.6,
+    rate: 0.7,
+  },
+  [UnitTypeId.TomBombadil]: {
+    select: ['Hey dol! Neşeli dol!', 'Yaşlı Tom burada!'],
+    move: ['Tom geliyor, tıngır mıngır!'],
+    attack: ['Kaçın bakalım!', 'Hop hop!'],
+    pitch: 1.2,
+    rate: 1.2,
+  },
+  [UnitTypeId.Ent]: {
+    select: ['Hmm… hom…', 'Acele etme…'],
+    move: ['Yürüyoruz…'],
+    attack: ['Isengard’ın ateşini söndürün!', 'Hoom!'],
+    pitch: 0.2,
+    rate: 0.6,
+  },
   [UnitTypeId.Gothmog]: {
     select: ['İnsan çağı bitti.', 'Emir ver.'],
     move: ['Yürüyün, köpekler!'],
@@ -155,6 +190,9 @@ const voiceFor = (t: number): VoiceDef => {
     case UnitTypeId.OrcArcher:
     case UnitTypeId.WargRider:
     case UnitTypeId.MouthOfSauron:
+    case UnitTypeId.GoblinWarrior:
+    case UnitTypeId.GoblinArcher:
+    case UnitTypeId.SpiderRider:
       return ORC;
     case UnitTypeId.CaveTroll:
       return TROLL;

@@ -66,6 +66,15 @@ export const fortTheme = (faction: number): FortTheme =>
         emblem: 'eye',
         glow: 'fire',
       },
+      // Goblinler: Sisli Dağların kaba taşı, kızıl göz arması.
+      {
+        stone: 'rock',
+        stoneDark: 'rockDark',
+        trim: 'rust',
+        bannerBg: 'sootBlack',
+        emblem: 'eye',
+        glow: 'fire',
+      },
     ] as const satisfies readonly FortTheme[]
   )[faction] ?? {
     stone: 'helmStone',

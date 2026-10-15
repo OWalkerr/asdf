@@ -12,6 +12,11 @@ const SPACING_X = 3.2;
 const SPACING_Z = 4;
 
 export const GALLERY_CENTER = { x: 0, z: 52 };
+/** `?gallery=41`: yalnızca bu id'den başlayan birimler (yeni modellere bakmak için). */
+const RANGE = (new URLSearchParams(location.search).get('gallery') ?? '').split('-').map(Number);
+const FROM = RANGE[0] || 0;
+const TO = RANGE[1] || 255;
+const DEFS = UNIT_DEFS.filter((d) => d.id >= FROM && d.id <= TO);
 
 export const updateGallery = (
   units: UnitRenderer,
@@ -20,12 +25,12 @@ export const updateGallery = (
 ) => {
   units.begin();
   const cols = STATES.length * 2;
-  UNIT_DEFS.forEach((def, row) => {
+  DEFS.forEach((def, row) => {
     for (let c = 0; c < cols; c++) {
       const state = STATES[c % STATES.length] as number;
       const team = c < STATES.length ? 0 : 1;
       const x = GALLERY_CENTER.x + (c - (cols - 1) / 2) * SPACING_X;
-      const z = GALLERY_CENTER.z + (row - (UNIT_DEFS.length - 1) / 2) * SPACING_Z;
+      const z = GALLERY_CENTER.z + (row - (DEFS.length - 1) / 2) * SPACING_Z;
       // Ölüm döngüsü 5 sn'de bir baştan; vurulma parıltısı saldırı sütununda periyodik.
       const t = state === ANIM_DIE ? timeS % 5 : timeS + row * 0.3;
       const flash = state === ANIM_ATTACK && timeS % 2 < 0.12 ? 1 : 0;

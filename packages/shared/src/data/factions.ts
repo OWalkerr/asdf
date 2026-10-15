@@ -1,5 +1,6 @@
 import {
   ELF_HEROES,
+  GOBLIN_HEROES,
   HEROES,
   type HeroDef,
   ISENGARD_HEROES,
@@ -14,7 +15,7 @@ import { UnitTypeId } from './units';
  * harita garnizonunun karşılıkları ve takım rengi. İndeks = sim'deki faction değeri.
  */
 export interface FactionDef {
-  key: 'gondor' | 'rohan' | 'elves' | 'isengard' | 'mordor';
+  key: 'gondor' | 'rohan' | 'elves' | 'isengard' | 'mordor' | 'goblins';
   name: string;
   desc: string;
   /** Kışlanın yetiştirdiği birimler (komut paneli sırası). */
@@ -149,6 +150,20 @@ export const FACTIONS: readonly FactionDef[] = [
         desc: "Saruman'ın fırtınası hedeften dışa yayılır: düşmanı yaralar ve sürükler.",
         icon: 'wave',
       },
+      tom_bombadil: {
+        name: 'Dunland Yabanileri',
+        desc: 'Dunland kabileleri inip gelir: hedef noktada üç tabur Uruk 40 sn savaşır.',
+        icon: 'club',
+        unit: UnitTypeId.UrukHai,
+        count: 3,
+      },
+      ent_moot: {
+        name: 'Orman Kıyımı',
+        desc: 'Isengard ocaklarının odun avcıları: hedef noktada iki mağara trolü 50 sn savaşır.',
+        icon: 'club',
+        unit: UnitTypeId.CaveTroll,
+        count: 2,
+      },
     },
   },
   {
@@ -214,6 +229,100 @@ export const FACTIONS: readonly FactionDef[] = [
         name: 'Lav Dalgası',
         desc: 'Hedeften dışa yayılan kızgın dalga düşmanı yaralar ve sürükler.',
         icon: 'flame',
+      },
+      tom_bombadil: {
+        name: 'Morgul Süvarisi',
+        desc: 'Bir warg sürüsü hedef noktaya iner ve 40 sn savaşır.',
+        icon: 'wolf',
+        unit: UnitTypeId.WargRider,
+        count: 2,
+      },
+      ent_moot: {
+        name: 'Dağ Trolleri',
+        desc: 'Gorgoroth trolleri yürür: hedef noktada üç mağara trolü 50 sn savaşır.',
+        icon: 'club',
+        unit: UnitTypeId.CaveTroll,
+        count: 3,
+      },
+    },
+  },
+  {
+    key: 'goblins',
+    name: 'Goblinler',
+    desc: 'Sisli Dağların sürüleri: ucuz goblin savaşçıları ve okçuları, örümcek biniciler. Gorkil, Drogoth, Shelob. Gondor ve Rohan saldırır.',
+    trains: [UnitTypeId.GoblinWarrior, UnitTypeId.GoblinArcher, UnitTypeId.SpiderRider],
+    heroes: GOBLIN_HEROES,
+    garrison: {
+      [UnitTypeId.GondorSoldier]: UnitTypeId.GoblinWarrior,
+      [UnitTypeId.TowerGuard]: UnitTypeId.SpiderRider,
+      [UnitTypeId.GondorArcher]: UnitTypeId.GoblinArcher,
+    },
+    color: { main: '#6b5a2c', dark: '#2e2612', accent: '#d8b040' },
+    evil: true,
+    enemyHpPercent: 72,
+    enemyMap: GOOD_ATTACKERS,
+    spells: {
+      heal: {
+        name: 'Mağara Ziyafeti',
+        desc: 'Sürü kendini toparlar: alandaki dost birimlerin canını %60 yeniler.',
+      },
+      rally: { name: 'Goblin Davulları', desc: '30 sn boyunca tüm birlikleriniz +%25 hasar verir.' },
+      arrow_volley: {
+        name: 'Ateşli Oklar',
+        desc: 'Hedef alana üç dalga ateşli ok yağdırır. Bir 1. kademe güç gerektirir.',
+      },
+      elven_allies: {
+        name: 'Goblin Akını',
+        desc: 'Hedef noktada 60 sn kalan dört tabur goblin belirir.',
+        icon: 'army',
+        unit: UnitTypeId.GoblinWarrior,
+        count: 4,
+      },
+      sun_flare: {
+        name: 'Karanlık Mağara',
+        desc: 'Alandaki düşmanlar 60 hasar alır, 15 sn −%40 hasar verir, +%25 alır.',
+        icon: 'ghost',
+      },
+      rohirrim: {
+        name: 'Örümcek Akını',
+        desc: 'Örümcek biniciler doğudan hedef noktanın üzerinden batıya akar, yoldaki düşmanı çiğner.',
+        icon: 'spider',
+        unit: UnitTypeId.SpiderRider,
+      },
+      earthquake: {
+        name: 'Dağ Uyanır',
+        desc: 'Sisli Dağlar sarsılır: askerlere ve kuşatma yapılarına ağır hasar.',
+      },
+      army_of_dead: {
+        name: "Balrog'u Uyandır",
+        desc: 'Derinlerden bir Balrog yükselir ve 45 sn sizin için savaşır.',
+        icon: 'flame',
+        unit: UnitTypeId.Balrog,
+        count: 1,
+      },
+      eagles: {
+        name: 'Yarasa Sürüsü',
+        desc: 'Kara yarasalar üç kez dalış yapar: her dalış 220 hasar.',
+        icon: 'eagle',
+      },
+      flood: {
+        name: 'Ateş Seli',
+        desc: 'Hedeften dışa yayılan alev dalgası düşmanı yaralar ve sürükler.',
+        icon: 'flame',
+      },
+      tom_bombadil: {
+        name: 'Dağ Devi',
+        desc: 'Sisli Dağlardan bir mağara trolü hedef noktaya iner ve 40 sn savaşır.',
+        icon: 'club',
+        unit: UnitTypeId.CaveTroll,
+        count: 1,
+      },
+      ent_moot: {
+        name: 'Örümcek Yuvası',
+        desc: 'Mirkwood örümcekleri: hedef noktada üç tabur örümcek binicisi 50 sn savaşır.',
+        icon: 'spider',
+        unit: UnitTypeId.SpiderRider,
+        count: 3,
       },
     },
   },

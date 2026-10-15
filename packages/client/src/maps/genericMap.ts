@@ -243,7 +243,7 @@ export const buildGenericMap = (palette: Texture, params: ToonParams, def: MapDe
   const keepRot = Math.PI / 2 - (c.facing ?? 90) * DEG;
   const keepY = heightAt(c.pos[0], c.pos[1]) + (c.elevation ?? 0) - 0.4;
   // Kale: Gondor taş kalesi, Rohan'ın Altın Salonu, Lórien'in mallorn kalesi Orthanc veya Barad-dûr (taraf seçimi).
-  const KEEPS = [P.fortressKeep, P.rohanKeep, P.elfKeep, P.isengardKeep, P.baradDurKeep];
+  const KEEPS = [P.fortressKeep, P.rohanKeep, P.elfKeep, P.isengardKeep, P.baradDurKeep, P.baradDurKeep];
   const keep = (KEEPS[faction] ?? P.fortressKeep)();
   solid.add(keep, at(c.pos[0], c.pos[1], keepRot, def.mode === 'TD' ? 0.7 : 1, keepY), true);
   if (c.door) {

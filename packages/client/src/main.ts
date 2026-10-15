@@ -126,7 +126,9 @@ const boot = async () => {
   setTeamColor(palette, factionDef(faction).color);
   setPlayerBannerColor(factionDef(faction).color.main);
   if (faction > 0)
-    setPlayerMinimapColor(['#8fb8ff', '#8be07a', '#8fe0d0', '#ecece4', '#ff8a5a'][faction] ?? '#8fb8ff');
+    setPlayerMinimapColor(
+      ['#8fb8ff', '#8be07a', '#8fe0d0', '#ecece4', '#ff8a5a', '#e0c060'][faction] ?? '#8fb8ff',
+    );
   const mapId = choice.mapId;
   const difficulty = choice.difficulty;
   const world = buildMap(mapId, palette, toon, faction);

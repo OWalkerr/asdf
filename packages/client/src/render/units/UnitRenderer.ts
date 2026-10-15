@@ -95,7 +95,7 @@ export class UnitRenderer {
       geo.setAttribute('iPose', poseAttr);
       geo.setAttribute('iAnim', animAttr);
       const style = def.attackStyle === 'thrust' ? 1 : def.attackStyle === 'bow' ? 2 : 0;
-      const ghost = def.invulnerable === true;
+      const ghost = def.invulnerable === true && def.key === 'dead_army';
       const mat = createUnitMaterial(palette, params, {
         attackStyle: style,
         ghost,

@@ -54,9 +54,20 @@ const battalions = (sim: Simulation, team: number) =>
   [...query(sim.world, [sim.world.c.Battalion])].filter((b) => sim.world.c.Team.id[b] === team);
 
 describe('genişletilmiş büyü kitabı', () => {
-  it('10 güç, 4 kademe; snapshot hepsini taşır', () => {
-    expect(SPELL_DEFS.length).toBe(10);
+  it('12 güç, 4 kademe; snapshot hepsini taşır', () => {
+    expect(SPELL_DEFS.length).toBe(12);
     expect(new Set(SPELL_DEFS.map((s) => s.tier))).toEqual(new Set([1, 2, 3, 4]));
+  });
+
+  it('Tom Bombadil ve Ent Toplantısı ölümsüz Tom ile üç Ent çağırır', () => {
+    const sim = setup(23);
+    sim.world.match.spells[0] = (1 << idx('tom_bombadil')) | (1 << idx('ent_moot'));
+    sim.schedule(stamp(sim.world.tick, { type: 'castSpell', spell: idx('tom_bombadil'), x: 0, z: F(10) }));
+    sim.schedule(stamp(sim.world.tick, { type: 'castSpell', spell: idx('ent_moot'), x: F(10), z: F(10) }));
+    sim.step();
+    const types = battalions(sim, 0).map((b) => sim.world.c.Battalion.unitType[b]);
+    expect(types.filter((t) => t === UnitTypeId.TomBombadil).length).toBe(1);
+    expect(types.filter((t) => t === UnitTypeId.Ent).length).toBe(3);
   });
 
   it('Güneş Parlaması hasar verir ve düşmanı zayıflatır', () => {

@@ -150,4 +150,14 @@ export const HORDE_COMBOS: readonly HordeCombo[] = [
     bTaken: 90,
     desc: 'Trolün yanındaki orklar gözü kara saldırır (+%25); trol orklarca korunur (−%10 alınan).',
   },
+  {
+    name: 'Mağara Sürüsü',
+    a: UnitTypeId.GoblinWarrior,
+    b: UnitTypeId.SpiderRider,
+    aDealt: 120,
+    aTaken: 100,
+    bDealt: 100,
+    bTaken: 85,
+    desc: 'Örümceklerin peşindeki goblinler kuduzca saldırır (+%20); örümcekler sürünün içinde korunur (−%15 alınan).',
+  },
 ];

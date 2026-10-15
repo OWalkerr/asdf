@@ -391,7 +391,9 @@ export interface SpellDef {
     | 'earthquake'
     | 'army_of_dead'
     | 'eagles'
-    | 'flood';
+    | 'flood'
+    | 'tom_bombadil'
+    | 'ent_moot';
   name: string;
   tier: number;
   /** Açma maliyeti (PP). */
@@ -467,6 +469,24 @@ export const SPELL_DEFS: readonly SpellDef[] = [
     desc: 'Toprak 4 sn boyunca sarsılır: düşman askerlerine ezme hasarı, merdiven ve kuşatma kulelerine ağır hasar.',
   },
   {
+    key: 'tom_bombadil',
+    name: 'Tom Bombadil',
+    tier: 3,
+    cost: 15,
+    cooldown: 210,
+    radius: 6,
+    desc: 'Yaşlı Tom şarkı söyleyerek gelir: 40 sn boyunca ölümsüzdür, sopasıyla çevresini ezer.',
+  },
+  {
+    key: 'ent_moot',
+    name: 'Ent Toplantısı',
+    tier: 3,
+    cost: 15,
+    cooldown: 240,
+    radius: 10,
+    desc: 'Fangorn uyanır: hedef noktada üç Ent belirir ve 50 sn savaşır — kuşatma araçlarını ve sürüleri ezer.',
+  },
+  {
     key: 'army_of_dead',
     name: 'Ölüler Ordusu',
     tier: 4,
@@ -499,6 +519,8 @@ export const SUMMONS = {
   elvenAllies: { battalions: 2, duration: 60 },
   rohirrim: { battalions: 2, duration: 25, distance: 75 },
   armyOfDead: { battalions: 4, duration: 45 },
+  tom: { battalions: 1, duration: 40 },
+  entMoot: { battalions: 3, duration: 50 },
 } as const;
 /** Süvari çiğneme: rider başına vuruş aralığı (tick), yarıçap (m), hasar. */
 export const TRAMPLE = { interval: 3, radius: 2.2, damage: 45 } as const;
@@ -788,6 +810,145 @@ export const MORDOR_HEROES: readonly HeroDef[] = [
         cooldown: 200,
         icon: 'eagle',
         desc: 'Fell beast sırtındaki Nazgûl çevresine üç kez dalar.',
+      },
+    ],
+  },
+];
+
+/** Goblin kahramanları (Gorkil F, Drogoth G, Shelob J). */
+export const GOBLIN_HEROES: readonly HeroDef[] = [
+  {
+    unitType: 46,
+    key: 'KeyF',
+    icon: 'crown',
+    abilities: [
+      {
+        key: 'summon_elves',
+        name: 'Goblin Sürüsü',
+        rank: 1,
+        cooldown: 60,
+        icon: 'army',
+        unit: 43,
+        count: 2,
+        desc: 'Mağaralardan iki tabur goblin savaşçısı çıkar ve 60 sn savaşır.',
+      },
+      {
+        key: 'kings_glory',
+        name: 'Kralın Kamçısı',
+        rank: 3,
+        cooldown: 70,
+        icon: 'rally',
+        desc: 'Gorkil sürüyü kamçılar: 15 sn boyunca bütün ordunuz +%25 hasar verir.',
+      },
+      {
+        key: 'arrow_wind',
+        name: 'Ateşli Ok Yağmuru',
+        rank: 6,
+        cooldown: 40,
+        radius: 30,
+        count: 30,
+        damage: 35,
+        icon: 'volley',
+        desc: '30 m içindeki düşmanlara 30 ateşli ok (ok başı 35 hasar).',
+      },
+      {
+        key: 'istar_light',
+        name: 'Dağın Karanlığı',
+        rank: 10,
+        cooldown: 90,
+        radius: 26,
+        icon: 'ghost',
+        desc: '26 m içindeki düşmanlar karanlığa gömülür: −%40 hasar verir, +%25 hasar alır.',
+      },
+    ],
+  },
+  {
+    unitType: 47,
+    key: 'KeyG',
+    icon: 'flame',
+    abilities: [
+      {
+        key: 'wizard_blast',
+        name: 'Alev Nefesi',
+        rank: 1,
+        cooldown: 30,
+        radius: 10,
+        damage: 220,
+        icon: 'flame',
+        desc: 'Drogoth alev püskürtür: 10 m içindeki düşmanlara 220 hasar.',
+      },
+      {
+        key: 'elendil',
+        name: 'Ejder Öfkesi',
+        rank: 3,
+        cooldown: 60,
+        icon: 'blade',
+        desc: '10 sn boyunca Drogoth çift hasar verir.',
+      },
+      {
+        key: 'istar_light',
+        name: 'Korku Kükreyişi',
+        rank: 6,
+        cooldown: 70,
+        radius: 22,
+        icon: 'eye',
+        desc: '22 m içindeki düşmanlar dehşete düşer: −%40 hasar verir, +%25 hasar alır.',
+      },
+      {
+        key: 'word_of_power',
+        name: 'Kızıl Yangın',
+        rank: 10,
+        cooldown: 150,
+        radius: 30,
+        damage: 450,
+        icon: 'blast',
+        desc: '30 m içindeki bütün düşmanlara 450 ateş hasarı.',
+      },
+    ],
+  },
+  {
+    unitType: 48,
+    key: 'KeyJ',
+    icon: 'spider',
+    abilities: [
+      {
+        key: 'slayer',
+        name: 'Zehirli İğne',
+        rank: 1,
+        cooldown: 30,
+        radius: 12,
+        damage: 600,
+        icon: 'blade',
+        desc: '12 m içindeki en güçlü düşmana (önce boss) 600 hasar.',
+      },
+      {
+        key: 'eored',
+        name: 'Yavrular',
+        rank: 3,
+        cooldown: 60,
+        icon: 'spider',
+        unit: 45,
+        count: 1,
+        desc: "Shelob'un yavruları: bir tabur örümcek binicisi 40 sn savaşır.",
+      },
+      {
+        key: 'istar_light',
+        name: 'Ağ',
+        rank: 6,
+        cooldown: 70,
+        radius: 18,
+        icon: 'eye',
+        desc: '18 m içindeki düşmanlar ağa dolanır: −%40 hasar verir, +%25 hasar alır.',
+      },
+      {
+        key: 'wizard_blast',
+        name: 'Zehir Bulutu',
+        rank: 10,
+        cooldown: 90,
+        radius: 14,
+        damage: 380,
+        icon: 'blast',
+        desc: '14 m içindeki düşmanlara 380 zehir hasarı.',
       },
     ],
   },

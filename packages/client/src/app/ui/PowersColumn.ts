@@ -23,6 +23,8 @@ const SPELL_ICON: Record<string, string> = {
   earthquake: 'quake',
   eagles: 'eagle',
   flood: 'wave',
+  tom_bombadil: 'hero',
+  ent_moot: 'tree',
 };
 const ROMAN = ['', 'I', 'II', 'III', 'IV'];
 const PULSE: Record<string, string> = {
@@ -35,6 +37,8 @@ const PULSE: Record<string, string> = {
   earthquake: '#c8a070',
   eagles: '#ffe0a0',
   flood: '#8fd0ff',
+  tom_bombadil: '#ffe27a',
+  ent_moot: '#9fe07a',
 };
 const KEYS = [
   'Digit1',
@@ -47,6 +51,8 @@ const KEYS = [
   'Digit8',
   'Digit9',
   'Digit0',
+  'Minus',
+  'Equal',
 ];
 
 export interface PowersDeps {
@@ -200,7 +206,7 @@ export class PowersColumn {
       const state = !unlocked ? (this.canUnlock(i) ? 'open' : 'locked') : cd > 0 ? 'cd' : 'ready';
       const prog = cd > 0 ? 1 - left / (def.cooldown * 20) : 1;
       const label = !unlocked ? `${def.cost}` : '';
-      const h = `${richIcon(spellView(this.d.faction ?? 0, def).icon)}${!unlocked ? `<i class="lock">${icon('lock')}</i>` : ''}${label ? `<small>${label}</small>` : ''}${cd > 0 ? `<b class="cdn">${cd}</b>` : ''}<kbd>${(i + 1) % 10}</kbd>`;
+      const h = `${richIcon(spellView(this.d.faction ?? 0, def).icon)}${!unlocked ? `<i class="lock">${icon('lock')}</i>` : ''}${label ? `<small>${label}</small>` : ''}${cd > 0 ? `<b class="cdn">${cd}</b>` : ''}<kbd>${['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '='][i] ?? ''}</kbd>`;
       if (b.innerHTML !== h) b.innerHTML = h;
       b.dataset.state = state;
       b.style.setProperty('--p', `${prog * 360}deg`);

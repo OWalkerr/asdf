@@ -2095,3 +2095,13 @@ body.debug #hud {
 #resources .cpfull b {
   color: #ff9a7a;
 }
+#startscreen .factions button.goblins {
+  border-color: #6a5420;
+  background: linear-gradient(160deg, rgba(60, 46, 14, 0.55), rgba(10, 8, 4, 0.6));
+}
+#startscreen .factions button.goblins b::after {
+  content: " · Kötü taraf";
+  color: #e06a5a;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+}

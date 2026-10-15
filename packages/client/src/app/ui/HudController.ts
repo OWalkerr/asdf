@@ -75,6 +75,14 @@ export const UNIT_LABELS: Record<number, string> = {
   35: 'Cadı Kral',
   36: 'Gothmog',
   37: "Sauron'un Ağzı",
+  41: 'Tom Bombadil',
+  42: 'Ent',
+  43: 'Goblin Savaşçıları',
+  44: 'Goblin Okçuları',
+  45: 'Örümcek Biniciler',
+  46: 'Gorkil',
+  47: 'Drogoth',
+  48: 'Shelob',
 };
 const UNIT_ICON: Record<number, string> = {
   0: 'sword',
@@ -115,6 +123,14 @@ const UNIT_ICON: Record<number, string> = {
   35: 'crown',
   36: 'club',
   37: 'eye',
+  41: 'hero',
+  42: 'tree',
+  43: 'sword',
+  44: 'bow',
+  45: 'spider',
+  46: 'crown',
+  47: 'flame',
+  48: 'spider',
 };
 const GEAR_BODY = [
   'Bu taburun kılıçları dövülür: +%25 yakın dövüş hasarı.',
@@ -153,8 +169,14 @@ const HERO_DESC: Record<number, string> = {
   35: "Cadı Kral: Morgul Bıçağı, Kara Nefes; 10. seviyede Angmar'ın Gazabı.",
   36: 'Gothmog: Savaşa! (ordu +%25), Ork Takviyesi; 10. seviyede Trolleri Getirin.',
   37: "Sauron'un Ağzı: Sauron'un Sesi, Karanlık Lütuf; 10. seviyede Kanatlı Nazgûl.",
+  46: 'Gorkil, Goblin Kralı: Goblin Sürüsü, Kralın Kamçısı (ordu +%25); 10. seviyede Dağın Karanlığı.',
+  47: 'Drogoth, Ejder Lordu: uzaktan alev püskürtür; Alev Nefesi, Ejder Öfkesi; 10. seviyede Kızıl Yangın.',
+  48: 'Shelob: Zehirli İğne, Yavrular (örümcek binicileri), Ağ; 10. seviyede Zehir Bulutu.',
 };
 const UNIT_DESC: Record<number, string> = {
+  43: 'Ucuz ve kalabalık goblin sürüsü (20 asker); hızlı koşar, tek tek zayıftır.',
+  44: 'Goblin okçuları: ateşli oklarla birlikleri ve binaları vurur.',
+  45: 'Dev örümcek sırtında goblin mızrakçılar: hızlı, düşman hattını çiğner.',
   0: 'Kılıç ve kalkanlı çok yönlü piyade. Orklara karşı güçlü.',
   2: 'Ağır zırhlı mızrakçılar; süvari ve Uruk hücumunu karşılar.',
   4: 'Uzun menzilli okçular; zırhsız düşmana etkili.',
