@@ -123,7 +123,12 @@ Nadirlik ağırlıkları: Sıradan 10, Nadir 5, Destansı 2, Efsanevi 6 (yalnız
 - **Söküm infazcısı:** Ağır Mızrak + Çatallı Mızrak + Yırtıcı + İnfaz + Bulaşıcı Yemin → zincirleme Söküm sıfırlamaları.
 - **Ruh ordusu:** Yeminli Ruh ×3 + Hızlı El + Kan Yemini.
 
-## 7. Kalıcı ilerleme (Ruh Sunağı)
+## 7. Başarımlar ve pelerinler
+
+12 başarım, her biri bir pelerin rengi açar (Başarımlar ekranından giyilir, tüm mızrakçılarda geçerli; açılınca üstte bildirim çıkar):
+Kemik Yıkan (Kemik Lordu), Atlıyı Düşüren, Yası Bitiren, Durdurulamaz (50 seri), Toplu Söküm (tek Sökümle 5 öldürme), Rüzgâr Adım (bir avda 500 sekme), Derinlere (20. oda), Sandık Avcısı (Mimik), Dokunulmaz (5. odadan sonra hasarsız oda), Günün Avcısı (Günün Avı'nda 10. oda), Kurban (Ruh Bağışı), Dört Yemin (dört mızrakçıyla Kemik Lordu).
+
+## 8. Kalıcı ilerleme (Ruh Sunağı)
 
 | Güç | Etki | Seviye |
 |---|---|---|
@@ -134,7 +139,7 @@ Nadirlik ağırlıkları: Sıradan 10, Nadir 5, Destansı 2, Efsanevi 6 (yalnız
 
 Kayıt tarayıcının yerel depolamasında tutulur.
 
-## 8. Denge ölçümü
+## 9. Denge ölçümü
 
 `tools/balance-sim.js` oyunu tarayıcıda kendi kendine oynatır: bot tehditlerden kaçar, mermilere dik kaçar, duvardan uzak durur, uygun anda Söküm / Delici / Kader kullanır, her zaman ilk kartı ve Savaş kapısını seçer. Her mızrakçıyla N av yapıp ulaşılan odayı, oda başına süreyi ve alınan hasarı raporlar.
 
@@ -156,16 +161,29 @@ Bot artık kartları öncelik sırasıyla seçiyor (efsanevi > destansı > hasar
 
 Sonuç (32 bot avı): medyan ölüm odası 6–7, ilk muhafız ~%62 geçiliyor, 6–9. odalar 60–100 sn sürüyor.
 
-## 9. Sıradaki adımlar (yol haritası)
+### Üçüncü ölçüm (15+ oda, Ruh Sunağı tam yükseltilmiş bot)
 
-Tamamlananlar: Ruh Sandığı ve Mimik, Kan Sunağı, muhafız ikinci formu, Kalkanlı Şövalye ve Kemik Bombası, grafik kalitesi ayarı (otomatik / yüksek / düşük), Günün Avı sonuç paylaşımı, akıllı bot ile denge ayarı, mızrakçıya özel efsanevi kartlar, Günün Avı (tohumlu), son avlar listesi, bot ile denge ölçümü ve ayarı, 4 mızrakçı, Unutuş Ritüeli (güç silme), Yükselmiş muhafızlar, PWA (ana ekrana ekleme + çevrimdışı önbellek), Ruh Tüccarı kapısı, üçüncü muhafız Yas Kraliçesi, üretken müzik (dron + minör pentatonik arpej; savaşta davul, muhafızda hızlanır), Kader Çağrısı (R), kapı seçimi (Savaş/Elit/Lanetli/Ruh Pınarı), elit düşmanlar, ikinci muhafız Gölge Atlı, 5 efsanevi sinerji, vuruş durması (hit-stop) ve titreşim.
+Bot artık canı %50'nin altındaysa Ruh Pınarı'nı, değilse Savaş kapısını seçiyor; `node tools/balance-sim.js 5 meta` ile Ruh Sunağı yükseltmeleri tam açık oynuyor.
+
+İlk ölçümde 10. odaya ulaşan 16 avın 15'i ikinci formlu Gölge Atlı'da bitiyordu. Ayarlar:
+
+- Muhafız canının kademe artışı %90 → %60; ikinci form canın %50'si yerine %35'iyle döner
+- Gölge Atlı: hücum sayısı 3/4 → 2/3, hücum hızı 900 → 820, nişan süresi biraz daha uzun
+- Düşman canı: 10. odaya kadar oda başına %17, sonra %10, 20. odadan sonra ek %12
+- Dördüncü dalga 14. odadan itibaren
+
+Sonuç: yükseltmesiz bot medyan 7–8. oda; yükseltmeli bot medyan 10–11. oda, 10. odadaki ikinci muhafız yaklaşık %40 geçiliyor, 11–21. odalar 55–100 sn sürüyor.
+
+## 10. Sıradaki adımlar (yol haritası)
+
+Tamamlananlar: muhafız müzik temaları (Lord: ağır yürüyüş, Atlı: dörtnala, Kraliçe: tam-ton ağıt; öfkede hızlanır), 12 başarım ve pelerin renkleri, 15+ oda dengesi, Ruh Sandığı ve Mimik, Kan Sunağı, muhafız ikinci formu, Kalkanlı Şövalye ve Kemik Bombası, grafik kalitesi ayarı (otomatik / yüksek / düşük), Günün Avı sonuç paylaşımı, akıllı bot ile denge ayarı, mızrakçıya özel efsanevi kartlar, Günün Avı (tohumlu), son avlar listesi, bot ile denge ölçümü ve ayarı, 4 mızrakçı, Unutuş Ritüeli (güç silme), Yükselmiş muhafızlar, PWA (ana ekrana ekleme + çevrimdışı önbellek), Ruh Tüccarı kapısı, üçüncü muhafız Yas Kraliçesi, üretken müzik (dron + minör pentatonik arpej; savaşta davul, muhafızda hızlanır), Kader Çağrısı (R), kapı seçimi (Savaş/Elit/Lanetli/Ruh Pınarı), elit düşmanlar, ikinci muhafız Gölge Atlı, 5 efsanevi sinerji, vuruş durması (hit-stop) ve titreşim.
 
 Sıradakiler:
-1. Bot verisiyle 15+ oda dengesi (bot ikinci formları da test etsin).
-2. Ses tasarımı: her muhafıza kendi müzik teması.
-3. Başarımlar ve kozmetik pelerin renkleri (Ruh Sunağı'nda).
+1. Yeni biyom: 15. odadan sonra arena teması değişsin (buz mezarlığı / kan katedrali).
+2. Oyun içi istatistik ekranı (en çok hasar veren güç, ölüm nedeni).
+3. Dokunmatik kontrol seçenekleri (sabit joystick, sol el modu).
 
-## 10. Oyun hissi (Metal Slug esinli)
+## 11. Oyun hissi (Metal Slug esinli)
 
 Hedef: eski arcade oyunlarındaki gibi her öldürmenin "tatmin edici" hissettirmesi.
 
@@ -192,7 +210,7 @@ Hedef: eski arcade oyunlarındaki gibi her öldürmenin "tatmin edici" hissettir
 
 Erişilebilirlik: cihazda "hareketi azalt" açıksa titreme %30'a, ekran parlaması %25'e düşer.
 
-## 11. Görsel yön
+## 12. Görsel yön
 
 ### Ruh evreni (görsel güncelleme 2)
 
@@ -217,15 +235,15 @@ Tema: **ruhani mezar arenası**. Karanlık taş zemin, turkuaz ruh ışığı, y
 - **Ekran sonrası:** Vinyet, film greni, hasar alınca ve can %30'un altındayken kırmızı kenar.
 - **Arayüz:** İkonlu yetenek düğmeleri (dairesel bekleme süresi), gecikmeli (beyaz iz bırakan) can barı, muhafız barı ve sinematik siyah şeritli giriş, seri sayacı, ikonlu ve nadirliğe göre renklenen kartlar.
 
-## 12. Telefona kurulum (PWA)
+## 13. Telefona kurulum (PWA)
 
 `game/` klasörü herhangi bir statik sunucuda (ör. GitHub Pages) yayınlanınca tarayıcının "Ana ekrana ekle" seçeneğiyle tam ekran uygulama gibi kurulur; `sw.js` dosyaları önbelleğe alır, oyun çevrimdışı açılır. Claude artifact sürümünde servis çalışanı devre dışıdır.
 
-## 13. Performans
+## 14. Performans
 
 Duraklat menüsünde **Grafik: otomatik / yüksek / düşük**. Otomatikte savaş sırasında 3 sn boyunca ortalama kare süresi 26 ms'yi (≈38 fps) aşarsa düşük kaliteye geçer. Düşük kalite: piksel yoğunluğu en fazla 1.25, uzak adalar, sis ve film greni kapalı, sıradan düşman dumanı kapalı, duman sınırı 130 parçacık.
 
-## 14. Teknik
+## 15. Teknik
 
 - Tek dosya HTML5 Canvas + saf JavaScript, kütüphane yok.
 - Dünya: 820 birim yarıçaplı dairesel arena, kamera oyuncuyu takip eder, zoom ekran boyutuna göre ölçeklenir.
