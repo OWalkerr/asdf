@@ -1,12 +1,17 @@
 import {
   ARROW_WIND,
   ATHELAS_RADIUS,
+  BANNER,
   DAMAGE_TYPES,
+  EAGLES,
+  EARTHQUAKE,
   ELENDIL_DURATION,
   EORED,
+  FLOOD,
   FX_HALF,
   type Fx,
   factionDef,
+  fxDiv,
   fxFromFloat,
   fxLen,
   fxMul,
@@ -23,7 +28,9 @@ import {
   SHIELDMAIDEN,
   SLAYER,
   SPELL_DEFS,
+  STANCE_DEFS,
   SUMMONS,
+  SUN_FLARE,
   TRAIN_ARCHERS_RADIUS,
   TRAMPLE,
   UNIT_DEFS,
@@ -36,9 +43,9 @@ import {
 import { entityExists, hasComponent, query, removeEntity } from 'bitecs';
 import { BattalionMode } from '../components';
 import { SIM_HZ } from '../constants';
-import { cellAt } from '../nav/grid';
+import { cellAt, isBlockedAt } from '../nav/grid';
 import { STAT } from '../unitStats';
-import type { SimWorld } from '../world';
+import { type SimWorld, SpellEffect } from '../world';
 import { applyDamage, arrowDmgType, fireProjectile, hasUpgrade, splash } from './combat';
 import { orderBattalions, spawnBattalion, spawnBattalionRow } from './commands';
 import { fortressDoor } from './fortress';
@@ -83,6 +90,11 @@ export const attackPercent = (world: SimWorld, b: number, team: number, melee: b
   }
   if ((m.rallyUntil[team] as number) > world.tick) pct += RALLY_DAMAGE_PERCENT;
   if (melee && hasUpgrade(world, team, Upgrade.ForgedBlades)) pct += 25;
+  if (b !== 0) {
+    // Duruş ve Güneş Parlaması zayıflığı.
+    pct = ((pct * (STANCE_DEFS[Battalion.stance[b] as number]?.dealt ?? 100)) / 100) | 0;
+    if ((Battalion.weakUntil[b] as number) > world.tick) pct = ((pct * SUN_FLARE.dealtPercent) / 100) | 0;
+  }
   // Kahraman güçlendirmesi (Elendil'in Kılıcı, Kalkan Kızı): ×2.
   if (b !== 0)
     for (let k = 0; k < MAX_HEROES; k++) {
@@ -96,14 +108,20 @@ export const attackPercent = (world: SimWorld, b: number, team: number, melee: b
 export const defensePercent = (world: SimWorld, target: number): number => {
   const b = world.c.Soldier.battalion[target] as number;
   if (b === 0) return 100;
-  return ((100 * 100) / (100 + RANK_BONUS_PERCENT * ((world.c.Battalion.rank[b] as number) - 1))) | 0;
+  const { Battalion } = world.c;
+  let pct = ((100 * 100) / (100 + RANK_BONUS_PERCENT * ((Battalion.rank[b] as number) - 1))) | 0;
+  pct = ((pct * (STANCE_DEFS[Battalion.stance[b] as number]?.taken ?? 100)) / 100) | 0;
+  if ((Battalion.weakUntil[b] as number) > world.tick) pct = ((pct * SUN_FLARE.takenPercent) / 100) | 0;
+  return pct;
 };
 
 /** XP ver ve gerekirse rütbe atlat. */
 export const awardXp = (world: SimWorld, b: number, xp: number): void => {
   const { Battalion } = world.c;
   if (b <= 0 || !entityExists(world, b) || !hasComponent(world, b, Battalion)) return;
-  const total = (Battalion.xp[b] as number) + xp;
+  // Sancaktar: daha hızlı deneyim.
+  const gain = Battalion.banner[b] ? ((xp * BANNER.xpPercent) / 100) | 0 : xp;
+  const total = (Battalion.xp[b] as number) + gain;
   Battalion.xp[b] = total;
   let r = Battalion.rank[b] as number;
   while (r < MAX_RANK && total >= (RANK_XP[r + 1] as number)) r++;
@@ -278,7 +296,33 @@ export const castSpell = (world: SimWorld, team: number, spell: number, x: numbe
       m.rallyUntil[team] = world.tick + ticks(RALLY_DURATION);
       break;
     case 'arrow_volley':
-      m.volleys.push({ x, z, team, next: world.tick + 4, left: VOLLEY.waves });
+      m.volleys.push({ kind: SpellEffect.Volley, x, z, team, next: world.tick + 4, left: VOLLEY.waves });
+      break;
+    case 'sun_flare': {
+      const { Soldier, Battalion } = world.c;
+      const until = world.tick + ticks(SUN_FLARE.duration);
+      for (const e of enemiesNear(world, team, x, z, FLARE_R)) {
+        applyDamage(world, e, SUN_FLARE.damage, DMG_MAGIC);
+        const b = Soldier.battalion[e] as number;
+        if (b !== 0) Battalion.weakUntil[b] = until;
+      }
+      break;
+    }
+    case 'earthquake':
+      m.volleys.push({ kind: SpellEffect.Quake, x, z, team, next: world.tick + 2, left: EARTHQUAKE.pulses });
+      break;
+    case 'eagles':
+      m.volleys.push({
+        kind: SpellEffect.Eagles,
+        x,
+        z,
+        team,
+        next: world.tick + ticks(EAGLES.delay),
+        left: EAGLES.dives,
+      });
+      break;
+    case 'flood':
+      m.volleys.push({ kind: SpellEffect.Flood, x, z, team, next: world.tick + 2, left: FLOOD.rings });
       break;
     case 'elven_allies':
       summonAt(
@@ -325,6 +369,71 @@ export const castSpell = (world: SimWorld, team: number, spell: number, x: numbe
     }
   }
   return true;
+};
+
+const VOLLEY_R: Fx = fxFromFloat(SPELL_DEFS.find((s) => s.key === 'arrow_volley')?.radius ?? 12);
+const QUAKE_R: Fx = fxFromFloat(SPELL_DEFS.find((s) => s.key === 'earthquake')?.radius ?? 16);
+const FLARE_R: Fx = fxFromFloat(SPELL_DEFS.find((s) => s.key === 'sun_flare')?.radius ?? 16);
+const FLOOD_R = SPELL_DEFS.find((s) => s.key === 'flood')?.radius ?? 20;
+const EAGLE_R: Fx = fxFromFloat(EAGLES.radius);
+
+/** Kartal dalışı i'nin hedefe göre ofseti (m) — istemci görseli de aynı deseni kullanır. */
+export const eagleDive = (i: number): [number, number] =>
+  ((
+    [
+      [0, 0],
+      [5, 4],
+      [-5, -4],
+      [4, -5],
+    ] as const
+  )[i % 4] as [number, number]) ?? [0, 0];
+
+const volleyWave = (world: SimWorld, team: number, x: Fx, z: Fx): void => {
+  const targets = enemiesNear(world, team, x, z, VOLLEY_R);
+  if (targets.length === 0) return;
+  const dmgType = arrowDmgType(world, team, DMG_PIERCE);
+  for (let i = 0; i < VOLLEY.arrows; i++) {
+    const t = targets[world.rng.nextInt(targets.length)] as number;
+    const fx = (x + fxMul(world.rng.nextFx() - FX_HALF, VOLLEY_BACK)) | 0;
+    const fz = (z - VOLLEY_BACK) | 0;
+    fireProjectile(world, fx, fz, t, VOLLEY.damage, dmgType, 2400, 0);
+  }
+};
+
+/** Deprem sarsıntısı: askerlere ezme hasarı, düşman yapılarına (merdiven, kuşatma kulesi) ağır hasar. */
+const quakePulse = (world: SimWorld, team: number, x: Fx, z: Fx): void => {
+  for (const e of enemiesNear(world, team, x, z, QUAKE_R))
+    applyDamage(world, e, EARTHQUAKE.damage, DMG_CRUSH);
+  const { Structure, Position, Team } = world.c;
+  for (const st of query(world, [Structure, Position])) {
+    if (Team.id[st] === team || (Structure.hp[st] as number) <= 0) continue;
+    const d = fxLen(((Position.x[st] as number) - x) | 0, ((Position.z[st] as number) - z) | 0);
+    if (d <= QUAKE_R + (Structure.radius[st] as number))
+      applyDamage(world, st, EARTHQUAKE.structureDamage, DMG_CRUSH);
+  }
+};
+
+/** Sel halkası k (0 tabanlı): [k, k+1] × R / halka aralığındaki düşmanlar hasar alır ve dışa sürüklenir. */
+const floodRing = (world: SimWorld, team: number, x: Fx, z: Fx, k: number): void => {
+  const { Position, Health, Team, Dead, Soldier } = world.c;
+  const r0 = fxFromFloat((FLOOD_R * k) / FLOOD.rings);
+  const r1 = fxFromFloat((FLOOD_R * (k + 1)) / FLOOD.rings);
+  const push = fxFromFloat(FLOOD.push);
+  for (const e of query(world, [Health, Position, Soldier])) {
+    if (Team.id[e] === team || Dead.at[e] !== 0) continue;
+    const dx = ((Position.x[e] as number) - x) | 0;
+    const dz = ((Position.z[e] as number) - z) | 0;
+    const d = fxLen(dx, dz);
+    if (d < r0 || d > r1) continue;
+    applyDamage(world, e, FLOOD.damage, DMG_MAGIC);
+    if (d === 0 || STAT.boss[world.c.UnitType.id[e] as number] === 1) continue;
+    const nx = ((Position.x[e] as number) + fxMul(fxDiv(dx, d), push)) | 0;
+    const nz = ((Position.z[e] as number) + fxMul(fxDiv(dz, d), push)) | 0;
+    if (!isBlockedAt(world.nav, nx, nz, Team.id[e] as number)) {
+      Position.x[e] = nx;
+      Position.z[e] = nz;
+    }
+  }
 };
 
 /** Hedef noktaya yan yana `count` tabur çağırır; `duration` sn sonra yok olurlar. */
@@ -438,25 +547,49 @@ export const heroSystem = (world: SimWorld): void => {
         Soldier.battalion[s] as number,
       );
     }
+  // Sancaktar: çatışma dışındaki ve bir süredir vurulmayan askerler iyileşir.
+  if (world.tick % SIM_HZ === 0) {
+    const calm = ticks(BANNER.calm);
+    for (const b of query(world, [Battalion])) {
+      if (Battalion.banner[b] !== 1 || Battalion.engaged[b] === 1) continue;
+      forEachMember(world, b, (s) => {
+        if (Dead.at[s] !== 0) return;
+        const last = Health.lastHit[s] as number;
+        if (last !== 0 && world.tick - (last - 1) < calm) return;
+        const max = Health.max[s] as number;
+        Health.hp[s] = Math.min(
+          max,
+          (Health.hp[s] as number) + Math.max(1, ((max * BANNER.regenPercent) / 100) | 0),
+        );
+      });
+    }
+  }
   if (m.volleys.length === 0) return;
-  const radiusOf = fxFromFloat(SPELL_DEFS.find((s) => s.key === 'arrow_volley')?.radius ?? 12);
   for (const v of m.volleys) {
     if (world.tick < v.next) continue;
     v.left--;
-    v.next = world.tick + ticks(VOLLEY.gap);
-    const targets: number[] = [];
-    for (const e of query(world, [Health, Position, Soldier])) {
-      if (Team.id[e] === v.team || Dead.at[e] !== 0) continue;
-      if (fxLen(((Position.x[e] as number) - v.x) | 0, ((Position.z[e] as number) - v.z) | 0) <= radiusOf)
-        targets.push(e);
-    }
-    if (targets.length === 0) continue;
-    const dmgType = arrowDmgType(world, v.team, DMG_PIERCE);
-    for (let i = 0; i < VOLLEY.arrows; i++) {
-      const t = targets[world.rng.nextInt(targets.length)] as number;
-      const fx = (v.x + fxMul(world.rng.nextFx() - FX_HALF, VOLLEY_BACK)) | 0;
-      const fz = (v.z - VOLLEY_BACK) | 0;
-      fireProjectile(world, fx, fz, t, VOLLEY.damage, dmgType, 2400, 0);
+    switch (v.kind) {
+      case SpellEffect.Volley:
+        v.next = world.tick + ticks(VOLLEY.gap);
+        volleyWave(world, v.team, v.x, v.z);
+        break;
+      case SpellEffect.Quake:
+        v.next = world.tick + ticks(EARTHQUAKE.gap);
+        quakePulse(world, v.team, v.x, v.z);
+        break;
+      case SpellEffect.Eagles: {
+        v.next = world.tick + ticks(EAGLES.gap);
+        const [ox, oz] = eagleDive(EAGLES.dives - 1 - v.left);
+        const dx = (v.x + fxFromFloat(ox)) | 0;
+        const dz = (v.z + fxFromFloat(oz)) | 0;
+        for (const e of enemiesNear(world, v.team, dx, dz, EAGLE_R))
+          applyDamage(world, e, EAGLES.damage, DMG_CRUSH);
+        break;
+      }
+      case SpellEffect.Flood:
+        v.next = world.tick + ticks(FLOOD.gap);
+        floodRing(world, v.team, v.x, v.z, FLOOD.rings - v.left);
+        break;
     }
   }
   m.volleys = m.volleys.filter((v) => v.left > 0);

@@ -1,4 +1,5 @@
 import {
+  BANNER,
   DIFFICULTIES,
   FX_HALF,
   FX_ONE,
@@ -10,6 +11,8 @@ import {
   fxLen,
   fxMul,
   fxSin,
+  MatchState,
+  STANCE_DEFS,
   type StampedCommand,
   UNIT_DEFS,
 } from '@bulwark/shared';
@@ -147,6 +150,9 @@ export const spawnBattalion = (
   Battalion.expires[b] = 0;
   Battalion.lane[b] = 0;
   Battalion.ladder[b] = 0;
+  Battalion.stance[b] = 0;
+  Battalion.banner[b] = 0;
+  Battalion.weakUntil[b] = 0;
   const c = fxCos(facing);
   const sn = fxSin(facing);
   Battalion.cos[b] = c;
@@ -393,6 +399,23 @@ export const applyCommand = (world: SimWorld, sc: StampedCommand): void => {
     }
     case 'fortressUpgrade': {
       fortressUpgrade(world, team, cmd.upgrade);
+      break;
+    }
+    case 'stance': {
+      if (!Number.isInteger(cmd.stance) || !STANCE_DEFS[cmd.stance]) break;
+      for (const b of splitOwned(world, sc.player, cmd.units).battalions) Battalion.stance[b] = cmd.stance;
+      break;
+    }
+    case 'buyBanner': {
+      const m = world.match;
+      for (const b of splitOwned(world, sc.player, cmd.units).battalions) {
+        const t = Battalion.unitType[b] as number;
+        // Kahramanlar ve çağrılmış birlikler sancak almaz.
+        if (Battalion.banner[b] === 1 || STAT.hero[t] === 1 || STAT.summoned[t] === 1) continue;
+        if ((m.gold[team] as number) < BANNER.cost || m.state !== MatchState.Playing) break;
+        m.gold[team] = (m.gold[team] as number) - BANNER.cost;
+        Battalion.banner[b] = 1;
+      }
       break;
     }
     case 'stop': {

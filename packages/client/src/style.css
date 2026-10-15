@@ -416,7 +416,7 @@ kbd {
   position: fixed;
   left: 12px;
   top: 104px;
-  width: 128px;
+  width: 154px;
   padding: 8px 0 12px;
   border-radius: 12px;
   display: grid;
@@ -432,7 +432,7 @@ kbd {
   padding-bottom: 6px;
   margin-bottom: 2px;
   border-bottom: 1px solid rgba(201, 162, 58, 0.3);
-  width: 108px;
+  width: 134px;
 }
 #powers .head span {
   font-family: var(--title);
@@ -456,9 +456,9 @@ kbd {
 }
 #powers .list {
   display: grid;
-  grid-template-columns: 50px 50px;
+  grid-template-columns: 42px 42px 42px;
   justify-items: center;
-  gap: 9px 10px;
+  gap: 8px 6px;
 }
 #powers .tier {
   grid-column: 1 / -1;
@@ -470,8 +470,8 @@ kbd {
   margin-top: 2px;
 }
 #powers .power {
-  width: 50px;
-  height: 50px;
+  width: 42px;
+  height: 42px;
 }
 #powers .power svg {
   width: 24px;
@@ -1536,4 +1536,33 @@ body.debug #hud {
 .cmd.off img.pt,
 .cmd.locked img.pt {
   filter: grayscale(0.7) brightness(0.65);
+}
+
+/* ---------- Güneş Parlaması ekran parlaması ---------- */
+#flare-flash {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 8;
+  opacity: 0;
+  background: radial-gradient(
+    circle at 50% 45%,
+    rgba(255, 248, 220, 0.95),
+    rgba(255, 214, 120, 0.55) 45%,
+    rgba(255, 190, 80, 0) 80%
+  );
+}
+#flare-flash.on {
+  animation: flareFlash 1.4s ease-out;
+}
+@keyframes flareFlash {
+  0% {
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.85;
+  }
+  100% {
+    opacity: 0;
+  }
 }

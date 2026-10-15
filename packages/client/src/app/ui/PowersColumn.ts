@@ -2,13 +2,14 @@ import { type MatchInfo, MatchState, SPELL_DEFS } from '@bulwark/shared';
 import type { PlayerInput } from '../../input/PlayerInput';
 import type { RTSCamera } from '../../render/camera/RTSCamera';
 import type { SpellFx } from '../../render/fx/SpellFx';
+import type { SpellShow } from '../../render/fx/SpellShow';
 import { SIM_TICK_MS } from '../../sim-host/protocol';
 import type { Scenario } from '../scenario';
 import { icon, richIcon } from './icons';
 
 /**
  * Güçler (Spellbook, GDD §9) — ekranın solunda dikey sütun: kademe başlıkları (I–IV), yuvarlak
- * güç düğmeleri, bekleme halkası, kilit ve PP maliyeti. 1–6 kısayolları; açık güce basınca
+ * güç düğmeleri, bekleme halkası, kilit ve PP maliyeti. 1–9, 0 kısayolları; açık güce basınca
  * hedefli güçlerde zeminde halka belirir.
  */
 const SPELL_ICON: Record<string, string> = {
@@ -18,6 +19,10 @@ const SPELL_ICON: Record<string, string> = {
   elven_allies: 'leaf',
   rohirrim: 'horse',
   army_of_dead: 'ghost',
+  sun_flare: 'sun',
+  earthquake: 'quake',
+  eagles: 'eagle',
+  flood: 'wave',
 };
 const ROMAN = ['', 'I', 'II', 'III', 'IV'];
 const PULSE: Record<string, string> = {
@@ -26,12 +31,30 @@ const PULSE: Record<string, string> = {
   elven_allies: '#bff5d0',
   rohirrim: '#ffe08a',
   army_of_dead: '#5dffa8',
+  sun_flare: '#fff0a0',
+  earthquake: '#c8a070',
+  eagles: '#ffe0a0',
+  flood: '#8fd0ff',
 };
+const KEYS = [
+  'Digit1',
+  'Digit2',
+  'Digit3',
+  'Digit4',
+  'Digit5',
+  'Digit6',
+  'Digit7',
+  'Digit8',
+  'Digit9',
+  'Digit0',
+];
 
 export interface PowersDeps {
   scenario: Scenario;
   input: PlayerInput;
   fx: SpellFx;
+  /** Büyük güç gösterileri (kartallar, sel, deprem, güneş). */
+  show?: SpellShow;
   cam: RTSCamera;
   groundY: (x: number, z: number) => number;
   onClick?: () => void;
@@ -75,7 +98,8 @@ export class PowersColumn {
     document.body.appendChild(this.root);
     window.addEventListener('keydown', (e) => {
       if (e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
-      const i = ['Digit1', 'Digit2', 'Digit3', 'Digit4', 'Digit5', 'Digit6'].indexOf(e.code);
+      if (e.target instanceof HTMLInputElement) return;
+      const i = KEYS.indexOf(e.code);
       if (i >= 0) this.action(i);
     });
   }
@@ -116,7 +140,9 @@ export class PowersColumn {
         radius: def.radius,
         onPick: (x, z) => {
           this.d.scenario.castSpell(i, x, z);
-          this.d.fx.pulse(x, this.d.groundY(x, z), z, def.radius, PULSE[def.key] ?? '#ffd27a');
+          const y = this.d.groundY(x, z);
+          this.d.fx.pulse(x, y, z, def.radius, PULSE[def.key] ?? '#ffd27a');
+          this.d.show?.cast(def.key, x, y, z, def.radius);
         },
       });
     } else {
@@ -139,7 +165,7 @@ export class PowersColumn {
       const state = !unlocked ? (this.canUnlock(i) ? 'open' : 'locked') : cd > 0 ? 'cd' : 'ready';
       const prog = cd > 0 ? 1 - left / (def.cooldown * 20) : 1;
       const label = !unlocked ? `${def.cost}` : '';
-      const h = `${richIcon(SPELL_ICON[def.key] ?? 'power')}${!unlocked ? `<i class="lock">${icon('lock')}</i>` : ''}${label ? `<small>${label}</small>` : ''}${cd > 0 ? `<b class="cdn">${cd}</b>` : ''}<kbd>${i + 1}</kbd>`;
+      const h = `${richIcon(SPELL_ICON[def.key] ?? 'power')}${!unlocked ? `<i class="lock">${icon('lock')}</i>` : ''}${label ? `<small>${label}</small>` : ''}${cd > 0 ? `<b class="cdn">${cd}</b>` : ''}<kbd>${(i + 1) % 10}</kbd>`;
       if (b.innerHTML !== h) b.innerHTML = h;
       b.dataset.state = state;
       b.style.setProperty('--p', `${prog * 360}deg`);

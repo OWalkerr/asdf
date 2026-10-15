@@ -214,6 +214,87 @@ export class GameAudio {
     });
   }
 
+  /** Büyük güç sesleri (prosedürel). */
+  spell(kind: 'eagle' | 'eagleHit' | 'flood' | 'quake' | 'flare'): void {
+    if (!this.a.allow(`spell-${kind}`, 4)) return;
+    const { ctx } = this.a;
+    const out = this.a.out;
+    if (!ctx || !out) return;
+    const at = ctx.currentTime + 0.02;
+    const noise = (
+      dur: number,
+      type: BiquadFilterType,
+      f0: number,
+      f1: number,
+      peak: number,
+      attack: number,
+    ) => {
+      const src = this.a.noiseSource(true);
+      const env = this.a.envelope(peak, attack, dur, at);
+      if (!src || !env) return;
+      const f = ctx.createBiquadFilter();
+      f.type = type;
+      f.frequency.setValueAtTime(f0, at);
+      f.frequency.exponentialRampToValueAtTime(f1, at + dur);
+      src.connect(f).connect(env).connect(out);
+      src.start(at);
+      src.stop(at + dur + attack + 0.2);
+    };
+    if (kind === 'eagle') {
+      // Kartal çığlığı: iki inen tiz çağrı.
+      for (const [d, f] of [
+        [0, 2600],
+        [0.55, 2300],
+      ] as const) {
+        const o = ctx.createOscillator();
+        o.type = 'sawtooth';
+        o.frequency.setValueAtTime(f, at + d);
+        o.frequency.exponentialRampToValueAtTime(f * 0.55, at + d + 0.5);
+        const lfo = ctx.createOscillator();
+        lfo.frequency.value = 38;
+        const lg = ctx.createGain();
+        lg.gain.value = 90;
+        lfo.connect(lg).connect(o.frequency);
+        const bp = ctx.createBiquadFilter();
+        bp.type = 'bandpass';
+        bp.frequency.value = 2200;
+        bp.Q.value = 2;
+        const env = this.a.envelope(0.09, 0.03, 0.5, at + d);
+        if (!env) return;
+        o.connect(bp).connect(env).connect(out);
+        o.start(at + d);
+        lfo.start(at + d);
+        o.stop(at + d + 0.7);
+        lfo.stop(at + d + 0.7);
+      }
+    } else if (kind === 'eagleHit') noise(0.5, 'lowpass', 600, 80, 0.5, 0.01);
+    else if (kind === 'flood') noise(3.2, 'bandpass', 300, 1400, 0.45, 0.4);
+    else if (kind === 'quake') {
+      noise(4.2, 'lowpass', 160, 60, 0.8, 0.3);
+      const o = ctx.createOscillator();
+      o.type = 'sine';
+      o.frequency.setValueAtTime(42, at);
+      o.frequency.linearRampToValueAtTime(30, at + 4);
+      const env = this.a.envelope(0.4, 0.4, 3.8, at);
+      if (!env) return;
+      o.connect(env).connect(out);
+      o.start(at);
+      o.stop(at + 4.5);
+    } else {
+      // Güneş Parlaması: parlak koro akoru.
+      for (const f of [523, 659, 784, 1046]) {
+        const o = ctx.createOscillator();
+        o.type = 'triangle';
+        o.frequency.value = f;
+        const env = this.a.envelope(0.06, 0.25, 1.6, at);
+        if (!env) return;
+        o.connect(env).connect(out);
+        o.start(at);
+        o.stop(at + 2.2);
+      }
+    }
+  }
+
   click(): void {
     if (!this.a.allow('click', 10)) return;
     const { ctx } = this.a;

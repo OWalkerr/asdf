@@ -5,12 +5,15 @@ import {
   UNIT_DEFS,
   unpackAnimState,
   unpackAnimTick,
+  unpackBanner,
   unpackBattalion,
   unpackFlags,
   unpackHp8,
   unpackRank,
+  unpackStance,
   unpackTeam,
   unpackUnitType,
+  unpackWeak,
   unpackYaw,
 } from '@bulwark/shared';
 import { DynamicDrawUsage, InstancedBufferAttribute, InstancedMesh, type Texture } from 'three/webgpu';
@@ -45,8 +48,24 @@ interface Bucket {
   count: number;
 }
 
+/** Tabur başına son karedeki durum ve sancaktarın (taburun ilk askeri) pozu. */
+export interface BattalionInfo {
+  stance: number;
+  banner: number;
+  weak: number;
+  team: number;
+  type: number;
+  x: number;
+  y: number;
+  z: number;
+  yaw: number;
+  frame: number;
+}
+
 export class UnitRenderer {
   private readonly buckets: Bucket[] = [];
+  readonly battalionInfo = new Map<number, BattalionInfo>();
+  private frameNo = 0;
   /** Toplam çizilen birim (son kare). */
   drawn = 0;
   /** Bu taburun askerleri parlar (ör. Elendil'in Kılıcı etkinken kahraman). */
@@ -194,6 +213,7 @@ export class UnitRenderer {
     const u = curr.units;
     const pu = prev.units;
     this.begin();
+    const frame = ++this.frameNo;
     for (let i = 0; i < curr.count; i++) {
       const o = i * SNAP_UNIT_INTS;
       const eid = u[o] as number;
@@ -215,6 +235,28 @@ export class UnitRenderer {
       let t = (unpackAnimTick(animPacked) + a) * TICK_S;
       // Döngüsel animasyonlarda birimler arası faz farkı (adımlar senkron görünmesin).
       if (state === AnimState.Walk || state === AnimState.Idle) t += ((eid * 0.618034) % 1) * 2;
+      const f5 = u[o + 5] as number;
+      const bat = unpackBattalion(f5);
+      const weak = unpackWeak(f5);
+      if (bat !== 0 && state !== AnimState.Die) {
+        let info = this.battalionInfo.get(bat);
+        if (!info) {
+          info = { stance: 0, banner: 0, weak: 0, team: 0, type: 0, x: 0, y: 0, z: 0, yaw: 0, frame: -1 };
+          this.battalionInfo.set(bat, info);
+        }
+        if (info.frame !== frame) {
+          info.frame = frame;
+          info.stance = unpackStance(f5);
+          info.banner = unpackBanner(f5);
+          info.weak = weak;
+          info.team = unpackTeam(packed);
+          info.type = unpackUnitType(packed);
+          info.x = x;
+          info.y = this.groundY(x, z);
+          info.z = z;
+          info.yaw = yaw * ANGLE_TO_RAD;
+        }
+      }
       this.push(
         unpackUnitType(packed),
         x,
@@ -225,9 +267,12 @@ export class UnitRenderer {
         t,
         unpackFlags(animPacked) & FLAG_HIT
           ? 1
-          : this.glowBattalion !== 0 && unpackBattalion(u[o + 5] as number) === this.glowBattalion
+          : this.glowBattalion !== 0 && bat === this.glowBattalion
             ? 0.45
-            : 0,
+            : // Güneş Parlaması: kamaşmış düşman hafifçe titrer gibi parlar.
+              weak
+              ? 0.18 + 0.12 * Math.sin(now * 0.012 + eid)
+              : 0,
         unpackTeam(packed),
         unpackBattalion(u[o + 5] as number),
         unpackHp8(animPacked),
@@ -235,5 +280,6 @@ export class UnitRenderer {
       );
     }
     this.end();
+    for (const [b, info] of this.battalionInfo) if (info.frame !== frame) this.battalionInfo.delete(b);
   }
 }

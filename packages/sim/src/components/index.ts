@@ -87,6 +87,11 @@ export const createComponents = (capacity = MAX_ENTITIES) => ({
     lane: new Uint8Array(capacity),
     /** Merdiven takımının hedef merdiven noktası (koridor noktası indeksi + 1; 0 = yok). */
     ladder: new Uint8Array(capacity),
+    /** BFME2 duruşu (Stance: 0 normal, 1 saldırgan, 2 mevzi) ve sancaktar yükseltmesi (1 = var). */
+    stance: new Uint8Array(capacity),
+    banner: new Uint8Array(capacity),
+    /** Güneş Parlaması zayıflığının bitiş tick'i (0 = yok). */
+    weakUntil: new Uint32Array(capacity),
   },
   /** Tabur askeri: hangi tabur, hangi yuva, yuva sapması (Fx). */
   Soldier: {
@@ -148,8 +153,8 @@ export const StructureKind = {
   Barracks: 2,
   Forge: 3,
   Catapult: 4,
-  /** Düşmanın sura dayadığı kuşatma merdiveni. */
   Farm: 5,
+  /** Düşmanın sura dayadığı kuşatma merdiveni. */
   Ladder: 7,
   /** Sura yanaşmış kuşatma kulesi. */
   SiegeTower: 8,

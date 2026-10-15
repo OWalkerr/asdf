@@ -17,7 +17,7 @@
  *
  * Birim kaydı (6 × int32):
  *   0 eid · 1 x (Q16.16) · 2 z (Q16.16) · 3 yaw:16|unitType:8|team:8
- *   4 anim:8|flags:8|hp8:8|animTick:8 · 5 tabur eid'i:24|rütbe:8 (0 = yok/ölü)
+ *   4 anim:8|flags:8|hp8:8|animTick:8 · 5 tabur eid'i:24|rütbe:4|duruş:2|sancak:1|zayıf:1 (0 = yok/ölü)
  * Ok kaydı (7 × int32):
  *   0 eid · 1 fromX · 2 fromZ · 3 toX · 4 toZ · 5 fireTick:20|flightTicks:12 · 6 yükseklik (cm):16|tür:8 (0 ok, 1 taş)
  * Yapı kaydı (6 × int32) — kapılar da (kind 0, slot = kapı indeksi, 4 = kalan onarım tick'i):
@@ -66,9 +66,11 @@ export const H_SPELLS = 20;
 export const H_FORTRESS = 21;
 export const H_FORT_UP = 22;
 export const H_LIVES = 23;
-/** Büyü i'nin hazır tick'i: H_SPELL_READY + i (30–37). */
+/** Büyü i'nin hazır tick'i: spellReadyAt(i) — 0–7: 30–37, 8–11: 67–70. */
 export const H_SPELL_READY = 30;
-export const SNAP_SPELLS = 8;
+export const H_SPELL_READY_HI = 67;
+export const SNAP_SPELLS = 12;
+export const spellReadyAt = (i: number): number => (i < 8 ? H_SPELL_READY + i : H_SPELL_READY_HI + i - 8);
 /** Kahraman yuvası k'nın taburu (0 = yok), yeniden çağrılabileceği tick, yetenek hazır tick'leri (k × 2 + i). */
 export const SNAP_HEROES = 3;
 export const H_HEROES = 48;
@@ -117,11 +119,27 @@ export const unpackQueueLen = (v: number): number => v & 0xf;
 export const unpackQueueUnit = (v: number): number => (v >>> 4) & 0xff;
 export const unpackQueuePct = (v: number): number => (v >>> 12) & 0x7f;
 
-/** Birim kaydı alan 5: tabur eid'i (24 bit) + rütbe (8 bit). */
-export const packBattalionRank = (battalion: number, rank: number): number =>
-  (battalion & 0xffffff) | ((rank & 0xff) << 24);
+/**
+ * Birim kaydı alan 5: tabur eid'i (24 bit) + rütbe (4 bit) + duruş (2 bit, Stance) + sancaktar (1 bit)
+ * + Güneş Parlaması zayıflığı (1 bit).
+ */
+export const packBattalionRank = (
+  battalion: number,
+  rank: number,
+  stance = 0,
+  banner = 0,
+  weak = 0,
+): number =>
+  (battalion & 0xffffff) |
+  ((rank & 0xf) << 24) |
+  ((stance & 0x3) << 28) |
+  ((banner & 1) << 30) |
+  ((weak & 1) << 31);
 export const unpackBattalion = (v: number): number => v & 0xffffff;
-export const unpackRank = (v: number): number => (v >>> 24) & 0xff;
+export const unpackRank = (v: number): number => (v >>> 24) & 0xf;
+export const unpackStance = (v: number): number => (v >>> 28) & 0x3;
+export const unpackBanner = (v: number): number => (v >>> 30) & 1;
+export const unpackWeak = (v: number): number => (v >>> 31) & 1;
 
 export const packStructKind = (kind: number, slot: number, team: number, level = 1): number =>
   ((level & 0x0f) << 24) | ((kind & 0xff) << 16) | ((slot & 0xff) << 8) | (team & 0xff);
@@ -230,7 +248,7 @@ export const createFrame = (capacity: number, projCapacity = 2048): SnapshotFram
     researching: 0,
     pp: 0,
     spells: 0,
-    spellReady: [0, 0, 0, 0, 0, 0, 0, 0],
+    spellReady: new Array(SNAP_SPELLS).fill(0),
     heroes: [0, 0, 0],
     heroReady: [0, 0, 0],
     abilityReady: [0, 0, 0, 0, 0, 0],
@@ -261,7 +279,7 @@ export const readMatchHeader = (view: Int32Array, base: number, out: MatchInfo):
   out.researching = (up >>> 8) & 0xff;
   out.pp = view[base + H_PP] as number;
   out.spells = view[base + H_SPELLS] as number;
-  for (let i = 0; i < SNAP_SPELLS; i++) out.spellReady[i] = view[base + H_SPELL_READY + i] as number;
+  for (let i = 0; i < SNAP_SPELLS; i++) out.spellReady[i] = view[base + spellReadyAt(i)] as number;
   for (let k = 0; k < SNAP_HEROES; k++) {
     out.heroes[k] = view[base + H_HEROES + k] as number;
     out.heroReady[k] = view[base + H_HERO_READY + k] as number;

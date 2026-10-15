@@ -107,6 +107,18 @@ export class Scenario {
     this.sim.send({ type: 'fortressUpgrade', upgrade }, PLAYER);
   }
 
+  /** Seçili taburların duruşu (Stance). */
+  stance(battalions: Iterable<number>, stance: number): void {
+    const units = [...battalions];
+    if (units.length > 0) this.sim.send({ type: 'stance', units, stance }, PLAYER);
+  }
+
+  /** Seçili taburlara sancaktar al. */
+  buyBanner(battalions: Iterable<number>): void {
+    const units = [...battalions];
+    if (units.length > 0) this.sim.send({ type: 'buyBanner', units }, PLAYER);
+  }
+
   /** Seçili taburları durdur. */
   stop(battalions: Iterable<number>): void {
     const units = [...battalions];

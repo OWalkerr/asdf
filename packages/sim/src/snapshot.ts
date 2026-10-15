@@ -27,7 +27,6 @@ import {
   H_PROJ_COUNT,
   H_RALLY_UNTIL,
   H_SIM_MICROS,
-  H_SPELL_READY,
   H_SPELLS,
   H_STRUCT_COUNT,
   H_TICK,
@@ -51,6 +50,7 @@ import {
   SNAP_SPELLS,
   SNAP_STRUCT_INTS,
   SNAP_UNIT_INTS,
+  spellReadyAt,
   structOffset,
   UPGRADE_DEFS,
 } from '@bulwark/shared';
@@ -96,7 +96,16 @@ export const writeSnapshot = (world: SimWorld, view: Int32Array, simMicros = 0):
     );
     view[o + 4] = packAnim(Anim.state[eid] as number, flags, hp8, animTick);
     const bat = Soldier.battalion[eid] as number;
-    view[o + 5] = packBattalionRank(bat, bat !== 0 ? (Battalion.rank[bat] as number) : 0);
+    view[o + 5] =
+      bat !== 0
+        ? packBattalionRank(
+            bat,
+            Battalion.rank[bat] as number,
+            Battalion.stance[bat] as number,
+            Battalion.banner[bat] as number,
+            (Battalion.weakUntil[bat] as number) > world.tick ? 1 : 0,
+          )
+        : 0;
     o += SNAP_UNIT_INTS;
     count++;
   }
@@ -156,7 +165,7 @@ export const writeSnapshot = (world: SimWorld, view: Int32Array, simMicros = 0):
   view[base + H_GOLD_EARNED] = m.goldEarned;
   view[base + H_PP] = m.pp[0] as number;
   view[base + H_SPELLS] = m.spells[0] as number;
-  for (let i = 0; i < SNAP_SPELLS; i++) view[base + H_SPELL_READY + i] = m.spellReady[i] as number;
+  for (let i = 0; i < SNAP_SPELLS; i++) view[base + spellReadyAt(i)] = m.spellReady[i] as number;
   for (let k = 0; k < SNAP_HEROES; k++) {
     view[base + H_HEROES + k] = m.heroes[k] as number;
     view[base + H_HERO_READY + k] = m.heroReady[k] as number;

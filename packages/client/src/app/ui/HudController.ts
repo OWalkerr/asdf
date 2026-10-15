@@ -1,5 +1,6 @@
 import {
   type AbilityDef,
+  BANNER,
   BUILDING_DEFS,
   BUILDING_KINDS,
   BUILDING_LEVEL,
@@ -10,6 +11,7 @@ import {
   type MapDef,
   type MatchInfo,
   SLOT_BUILDS,
+  STANCE_DEFS,
   UNIT_DEFS,
   UnitTypeId,
   UPGRADE_DEFS,
@@ -293,6 +295,39 @@ export class HudController {
         });
       });
     });
+    // BFME2 duruşları ve sancaktar (kahraman/çağrılmış birlik dışı taburlar).
+    const regular = [...sel].filter((b) => {
+      const info = this.d.units.battalionInfo.get(b);
+      return info && !STAT_HERO.has(info.type) && !UNIT_DEFS[info.type]?.summoned;
+    });
+    if (regular.length > 0) {
+      const stances = new Set(regular.map((b) => this.d.units.battalionInfo.get(b)?.stance ?? 0));
+      const STANCE_ICON = ['army', 'charge', 'armor'];
+      STANCE_DEFS.forEach((st, i) => {
+        const on = stances.size === 1 && stances.has(i);
+        buttons.push({
+          icon: STANCE_ICON[i] ?? 'army',
+          label: st.name,
+          state: on ? 'active' : 'ready',
+          tip: { title: st.name, meta: on ? 'etkin' : 'duruş', body: st.desc },
+          run: () => this.d.scenario.stance(regular, i),
+        });
+      });
+      const need = regular.filter((b) => this.d.units.battalionInfo.get(b)?.banner !== 1);
+      const cost = BANNER.cost * need.length;
+      buttons.push({
+        icon: 'banner',
+        label: 'Sancaktar',
+        state: need.length === 0 ? 'done' : this.gold >= BANNER.cost ? 'ready' : 'off',
+        badge: need.length === 0 ? '✓' : `${cost}`,
+        tip: {
+          title: 'Sancaktar',
+          meta: need.length === 0 ? 'alındı' : `◆ ${BANNER.cost} / tabur`,
+          body: `Tabura sancak taşıyıcısı katılır: çatışma dışında askerler saniyede %${BANNER.regenPercent} iyileşir, tabur %${BANNER.xpPercent - 100} daha hızlı deneyim kazanır.`,
+        },
+        run: () => this.d.scenario.buyBanner(need),
+      });
+    }
     buttons.push({
       icon: 'stop',
       label: 'Dur',

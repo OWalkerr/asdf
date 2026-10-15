@@ -118,6 +118,7 @@ export class RTSCamera {
   }
 
   update(dt: number): void {
+    if (this.shakeLeft > 0) this.shakeLeft = Math.max(0, this.shakeLeft - dt);
     const g = this.goal;
     // --- Klavye + kenar kaydırma (kamera yaw'ına göre ekran-uzayı yönleri) ---
     let px = 0;
@@ -173,6 +174,18 @@ export class RTSCamera {
     g.dist = MathUtils.clamp(g.dist, minDistance, maxDistance);
   }
 
+  /** Kamera sarsıntısı (Deprem, kartal dalışı): genlik (m) ve süre (s). */
+  private shakeAmp = 0;
+  private shakeLeft = 0;
+  private shakeDur = 1;
+  shake(amp: number, dur: number): void {
+    if (amp >= this.shakeAmp * (this.shakeLeft / this.shakeDur)) {
+      this.shakeAmp = amp;
+      this.shakeDur = Math.max(0.05, dur);
+      this.shakeLeft = this.shakeDur;
+    }
+  }
+
   private apply(): void {
     const { pitchNear, pitchFar } = this.opts;
     const c = this.cur;
@@ -186,6 +199,13 @@ export class RTSCamera {
       c.z + Math.cos(c.yaw) * horiz,
     );
     this.camera.lookAt(this.tmp.set(c.x, c.y, c.z));
+    if (this.shakeLeft > 0) {
+      const k = this.shakeAmp * (this.shakeLeft / this.shakeDur) * Math.min(1, c.dist / 120);
+      const t = performance.now() * 0.001;
+      this.camera.position.x += Math.sin(t * 41.3) * k;
+      this.camera.position.y += Math.sin(t * 57.1 + 1.3) * k * 0.6;
+      this.camera.position.z += Math.sin(t * 47.9 + 2.1) * k;
+    }
   }
 
   // --- Olaylar -------------------------------------------------------------

@@ -9,6 +9,7 @@ import {
   fxLen,
   fxMul,
   LADDER,
+  STANCE_DEFS,
   Upgrade,
 } from '@bulwark/shared';
 import { addComponent, addEntity, entityExists, hasComponent, query, removeEntity } from 'bitecs';
@@ -355,7 +356,9 @@ export const combatSystem = (world: SimWorld): void => {
     if (t !== 0) {
       const ax = (Position.x[b] as number) - sx;
       const az = (Position.z[b] as number) - sz;
-      if (fxLen(ax | 0, az | 0) > LEASH) t = 0;
+      // Duruş kovalama mesafesini değiştirir (saldırgan uzağa, mevzi yakına).
+      const leash = (((LEASH >> 4) * (STANCE_DEFS[Battalion.stance[b] as number]?.leash ?? 100)) / 100) << 4;
+      if (fxLen(ax | 0, az | 0) > leash) t = 0;
     }
     Combat.target[s] = t;
     if (t !== 0) {

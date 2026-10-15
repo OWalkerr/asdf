@@ -30,6 +30,7 @@ import { PickCursor } from './render/fx/PickCursor';
 import { ProjectileRenderer } from './render/fx/ProjectileRenderer';
 import { SelectionRings } from './render/fx/SelectionRings';
 import { SpellFx } from './render/fx/SpellFx';
+import { SpellShow } from './render/fx/SpellShow';
 import { BattalionHud, setPlayerBannerColor } from './render/hud/BattalionHud';
 import { createLighting, FOG_COLOR } from './render/lighting';
 import { HeightGrid } from './render/map/HeightGrid';
@@ -43,6 +44,7 @@ import { FortressRenderer } from './render/structures/FortressRenderer';
 import { GateRenderer } from './render/structures/GateRenderer';
 import { LadderRenderer } from './render/structures/LadderRenderer';
 import { StructureRenderer } from './render/structures/StructureRenderer';
+import { BannerCarriers } from './render/units/BannerCarriers';
 import { Portraits } from './render/units/Portraits';
 import { UnitRenderer } from './render/units/UnitRenderer';
 import { SimHost } from './sim-host/SimHost';
@@ -125,6 +127,9 @@ const boot = async () => {
     ladders ? ground.sample(x, z) + ladders.climb(x, z) : ground.sample(x, z),
   );
   for (const m of units.meshes) scene.add(m);
+  // Sancaktarlar (tabur yükseltmesi): taburun ilk askeri uzun savaş sancağı taşır.
+  const bannerCarriers = new BannerCarriers(palette, toon);
+  scene.add(...bannerCarriers.meshes);
   const scenario = new Scenario(sim, world.def, faction);
   if (!gallery) scenario.start();
 
@@ -225,6 +230,11 @@ const boot = async () => {
   // --- Kahraman + Spellbook ----------------------------------------------------------
   const spellFx = new SpellFx();
   scene.add(...spellFx.meshes);
+  // Büyük güç gösterileri: kartallar, sel, deprem, güneş parlaması.
+  const spellShow = new SpellShow(palette, toon);
+  scene.add(...spellShow.meshes);
+  spellShow.onShake = (amp, dur) => cam.shake(amp, dur);
+  spellShow.onSound = (kind) => sfx.spell(kind);
   input.onTargetHover = (x, y, z, r) => spellFx.showTarget(x, y, z, r);
   input.onTargetEnd = () => spellFx.hideTarget();
   // --- BFME2 tarzı arayüz: komut çubuğu, güçler sütunu, üst arayüz ----------------------
@@ -277,6 +287,7 @@ const boot = async () => {
         scenario,
         input,
         fx: spellFx,
+        show: spellShow,
         cam,
         groundY: ground.sample,
         onClick: () => sfx.click(),
@@ -391,6 +402,7 @@ const boot = async () => {
       const buffed = mi.heroBuff.findIndex((t) => t > sim.tick);
       units.glowBattalion = buffed >= 0 ? (mi.heroes[buffed] ?? 0) : 0;
       units.updateFromSim(sim, now);
+      bannerCarriers.update(units, now);
       arrows.update(sim, now);
       structures?.update(sim.frame);
       ladders?.update(sim.frame);
@@ -426,6 +438,7 @@ const boot = async () => {
       );
     } else spellFx.hideSelect();
     spellFx.update(dt);
+    spellShow.update(dt);
     if (!gallery && world.def) {
       sfx.setListener(cam.target.x, cam.target.z, cam.zoom01);
       sfx.updateFromFrame(sim.frame, world.def.gates);
@@ -490,6 +503,9 @@ const boot = async () => {
   // Playwright / debug erişimi için.
   Object.assign(window, {
     __bulwark: {
+      spellShow,
+      groundY: ground.sample,
+      bannerCarriers,
       ctx,
       cam,
       scene,

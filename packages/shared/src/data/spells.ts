@@ -230,7 +230,17 @@ export const ELENDIL_DURATION = 10;
 export const ATHELAS_RADIUS = 15;
 
 export interface SpellDef {
-  key: 'heal' | 'rally' | 'arrow_volley' | 'elven_allies' | 'rohirrim' | 'army_of_dead';
+  key:
+    | 'heal'
+    | 'rally'
+    | 'arrow_volley'
+    | 'elven_allies'
+    | 'sun_flare'
+    | 'rohirrim'
+    | 'earthquake'
+    | 'army_of_dead'
+    | 'eagles'
+    | 'flood';
   name: string;
   tier: number;
   /** Açma maliyeti (PP). */
@@ -279,6 +289,15 @@ export const SPELL_DEFS: readonly SpellDef[] = [
     desc: 'Hedef noktada 60 sn kalan iki tabur Lórien okçusu belirir.',
   },
   {
+    key: 'sun_flare',
+    name: 'Güneş Parlaması',
+    tier: 2,
+    cost: 10,
+    cooldown: 120,
+    radius: 16,
+    desc: 'Göz kamaştıran ışık: alandaki düşmanlar 60 büyü hasarı alır, 15 sn boyunca %40 daha az hasar verir ve %25 daha fazla hasar alır.',
+  },
+  {
     key: 'rohirrim',
     name: "Rohirrim'i Çağır",
     tier: 3,
@@ -288,6 +307,15 @@ export const SPELL_DEFS: readonly SpellDef[] = [
     desc: 'Rohan süvarileri doğudan hedef noktanın üzerinden batıya dörtnala geçer, yoldaki düşmanı ezer.',
   },
   {
+    key: 'earthquake',
+    name: 'Deprem',
+    tier: 3,
+    cost: 15,
+    cooldown: 180,
+    radius: 16,
+    desc: 'Toprak 4 sn boyunca sarsılır: düşman askerlerine ezme hasarı, merdiven ve kuşatma kulelerine ağır hasar.',
+  },
+  {
     key: 'army_of_dead',
     name: 'Ölüler Ordusu',
     tier: 4,
@@ -295,6 +323,24 @@ export const SPELL_DEFS: readonly SpellDef[] = [
     cooldown: 300,
     radius: 10,
     desc: 'Hedefte 45 sn savaşan, hasar almayan dört tabur hayalet asker belirir.',
+  },
+  {
+    key: 'eagles',
+    name: 'Kartallar Geliyor!',
+    tier: 4,
+    cost: 20,
+    cooldown: 240,
+    radius: 14,
+    desc: "Gwaihir'in kartalları üç kez dalış yapar: her dalış alandaki düşmanlara 220 ezme hasarı verir, boss'ları da yaralar.",
+  },
+  {
+    key: 'flood',
+    name: 'Bruinen Seli',
+    tier: 4,
+    cost: 25,
+    cooldown: 300,
+    radius: 20,
+    desc: 'Hedeften dışa yayılan sel dalgası: geçtiği her düşmana 200 büyü hasarı verir ve onları sürükler.',
   },
 ];
 /** Çağrılan birliklerin süreleri (s) ve tabur sayıları. */
@@ -306,10 +352,18 @@ export const SUMMONS = {
 /** Süvari çiğneme: rider başına vuruş aralığı (tick), yarıçap (m), hasar. */
 export const TRAMPLE = { interval: 3, radius: 2.2, damage: 45 } as const;
 /** Spellbook büyü sayısı üst sınırı (snapshot/hazır tick dizileri). */
-export const MAX_SPELLS = 8;
+export const MAX_SPELLS = 12;
 export const RALLY_DURATION = 30;
 export const RALLY_DAMAGE_PERCENT = 25;
 /** Ok Yağmuru: dalga sayısı, dalga arası (s), dalga başına ok, ok hasarı. */
 export const VOLLEY = { waves: 3, gap: 0.8, arrows: 30, damage: 30 } as const;
 /** Güç Puanı kazancı: öldürülen birimin asker başı değeri / 100, dalga başı +2 (GDD §9.1 oranı yarıya indirildi: 3 büyülük kitapta PP taşmasın). */
 export const PP = { perValue: 100, waveBonus: 2 } as const;
+/** Güneş Parlaması: anlık hasar, zayıflama süresi (s), verilen/alınan hasar yüzdeleri. */
+export const SUN_FLARE = { damage: 60, duration: 15, dealtPercent: 60, takenPercent: 125 } as const;
+/** Deprem: sarsıntı sayısı, aralığı (s), asker ve yapı hasarı. */
+export const EARTHQUAKE = { pulses: 8, gap: 0.5, damage: 45, structureDamage: 260 } as const;
+/** Kartallar: dalış sayısı, ilk dalış gecikmesi ve aralığı (s), dalış yarıçapı (m), hasar. */
+export const EAGLES = { dives: 3, delay: 1.2, gap: 1.1, radius: 8, damage: 220 } as const;
+/** Sel: dalga halkası sayısı, aralığı (s), hasar, sürükleme (m). */
+export const FLOOD = { rings: 6, gap: 0.45, damage: 200, push: 3 } as const;

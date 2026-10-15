@@ -45,6 +45,14 @@ const P: Record<string, string> = {
   help: '<path d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20zm-1 14v2h2v-2zm1-10a4 4 0 0 0-4 4h2a2 2 0 1 1 3 1.7c-1 .6-2 1.4-2 3.3h2c0-1 .4-1.4 1.2-2A4 4 0 0 0 12 6z"/>',
   sound:
     '<path d="M3 9h4l5-5v16l-5-5H3zM15 8a5 5 0 0 1 0 8M17.5 5.5a8.5 8.5 0 0 1 0 13" stroke="currentColor" stroke-width="1.6" fill-rule="evenodd"/>',
+  sun: '<circle cx="12" cy="12" r="5"/><path d="M11 1h2v4h-2zM11 19h2v4h-2zM1 11h4v2H1zM19 11h4v2h-4zM4.2 5.6l1.4-1.4 2.8 2.8-1.4 1.4zM15.6 17l1.4-1.4 2.8 2.8-1.4 1.4zM4.2 18.4l2.8-2.8 1.4 1.4-2.8 2.8zM15.6 7l2.8-2.8 1.4 1.4-2.8 2.8z"/>',
+  quake:
+    '<path d="M2 14h7l2-3 2 4 2-3 1 2h6v8H2zM11 15l-1 3 2 1-1 3h1l1-3-2-1 1-3z" fill-rule="evenodd"/><path d="M5 10l2-3 2 2zM15 9l3-4 2 4z"/>',
+  eagle:
+    '<path d="M12 6c1 0 2 1 2 2l8-3-3 5h2l-4 3h-3l1 3-1 4-2-2-2 2-1-4 1-3H7l-4-3h2L2 5l8 3c0-1 1-2 2-2z"/>',
+  wave: '<path d="M2 15c3 0 4-6 9-6 3 0 4 2 4 4-1-1-3-1-4 0 2 0 4 1 5 3 2-1 4-1 6-1v7H2z"/>',
+  charge:
+    '<path d="M3 2l7 7-1.5 1.5L2 4.5V2zM21 2v2.5l-6.5 6L13 9l7-7zM8.5 12l3.5 3.5-5 5 1 1-1.5 1.5-4-4L4 17.5l1 1zM15.5 12l5 5 1-1 1.5 1.5-4 4L17.5 22l1-1-5-5z"/>',
   eye: '<path d="M12 5c5 0 9 4 10 7-1 3-5 7-10 7S3 15 2 12c1-3 5-7 10-7zm0 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8z"/>',
 };
 
@@ -92,6 +100,12 @@ const THEME: Record<string, [string, string, string]> = {
   ladder: ['#9a7a4a', '#2a1c0c', '#fff0d4'],
   castle: ['#c9a23a', '#3a2a08', '#fff6cc'],
   lock: ['#6a6a6a', '#1a1a1a', '#d0d0d0'],
+  sun: ['#ffd25a', '#5a3a06', '#fffbe0'],
+  quake: ['#9a7448', '#2a1a0a', '#ffe8c8'],
+  eagle: ['#c08a3a', '#2e1a06', '#fff0d0'],
+  wave: ['#3a8ad0', '#08203a', '#e0f6ff'],
+  charge: ['#d0503a', '#3a0e08', '#ffe0d8'],
+  army: ['#8a9ab0', '#1c2230', '#f2f6fc'],
 };
 
 export const richIcon = (name: string): string => {

@@ -86,7 +86,7 @@ export interface MatchContext {
   researching: Uint8Array;
   /** Güç Puanı ×10, açık büyü bitleri, büyü hazır tick'leri (takım × 4 + büyü). */
   pp: Int32Array;
-  spells: Uint8Array;
+  spells: Uint16Array;
   spellReady: Int32Array;
   rallyUntil: Int32Array;
   /** Takım başına lider (aura kaynağı; düşmanda boss) taburu. */
@@ -100,11 +100,14 @@ export interface MatchContext {
   abilityReady: Int32Array;
   /** Kahraman yuvası başına çift hasar güçlendirmesinin bitiş tick'i (Elendil, Kalkan Kızı). */
   heroBuff: Int32Array;
-  /** Bekleyen Ok Yağmuru dalgaları. */
-  volleys: { x: number; z: number; team: number; next: number; left: number }[];
+  /** Bekleyen zamanlı büyü etkileri (Ok Yağmuru dalgaları, Deprem, Kartallar, Sel). */
+  volleys: { kind: number; x: number; z: number; team: number; next: number; left: number }[];
   /** MapDef.slots sırasıyla inşa edilmiş yapı eid'i (0 = boş). */
   slots: Int32Array;
 }
+
+/** Zamanlı büyü etkisi türleri (MatchContext.volleys[].kind). */
+export const SpellEffect = { Volley: 0, Quake: 1, Eagles: 2, Flood: 3 } as const;
 
 export interface SimContext {
   c: Components;
@@ -172,7 +175,7 @@ export const createSimWorld = (
       upgrades: new Uint8Array(4),
       researching: new Uint8Array(4),
       pp: new Int32Array(4),
-      spells: new Uint8Array(4),
+      spells: new Uint16Array(4),
       spellReady: new Int32Array(4 * MAX_SPELLS),
       rallyUntil: new Int32Array(4),
       hero: new Int32Array(4),
@@ -267,6 +270,9 @@ export const hashWorld = (world: SimWorld): number => {
     h = hashInt(h, Battalion.rank[eid] as number);
     h = hashInt(h, Battalion.aura[eid] as number);
     h = hashInt(h, Battalion.expires[eid] as number);
+    h = hashInt(h, Battalion.stance[eid] as number);
+    h = hashInt(h, Battalion.banner[eid] as number);
+    h = hashInt(h, Battalion.weakUntil[eid] as number);
   }
   for (const eid of query(world, [Soldier])) {
     h = hashInt(h, Soldier.battalion[eid] as number);
@@ -311,6 +317,7 @@ export const hashWorld = (world: SimWorld): number => {
   ])
     for (const v of arr) h = hashInt(h, v);
   for (const v of m.volleys) {
+    h = hashInt(h, v.kind);
     h = hashInt(h, v.x);
     h = hashInt(h, v.z);
     h = hashInt(h, v.next);

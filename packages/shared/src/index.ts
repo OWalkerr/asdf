@@ -3,6 +3,7 @@ export * from './data/factions';
 export * from './data/maps/helmsDeep';
 export * from './data/maps/index';
 export * from './data/spells';
+export * from './data/stances';
 export * from './data/units';
 export * from './hash';
 export * from './map/types';

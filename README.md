@@ -116,9 +116,22 @@ saklanır; başlangıç ekranındaki harita kartlarında en iyi yıldız ve puan
 kılıçlı, yarma vuruşlu ve çevresini her saniye yakan ateş aurasıyla; ona yakın dövüşle değil Gandalf ve okçularla
 karşılık verin.
 
-**Güçler:** Düşman öldürmek ve dalga başları **Güç Puanı** verir; ekranın solundaki **Güçler** sütunundan (**1–6**)
-kademe kademe açılır: Şifa, Toplanma Çağrısı → Ok Yağmuru, Elf Müttefikleri → Rohirrim'i Çağır →
-Ölüler Ordusu. Taburlar öldürdükçe 5 rütbeye kadar yükselir. Son dalgada boss **Lurtz** gelir.
+**Güçler:** Düşman öldürmek ve dalga başları **Güç Puanı** verir; ekranın solundaki **Güçler** sütunundan (**1–9, 0**)
+kademe kademe açılır (10 güç):
+- I: Şifa, Toplanma Çağrısı
+- II: Ok Yağmuru, Elf Müttefikleri, **Güneş Parlaması** (alandaki düşmanlar kamaşır: 15 sn −%40 hasar verir,
+  +%25 hasar alır)
+- III: Rohirrim'i Çağır, **Deprem** (4 sn sarsıntı: askerlere ezme hasarı, merdiven ve kuşatma kulelerine ağır
+  hasar; yarılan toprak, fırlayan kayalar, kamera sarsıntısı)
+- IV: Ölüler Ordusu, **Kartallar Geliyor!** (üç kartal dalışı, dalış başına 220 ezme hasarı),
+  **Bruinen Seli** (hedeften dışa yayılan sel dalgası düşmanı yaralar ve sürükler)
+
+Taburlar öldürdükçe 5 rütbeye kadar yükselir. Son dalgada boss **Lurtz** gelir.
+
+**Tabur duruşları ve sancaktar:** bir tabur seçince komut çubuğunda BFME2 duruşları çıkar — **Normal**,
+**Saldırgan** (+%25 hasar verir, +%25 alır, düşmanı uzağa kovalar), **Mevzi Tut** (kalkan duvarı: %35 daha az hasar
+alır, %15 daha az verir, yerinden kopmaz). **Sancaktar** (150 altın / tabur) taburun bir askerine armalı uzun savaş
+sancağı taşıtır: çatışma dışındaki askerler saniyede %3 iyileşir, tabur %50 daha hızlı deneyim kazanır.
 
 **Halka menü ve sayaçlar:** bir yapıya, inşa yuvasına veya kaleye tıklayınca BFME'deki gibi etrafında yuvarlak
 komut halkası açılır (aynı komutlar alttaki çubukta da). İnşa, yükseltme, eğitim, araştırma, onarım, kahraman
@@ -141,15 +154,14 @@ ve sim hızı ayarı var.
 
 **Var:** Kale (FD) ve Kule (TD) savunması, klasik Tower Wars / Fortress Defence haritaları, işlevsel ve gelişen kale,
 kale yükseltmeleri, bina seviyeleri ve satış, çiftlik, kışla / demirhane, 3 iyi taraf (Gondor, Rohan, Lothlórien) ve
-9 kahraman, 4 kademeli 6 güç, rütbe sistemi, kuşatma (koçbaşı, merdiven, kule), boss'lar (Lurtz, Balrog, Su Gözcüsü,
+9 kahraman, 4 kademeli 10 güç (Kartallar, Sel, Deprem, Güneş Parlaması dahil), tabur duruşları ve sancaktar, rütbe sistemi, kuşatma (koçbaşı, merdiven, kule), boss'lar (Lurtz, Balrog, Su Gözcüsü,
 Ateş Ejderi), halka menü, bekleme sayaçları, palantír mini harita, portreler, oyun hızı, istatistik ve rekorlar.
 
 **Eksik (BFME2'de olup henüz olmayan):**
 1. Kötü tarafların oynanabilir olması (Mordor, Isengard, Goblinler) ve çok oyunculu / PvP (deterministik lockstep
    altyapısı hazır, ağ katmanı yok).
-2. Güç kitabının tamamı (BFME2'de ~15 güç: Kartallar, Sel, Deprem, Tom Bombadil…); burada 6.
-3. Tabur duruşları (saldırgan / savunmacı / yerini koru), tabur başına yükseltmeler (sancaktar, dövme kılıç),
-   sürü (horde) bonusları.
+2. Güç kitabının kalanı (Tom Bombadil, Kale Kuşatması, Ölülerin Çağrısı…; BFME2'de ~15, burada 10).
+3. Tabur başına demirhane yükseltmeleri (burada takım çapında), sürü (horde) bonusları.
 4. Kahramanların 10 seviyeye kadar gelişmesi ve 4–5 yeteneği, Kahraman Yarat (Create-a-Hero), binekli kahramanlar.
 5. Serbest inşa ve sur inşası, komuta noktası (nüfus) sınırı, deniz birimleri.
 6. Seslendirme (birim cevapları) ve müzik; War of the Ring kampanya modu; harita editörü.
