@@ -15,6 +15,7 @@ import {
 import { addComponent, addEntity, entityExists, hasComponent, query, removeEntity } from 'bitecs';
 import { StructureKind } from '../components';
 import { cellAt } from '../nav/grid';
+import { allied } from '../team';
 import { ARMOR_STRUCTURE, PERCENT, STAT } from '../unitStats';
 import type { SimWorld } from '../world';
 import { clearLine } from './battalion';
@@ -109,7 +110,7 @@ const acquireNearest = (world: SimWorld, s: number, team: number): number => {
       const cc = c0 + dc;
       if (cc < 0 || cc >= grid.cols) continue;
       for (let o = world.hashHead[r * grid.cols + cc] as number; o !== -1; o = world.hashNext[o] as number) {
-        if (Team.id[o] === team) continue;
+        if (allied(world, Team.id[o] as number, team)) continue;
         const d = fxLen(((Position.x[o] as number) - sx) | 0, ((Position.z[o] as number) - sz) | 0);
         if (d < bestD || (d === bestD && o < best)) {
           bestD = d;
@@ -231,7 +232,7 @@ export const splash = (
       const cc = c0 + dc;
       if (cc < 0 || cc >= grid.cols) continue;
       for (let o = world.hashHead[r * grid.cols + cc] as number; o !== -1; o = world.hashNext[o] as number) {
-        if (Team.id[o] === team || Dead.at[o] !== 0 || o === exclude) continue;
+        if (allied(world, Team.id[o] as number, team) || Dead.at[o] !== 0 || o === exclude) continue;
         if (fxLen(((Position.x[o] as number) - x) | 0, ((Position.z[o] as number) - z) | 0) <= radius)
           applyDamage(world, o, damage, dmgType, source);
       }
@@ -333,7 +334,7 @@ export const combatSystem = (world: SimWorld): void => {
       let target = 0;
       let best = Combat.range[s] as number;
       for (const e of buildings) {
-        if (Team.id[e] === team || (Structure.hp[e] as number) <= 0) continue;
+        if (allied(world, Team.id[e] as number, team) || (Structure.hp[e] as number) <= 0) continue;
         const d = fxLen(((Position.x[e] as number) - sx) | 0, ((Position.z[e] as number) - sz) | 0);
         if (d < best) {
           best = d;
@@ -351,7 +352,7 @@ export const combatSystem = (world: SimWorld): void => {
 
     // --- Yakın dövüş ---
     let t = Combat.target[s] as number;
-    if (t !== 0 && (!alive(world, t) || Team.id[t] === team)) t = 0;
+    if (t !== 0 && (!alive(world, t) || allied(world, Team.id[t] as number, team))) t = 0;
     if (Battalion.engaged[b] === 1) {
       if (t === 0 && (s + world.tick) % 5 === 0) t = acquireNearest(world, s, team);
     } else {
@@ -478,7 +479,7 @@ export const projectileSystem = (world: SimWorld): void => {
       // Alan hasarı kuşatma yapılarına (merdiven, kule) da işler.
       const team = Projectile.team[p] as number;
       for (const l of world.match.ladders) {
-        if (world.c.Team.id[l.eid] === team) continue;
+        if (allied(world, world.c.Team.id[l.eid] as number, team)) continue;
         const d = fxLen(
           ((Position.x[l.eid] as number) - (Projectile.toX[p] as number)) | 0,
           ((Position.z[l.eid] as number) - (Projectile.toZ[p] as number)) | 0,

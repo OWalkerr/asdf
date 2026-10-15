@@ -218,12 +218,12 @@ describe('maç istatistikleri', () => {
     );
     run(sim, 1);
     const { Health, Soldier } = sim.world.c;
-    const g0 = sim.world.match.goldEarned;
+    const g0 = sim.world.match.goldEarned[0];
     for (const e of query(sim.world, [Soldier, Health])) Health.hp[e] = 0;
     run(sim, 1);
-    expect(sim.world.match.kills).toBe(UNIT_DEFS[UnitTypeId.OrcWarrior]?.battalionSize);
-    expect(sim.world.match.losses).toBe(UNIT_DEFS[UnitTypeId.GondorSoldier]?.battalionSize);
-    expect(sim.world.match.goldEarned).toBeGreaterThan(g0);
+    expect(sim.world.match.kills[0]).toBe(UNIT_DEFS[UnitTypeId.OrcWarrior]?.battalionSize);
+    expect(sim.world.match.losses[0]).toBe(UNIT_DEFS[UnitTypeId.GondorSoldier]?.battalionSize);
+    expect(sim.world.match.goldEarned[0]).toBeGreaterThan(g0);
   });
 });
 

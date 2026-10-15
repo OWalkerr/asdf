@@ -1,5 +1,7 @@
 import {
   DIFFICULTIES,
+  FACTIONS,
+  FREE_BUILD,
   type Fx,
   factionDef,
   fxAtan2,
@@ -10,17 +12,20 @@ import {
   type MapDef,
   MatchState,
   PP,
+  UnitTypeId,
   type Vec2,
+  type VersusSetup,
 } from '@bulwark/shared';
 import { addComponent, addEntity, query } from 'bitecs';
 import { BattalionMode } from '../components';
 import { SIM_HZ } from '../constants';
 import { isBlockedAt } from '../nav/grid';
+import { allied } from '../team';
 import { STAT } from '../unitStats';
 import type { ScheduledGroup, SimWorld } from '../world';
 import { clearLine } from './battalion';
 import { orderBattalions, spawnBattalionRow } from './commands';
-import { fortressDoor, setupFortress } from './fortress';
+import { fortressDoor, setupFortress, setupFortressAt } from './fortress';
 import { isLadderType, sendLadderTeam } from './ladders';
 import { isBuilding } from './structures';
 
@@ -29,8 +34,42 @@ export const ENEMY_TEAM = 1;
 
 const fxv = (p: Vec2): [number, number] => [fxFromFloat(p[0]), fxFromFloat(p[1])];
 
+/**
+ * Çatışma (BFME2 Skirmish): her yuvaya başlangıç konumunda kale, başlangıç altını, Güç Puanı ve
+ * işçiler; dalga yok. Bilgisayar yuvaları aiSystem'e bırakılır.
+ */
+const setupVersus = (world: SimWorld, map: MapDef, setup: VersusSetup): void => {
+  const m = world.match;
+  m.versus = true;
+  m.cpLimit = setup.cpLimit;
+  setup.humans.forEach((t, i) => {
+    m.playerTeam[i] = t;
+  });
+  for (const slot of setup.slots) {
+    const t = slot.team;
+    const start = map.starts?.[slot.start];
+    if (t < 0 || t > 3 || !start) continue;
+    m.factions[t] = FACTIONS[slot.faction] ? slot.faction : 0;
+    // İttifak: lobideki takım (0–3) ya da takımsız (kendi başına, 4 + takım).
+    m.alliance[t] = slot.alliance >= 0 && slot.alliance < 4 ? slot.alliance : 4 + t;
+    m.ai[t] = slot.ai;
+    m.startOf[t] = slot.start;
+    m.gold[t] = setup.startGold;
+    m.pp[t] = PP.start * 10;
+    setupFortressAt(world, t, start);
+    const [dx, dz] = fortressDoor(world, t);
+    spawnBattalionRow(world, t, UnitTypeId.Worker, dx, dz, FREE_BUILD.startWorkers, 16384);
+  }
+  m.faction = m.factions[0] as number;
+  m.waveCount = 0;
+};
+
 /** Kapı yapıları ve dalga programı (harita yüklenirken bir kez). */
-export const setupMatch = (world: SimWorld, map: MapDef): void => {
+export const setupMatch = (world: SimWorld, map: MapDef, versus: VersusSetup | null = null): void => {
+  if (map.mode === 'VS' && versus) {
+    setupVersus(world, map, versus);
+    return;
+  }
   const diff = DIFFICULTIES[world.match.difficulty] ?? (DIFFICULTIES[1] as (typeof DIFFICULTIES)[number]);
   const { Position, Team, Structure } = world.c;
   map.gates.forEach((gate, i) => {
@@ -108,7 +147,7 @@ export const waveSystem = (world: SimWorld): void => {
       if (map.waveGold) {
         const bonus = map.waveGold.base + map.waveGold.perWave * (g.wave - 1);
         m.gold[0] = (m.gold[0] as number) + bonus;
-        m.goldEarned += bonus;
+        m.goldEarned[0] = (m.goldEarned[0] as number) + bonus;
       }
     }
     m.waveIndex = Math.max(m.waveIndex, g.wave);
@@ -131,7 +170,13 @@ const nearbyBuilding = (world: SimWorld, b: number): { e: number; x: Fx; z: Fx }
   let best: { e: number; x: Fx; z: Fx } | null = null;
   let bestD = BUILDING_AGGRO;
   for (const e of world.match.slots) {
-    if (e === 0 || !isBuilding(world, e) || Team.id[e] === team || (Structure.hp[e] as number) <= 0) continue;
+    if (
+      e === 0 ||
+      !isBuilding(world, e) ||
+      allied(world, Team.id[e] as number, team) ||
+      (Structure.hp[e] as number) <= 0
+    )
+      continue;
     if (map.slots[Structure.slot[e] as number]?.kind !== 'building') continue;
     const ex = Position.x[e] as number;
     const ez = Position.z[e] as number;
@@ -233,6 +278,38 @@ export const enemyAiSystem = (world: SimWorld): void => {
   }
 };
 
+/**
+ * Çatışma sonucu: kalesi düşen takım elenir (birlikleri dağılır, yapıları yıkılır). Ayakta tek
+ * ittifak kalınca kalanlar kazanır.
+ */
+const versusOutcome = (world: SimWorld): void => {
+  const m = world.match;
+  const { Structure } = world.c;
+  for (let t = 0; t < 4; t++) {
+    if (!m.alive[t]) continue;
+    const f = m.fortresses[t] as number;
+    if (f !== 0 && (Structure.hp[f] as number) > 0) continue;
+    m.alive[t] = 0;
+    m.teamState[t] = MatchState.Defeat;
+    eliminate(world, t);
+  }
+  const alliances = new Set<number>();
+  for (let t = 0; t < 4; t++) if (m.alive[t]) alliances.add(m.alliance[t] as number);
+  if (alliances.size > 1) return;
+  for (let t = 0; t < 4; t++) if (m.alive[t]) m.teamState[t] = MatchState.Victory;
+  m.state = MatchState.Victory;
+};
+
+/** Elenen takımın askerleri ölür, yapıları yıkılır (BFME2: yenilen oyuncu haritadan silinir). */
+const eliminate = (world: SimWorld, team: number): void => {
+  const { Health, Structure, Team, Dead, Soldier } = world.c;
+  for (const e of query(world, [Health, Soldier])) {
+    if (Team.id[e] !== team || Dead.at[e] !== 0) continue;
+    Health.hp[e] = 0;
+  }
+  for (const e of query(world, [Structure])) if (Team.id[e] === team) Structure.hp[e] = 0;
+};
+
 /** Bir sonraki (henüz başlamamış) dalganın başlama tick'i; yoksa -1. */
 export const nextWaveTick = (world: SimWorld): number => {
   const m = world.match;
@@ -251,6 +328,10 @@ export const matchSystem = (world: SimWorld): void => {
   const m = world.match;
   const map = world.map;
   if (!map || m.state !== MatchState.Playing) return;
+  if (m.versus) {
+    versusOutcome(world);
+    return;
+  }
   const fallen =
     map.mode === 'TD' ? m.lives <= 0 : m.fortress !== 0 && (world.c.Structure.hp[m.fortress] as number) <= 0;
   if (fallen) {

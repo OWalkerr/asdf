@@ -59,6 +59,10 @@ export const H_GOLD = 16;
 /** Komuta puanı: kullanılan ve tavan (oyuncu 0). */
 export const H_CP_USED = 72;
 export const H_CP_CAP = 73;
+/** Çatışma: görüş takımının müttefikleri (eşlenmiş takım bitleri). */
+export const H_ALLY_MASK = 74;
+/** Çatışma: bit 0 = VS modu, bit 4+t = takım t ayakta (eşlenmiş). */
+export const H_VERSUS = 75;
 export const H_STRUCT_COUNT = 17;
 /** Oyuncu 0'ın tamamlanmış yükseltmeleri (bit maskesi) ve araştırılanlar (<< 8). */
 export const H_UPGRADES = 18;
@@ -210,6 +214,10 @@ export interface MatchInfo {
   gold: number;
   cpUsed: number;
   cpCap: number;
+  /** Çatışma: müttefik takım bitleri, VS modu, ayakta takım bitleri. */
+  allyMask: number;
+  versus: boolean;
+  aliveMask: number;
   /** Tamamlanmış yükseltme bitleri. */
   upgrades: number;
   /** Araştırılmakta olan yükseltme bitleri. */
@@ -277,6 +285,9 @@ export const createFrame = (capacity: number, projCapacity = 2048): SnapshotFram
     gold: 0,
     cpUsed: 0,
     cpCap: 0,
+    allyMask: 0,
+    versus: false,
+    aliveMask: 0,
     upgrades: 0,
     researching: 0,
     pp: 0,
@@ -312,6 +323,9 @@ export const readMatchHeader = (view: Int32Array, base: number, out: MatchInfo):
   out.gold = view[base + H_GOLD] as number;
   out.cpUsed = view[base + H_CP_USED] as number;
   out.cpCap = view[base + H_CP_CAP] as number;
+  out.allyMask = view[base + H_ALLY_MASK] as number;
+  out.versus = ((view[base + H_VERSUS] as number) & 1) === 1;
+  out.aliveMask = ((view[base + H_VERSUS] as number) >> 4) & 0xf;
   const up = view[base + H_UPGRADES] as number;
   out.upgrades = up & 0xff;
   out.researching = (up >>> 8) & 0xff;

@@ -159,15 +159,16 @@ export const releaseFootprint = (world: SimWorld, e: number): void => {
 /** Kaleden işçi yetiştir (anında kapıdan çıkar; bekleme süresi ve üst sınır var). */
 export const trainWorker = (world: SimWorld, team: number): boolean => {
   const m = world.match;
-  if (m.state !== MatchState.Playing || m.fortress === 0 || world.tick < m.workerReady) return false;
-  if ((world.c.Structure.hp[m.fortress] as number) <= 0) return false;
+  const f = m.fortresses[team] as number;
+  if (m.state !== MatchState.Playing || f === 0 || world.tick < (m.workerReady[team] as number)) return false;
+  if ((world.c.Structure.hp[f] as number) <= 0) return false;
   if (countWorkers(world, team) >= FREE_BUILD.maxWorkers) return false;
   if ((m.gold[team] as number) < FREE_BUILD.workerCost) return false;
   const cp = commandPoints(world, team);
   if (cp.used + COMMAND_POINTS.worker > cp.cap) return false;
   m.gold[team] = (m.gold[team] as number) - FREE_BUILD.workerCost;
-  m.workerReady = world.tick + ticks(FREE_BUILD.workerCooldown);
-  const [x, z] = fortressDoor(world);
+  m.workerReady[team] = world.tick + ticks(FREE_BUILD.workerCooldown);
+  const [x, z] = fortressDoor(world, team);
   spawnBattalion(world, team, UnitTypeId.Worker, x, z, 16384);
   return true;
 };

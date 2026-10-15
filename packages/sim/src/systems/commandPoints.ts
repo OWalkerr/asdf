@@ -24,6 +24,10 @@ export const commandPoints = (world: SimWorld, team: number): { used: number; ca
   }
   return {
     used,
-    cap: Math.min(COMMAND_POINTS.max, COMMAND_POINTS.base + farms * COMMAND_POINTS.perFarmLevel),
+    cap: Math.min(
+      COMMAND_POINTS.max,
+      world.match.cpLimit,
+      COMMAND_POINTS.base + farms * COMMAND_POINTS.perFarmLevel,
+    ),
   };
 };

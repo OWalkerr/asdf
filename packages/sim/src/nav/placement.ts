@@ -49,8 +49,8 @@ export const placementError = (
   for (const g of map.gates)
     if (sq(x - g.pos[0]) + sq(z - g.pos[1]) < sq(r + FREE_BUILD.gatePad + g.width / 2))
       return 'Kapıya çok yakın';
-  const c = map.citadel;
-  if (sq(x - c.pos[0]) + sq(z - c.pos[1]) < sq(r + c.radius + 4)) return 'Kaleye çok yakın';
+  for (const c of map.starts ?? [map.citadel])
+    if (sq(x - c.pos[0]) + sq(z - c.pos[1]) < sq(r + c.radius + 4)) return 'Kaleye çok yakın';
   for (const o of others)
     if (sq(x - o.x) + sq(z - o.z) < sq(r + o.r + FREE_BUILD.structPad)) return 'Başka yapıya çok yakın';
   // Taban hücreleri: kare tarama (FD: hepsi açık; TD: hepsi yol dışı).

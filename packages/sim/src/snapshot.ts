@@ -6,6 +6,7 @@ import {
   G_CAPACITY,
   G_PROJ_CAPACITY,
   G_PUBLISH,
+  H_ALLY_MASK,
   H_COUNT,
   H_CP_CAP,
   H_CP_USED,
@@ -35,12 +36,15 @@ import {
   H_TICK,
   H_UPGRADES,
   H_VERSION,
+  H_VERSUS,
   H_WAVE_COUNT,
   H_WAVE_INDEX,
   H_WORKER_READY,
   H_WORKERS,
   H_ZONE,
   MAX_ABILITIES,
+  MAX_HEROES,
+  MAX_SPELLS,
   packAnim,
   packBattalionRank,
   packFlight,
@@ -67,6 +71,7 @@ import { commandPoints } from './systems/commandPoints';
 import { fortressPct } from './systems/fortress';
 import { nextWaveTick } from './systems/match';
 import { countWorkers } from './systems/workers';
+import { allied } from './team';
 import { STAT } from './unitStats';
 import type { SimWorld } from './world';
 
@@ -77,7 +82,11 @@ const HIT_FLASH_TICKS = 3;
  * Render snapshot'ını aktif olmayan buffer'a yazar ve yayınlar (seqlock + double buffer).
  * Birimler (canlı + ceset), oklar ve maç durumu tek seferde yazılır.
  */
-export const writeSnapshot = (world: SimWorld, view: Int32Array, simMicros = 0): number => {
+export const writeSnapshot = (world: SimWorld, view: Int32Array, simMicros = 0, viewTeam = 0): number => {
+  // Görüş takımı: snapshot'ta bu takım 0 olarak yazılır (0 ile yer değiştirir) — istemci "benim
+  // takımım = 0" varsayımıyla çalışır; çatışmada her istemci kendi takımını görür.
+  const v = viewTeam;
+  const mapTeam = (t: number): number => (t === v ? 0 : t === 0 ? v : t);
   const { Position, Facing, Team, UnitType, Health, Anim, Soldier, Projectile, Structure, Battalion } =
     world.c;
   const capacity = view[G_CAPACITY] as number;
@@ -100,7 +109,7 @@ export const writeSnapshot = (world: SimWorld, view: Int32Array, simMicros = 0):
     view[o + 3] = packYawTypeTeam(
       Facing.angle[eid] as number,
       UnitType.id[eid] as number,
-      Team.id[eid] as number,
+      mapTeam(Team.id[eid] as number),
     );
     view[o + 4] = packAnim(Anim.state[eid] as number, flags, hp8, animTick);
     const bat = Soldier.battalion[eid] as number;
@@ -155,7 +164,7 @@ export const writeSnapshot = (world: SimWorld, view: Int32Array, simMicros = 0):
     // Kapılarda slot alanı kapı indeksini taşır.
     const slot =
       kind === StructureKind.Gate ? (Structure.gateIndex[eid] as number) : (Structure.slot[eid] as number);
-    view[s + 1] = packStructKind(kind, slot, Team.id[eid] as number, Structure.level[eid] as number);
+    view[s + 1] = packStructKind(kind, slot, mapTeam(Team.id[eid] as number), Structure.level[eid] as number);
     view[s + 2] = Structure.hp[eid] as number;
     view[s + 3] = Structure.max[eid] as number;
     view[s + 4] = Structure.buildLeft[eid] as number;
@@ -167,44 +176,53 @@ export const writeSnapshot = (world: SimWorld, view: Int32Array, simMicros = 0):
   }
   const m = world.match;
   view[base + H_STRUCT_COUNT] = structCount;
-  view[base + H_WORKER_READY] = m.workerReady;
-  view[base + H_WORKERS] = countWorkers(world, 0);
-  view[base + H_GOLD] = m.gold[0] as number;
-  view[base + H_FORTRESS] = m.fortress;
+  view[base + H_WORKER_READY] = m.workerReady[v] as number;
+  view[base + H_WORKERS] = countWorkers(world, v);
+  view[base + H_GOLD] = m.gold[v] as number;
+  view[base + H_FORTRESS] = m.fortresses[v] as number;
   view[base + H_FORT_UP] =
-    (m.fortressUp[0] as number) | (((m.fortResearch[0] as number) + 1) << 8) | (fortressPct(world) << 16);
+    (m.fortressUp[v] as number) | (((m.fortResearch[v] as number) + 1) << 8) | (fortressPct(world, v) << 16);
   view[base + H_LIVES] = m.lives;
   view[base + H_ZONE] = m.zone;
-  view[base + H_KILLS] = m.kills;
-  view[base + H_LOSSES] = m.losses;
-  view[base + H_GOLD_EARNED] = m.goldEarned;
-  const cp = commandPoints(world, 0);
+  view[base + H_KILLS] = m.kills[v] as number;
+  view[base + H_LOSSES] = m.losses[v] as number;
+  view[base + H_GOLD_EARNED] = m.goldEarned[v] as number;
+  const cp = commandPoints(world, v);
   view[base + H_CP_USED] = cp.used;
   view[base + H_CP_CAP] = cp.cap;
-  view[base + H_PP] = m.pp[0] as number;
-  view[base + H_SPELLS] = m.spells[0] as number;
-  for (let i = 0; i < SNAP_SPELLS; i++) view[base + spellReadyAt(i)] = m.spellReady[i] as number;
+  view[base + H_PP] = m.pp[v] as number;
+  view[base + H_SPELLS] = m.spells[v] as number;
+  for (let i = 0; i < SNAP_SPELLS; i++)
+    view[base + spellReadyAt(i)] = m.spellReady[v * MAX_SPELLS + i] as number;
+  const h0 = v * MAX_HEROES;
   for (let k = 0; k < SNAP_HEROES; k++) {
-    const h = m.heroes[k] as number;
+    const h = m.heroes[h0 + k] as number;
     view[base + H_HERO_XP + k] = h !== 0 ? (world.c.Battalion.xp[h] as number) : 0;
-  }
-  for (let k = 0; k < SNAP_HEROES; k++) {
-    view[base + H_HEROES + k] = m.heroes[k] as number;
-    view[base + H_HERO_READY + k] = m.heroReady[k] as number;
+    view[base + H_HEROES + k] = h;
+    view[base + H_HERO_READY + k] = m.heroReady[h0 + k] as number;
   }
   for (let k = 0; k < SNAP_HEROES; k++)
     for (let i = 0; i < MAX_ABILITIES; i++)
-      view[base + abilityReadyAt(k, i)] = m.abilityReady[k * MAX_ABILITIES + i] as number;
-  view[base + H_ELENDIL_UNTIL] = m.heroBuff[0] as number;
-  view[base + H_HERO_BUFF] = m.heroBuff[1] as number;
-  view[base + H_HERO_BUFF + 1] = m.heroBuff[2] as number;
-  view[base + H_RALLY_UNTIL] = m.rallyUntil[0] as number;
-  view[base + H_UPGRADES] = (m.upgrades[0] as number) | ((m.researching[0] as number) << 8);
+      view[base + abilityReadyAt(k, i)] = m.abilityReady[(h0 + k) * MAX_ABILITIES + i] as number;
+  view[base + H_ELENDIL_UNTIL] = m.heroBuff[h0] as number;
+  view[base + H_HERO_BUFF] = m.heroBuff[h0 + 1] as number;
+  view[base + H_HERO_BUFF + 1] = m.heroBuff[h0 + 2] as number;
+  view[base + H_RALLY_UNTIL] = m.rallyUntil[v] as number;
+  view[base + H_UPGRADES] = (m.upgrades[v] as number) | ((m.researching[v] as number) << 8);
+  // Çatışma: müttefik ve ayakta takımlar (eşlenmiş takım numaralarıyla).
+  let allies = 0;
+  let alive = 0;
+  for (let t = 0; t < 4; t++) {
+    if (t !== v && allied(world, t, v)) allies |= 1 << mapTeam(t);
+    if (m.alive[t]) alive |= 1 << mapTeam(t);
+  }
+  view[base + H_ALLY_MASK] = allies;
+  view[base + H_VERSUS] = (m.versus ? 1 : 0) | (alive << 4);
   view[base + H_TICK] = world.tick;
   view[base + H_COUNT] = count;
   view[base + H_SIM_MICROS] = simMicros | 0;
   view[base + H_PROJ_COUNT] = projCount;
-  view[base + H_MATCH_STATE] = m.state;
+  view[base + H_MATCH_STATE] = m.versus ? (m.teamState[v] as number) : m.state;
   view[base + H_WAVE_INDEX] = m.waveIndex;
   view[base + H_WAVE_COUNT] = m.waveCount;
   view[base + H_NEXT_WAVE_TICK] = nextWaveTick(world);

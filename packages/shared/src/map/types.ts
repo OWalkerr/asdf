@@ -10,7 +10,8 @@
 
 export type Vec2 = readonly [x: number, z: number];
 
-export type GameMode = 'TD' | 'FD';
+/** TD kule savunması, FD kale savunması, VS çatışma (oyuncular birbirine karşı, BFME2 Skirmish). */
+export type GameMode = 'TD' | 'FD' | 'VS';
 
 export type SlotKind =
   /** Sur üstü soket: okçu kulesi, mancınık, sıcak yağ (GDD §4.2). */
@@ -183,6 +184,8 @@ export interface MapDef {
   seed: number;
   camera: { home: Vec2; yaw: number; distance: number };
   citadel: CitadelDef;
+  /** VS: başlangıç konumları (her oyuncunun kalesi); citadel = starts[0]. */
+  starts?: readonly CitadelDef[];
   /** TD: sızan düşman başına can kaybı sayacı (başlangıç canı). */
   lives?: number;
   /**
@@ -256,7 +259,9 @@ export const validateMap = (map: MapDef): string[] => {
     if (!inBounds(s.pos)) errors.push(`${s.id} harita dışında`);
     if (!laneIds.has(s.lane)) errors.push(`${s.id} bilinmeyen koridor: ${s.lane}`);
   }
-  if (map.spawns.length === 0) errors.push('en az bir spawn gerekli');
+  if (map.mode !== 'VS' && map.spawns.length === 0) errors.push('en az bir spawn gerekli');
+  if (map.mode === 'VS' && (map.starts?.length ?? 0) < 2)
+    errors.push('VS haritası en az iki başlangıç ister');
   for (const p of map.terrain.plateaus) {
     unique(p.id, 'plateau');
     if (!inBounds(p.center)) errors.push(`${p.id} harita dışında`);

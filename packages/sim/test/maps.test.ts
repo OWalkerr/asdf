@@ -43,6 +43,19 @@ describe.each(Object.values(MAP_DEFS).map((m) => [m.id, m] as [string, MapDef]))
     });
   }
 
+  if (map.mode === 'VS') {
+    it('başlangıç kapıları birbirine ulaşılabilir', () => {
+      const starts = map.starts ?? [];
+      const cache = new FlowFieldCache(grid);
+      for (const a of starts) {
+        const f = cache.get(...at(a.door as Vec2), 0);
+        for (const b of starts)
+          expect(f?.cost[cell(b.door as Vec2)], `${a.id} → ${b.id}`).toBeLessThan(COST_INF);
+      }
+    });
+    return;
+  }
+
   it('maç kurulur ve ilk dalga çıkar', () => {
     const sim = new Simulation(2, grid, map);
     const first = Math.min(...map.waves.flatMap((w) => w.groups.map((g) => g.atSec)));

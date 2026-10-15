@@ -16,6 +16,7 @@ import { entityExists, hasComponent, query } from 'bitecs';
 import { BattalionMode } from '../components';
 import { COST_INF } from '../nav/flowField';
 import { cellAt, cellCenterX, cellCenterZ, isBlockedAt, type NavGrid } from '../nav/grid';
+import { allied } from '../team';
 import { STAT } from '../unitStats';
 import type { SimWorld } from '../world';
 
@@ -85,7 +86,7 @@ const isEnemyBattalion = (world: SimWorld, b: number, team: number): boolean =>
   entityExists(world, b) &&
   hasComponent(world, b, world.c.Battalion) &&
   (world.c.Battalion.count[b] as number) > 0 &&
-  world.c.Team.id[b] !== team;
+  !allied(world, world.c.Team.id[b] as number, team);
 
 /**
  * Çatışma kararı (her ENGAGE_INTERVAL tick'te): en yakın düşman taburu ve kipe göre engaged.
@@ -103,7 +104,7 @@ export const engagementSystem = (world: SimWorld): void => {
     let nearest = 0;
     let nearestD = 0x7fffffff;
     for (const o of list) {
-      if (Team.id[o] === team || (Battalion.count[o] as number) === 0) continue;
+      if (allied(world, Team.id[o] as number, team) || (Battalion.count[o] as number) === 0) continue;
       const d = fxLen(
         ((Position.x[o] as number) - (Position.x[b] as number)) | 0,
         ((Position.z[o] as number) - (Position.z[b] as number)) | 0,

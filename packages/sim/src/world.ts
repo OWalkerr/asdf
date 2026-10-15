@@ -1,4 +1,5 @@
 import {
+  COMMAND_POINTS,
   DEFAULT_DIFFICULTY,
   DIFFICULTIES,
   FACTIONS,
@@ -12,6 +13,7 @@ import {
   type MapDef,
   MatchState,
   Rng,
+  type VersusSetup,
 } from '@bulwark/shared';
 import { createWorld, query, type World } from 'bitecs';
 import { type Components, createComponents } from './components';
@@ -19,6 +21,7 @@ import { MAX_ENTITIES, SIM_HZ } from './constants';
 import { FlowFieldCache } from './nav/flowField';
 import { createOpenGrid, type NavGrid } from './nav/grid';
 import { type LadderSpot, ladderSpots } from './nav/ladders';
+import { aiSystem } from './systems/ai';
 import {
   battalionSpacingSystem,
   battalionSystem,
@@ -65,10 +68,29 @@ export interface MatchContext {
   lives: number;
   /** TD uç bölgesindeki düşman taburu (görüntü). */
   zone: number;
-  /** Maç istatistikleri (oyuncu): öldürülen düşman askeri, kaybedilen asker, kazanılan altın. */
-  kills: number;
-  losses: number;
-  goldEarned: number;
+  /** Takım başına maç istatistikleri: öldürülen düşman askeri, kaybedilen asker, kazanılan altın. */
+  kills: Int32Array;
+  losses: Int32Array;
+  goldEarned: Int32Array;
+  /** Çatışma (VS): takımlar birbirine karşı; dalga yok. */
+  versus: boolean;
+  /** Takım başına taraf (FACTIONS indeksi), kale eid'i, başlangıç konumu, ittifak, AI zorluğu (−1 insan/yok). */
+  factions: Uint8Array;
+  fortresses: Int32Array;
+  startOf: Int8Array;
+  alliance: Uint8Array;
+  ai: Int8Array;
+  /** Takım oyunda mı (VS: kalesi ayakta) ve sonucu (MatchState). */
+  alive: Uint8Array;
+  teamState: Uint8Array;
+  /** İnsan oyuncu (komut `player`) → takım (VS). */
+  playerTeam: Int8Array;
+  /** Komuta puanı tavanının üst sınırı. */
+  cpLimit: number;
+  /** Bilgisayar gelir çarpanı birikimi (takım başına, yüzde). */
+  incomeAcc: Int32Array;
+  /** Bilgisayar rakiplerin hafızası (takım başına). */
+  aiMem: AiMemory[];
   state: number;
   /** Başlamış son dalga (1 tabanlı; 0 = henüz yok). */
   waveIndex: number;
@@ -108,12 +130,23 @@ export interface MatchContext {
   volleys: { kind: number; x: number; z: number; team: number; next: number; left: number }[];
   /** Ortak savunma (çok oyunculu): bütün oyuncular takım 0'ı yönetir. */
   coop: boolean;
-  /** Kaleden işçi yetiştirmenin yeniden mümkün olduğu tick. */
-  workerReady: number;
+  /** Takım başına kaleden işçi yetiştirmenin yeniden mümkün olduğu tick. */
+  workerReady: Int32Array;
   /** Serbest yapıların nav'da kapattığı hücreler ve eski maskeleri (yapı eid'i → taban). */
   footprints: Map<number, { cells: number[]; orig: number[] }>;
   /** MapDef.slots sırasıyla inşa edilmiş yapı eid'i (0 = boş). */
   slots: Int32Array;
+}
+
+/** Bilgisayar rakibin durumu (ai.ts). */
+export interface AiMemory {
+  /** Sonraki karar tick'i, saldırı dalgası sayısı, toplanma noktası. */
+  next: number;
+  waves: number;
+  rallyX: number;
+  rallyZ: number;
+  /** Saldırıda olan taburlar. */
+  attackers: number[];
 }
 
 /** Zamanlı büyü etkisi türleri (MatchContext.volleys[].kind). */
@@ -149,6 +182,7 @@ export const createSimWorld = (
   difficulty = DEFAULT_DIFFICULTY,
   faction = 0,
   cah = -1,
+  versus: VersusSetup | null = null,
 ): SimWorld => {
   const world = createWorld<SimContext>({
     c: createComponents(),
@@ -171,9 +205,21 @@ export const createSimWorld = (
       breached: 0,
       lives: 0,
       zone: 0,
-      kills: 0,
-      losses: 0,
-      goldEarned: 0,
+      kills: new Int32Array(4),
+      losses: new Int32Array(4),
+      goldEarned: new Int32Array(4),
+      versus: false,
+      factions: new Uint8Array(4).fill(FACTIONS[faction] ? faction : 0),
+      fortresses: new Int32Array(4),
+      startOf: new Int8Array(4).fill(-1),
+      alliance: Uint8Array.from({ length: 8 }, (_, i) => i),
+      ai: new Int8Array(4).fill(-1),
+      alive: new Uint8Array(4),
+      teamState: new Uint8Array(4),
+      playerTeam: Int8Array.from({ length: 8 }, (_, i) => i),
+      cpLimit: COMMAND_POINTS.max,
+      incomeAcc: new Int32Array(4),
+      aiMem: [],
       waveIndex: 0,
       waveCount: 0,
       schedule: [],
@@ -197,7 +243,7 @@ export const createSimWorld = (
       heroBuff: new Int32Array(4 * MAX_HEROES),
       volleys: [],
       coop: false,
-      workerReady: 0,
+      workerReady: new Int32Array(4),
       footprints: new Map(),
       slots: new Int32Array(map?.slots.length ?? 0),
     },
@@ -206,7 +252,7 @@ export const createSimWorld = (
     memberHead: new Int32Array(MAX_ENTITIES),
     memberNext: new Int32Array(MAX_ENTITIES),
   });
-  if (map) setupMatch(world, map);
+  if (map) setupMatch(world, map, versus);
   return world;
 };
 
@@ -216,6 +262,7 @@ export const createSimWorld = (
  */
 export const stepWorld = (world: SimWorld): void => {
   waveSystem(world);
+  aiSystem(world);
   enemyAiSystem(world);
   economySystem(world);
   spatialSystem(world);
@@ -316,10 +363,14 @@ export const hashWorld = (world: SimWorld): number => {
   h = hashInt(h, world.match.lives);
   h = hashInt(h, world.match.faction);
   h = hashInt(h, world.match.zone);
-  h = hashInt(h, world.match.kills);
-  h = hashInt(h, world.match.losses);
-  h = hashInt(h, world.match.goldEarned);
-  h = hashInt(h, world.match.workerReady);
+  for (let t = 0; t < 4; t++) {
+    h = hashInt(h, world.match.kills[t] as number);
+    h = hashInt(h, world.match.losses[t] as number);
+    h = hashInt(h, world.match.goldEarned[t] as number);
+    h = hashInt(h, world.match.workerReady[t] as number);
+    h = hashInt(h, world.match.gold[t] as number);
+    h = hashInt(h, world.match.teamState[t] as number);
+  }
   for (const [e, fp] of world.match.footprints) h = hashInt(h, e + fp.cells.length);
   for (const u of world.match.upgrades) h = hashInt(h, u);
   for (const u of world.match.researching) h = hashInt(h, u);

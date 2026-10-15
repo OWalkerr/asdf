@@ -1,4 +1,5 @@
 import {
+  type CitadelDef,
   DAMAGE_TYPES,
   FORTRESS_UPGRADES,
   FORTRESS_WEAPONS,
@@ -13,6 +14,7 @@ import { addComponent, addEntity, query, removeEntity } from 'bitecs';
 import { StructureKind } from '../components';
 import { SIM_HZ } from '../constants';
 import { shapeContains } from '../nav/grid';
+import { allied } from '../team';
 import { STAT } from '../unitStats';
 import type { SimWorld } from '../world';
 import { applyDamage, arrowDmgType, fireProjectile, fireStone } from './combat';
@@ -40,32 +42,47 @@ const DMG_MAGIC = DAMAGE_TYPES.indexOf('magic');
 const has = (world: SimWorld, team: number, up: number) =>
   ((world.match.fortressUp[team] as number) & (1 << up)) !== 0;
 
-/** Kale yapısını kurar (setupMatch). */
-export const setupFortress = (world: SimWorld): void => {
-  const map = world.map;
-  if (!map) return;
+/** Bir kale yapısı kurar (savunmada harita kalesi, çatışmada her başlangıç konumu). */
+export const setupFortressAt = (world: SimWorld, team: number, def: CitadelDef): number => {
   const { Position, Team, Structure } = world.c;
   const f = addEntity(world);
   for (const comp of [Position, Team, Structure]) addComponent(world, f, comp);
-  [Position.x[f], Position.z[f]] = fxv(map.citadel.pos);
-  Team.id[f] = 0;
+  [Position.x[f], Position.z[f]] = fxv(def.pos);
+  Team.id[f] = team;
   Structure.kind[f] = StructureKind.Fortress;
-  Structure.hp[f] = map.citadel.hp;
-  Structure.max[f] = map.citadel.hp;
-  Structure.radius[f] = fxFromFloat(map.citadel.radius);
+  Structure.hp[f] = def.hp;
+  Structure.max[f] = def.hp;
+  Structure.radius[f] = fxFromFloat(def.radius);
   Structure.gateIndex[f] = 255;
   Structure.slot[f] = -1;
   Structure.buildLeft[f] = 0;
   Structure.cooldown[f] = 0;
-  Structure.height[f] = Math.round(((map.citadel.elevation ?? 0) + 14) * 100);
+  Structure.height[f] = Math.round(((def.elevation ?? 0) + 14) * 100);
   Structure.qLen[f] = 0;
-  world.match.fortress = f;
+  world.match.fortresses[team] = f;
+  world.match.alive[team] = 1;
+  return f;
+};
+
+/** Kale yapısını kurar (setupMatch, savunma). */
+export const setupFortress = (world: SimWorld): void => {
+  const map = world.map;
+  if (!map) return;
+  world.match.fortress = setupFortressAt(world, 0, map.citadel);
   world.match.lives = map.mode === 'TD' ? (map.lives ?? 20) : 0;
 };
 
+/** Takımın kale tanımı (çatışmada başlangıç konumu). */
+export const citadelOf = (world: SimWorld, team: number): CitadelDef | undefined => {
+  const map = world.map;
+  if (!map) return undefined;
+  if (world.match.versus) return map.starts?.[world.match.startOf[team] as number];
+  return map.citadel;
+};
+
 /** Kahraman/birlik çıkış noktası: kale kapısının önü. */
-export const fortressDoor = (world: SimWorld): [Fx, Fx] => {
-  const c = world.map?.citadel;
+export const fortressDoor = (world: SimWorld, team = 0): [Fx, Fx] => {
+  const c = citadelOf(world, team);
   if (!c) return [0, 0];
   return fxv(c.door ?? [c.pos[0], c.pos[1] + c.radius + 4]);
 };
@@ -73,9 +90,10 @@ export const fortressDoor = (world: SimWorld): [Fx, Fx] => {
 export const fortressUpgrade = (world: SimWorld, team: number, upgrade: number): boolean => {
   const m = world.match;
   const def = FORTRESS_UPGRADES[upgrade];
-  if (!def || !Number.isInteger(upgrade) || m.state !== MatchState.Playing || m.fortress === 0) return false;
+  const f = m.fortresses[team] as number;
+  if (!def || !Number.isInteger(upgrade) || m.state !== MatchState.Playing || f === 0) return false;
   if (has(world, team, upgrade) || (m.fortResearch[team] as number) >= 0) return false;
-  if ((world.c.Structure.hp[m.fortress] as number) <= 0) return false;
+  if ((world.c.Structure.hp[f] as number) <= 0) return false;
   if ((m.gold[team] as number) < def.cost) return false;
   m.gold[team] = (m.gold[team] as number) - def.cost;
   m.fortResearch[team] = upgrade;
@@ -84,12 +102,12 @@ export const fortressUpgrade = (world: SimWorld, team: number, upgrade: number):
 };
 
 /** Araştırma ilerlemesi yüzde (snapshot). */
-export const fortressPct = (world: SimWorld): number => {
+export const fortressPct = (world: SimWorld, team = 0): number => {
   const m = world.match;
-  const r = m.fortResearch[0] as number;
+  const r = m.fortResearch[team] as number;
   const def = FORTRESS_UPGRADES[r];
   if (r < 0 || !def) return 0;
-  return Math.max(0, Math.min(100, (100 - ((m.fortProgress[0] as number) * 100) / ticks(def.time)) | 0));
+  return Math.max(0, Math.min(100, (100 - ((m.fortProgress[team] as number) * 100) / ticks(def.time)) | 0));
 };
 
 /** En yakın düşman taburu (sancak) menzilde; yoksa 0. */
@@ -98,7 +116,7 @@ const nearestEnemyBattalion = (world: SimWorld, x: number, z: number, team: numb
   let best = 0;
   let bestD = range;
   for (const b of query(world, [Battalion, Position])) {
-    if (Team.id[b] === team || (Battalion.count[b] as number) === 0) continue;
+    if (allied(world, Team.id[b] as number, team) || (Battalion.count[b] as number) === 0) continue;
     const d = fxLen(((Position.x[b] as number) - x) | 0, ((Position.z[b] as number) - z) | 0);
     if (d < bestD || (d === bestD && b < best)) {
       bestD = d;
@@ -109,11 +127,14 @@ const nearestEnemyBattalion = (world: SimWorld, x: number, z: number, team: numb
 };
 
 export const fortressSystem = (world: SimWorld): void => {
+  if (!world.map || world.match.state !== MatchState.Playing) return;
+  for (let team = 0; team < 4; team++) if (world.match.fortresses[team] !== 0) fortressOf(world, team);
+};
+
+const fortressOf = (world: SimWorld, team: number): void => {
   const m = world.match;
-  const f = m.fortress;
-  if (!world.map || f === 0 || m.state !== MatchState.Playing) return;
+  const f = m.fortresses[team] as number;
   const { Structure, Position, Health, Team, Dead, Soldier } = world.c;
-  const team = 0;
   // Araştırma
   const r = m.fortResearch[team] as number;
   if (r >= 0) {
@@ -193,11 +214,14 @@ export const fortressSystem = (world: SimWorld): void => {
 
 /** Hazine geliri: tick başına tamsayı birikim (economySystem çağırır). */
 export const treasuryIncome = (world: SimWorld): void => {
-  if (!has(world, 0, FortressUpgrade.Treasury)) return;
   const every = Math.max(1, Math.round(SIM_HZ / W.treasuryIncome));
-  if (world.tick % every === 0) {
-    world.match.gold[0] = (world.match.gold[0] as number) + 1;
-    world.match.goldEarned++;
+  if (world.tick % every !== 0) return;
+  const m = world.match;
+  for (let t = 0; t < 4; t++) {
+    if (!has(world, t, FortressUpgrade.Treasury) || m.fortresses[t] === 0) continue;
+    if ((world.c.Structure.hp[m.fortresses[t] as number] as number) <= 0) continue;
+    m.gold[t] = (m.gold[t] as number) + 1;
+    m.goldEarned[t] = (m.goldEarned[t] as number) + 1;
   }
 };
 

@@ -21,6 +21,7 @@ import {
 import { addComponent, addEntity, entityExists, hasComponent } from 'bitecs';
 import { BattalionMode } from '../components';
 import { cellAt, cellCenterX, cellCenterZ, isBlockedAt, nearestOpenCell } from '../nav/grid';
+import { allied } from '../team';
 import { isUnitType, STAT } from '../unitStats';
 import type { SimWorld } from '../world';
 import { fortressUpgrade } from './fortress';
@@ -37,7 +38,9 @@ import { constructAt, trainWorker } from './workers';
 
 /** Oyuncu → takım eşlemesi (Phase 1: oyuncu N = takım N). Co-op'ta lobi belirleyecek. */
 /** Oyuncu → takım (ortak savunmada herkes takım 0). */
-const teamOf = (world: SimWorld, player: number): number => (world.match.coop ? 0 : player);
+/** Komutu veren oyuncunun takımı: ortak savunmada 0, çatışmada kurulumdaki takımı. */
+const teamOf = (world: SimWorld, player: number): number =>
+  world.match.coop ? 0 : world.match.versus ? (world.match.playerTeam[player] ?? -1) : player;
 
 /** Taburlar arası yan boşluk (m). */
 const BATTALION_GAP: Fx = fxFromFloat(2);
@@ -75,7 +78,7 @@ export const spawnUnit = (world: SimWorld, team: number, unitType: number, x: Fx
   // Zorluk ve taraf: kötü taraf oynanırken saldıran iyi taraf birlikleri daha dayanıklıdır; denge için azaltılır.
   const diffPct = DIFFICULTIES[world.match.difficulty]?.enemyHpPercent ?? 100;
   const sidePct = factionDef(world.match.faction).enemyHpPercent ?? 100;
-  const hpPct = world.map && team !== 0 ? ((diffPct * sidePct) / 100) | 0 : 100;
+  const hpPct = world.map && !world.match.versus && team !== 0 ? ((diffPct * sidePct) / 100) | 0 : 100;
   const hp = Math.max(1, (((STAT.hp[unitType] as number) * hpPct) / 100) | 0);
   Health.hp[eid] = hp;
   Health.max[eid] = hp;
@@ -346,7 +349,7 @@ export const applyCommand = (world: SimWorld, sc: StampedCommand): void => {
         t <= 0 ||
         !entityExists(world, t) ||
         !hasComponent(world, t, Battalion) ||
-        Team.id[t] === team ||
+        allied(world, Team.id[t] as number, team) ||
         (Battalion.count[t] as number) === 0
       )
         break;

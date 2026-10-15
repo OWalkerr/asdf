@@ -1,4 +1,5 @@
 import {
+  AI_LEVELS,
   BUILDING_DEFS,
   BUILDING_KINDS,
   BUILDING_LEVEL,
@@ -15,6 +16,7 @@ import {
 import { addComponent, addEntity, entityExists, hasComponent, query, removeEntity } from 'bitecs';
 import { QUEUE_STRIDE, StructureKind } from '../components';
 import { SIM_HZ } from '../constants';
+import { allied } from '../team';
 import { STAT } from '../unitStats';
 import type { SimWorld } from '../world';
 import { arrowDmgType, fireProjectile, fireStone } from './combat';
@@ -51,9 +53,21 @@ const CATA_DMG_TYPE = DAMAGE_TYPES.indexOf(CATA.damageType);
 
 export const economySystem = (world: SimWorld): void => {
   if (!world.map || world.match.state !== MatchState.Playing) return;
+  const m = world.match;
   if (world.tick % INCOME_EVERY === 0) {
-    world.match.gold[0] = (world.match.gold[0] as number) + 1;
-    world.match.goldEarned++;
+    for (let t = 0; t < 4; t++) {
+      if (t > 0 && !(m.versus && m.alive[t])) continue;
+      // Bilgisayar zorluğu gelir çarpanı (BFME2 Zor/Acımasız AI'ları daha hızlı kaynak toplar).
+      const lvl = m.ai[t] as number;
+      let gain = 1;
+      if (lvl >= 0) {
+        m.incomeAcc[t] = (m.incomeAcc[t] as number) + (AI_LEVELS[lvl]?.incomePercent ?? 100);
+        gain = ((m.incomeAcc[t] as number) / 100) | 0;
+        m.incomeAcc[t] = (m.incomeAcc[t] as number) - gain * 100;
+      }
+      m.gold[t] = (m.gold[t] as number) + gain;
+      m.goldEarned[t] = (m.goldEarned[t] as number) + gain;
+    }
   }
   treasuryIncome(world);
 };
@@ -229,7 +243,7 @@ export const trainUnit = (world: SimWorld, team: number, building: number, unitT
   if (!hasComponent(world, building, Structure) || Team.id[building] !== team) return false;
   if (Structure.kind[building] !== StructureKind.Barracks || (Structure.buildLeft[building] as number) > 0)
     return false;
-  if (!factionDef(world.match.faction).trains.includes(unitType)) return false;
+  if (!factionDef(world.match.factions[team] as number).trains.includes(unitType)) return false;
   const len = Structure.qLen[building] as number;
   const cost = STAT.cost[unitType] as number;
   if (len >= ECONOMY.queueMax || (world.match.gold[team] as number) < cost) return false;
@@ -284,7 +298,7 @@ export const structureSystem = (world: SimWorld): void => {
       let target = 0;
       let best = (TOWER_RANGE + up * TOWER_RANGE_STEP) | 0;
       for (const b of query(world, [Battalion, Position])) {
-        if (Team.id[b] === team || (Battalion.count[b] as number) === 0) continue;
+        if (allied(world, Team.id[b] as number, team) || (Battalion.count[b] as number) === 0) continue;
         const d = fxLen(((Position.x[b] as number) - x) | 0, ((Position.z[b] as number) - z) | 0);
         if (d < best || (d === best && b < target)) {
           best = d;
@@ -348,7 +362,7 @@ export const structureSystem = (world: SimWorld): void => {
       let target = 0;
       let best = CATA_RANGE;
       for (const b of query(world, [Battalion, Position])) {
-        if (Team.id[b] === team || (Battalion.count[b] as number) === 0) continue;
+        if (allied(world, Team.id[b] as number, team) || (Battalion.count[b] as number) === 0) continue;
         const d = fxLen(((Position.x[b] as number) - x) | 0, ((Position.z[b] as number) - z) | 0);
         if (d < best || (d === best && b < target)) {
           best = d;
@@ -405,7 +419,7 @@ export const structureSystem = (world: SimWorld): void => {
       if (world.tick % SIM_HZ === 0 && world.match.state === MatchState.Playing) {
         const gain = (BUILDING_DEFS.farm.income ?? 1) * (up + 1);
         world.match.gold[team] = (world.match.gold[team] as number) + gain;
-        if (team === 0) world.match.goldEarned += gain;
+        world.match.goldEarned[team] = (world.match.goldEarned[team] as number) + gain;
       }
       continue;
     }

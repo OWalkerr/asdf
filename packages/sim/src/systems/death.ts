@@ -1,5 +1,6 @@
 import { AnimState } from '@bulwark/shared';
 import { entityExists, query, removeEntity } from 'bitecs';
+import { allied } from '../team';
 import { STAT } from '../unitStats';
 import type { SimWorld } from '../world';
 import { awardXp, onBattalionRemoved } from './heroes';
@@ -36,16 +37,35 @@ export const deathSystem = (world: SimWorld): void => {
     MoveTarget.active[e] = 0;
     const type = UnitType.id[e] as number;
     // Ödül (GDD §5.1): saldıran takımın her kaybı savunan oyuncuya altın ve Güç Puanı kazandırır.
-    if (world.map && Team.id[e] === ENEMY_TEAM) {
-      world.match.kills++;
-      world.match.goldEarned += STAT.bounty[type] as number;
-      world.match.gold[0] = (world.match.gold[0] as number) + (STAT.bounty[type] as number);
-      world.match.pp[0] = (world.match.pp[0] as number) + (STAT.ppValue[type] as number);
-    }
-    if (world.map && Team.id[e] === 0 && STAT.summoned[type] !== 1) world.match.losses++;
     // XP: son vuran tabur (karşı takımdan) ölenin değeri kadar deneyim kazanır.
     const killer = Health.lastBy[e] as number;
-    if (killer !== 0 && entityExists(world, killer) && Team.id[killer] !== Team.id[e])
+    const m = world.match;
+    if (world.map && m.versus) {
+      // Çatışma: ödül ve Güç Puanı öldüren takıma.
+      const victim = Team.id[e] as number;
+      if (STAT.summoned[type] !== 1) m.losses[victim] = (m.losses[victim] as number) + 1;
+      if (killer !== 0 && entityExists(world, killer)) {
+        const kt = Team.id[killer] as number;
+        if (kt < 4 && !allied(world, kt, victim)) {
+          m.kills[kt] = (m.kills[kt] as number) + 1;
+          m.goldEarned[kt] = (m.goldEarned[kt] as number) + (STAT.bounty[type] as number);
+          m.gold[kt] = (m.gold[kt] as number) + (STAT.bounty[type] as number);
+          m.pp[kt] = (m.pp[kt] as number) + (STAT.ppValue[type] as number);
+        }
+      }
+    } else if (world.map && Team.id[e] === ENEMY_TEAM) {
+      m.kills[0] = (m.kills[0] as number) + 1;
+      m.goldEarned[0] = (m.goldEarned[0] as number) + (STAT.bounty[type] as number);
+      m.gold[0] = (m.gold[0] as number) + (STAT.bounty[type] as number);
+      m.pp[0] = (m.pp[0] as number) + (STAT.ppValue[type] as number);
+    }
+    if (world.map && !m.versus && Team.id[e] === 0 && STAT.summoned[type] !== 1)
+      m.losses[0] = (m.losses[0] as number) + 1;
+    if (
+      killer !== 0 &&
+      entityExists(world, killer) &&
+      !allied(world, Team.id[killer] as number, Team.id[e] as number)
+    )
       awardXp(world, killer, STAT.xpValue[type] as number);
     const b = Soldier.battalion[e] as number;
     if (b !== 0) {

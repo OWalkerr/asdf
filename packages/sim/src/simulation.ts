@@ -1,4 +1,4 @@
-import { DEFAULT_DIFFICULTY, type MapDef, type StampedCommand } from '@bulwark/shared';
+import { DEFAULT_DIFFICULTY, type MapDef, type StampedCommand, type VersusSetup } from '@bulwark/shared';
 import { CommandQueue } from './commandQueue';
 import type { NavGrid } from './nav/grid';
 import { writeSnapshot } from './snapshot';
@@ -26,8 +26,9 @@ export class Simulation {
     difficulty = DEFAULT_DIFFICULTY,
     faction = 0,
     cah = -1,
+    versus: VersusSetup | null = null,
   ) {
-    this.world = createSimWorld(seed, nav, map ?? null, difficulty, faction, cah);
+    this.world = createSimWorld(seed, nav, map ?? null, difficulty, faction, cah, versus);
   }
 
   get tick(): number {
@@ -48,7 +49,10 @@ export class Simulation {
     return hashWorld(this.world);
   }
 
+  /** viewTeam: snapshot'ın kimin gözünden yazılacağı (çatışmada yerel oyuncunun takımı). */
+  viewTeam = 0;
+
   writeSnapshot(view: Int32Array, simMicros = 0): number {
-    return writeSnapshot(this.world, view, simMicros);
+    return writeSnapshot(this.world, view, simMicros, this.viewTeam);
   }
 }

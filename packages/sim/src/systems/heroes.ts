@@ -53,6 +53,7 @@ import { entityExists, hasComponent, query, removeEntity } from 'bitecs';
 import { BattalionMode } from '../components';
 import { SIM_HZ } from '../constants';
 import { cellAt, isBlockedAt } from '../nav/grid';
+import { allied } from '../team';
 import { STAT } from '../unitStats';
 import { type SimWorld, SpellEffect } from '../world';
 import { applyDamage, arrowDmgType, fireProjectile, hasGear, splash } from './combat';
@@ -82,11 +83,13 @@ const DMG_MAGIC = DAMAGE_TYPES.indexOf('magic');
 const DMG_FIRE = DAMAGE_TYPES.indexOf('fire');
 
 /** Oyuncu tarafının kahraman kadrosu. */
-const heroesOf = (world: SimWorld) => heroRoster(world.match.faction, world.match.cah);
+const heroesOf = (world: SimWorld, team: number) =>
+  heroRoster(world.match.factions[team] as number, team === 0 && !world.match.versus ? world.match.cah : -1);
 /** Kahraman tipinin yuvası (taraf kadrosu indeksi; -1 = bu tarafın kahramanı değil). */
-export const heroSlot = (world: SimWorld, unitType: number): number =>
-  heroesOf(world).findIndex((h) => h.unitType === unitType);
-const isHeroType = (world: SimWorld, t: number) => STAT.hero[t] === 1 && heroSlot(world, t) >= 0;
+export const heroSlot = (world: SimWorld, unitType: number, team = 0): number =>
+  heroesOf(world, team).findIndex((h) => h.unitType === unitType);
+const isHeroType = (world: SimWorld, t: number, team: number) =>
+  STAT.hero[t] === 1 && heroSlot(world, t, team) >= 0;
 
 /** Saldıran tabura göre hasar yüzdesi: rütbe + aura + Toplanma + (yakın dövüşte) Dövme Kılıçlar; Elendil ×2. */
 export const attackPercent = (world: SimWorld, b: number, team: number, melee: boolean): number => {
@@ -170,14 +173,14 @@ export const onBattalionRemoved = (world: SimWorld, b: number, team: number): vo
 export const summonHero = (world: SimWorld, team: number, unitType: number): boolean => {
   const m = world.match;
   const map = world.map;
-  if (!map || m.state !== MatchState.Playing || !isHeroType(world, unitType)) return false;
-  const i = team * MAX_HEROES + heroSlot(world, unitType);
+  if (!map || m.state !== MatchState.Playing || !isHeroType(world, unitType, team)) return false;
+  const i = team * MAX_HEROES + heroSlot(world, unitType, team);
   if ((m.heroes[i] as number) !== 0 || world.tick < (m.heroReady[i] as number)) return false;
   const cost = UNIT_DEFS[unitType]?.cost ?? 0;
   if ((m.gold[team] as number) < cost) return false;
   m.gold[team] = (m.gold[team] as number) - cost;
   // Kahraman kalenin kapısından çıkar (GDD §8.1).
-  const [dx, dz] = fortressDoor(world);
+  const [dx, dz] = fortressDoor(world, team);
   const b = spawnBattalion(world, team, unitType, dx, dz, 16384);
   m.heroes[i] = b;
   return true;
@@ -198,7 +201,7 @@ const enemiesNear = (world: SimWorld, team: number, x: Fx, z: Fx, radius: Fx): n
   const { Health, Position, Team, Dead, Soldier } = world.c;
   const out: number[] = [];
   for (const e of query(world, [Health, Position, Soldier])) {
-    if (Team.id[e] === team || Dead.at[e] !== 0) continue;
+    if (allied(world, Team.id[e] as number, team) || Dead.at[e] !== 0) continue;
     if (fxLen(((Position.x[e] as number) - x) | 0, ((Position.z[e] as number) - z) | 0) <= radius)
       out.push(e);
   }
@@ -211,7 +214,7 @@ export const useAbility = (world: SimWorld, team: number, unit: number, ability:
   if (m.state !== MatchState.Playing || unit === 0 || !Number.isInteger(ability)) return false;
   let k = -1;
   for (let i = 0; i < MAX_HEROES; i++) if (m.heroes[team * MAX_HEROES + i] === unit) k = i;
-  const def = heroesOf(world)[k]?.abilities[ability];
+  const def = heroesOf(world, team)[k]?.abilities[ability];
   if (!def || !entityExists(world, unit) || (Battalion.rank[unit] as number) < def.rank) return false;
   const slot = (team * MAX_HEROES + k) * MAX_ABILITIES + ability;
   if (world.tick < (m.abilityReady[slot] as number)) return false;
@@ -364,7 +367,7 @@ export const castSpell = (world: SimWorld, team: number, spell: number, x: numbe
   if (world.tick < (m.spellReady[slot] as number)) return false;
   m.spellReady[slot] = world.tick + ticks(def.cooldown);
   // Tarafa özgü çağrılan birim / sayı (Isengard: Uruk takviyesi, warg akını, Balrog).
-  const fs = factionDef(m.faction).spells?.[def.key];
+  const fs = factionDef(m.factions[team] as number).spells?.[def.key];
   switch (def.key) {
     case 'heal':
       healArea(world, team, x, z, fxFromFloat(def.radius), 60);
@@ -511,7 +514,7 @@ const quakePulse = (world: SimWorld, team: number, x: Fx, z: Fx): void => {
     applyDamage(world, e, EARTHQUAKE.damage, DMG_CRUSH);
   const { Structure, Position, Team } = world.c;
   for (const st of query(world, [Structure, Position])) {
-    if (Team.id[st] === team || (Structure.hp[st] as number) <= 0) continue;
+    if (allied(world, Team.id[st] as number, team) || (Structure.hp[st] as number) <= 0) continue;
     const d = fxLen(((Position.x[st] as number) - x) | 0, ((Position.z[st] as number) - z) | 0);
     if (d <= QUAKE_R + (Structure.radius[st] as number))
       applyDamage(world, st, EARTHQUAKE.structureDamage, DMG_CRUSH);
@@ -525,7 +528,7 @@ const floodRing = (world: SimWorld, team: number, x: Fx, z: Fx, k: number): void
   const r1 = fxFromFloat((FLOOD_R * (k + 1)) / FLOOD.rings);
   const push = fxFromFloat(FLOOD.push);
   for (const e of query(world, [Health, Position, Soldier])) {
-    if (Team.id[e] === team || Dead.at[e] !== 0) continue;
+    if (allied(world, Team.id[e] as number, team) || Dead.at[e] !== 0) continue;
     const dx = ((Position.x[e] as number) - x) | 0;
     const dz = ((Position.z[e] as number) - z) | 0;
     const d = fxLen(dx, dz);
@@ -665,7 +668,7 @@ export const trampleSystem = (world: SimWorld): void => {
           o !== -1;
           o = world.hashNext[o] as number
         ) {
-          if (Team.id[o] === team || Dead.at[o] !== 0) continue;
+          if (allied(world, Team.id[o] as number, team) || Dead.at[o] !== 0) continue;
           const d = fxLen(((Position.x[o] as number) - sx) | 0, ((Position.z[o] as number) - sz) | 0);
           if (d <= TRAMPLE_R) applyDamage(world, o, TRAMPLE.damage, DMG_CRUSH, b);
         }
