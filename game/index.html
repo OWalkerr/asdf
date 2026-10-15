@@ -155,7 +155,8 @@ p{margin:0;line-height:1.45;color:var(--ink)}
 .btn:active{transform:translateY(1px)}
 .btn.primary{background:linear-gradient(180deg,#b6f6e6 0%,#6fd3bd 45%,#2f8f7f 100%);color:#04201a;border-color:#d8fff4;
   box-shadow:0 0 0 1px #0a1716,0 0 24px rgba(143,227,207,.45),inset 0 1px 0 rgba(255,255,255,.7)}
-.btn small{font-weight:600;opacity:.75;font-size:13px;letter-spacing:.06em;text-transform:none}
+.btn .nw{white-space:nowrap}
+.btn small{text-align:right;font-weight:600;opacity:.75;font-size:13px;letter-spacing:.06em;text-transform:none}
 .btn:disabled{opacity:.4;cursor:default;transform:none}
 .statrow{display:flex;gap:28px;flex-wrap:wrap;color:var(--dim);font-size:12px;letter-spacing:.16em;text-transform:uppercase;font-weight:700}
 .hero .statrow{justify-content:center}
@@ -202,6 +203,8 @@ p{margin:0;line-height:1.45;color:var(--ink)}
 .shopitem button:disabled{opacity:.35}
 .pips{display:flex;gap:4px;margin-top:6px}.pips i{width:16px;height:4px;background:rgba(143,227,207,.18)}.pips i.on{background:var(--mist);box-shadow:0 0 6px rgba(143,227,207,.7)}
 .ups{display:flex;flex-wrap:wrap;gap:6px}
+.ups.history{justify-content:center}
+.ups .hl{border:0;background:none;color:var(--gold);font-weight:800;letter-spacing:.16em;text-transform:uppercase;font-size:11px;width:100%;text-align:center}
 .ups span{font-size:13px;border:1px solid var(--line);border-radius:2px;padding:4px 10px;color:#c3d2ce;background:rgba(11,21,23,.8)}
 @media (prefers-reduced-motion:reduce){#btnE.ready,.emblem,.card.leg::after{animation:none}.card,.panel{animation:none}}
 </style>
@@ -249,9 +252,11 @@ p{margin:0;line-height:1.45;color:var(--ink)}
     <div class="statrow"><div>En iyi oda<b id="tBest">0</b></div><div>Ruh parçası<b id="tShards">0</b></div></div>
     <div class="btns">
       <button class="btn primary" id="btnStart">Ava başla <small>Oda 1</small></button>
+      <button class="btn" id="btnDaily"><span class="nw">Günün Avı</span> <small id="dailyLbl"></small></button>
       <button class="btn" id="btnHow">Nasıl oynanır</button>
       <button class="btn" id="btnShop">Ruh Sunağı <small>kalıcı güçler</small></button>
     </div>
+    <div class="ups history" id="history" hidden></div>
     <p class="fine">LoL'deki Kalista'nın "Martial Poise" sekme mekaniğinden esinlenmiş bir hayran projesi.</p>
   </div>
 </section>
@@ -503,6 +508,10 @@ const UPS = [
   { id:'wildfire', n:'Ruh Yangını', r:'leg', max:1, tag:'Sinerji', req:u => u.trail && u.shock, d:'Ruh İzi + İniş Şoku: iz hasarı iki katına çıkar, şok yarıçapı +40.', a:s => { s.trailMul = 2; s.shockR += 40; } },
   { id:'legion', n:'Lejyon', r:'leg', max:1, tag:'Sinerji', req:u => (u.spirit || 0) >= 2 && u.as, d:'2+ Yeminli Ruh + Hızlı El: ruhlar iki kat sık mızrak atar.', a:s => s.spiritRate = .5 },
   { id:'fated', n:'Kadere Bağlı', r:'leg', max:1, tag:'Sinerji', req:u => u.rcd && u.rendcd, d:'Kader Yemini + Acımasız: Kader Çağrısı inişi bedava bir Söküm tetikler.', a:s => s.rRend = true },
+  { id:'loyal', n:'Sadakat', r:'leg', max:1, tag:'Sinerji', req:u => G.hero.id === 'oath' && (u.rend || u.rendcd), d:'Yeminli\'ye özel: Söküm hasarı +%20 ve Söküm ile her öldürme Kader Çağrısı bekleme süresini 3 sn kısaltır.', a:s => { s.rendMul *= 1.2; s.loyal = true; } },
+  { id:'dance', n:'Gölge Dansı', r:'leg', max:1, tag:'Sinerji', req:u => G.hero.id === 'shade' && (u.hop || u.as), d:'Gölge Koşucu\'ya özel: her sekmeden sonra 0.8 sn boyunca saldırı hızı +%45.', a:s => s.dance = true },
+  { id:'boneburst', n:'Kemik Patlaması', r:'leg', max:1, tag:'Sinerji', req:u => G.hero.id === 'heavy' && (u.heavy || u.dmg), d:'Kemik Kıran\'a özel: üzerinde 5+ mızrak olan düşman ölünce çevresine 6 mızrak saçar.', a:s => s.boneBurst = true },
+  { id:'chorus', n:'Ruh Korosu', r:'leg', max:1, tag:'Sinerji', req:u => G.hero.id === 'caller' && (u.spirit || u.rcd), d:'Ruh Çağıran\'a özel: ruhlar iki mızrak birden atar ve ruh mızrakları %80 hasar verir.', a:s => s.chorus = true },
   { id:'hp', n:'Sağlam Ruh', r:'common', max:5, tag:'Ruh', d:'Azami can +25 ve 25 can yenile.', a:(s, p) => { s.maxHp += 25; p.hp += 25; } },
   { id:'regen', n:'Yenilenme', r:'common', max:3, tag:'Ruh', d:'Saniyede 1 can yenilenir.', a:s => s.regen += 1 },
   { id:'leech', n:'Kan Yemini', r:'rare', max:3, tag:'Ruh', d:'Mızrak hasarının %4\'ü kadar can çalarsın.', a:s => s.leech += .04 },
@@ -530,9 +539,23 @@ let G = null, paused = false;
 const HEROES = [
   { id: 'oath', n: 'Yeminli', d: 'Dengeli mızrakçı. Ek bir özelliği yok, her yola uyar.', cloak: ['#348478', '#17463f', '#0a2420'], rim: '170,255,235', a: s => {} },
   { id: 'shade', n: 'Gölge Koşucu', d: 'Sekme mesafesi +%35 ve sekerken hasar almaz. Mızrak hasarı -%15, can -20.', cloak: ['#5a58a0', '#29275a', '#0e0d22'], rim: '200,190,255', a: s => { s.hopDist *= 1.35; s.ghostHop = true; s.dmg *= .85; s.maxHp -= 20; } },
-  { id: 'heavy', n: 'Kemik Kıran', d: 'Mızrak hasarı +%30, mızraklar %25 şansla 2 saplanır. Saldırı hızı -%15, sekme -%10.', cloak: ['#9a6838', '#4e2e18', '#1e1008'], rim: '255,205,140', a: s => { s.dmg *= 1.3; s.heavy += .25; s.as *= .85; s.hopDist *= .9; } },
+  { id: 'heavy', n: 'Kemik Kıran', d: 'Mızrak hasarı +%30, mızraklar %25 şansla 2 saplanır. Saldırı hızı -%10, sekme -%5.', cloak: ['#9a6838', '#4e2e18', '#1e1008'], rim: '255,205,140', a: s => { s.dmg *= 1.3; s.heavy += .25; s.as *= .9; s.hopDist *= .95; } },
   { id: 'caller', n: 'Ruh Çağıran', d: 'Bir Yeminli Ruh ile başlar, Kader Çağrısı bekleme süresi -%30. Mızrak hasarı -%10.', cloak: ['#3c84a8', '#1a3a56', '#081624'], rim: '165,225,255', a: s => { s.spirits += 1; s.rCd *= .7; s.dmg *= .9; } },
 ];
+function mulberry32(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const crand = () => (G && G.rng ? G.rng() : Math.random());
+const crange = (a, b) => a + crand() * (b - a);
+const DAILY_MODS = [
+  { id: 'bloodmoon', n: 'Kanlı Ay', d: 'Düşmanlar %25 daha hızlı, ruh parçası kazancı iki katı.', g: m => { m.spd = 1.25; m.shards = 2; } },
+  { id: 'glass', n: 'Cam Kalp', d: 'Azami can yarıya iner, Söküm hasarı +%60.', s: s => { s.maxHp = Math.round(s.maxHp / 2); s.rendMul *= 1.6; } },
+  { id: 'elitenight', n: 'Elit Gecesi', d: 'Her odada düşmanların %30\'u fazladan elit olur; elitler iki kat parça düşürür.', g: m => { m.elite = .3; m.eliteShards = 2; } },
+  { id: 'gift', n: 'Kehanet Armağanı', d: 'Ava 2 rastgele destansı güçle başlarsın ama yeniden çekme hakkın yok.', g: m => { m.gift = true; } },
+];
+function dailyInfo() {
+  const d = new Date(), key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  let seed = 0; for (const ch of key) seed = Math.imul(seed ^ ch.charCodeAt(0), 2654435761) >>> 0;
+  return { key, seed, hero: HEROES[seed % HEROES.length], mod: DAILY_MODS[(seed >>> 4) % DAILY_MODS.length] };
+}
 const heroById = id => HEROES.find(x => x.id === id) || HEROES[0];
 function baseStats() {
   return { dmg: 18 * (1 + .06 * meta.dmg), as: 1.1, range: 400, spearSpd: 1250, hopDist: 160 * (1 + .06 * meta.hop), hopTime: .15, walk: 140,
@@ -541,18 +564,24 @@ function baseStats() {
     rCd: 20, rStun: 1, rR: 150, rendPer: .6, trailMul: 1, shockR: 0, spiritRate: 1, postIframe: 0, rRend: false };
 }
 function recomputeStats() {
-  const s = baseStats(), dummy = { hp: 0 }; G.hero.a(s);
+  const s = baseStats(), dummy = { hp: 0 }; G.hero.a(s); if (G.daily && G.daily.mod.s) G.daily.mod.s(s);
   for (const [id, n] of Object.entries(G.ups)) { const u = UPS.find(x => x.id === id); for (let i = 0; i < n; i++) u.a(s, dummy); }
   const ratio = G.p.hp / G.s.maxHp; G.s = s; G.p.hp = Math.max(1, Math.min(s.maxHp, s.maxHp * ratio));
 }
-function newRun() {
-  const hero = heroById(meta.hero), s = baseStats(); hero.a(s);
+function newRun(daily) {
+  const hero = daily ? daily.hero : heroById(meta.hero), s = baseStats(); hero.a(s); if (daily && daily.mod.s) daily.mod.s(s);
   document.querySelector('#hud .medal').innerHTML = heroSvg(hero);
   G = { s, hero, ups: {}, room: 0, kills: 0, time: 0, shards: 0, rerolls: meta.reroll, hops: 0, phase: 'fight',
     p: { x: 0, y: 0, hp: s.maxHp, state: 'idle', t: 0, atkCd: .3, face: -Math.PI / 2, target: null, iT: 0, hvx: 0, hvy: 0, buf: false,
       lastHop: -9, rStacks: 0, ghosts: [], qCd: 0, rendCd: 0, rCd: 0, qQueued: false, shots: 0, spA: 0, spCd: [], trailAcc: 0 },
     enemies: [], spears: [], eshots: [], parts: [], texts: [], trails: [], spawns: [], hazards: [], hitstop: 0, gibs: [], decals: [], booms: [], flashA: 0, combo: 0, comboT: 0, zp: 0, hurtA: 0, twinkles: [], rings: [], orbs: [], hitstars: [], impactT: 0, speedT: 0, beamT: 0, lastKill: null, slowT: 0, slowS: 1, roomType: 'fight', pending: 0, waves: [], waveIdx: 0, waveT: 0, shake: 0, clearT: 0,
     cam: { x: 0, y: 0 } };
+  G.mod = {}; G.daily = daily || null; G.rng = daily ? mulberry32(daily.seed) : null;
+  if (daily && daily.mod.g) daily.mod.g(G.mod);
+  if (G.mod.gift) {
+    G.rerolls = 0;
+    for (let k = 0; k < 2; k++) { const pool = UPS.filter(u => u.r === 'epic' && !G.ups[u.id] && !(u.id === 'ghost' && G.s.ghostHop)); const u = pool[Math.floor(crand() * pool.length)]; if (u) { G.ups[u.id] = 1; u.a(G.s, G.p); } }
+  }
   nextRoom();
 }
 
@@ -564,8 +593,8 @@ function roomWaves(r) {
   const n = 2 + (r >= 3) + (r >= 8);
   const waves = [];
   for (let i = 0; i < n; i++) {
-    let b = 4 + r * 1.4 + i * 1.5; const w = [];
-    while (b > 0) { const t = pool[Math.floor(Math.random() * pool.length)]; if (t === 'wisp') w.push('wisp', 'wisp', 'wisp'); else w.push(t); b -= cost[t]; }
+    let b = 4.5 + r * 1.5 + i * 1.5; const w = [];
+    while (b > 0) { const t = pool[Math.floor(crand() * pool.length)]; if (t === 'wisp') w.push('wisp', 'wisp', 'wisp'); else w.push(t); b -= cost[t]; }
     waves.push(w);
   }
   return waves;
@@ -589,10 +618,10 @@ const EDEF = {
   archer:  { hp: 38,  r: 13, spd: 90,  dmg: 9 },
   brute:   { hp: 170, r: 25, spd: 58,  dmg: 18 },
   spitter: { hp: 85,  r: 18, spd: 40,  dmg: 8 },
-  boss:    { hp: 1250, r: 46, spd: 88, dmg: 22 },
+  boss:    { hp: 1050, r: 46, spd: 74, dmg: 15 },
 };
 function makeEnemy(type, x, y, elite) {
-  const d = EDEF[type], r = G.room, hm = 1 + .2 * (r - 1), tier = Math.floor(r / 5);
+  const d = EDEF[type], r = G.room, hm = 1 + .17 * (r - 1), tier = Math.floor(r / 5);
   const hp = type === 'boss' ? d.hp * (1 + .9 * (tier - 1)) * (1 + .05 * r) : d.hp * hm;
   return { type, x, y, r: d.r, hp, maxHp: hp, spd: d.spd * (1 + .015 * r), dmg: d.dmg * (1 + .08 * (r - 1)), stacks: 0, stackT: 0, slowT: 0, slowAmt: 0,
     flash: 0, kx: 0, ky: 0, cd: rand(1, 2.5), st: 'walk', t: 0, ax: 0, ay: 0, wob: rand(0, TAU), trailCd: 0, boss: type === 'boss', dead: false, ang: 0, n: 0,
@@ -603,21 +632,22 @@ function makeEnemyFull(type, x, y, elite) {
   if (e.boss) { e.kind = bossKind(r); e.name = bossName(r); e.t = 1.2; if (e.kind === 'rider') { e.spd *= 1.3; e.r = 40; e.hp *= .9; e.maxHp = e.hp; } if (e.kind === 'queen') { e.r = 38; e.spd *= 1.1; e.hp *= .95; e.maxHp = e.hp; e.fade = 1; }
     if (Math.floor(r / 5) >= 4) { e.asc = true; e.name = 'Yükselmiş ' + e.name; e.hp *= 1.2; e.maxHp = e.hp; } }
   if (elite) {
-    e.elite = ['shield', 'swift', 'burst'][Math.floor(Math.random() * 3)];
+    e.elite = ['shield', 'swift', 'burst'][Math.floor(crand() * 3)];
     e.hp *= 1.8; e.maxHp = e.hp; e.r *= 1.2; e.dmg *= 1.2;
     if (e.elite === 'swift') e.spd *= 1.35; if (e.elite === 'shield') e.shield = e.maxHp * .4;
   }
   if (G.roomType === 'cursed') e.spd *= 1.15;
+  e.spd *= G.mod.spd || 1;
   return e;
 }
 function spawnWave() {
   const w = G.waves[G.waveIdx++]; if (!w) return;
   for (const type of w) {
     let x, y, tries = 0;
-    do { const a = rand(0, TAU), rr = type === 'boss' ? 380 : rand(200, ARENA - 60); x = Math.cos(a) * rr; y = Math.sin(a) * rr; tries++; }
+    do { const a = crange(0, TAU), rr = type === 'boss' ? 380 : crange(200, ARENA - 60); x = Math.cos(a) * rr; y = Math.sin(a) * rr; tries++; }
     while (hyp(x - G.p.x, y - G.p.y) < (type === 'boss' ? 300 : 280) && tries < 20);
-    const ec = G.roomType === 'elite' ? .35 : G.roomType === 'cursed' ? .6 : G.room >= 6 ? .08 : 0;
-    G.spawns.push({ x, y, type, t: type === 'boss' ? 1.4 : rand(.7, 1.1), elite: type !== 'boss' && type !== 'wisp' && Math.random() < ec });
+    const ec = (G.roomType === 'elite' ? .35 : G.roomType === 'cursed' ? .6 : G.room >= 6 ? .08 : 0) + (G.mod.elite || 0);
+    G.spawns.push({ x, y, type, t: type === 'boss' ? 1.4 : rand(.7, 1.1), elite: type !== 'boss' && type !== 'wisp' && crand() < ec });
   }
   G.waveT = 16;
 }
@@ -666,7 +696,7 @@ function startHop(dx, dy) {
   const f = dot >= 0 ? 1 - .4 * dot : 1 + .25 * -dot;
   const dist = s.hopDist * f;
   p.hvx = dx * dist / s.hopTime; p.hvy = dy * dist / s.hopTime; p.state = 'hop'; p.t = s.hopTime; p.buf = false;
-  p.rStacks = G.time - p.lastHop < 1.6 ? Math.min(5, p.rStacks + 1) : 1; p.lastHop = G.time; G.hops++;
+  p.rStacks = G.time - p.lastHop < 1.6 ? Math.min(5, p.rStacks + 1) : 1; p.lastHop = G.time; G.hops++; if (s.dance) p.danceT = .8;
   if (G.room === 1 && G.hops === 4) $('hint').style.opacity = 0;
   for (let i = 0; i < s.shadow; i++) {
     const e = i === 0 ? nearestEnemy(p.x, p.y, s.range + 100) : nearestEnemy(p.x, p.y, s.range + 100, nearestEnemy(p.x, p.y, s.range + 100));
@@ -722,6 +752,7 @@ function castRend() {
   }
   if (!any) { txt(p.x, p.y - 30, 'saplı mızrak yok', '#88a29c'); p.rendCd = .3; return; }
   p.rendCd = killed ? .5 : s.rendCd;
+  if (s.loyal && killed) p.rCd = Math.max(0, p.rCd - 3 * killed);
   G.shake = Math.max(G.shake, 7); sfx('rend'); buzz(killed ? 25 : 12); if (killed) G.hitstop = Math.max(G.hitstop, .05);
   G.parts.push({ ring: true, x: p.x, y: p.y, r: 420, life: .4, max: .4, c: '#d8fff4' });
   if (killed >= 3) { G.impactT = .06; G.speedT = .4; twinkleWorld(p.x, p.y - 30, Math.min(W, H) * .32); }
@@ -745,7 +776,8 @@ function killEnemy(e, src, crit) {
     return;
   }
   e.dead = true; G.kills++; G.combo++; G.comboT = 2.5;
-  const sh = e.elite ? 3 : e.type === 'brute' ? 2 : 1; G.shards += sh;
+  if (G.s.boneBurst && Math.max(e.stacks, e.lastStacks || 0) >= 5) { for (let i = 0; i < 6; i++) fireSpear(i * TAU / 6 + rand(0, .5), .6, 'spear', e.x, e.y); G.parts.push({ ring: true, x: e.x, y: e.y, r: 60, life: .25, max: .25, c: '#ffd8a8' }); }
+  const sh = (e.elite ? 3 * (G.mod.eliteShards || 1) : e.type === 'brute' ? 2 : 1) * (G.mod.shards || 1); G.shards += sh;
   if (e.elite === 'burst') { for (let i = 0; i < 8; i++) eshot(e.x, e.y, i * TAU / 8 + .2, 190, e.dmg * .6, 8); }
   G.lastKill = { x: e.x, y: e.y }; dropOrbs(e, sh);
   if (PRAISE[G.combo]) praise(G.combo);
@@ -801,7 +833,7 @@ function eshot(x, y, ang, spd, dmg, r = 7) { G.eshots.push({ x, y, vx: Math.cos(
 function update(dt) {
   const p = G.p, s = G.s; G.time += dt; const ox0 = p.x, oy0 = p.y;
   if (G.comboT > 0) { G.comboT -= dt; if (G.comboT <= 0) G.combo = 0; }
-  p.atkCd -= dt; p.iT -= dt; p.qCd -= dt; p.rendCd -= dt; p.rCd -= dt; G.shake = Math.max(0, G.shake - 40 * dt);
+  p.danceT = (p.danceT || 0) - dt; p.atkCd -= dt; p.iT -= dt; p.qCd -= dt; p.rendCd -= dt; p.rCd -= dt; G.shake = Math.max(0, G.shake - 40 * dt);
   if (s.regen && G.phase === 'fight') p.hp = Math.min(s.maxHp, p.hp + s.regen * dt);
   const inp = inputDir();
 
@@ -823,7 +855,7 @@ function update(dt) {
       if (p.qQueued && p.qCd <= 0 && G.phase === 'fight') { p.qQueued = false; p.state = 'qcast'; p.t = .22; const e = nearestEnemy(p.x, p.y, 760); p.target = e;
         p.face = e ? Math.atan2(e.y - p.y, e.x - p.x) : inp.m > .2 ? Math.atan2(inp.y, inp.x) : p.face; p.buf = false; break; }
       const tgt = p.atkCd <= 0 && G.phase === 'fight' ? nearestEnemy(p.x, p.y, s.range) : null;
-      if (tgt) { p.state = 'windup'; p.t = Math.max(.07, .3 / s.as); p.target = tgt; p.buf = false; p.face = Math.atan2(tgt.y - p.y, tgt.x - p.x); }
+      if (tgt) { p.state = 'windup'; p.t = Math.max(.07, .3 / (s.as * (p.danceT > 0 ? 1.45 : 1))); p.target = tgt; p.buf = false; p.face = Math.atan2(tgt.y - p.y, tgt.x - p.x); }
       else if (inp.m > .12) { const sp = s.walk * inp.m; p.x += inp.x * sp * dt; p.y += inp.y * sp * dt; p.face = Math.atan2(inp.y, inp.x); }
       break;
     }
@@ -831,7 +863,7 @@ function update(dt) {
       p.t -= dt; if (wantHop) { p.buf = true; p.bx = inp.x; p.by = inp.y; }
       if (p.target && !p.target.dead) p.face = Math.atan2(p.target.y - p.y, p.target.x - p.x);
       if (p.t <= 0) {
-        if (p.state === 'windup') { attackThrow(); p.atkCd = 1 / s.as; }
+        if (p.state === 'windup') { attackThrow(); p.atkCd = 1 / (s.as * (p.danceT > 0 ? 1.45 : 1)); }
         else { fireSpear(p.face, 1, 'q'); p.qCd = Math.max(1.5, s.qCd); sfx('q'); G.shake = Math.max(G.shake, 4); }
         if (p.buf) startHop(p.bx, p.by); else { p.state = 'post'; p.t = .13; }
       }
@@ -867,7 +899,7 @@ function update(dt) {
     p.spCd[i] -= dt; if (p.spCd[i] > 0 || G.phase !== 'fight') continue;
     const a = p.spA + i * TAU / s.spirits, sx = p.x + Math.cos(a) * 46, sy = p.y + Math.sin(a) * 46;
     const e = nearestEnemy(sx, sy, s.range); if (!e) continue;
-    fireSpear(Math.atan2(e.y - sy, e.x - sx), .5, 'spirit', sx, sy); p.spCd[i] = 1.3 * s.spiritRate;
+    const sa = Math.atan2(e.y - sy, e.x - sx); fireSpear(sa, s.chorus ? .8 : .5, 'spirit', sx, sy); if (s.chorus) fireSpear(sa + .14, .8, 'spirit', sx, sy); p.spCd[i] = 1.3 * s.spiritRate;
   }
 
   // scream rings: hop over them (only feet on the ground get hit)
@@ -1805,7 +1837,16 @@ const icon = k => `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" s
 const screens = ['scrTitle', 'scrHero', 'scrHow', 'scrShop', 'scrDraft', 'scrPath', 'scrMerchant', 'scrPause', 'scrOver'];
 let backTo = 'scrTitle';
 function show(id) { screens.forEach(s => $(s).hidden = s !== id); $('hud').hidden = !G || id === 'scrTitle' || id === 'scrHow' || id === 'scrShop'; }
-function titleScreen() { G = null; paused = false; $('tBest').textContent = meta.best; $('tShards').textContent = meta.shards; show('scrTitle'); }
+function titleScreen() {
+  G = null; paused = false; $('tBest').textContent = meta.best; $('tShards').textContent = meta.shards;
+  const di = dailyInfo(), best = meta.daily && meta.daily.key === di.key ? meta.daily.best : 0;
+  $('dailyLbl').textContent = di.hero.n + ' · ' + di.mod.n + (best ? ' · en iyi ' + best : '');
+  renderHistory(); show('scrTitle');
+}
+function renderHistory() {
+  const el = $('history'), H = meta.history || []; el.hidden = !H.length;
+  el.innerHTML = '<span class="hl">Son avlar</span>' + H.slice(0, 5).map(r => `<span>${r.d ? '◆ ' : ''}${heroById(r.h).n} · oda ${r.room} · ${Math.floor(r.t / 60)}:${String(r.t % 60).padStart(2, '0')}</span>`).join('');
+}
 document.querySelectorAll('[data-back]').forEach(b => b.addEventListener('click', () => titleScreen()));
 $('btnStart').addEventListener('click', () => { initAudio(); renderHeroes(); show('scrHero'); });
 const heroSvg = h => `<svg width="30" height="30" viewBox="0 0 48 48"><path d="M24 4C13 4 8 16 8 27v15h32V27C40 16 35 4 24 4Z" fill="${h.cloak[1]}" stroke="rgb(${h.rim})" stroke-width="2"/><path d="M24 14c-6 0-9 6-9 12v4h18v-4c0-6-3-12-9-12Z" fill="#030808"/><circle cx="20" cy="25" r="2.2" fill="rgb(${h.rim})"/><circle cx="28" cy="25" r="2.2" fill="rgb(${h.rim})"/></svg>`;
@@ -1819,11 +1860,12 @@ function renderHeroes() {
   }
 }
 $('btnHow').addEventListener('click', () => show('scrHow'));
+$('btnDaily').addEventListener('click', () => { initAudio(); const di = dailyInfo(); newRun(di); show(null); banner('Günün Avı'); setTimeout(() => G && G.daily && banner(di.mod.n), 1500); });
 $('btnShop').addEventListener('click', () => { renderShop(); show('scrShop'); });
 $('btnPause').addEventListener('pointerdown', e => { e.stopPropagation(); pause(); });
 $('btnResume').addEventListener('click', () => resume());
 $('btnQuit').addEventListener('click', () => { paused = false; gameOver(); });
-$('btnAgain').addEventListener('click', () => { newRun(); show(null); });
+$('btnAgain').addEventListener('click', () => { const d = G && G.daily ? dailyInfo() : null; newRun(d); show(null); });
 $('btnMenu').addEventListener('click', () => titleScreen());
 function syncMute() { $('btnMute').textContent = 'Ses: ' + (muted ? 'kapalı' : 'açık'); }
 $('btnMute').addEventListener('click', () => { muted = !muted; store.set('ym_opts', { muted }); syncMute(); initAudio(); if (MG) MG.gain.value = muted ? 0 : .5; }); syncMute();
@@ -1839,7 +1881,7 @@ function rollDraft() {
   const avail = UPS.filter(u => (G.ups[u.id] || 0) < u.max && (!u.req || u.req(G.ups)) && !(u.id === 'ghost' && G.s.ghostHop)); const out = [];
   const boost = G.roomType !== 'fight', w = u => boost && u.r === 'common' ? 2 : RW[u.r];
   while (out.length < 3 && avail.length) {
-    const tot = avail.reduce((a, u) => a + w(u), 0); let r = Math.random() * tot, i = 0;
+    const tot = avail.reduce((a, u) => a + w(u), 0); let r = crand() * tot, i = 0;
     for (; i < avail.length; i++) { r -= w(avail[i]); if (r <= 0) break; }
     out.push(avail.splice(Math.min(i, avail.length - 1), 1)[0]);
   }
@@ -1871,7 +1913,7 @@ function showPath() {
   if ((G.room + 1) % 5 === 0) { show(null); nextRoom('fight'); return; }
   G.phase = 'path';
   const pool = ['elite', 'cursed', 'rest', 'shop'], opts = ['fight'];
-  while (opts.length < 3) opts.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
+  while (opts.length < 3) opts.push(pool.splice(Math.floor(crand() * pool.length), 1)[0]);
   $('pathEyebrow').textContent = 'Oda ' + (G.room + 1) + ' · muhafıza ' + (5 - (G.room + 1) % 5) + ' oda';
   const c = $('doors'); c.innerHTML = '';
   for (const t of opts) {
@@ -1945,7 +1987,10 @@ function chooseDoor(t) {
 function gameOver() {
   if (!G || G.phase === 'over') return; G.phase = 'over';
   shatter({ x: G.p.x, y: G.p.y, r: 16, type: 'player', stacks: 0 }, true);
-  const reached = G.room; meta.shards += G.shards; meta.best = Math.max(meta.best, reached); store.set('ym_meta', meta);
+  const reached = G.room; meta.shards += G.shards; meta.best = Math.max(meta.best, reached);
+  if (G.daily) { const prev = meta.daily && meta.daily.key === G.daily.key ? meta.daily.best : 0; meta.daily = { key: G.daily.key, best: Math.max(prev, reached) }; }
+  meta.history = [{ h: G.hero.id, room: reached, t: Math.floor(G.time), d: !!G.daily }, ...(meta.history || [])].slice(0, 10);
+  store.set('ym_meta', meta);
   const m = Math.floor(G.time / 60), sec = Math.floor(G.time % 60);
   $('oStats').innerHTML = `<div>Oda<b>${reached}</b></div><div>Öldürme<b>${G.kills}</b></div><div>Sekme<b>${G.hops}</b></div><div>Süre<b>${m}:${String(sec).padStart(2, '0')}</b></div><div>Ruh parçası<b>+${G.shards}</b></div>`;
   upChips($('oUps'));

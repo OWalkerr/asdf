@@ -38,6 +38,26 @@ Sonuç olarak ritim şu: **saldır → sek → saldır → sek**. Yürümek yava
 | Kemik Kıran | Mızrak hasarı +%30, %25 şansla çift saplanma | Saldırı hızı -%15, sekme -%10 |
 | Ruh Çağıran | 1 Yeminli Ruh ile başlar, Kader bekleme -%30 | Mızrak hasarı -%10 |
 
+### Mızrakçıya özel efsanevi kartlar
+
+| Kart | Mızrakçı | Ön koşul | Etki |
+|---|---|---|---|
+| Sadakat | Yeminli | Yırtıcı veya Acımasız | Söküm hasarı +%20; Söküm öldürmesi başına Kader bekleme -3 sn |
+| Gölge Dansı | Gölge Koşucu | Uzun Sekme veya Hızlı El | Her sekmeden sonra 0.8 sn saldırı hızı +%45 |
+| Kemik Patlaması | Kemik Kıran | Ağır Mızrak veya Keskin Uç | 5+ mızraklı düşman ölünce çevresine 6 mızrak saçar |
+| Ruh Korosu | Ruh Çağıran | Yeminli Ruh veya Kader Yemini | Ruhlar iki mızrak atar, ruh mızrakları %80 hasar |
+
+### Günün Avı
+
+Her gün için tarihten üretilen sabit bir tohum: herkes aynı mızrakçıyla, aynı günlük kuralla, aynı oda dizilimi, düşman yerleri, elitler, kart teklifleri ve kapı seçenekleriyle oynar. Günün en iyi odası ve son 10 av ana ekranda tutulur.
+
+| Günlük kural | Etki |
+|---|---|
+| Kanlı Ay | Düşmanlar %25 hızlı, ruh parçası ×2 |
+| Cam Kalp | Azami can yarıya iner, Söküm hasarı +%60 |
+| Elit Gecesi | +%30 elit oranı, elitler ×2 parça |
+| Kehanet Armağanı | 2 rastgele destansı güçle başla, yeniden çekme yok |
+
 ## 4. Çekirdek döngü
 
 1. Odaya gir → 2–4 dalga düşman (dalga, kalan düşman ≤2 olunca ya da 16 sn sonra gelir).
@@ -107,16 +127,29 @@ Nadirlik ağırlıkları: Sıradan 10, Nadir 5, Destansı 2, Efsanevi 6 (yalnız
 
 Kayıt tarayıcının yerel depolamasında tutulur.
 
-## 8. Sıradaki adımlar (yol haritası)
+## 8. Denge ölçümü
 
-Tamamlananlar: 4 mızrakçı, Unutuş Ritüeli (güç silme), Yükselmiş muhafızlar, PWA (ana ekrana ekleme + çevrimdışı önbellek), Ruh Tüccarı kapısı, üçüncü muhafız Yas Kraliçesi, üretken müzik (dron + minör pentatonik arpej; savaşta davul, muhafızda hızlanır), Kader Çağrısı (R), kapı seçimi (Savaş/Elit/Lanetli/Ruh Pınarı), elit düşmanlar, ikinci muhafız Gölge Atlı, 5 efsanevi sinerji, vuruş durması (hit-stop) ve titreşim.
+`tools/balance-sim.js` oyunu tarayıcıda kendi kendine oynatır: bot tehditlerden kaçar, mermilere dik kaçar, duvardan uzak durur, uygun anda Söküm / Delici / Kader kullanır, her zaman ilk kartı ve Savaş kapısını seçer. Her mızrakçıyla N av yapıp ulaşılan odayı, oda başına süreyi ve alınan hasarı raporlar.
+
+İlk ölçümde bot 1–4. odalarda neredeyse hiç hasar almıyor, 16 avın 12'sinde 5. odadaki Kemik Lordu'nda ölüyordu (temas başına ~29 hasar, 55 sn'ye varan dövüş). Yapılan ayarlar:
+
+- Muhafız tabanı: can 1250 → 1050, hız 88 → 74, temas hasarı 22 → 15
+- Oda bütçesi: `4 + 1.4·oda` → `4.5 + 1.5·oda` (ilk odalar biraz daha dolu)
+- Düşman canı artışı oda başına %20 → %17
+- Kemik Kıran cezaları: saldırı hızı -%15 → -%10, sekme -%10 → -%5
+
+Sonuç (24 bot avı): ilk muhafız ~%55–65 geçiliyor, ölümler 4. ile 14. oda arasına yayılıyor. Bot kart seçmediği için geç odalar uzun sürüyor; gerçek oyuncuda daha kısa olması beklenir.
+
+## 9. Sıradaki adımlar (yol haritası)
+
+Tamamlananlar: mızrakçıya özel efsanevi kartlar, Günün Avı (tohumlu), son avlar listesi, bot ile denge ölçümü ve ayarı, 4 mızrakçı, Unutuş Ritüeli (güç silme), Yükselmiş muhafızlar, PWA (ana ekrana ekleme + çevrimdışı önbellek), Ruh Tüccarı kapısı, üçüncü muhafız Yas Kraliçesi, üretken müzik (dron + minör pentatonik arpej; savaşta davul, muhafızda hızlanır), Kader Çağrısı (R), kapı seçimi (Savaş/Elit/Lanetli/Ruh Pınarı), elit düşmanlar, ikinci muhafız Gölge Atlı, 5 efsanevi sinerji, vuruş durması (hit-stop) ve titreşim.
 
 Sıradakiler:
-1. Dengeleme için oda başına istatistik kaydı ve zorluk eğrisi ayarı.
-2. Mızrakçılara özel efsanevi kartlar.
-3. Günlük meydan okuma (sabit tohumlu av).
+1. Botun kartları akıllıca seçmesi ve kapı stratejisi; geç oda dengesinin buna göre ayarı.
+2. Günün Avı için paylaşılabilir sonuç kartı.
+3. Yeni düşman türleri (kalkanlı şövalye, intihar eden kemik bombası).
 
-## 9. Oyun hissi (Metal Slug esinli)
+## 10. Oyun hissi (Metal Slug esinli)
 
 Hedef: eski arcade oyunlarındaki gibi her öldürmenin "tatmin edici" hissettirmesi.
 
@@ -143,7 +176,7 @@ Hedef: eski arcade oyunlarındaki gibi her öldürmenin "tatmin edici" hissettir
 
 Erişilebilirlik: cihazda "hareketi azalt" açıksa titreme %30'a, ekran parlaması %25'e düşer.
 
-## 10. Görsel yön
+## 11. Görsel yön
 
 Tema: **ruhani mezar arenası**. Karanlık taş zemin, turkuaz ruh ışığı, yıpranmış altın süslemeler.
 
@@ -155,11 +188,11 @@ Tema: **ruhani mezar arenası**. Karanlık taş zemin, turkuaz ruh ışığı, y
 - **Ekran sonrası:** Vinyet, film greni, hasar alınca ve can %30'un altındayken kırmızı kenar.
 - **Arayüz:** İkonlu yetenek düğmeleri (dairesel bekleme süresi), gecikmeli (beyaz iz bırakan) can barı, muhafız barı ve sinematik siyah şeritli giriş, seri sayacı, ikonlu ve nadirliğe göre renklenen kartlar.
 
-## 11. Telefona kurulum (PWA)
+## 12. Telefona kurulum (PWA)
 
 `game/` klasörü herhangi bir statik sunucuda (ör. GitHub Pages) yayınlanınca tarayıcının "Ana ekrana ekle" seçeneğiyle tam ekran uygulama gibi kurulur; `sw.js` dosyaları önbelleğe alır, oyun çevrimdışı açılır. Claude artifact sürümünde servis çalışanı devre dışıdır.
 
-## 12. Teknik
+## 13. Teknik
 
 - Tek dosya HTML5 Canvas + saf JavaScript, kütüphane yok.
 - Dünya: 820 birim yarıçaplı dairesel arena, kamera oyuncuyu takip eder, zoom ekran boyutuna göre ölçeklenir.
