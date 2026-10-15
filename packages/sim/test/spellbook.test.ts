@@ -2,6 +2,7 @@ import {
   BANNER,
   FACTIONS,
   fxFromFloat,
+  GEAR_DEFS,
   HELMS_DEEP,
   HERO_XP,
   MAX_HERO_LEVEL,
@@ -230,5 +231,51 @@ describe('kahraman seviyeleri (1–10) ve 4 yetenek', () => {
   it('her kahramanın 4 yeteneği var: 1, 3, 6, 10. seviyede açılır', () => {
     for (const f of FACTIONS)
       for (const h of f.heroes) expect(h.abilities.map((a) => a.rank)).toEqual([1, 3, 6, 10]);
+  });
+});
+
+describe('tabur başına donanım ve birleşik ordu', () => {
+  it('donanım araştırma olmadan alınamaz; kurallara göre tabur başına satılır', () => {
+    const sim = setup(41);
+    spawn(sim, 0, UnitTypeId.GondorSoldier, 0, 0);
+    spawn(sim, 0, UnitTypeId.GondorArcher, 30, 0);
+    sim.step();
+    const [sold, arch] = battalions(sim, 0).sort(
+      (a, b) => (sim.world.c.Battalion.unitType[a] as number) - (sim.world.c.Battalion.unitType[b] as number),
+    ) as [number, number];
+    const G = sim.world.c.Battalion.gear;
+    sim.world.match.gold[0] = 1000;
+    sim.schedule(stamp(sim.world.tick, { type: 'buyGear', units: [sold, arch], upgrade: 0 }));
+    sim.step();
+    expect(G[sold]).toBe(0);
+    expect(sim.world.match.gold[0]).toBe(1000);
+    sim.world.match.upgrades[0] = 0b111;
+    // Dövme Kılıç yalnızca yakın dövüşe, Ateşli Ok yalnızca okçuya.
+    sim.schedule(stamp(sim.world.tick, { type: 'buyGear', units: [sold, arch], upgrade: 0 }));
+    sim.schedule(stamp(sim.world.tick, { type: 'buyGear', units: [sold, arch], upgrade: 2 }));
+    sim.schedule(stamp(sim.world.tick, { type: 'buyGear', units: [sold, arch], upgrade: 1 }));
+    sim.step();
+    expect(G[sold]).toBe(0b011);
+    expect(G[arch]).toBe(0b110);
+    expect(sim.world.match.gold[0]).toBe(
+      1000 - GEAR_DEFS[0]!.cost - GEAR_DEFS[2]!.cost - 2 * GEAR_DEFS[1]!.cost,
+    );
+    expect(attackPercent(sim.world, sold, 0, true)).toBe(125);
+  });
+
+  it('yakın dövüş + okçu taburu yan yana birleşik ordu bonusu alır', () => {
+    const sim = setup(42);
+    spawn(sim, 0, UnitTypeId.GondorSoldier, 0, 0);
+    spawn(sim, 0, UnitTypeId.GondorArcher, 10, 0);
+    spawn(sim, 0, UnitTypeId.GondorSoldier, 120, 0);
+    for (let t = 0; t < 6; t++) sim.step();
+    const H = sim.world.c.Battalion.horde;
+    const bs = battalions(sim, 0);
+    const near = bs.filter((b) => (sim.world.c.Position.x[b] as number) < F(60));
+    const far = bs.filter((b) => (sim.world.c.Position.x[b] as number) >= F(60));
+    expect(near.every((b) => H[b] === 1)).toBe(true);
+    expect(far.every((b) => H[b] === 0)).toBe(true);
+    const arch = near.find((b) => sim.world.c.Battalion.unitType[b] === UnitTypeId.GondorArcher) as number;
+    expect(attackPercent(sim.world, arch, 0, false)).toBe(115);
   });
 });

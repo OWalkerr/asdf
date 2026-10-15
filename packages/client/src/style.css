@@ -1644,3 +1644,7 @@ body.debug #hud {
     transform: translate(-50%, -10px) scale(1);
   }
 }
+#cmdbar .info .line b.ok {
+  color: #9fe07a;
+  font-weight: 600;
+}

@@ -8,6 +8,8 @@ import {
   unpackBanner,
   unpackBattalion,
   unpackFlags,
+  unpackGear,
+  unpackHorde,
   unpackHp8,
   unpackRank,
   unpackStance,
@@ -51,6 +53,8 @@ interface Bucket {
 /** Tabur başına son karedeki durum ve sancaktarın (taburun ilk askeri) pozu. */
 export interface BattalionInfo {
   rank: number;
+  gear: number;
+  horde: number;
   stance: number;
   banner: number;
   weak: number;
@@ -244,6 +248,8 @@ export class UnitRenderer {
         if (!info) {
           info = {
             rank: 0,
+            gear: 0,
+            horde: 0,
             stance: 0,
             banner: 0,
             weak: 0,
@@ -260,6 +266,8 @@ export class UnitRenderer {
         if (info.frame !== frame) {
           info.frame = frame;
           info.rank = unpackRank(f5);
+          info.gear = unpackGear(f5);
+          info.horde = unpackHorde(f5);
           info.stance = unpackStance(f5);
           info.banner = unpackBanner(f5);
           info.weak = weak;

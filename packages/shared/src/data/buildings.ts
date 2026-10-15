@@ -102,21 +102,21 @@ export const UPGRADE_DEFS: readonly UpgradeDef[] = [
     name: 'Dövme Kılıçlar',
     cost: 600,
     researchTime: 30,
-    desc: 'Yakın dövüş hasarı +%25.',
+    desc: 'Açar: yakın dövüş taburları tabur başına 120 altınla +%25 yakın dövüş hasarı alabilir.',
   },
   {
     key: 'heavy_armor',
     name: 'Ağır Zırh',
     cost: 600,
     researchTime: 30,
-    desc: 'Birlikler %25 daha az hasar alır.',
+    desc: 'Açar: her tabur, tabur başına 120 altınla %25 daha az hasar alan zırh giyebilir.',
   },
   {
     key: 'fire_arrows',
     name: 'Ateşli Oklar',
     cost: 500,
     researchTime: 25,
-    desc: 'Okçu ve kule okları ateş hasarı verir: Uruk zırhını ve koçbaşını deler.',
+    desc: 'Kule okları ateşli olur; okçu taburları tabur başına 100 altınla ateşli ok alabilir (Uruk zırhını ve koçbaşını deler).',
   },
 ];
 

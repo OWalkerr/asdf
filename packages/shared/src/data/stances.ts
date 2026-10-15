@@ -57,3 +57,28 @@ export const BANNER = {
   /** Kazanılan XP çarpanı (%). */
   xpPercent: 150,
 } as const;
+
+/**
+ * Tabur başına demirhane yükseltmeleri (BFME2): demirhanede araştırma yükseltmeyi AÇAR, sonra her
+ * tabur kendi donanımını altınla alır. Bit = 1 << UPGRADE_DEFS indeksi.
+ * - Dövme Kılıçlar: yalnızca yakın dövüş taburları, +%25 yakın dövüş hasarı.
+ * - Ağır Zırh: her tabur, %25 daha az hasar.
+ * - Ateşli Oklar: yalnızca okçular, oklar ateş hasarı verir. (Kuleler araştırmayla doğrudan alır.)
+ */
+export interface GearDef {
+  cost: number;
+  /** Kimler alabilir. */
+  for: 'melee' | 'ranged' | 'all';
+}
+export const GEAR_DEFS: readonly GearDef[] = [
+  { cost: 120, for: 'melee' },
+  { cost: 120, for: 'all' },
+  { cost: 100, for: 'ranged' },
+];
+
+/**
+ * Birleşik ordu (BFME2 sürü bonusu): yakın dövüş taburu yakınında dost okçu taburu varsa
+ * kalkan duvarı arkasından korunur (%15 daha az hasar alır); okçu taburu yakınında dost yakın
+ * dövüş taburu varsa rahat nişan alır (+%15 hasar). Kahramanlar ve çağrılmış birlikler sayılmaz.
+ */
+export const HORDE = { radius: 18, takenPercent: 85, dealtPercent: 115 } as const;

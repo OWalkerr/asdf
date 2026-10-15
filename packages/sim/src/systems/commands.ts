@@ -11,6 +11,7 @@ import {
   fxLen,
   fxMul,
   fxSin,
+  GEAR_DEFS,
   MatchState,
   STANCE_DEFS,
   type StampedCommand,
@@ -153,6 +154,8 @@ export const spawnBattalion = (
   Battalion.stance[b] = 0;
   Battalion.banner[b] = 0;
   Battalion.weakUntil[b] = 0;
+  Battalion.gear[b] = 0;
+  Battalion.horde[b] = 0;
   const c = fxCos(facing);
   const sn = fxSin(facing);
   Battalion.cos[b] = c;
@@ -415,6 +418,24 @@ export const applyCommand = (world: SimWorld, sc: StampedCommand): void => {
         if ((m.gold[team] as number) < BANNER.cost || m.state !== MatchState.Playing) break;
         m.gold[team] = (m.gold[team] as number) - BANNER.cost;
         Battalion.banner[b] = 1;
+      }
+      break;
+    }
+    case 'buyGear': {
+      const m = world.match;
+      const u = cmd.upgrade;
+      const gd = GEAR_DEFS[u];
+      if (!gd || !Number.isInteger(u) || m.state !== MatchState.Playing) break;
+      if (!((m.upgrades[team] as number) & (1 << u))) break;
+      for (const b of splitOwned(world, sc.player, cmd.units).battalions) {
+        const t = Battalion.unitType[b] as number;
+        if ((Battalion.gear[b] as number) & (1 << u) || STAT.hero[t] === 1 || STAT.summoned[t] === 1)
+          continue;
+        const ranged = STAT.ranged[t] === 1;
+        if ((gd.for === 'melee' && ranged) || (gd.for === 'ranged' && !ranged)) continue;
+        if ((m.gold[team] as number) < gd.cost) break;
+        m.gold[team] = (m.gold[team] as number) - gd.cost;
+        Battalion.gear[b] = (Battalion.gear[b] as number) | (1 << u);
       }
       break;
     }

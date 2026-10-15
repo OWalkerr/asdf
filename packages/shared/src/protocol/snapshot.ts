@@ -17,7 +17,7 @@
  *
  * Birim kaydı (6 × int32):
  *   0 eid · 1 x (Q16.16) · 2 z (Q16.16) · 3 yaw:16|unitType:8|team:8
- *   4 anim:8|flags:8|hp8:8|animTick:8 · 5 tabur eid'i:24|rütbe:4|duruş:2|sancak:1|zayıf:1 (0 = yok/ölü)
+ *   4 anim:8|flags:8|hp8:8|animTick:8 · 5 tabur eid'i:16|donanım:3|birleşik:1|boş:4|rütbe:4|duruş:2|sancak:1|zayıf:1
  * Ok kaydı (7 × int32):
  *   0 eid · 1 fromX · 2 fromZ · 3 toX · 4 toZ · 5 fireTick:20|flightTicks:12 · 6 yükseklik (cm):16|tür:8 (0 ok, 1 taş)
  * Yapı kaydı (6 × int32) — kapılar da (kind 0, slot = kapı indeksi, 4 = kalan onarım tick'i):
@@ -127,8 +127,8 @@ export const unpackQueueUnit = (v: number): number => (v >>> 4) & 0xff;
 export const unpackQueuePct = (v: number): number => (v >>> 12) & 0x7f;
 
 /**
- * Birim kaydı alan 5: tabur eid'i (24 bit) + rütbe (4 bit) + duruş (2 bit, Stance) + sancaktar (1 bit)
- * + Güneş Parlaması zayıflığı (1 bit).
+ * Birim kaydı alan 5: tabur eid'i (16 bit) + donanım (3 bit, UPGRADE_DEFS bitleri) + birleşik ordu (1 bit)
+ * + boş (4) + rütbe (4 bit) + duruş (2 bit, Stance) + sancaktar (1 bit) + Güneş Parlaması zayıflığı (1 bit).
  */
 export const packBattalionRank = (
   battalion: number,
@@ -136,13 +136,19 @@ export const packBattalionRank = (
   stance = 0,
   banner = 0,
   weak = 0,
+  gear = 0,
+  horde = 0,
 ): number =>
-  (battalion & 0xffffff) |
+  (battalion & 0xffff) |
+  ((gear & 0x7) << 16) |
+  ((horde & 1) << 19) |
   ((rank & 0xf) << 24) |
   ((stance & 0x3) << 28) |
   ((banner & 1) << 30) |
   ((weak & 1) << 31);
-export const unpackBattalion = (v: number): number => v & 0xffffff;
+export const unpackBattalion = (v: number): number => v & 0xffff;
+export const unpackGear = (v: number): number => (v >>> 16) & 0x7;
+export const unpackHorde = (v: number): number => (v >>> 19) & 1;
 export const unpackRank = (v: number): number => (v >>> 24) & 0xf;
 export const unpackStance = (v: number): number => (v >>> 28) & 0x3;
 export const unpackBanner = (v: number): number => (v >>> 30) & 1;

@@ -7,6 +7,7 @@ import {
   CylinderGeometry,
   InstancedMesh,
   Matrix4,
+  OctahedronGeometry,
   type Texture,
   Vector3,
 } from 'three/webgpu';
@@ -46,6 +47,8 @@ export class BattalionHud {
   readonly meshes: InstancedMesh[];
   private readonly pole: InstancedMesh;
   private readonly flag: InstancedMesh;
+  /** Sancak altındaki donanım işaretleri: kılıç, kalkan, alev; birleşik ordu elması. */
+  private readonly pips: InstancedMesh[];
   private readonly bars = new BarRenderer(MAX_BATTALIONS + 64);
   private readonly agg = new Map<number, Agg>();
   private readonly pool: Agg[] = [];
@@ -77,7 +80,28 @@ export class BattalionHud {
       mesh.count = 0;
       mesh.name = 'battalion-banners';
     }
-    this.meshes = [this.pole, this.flag, ...this.bars.meshes];
+    // Donanım işaretleri flama altında yan yana (flama yerel uzayı: x 0.05–1.05).
+    const pipGeos = [
+      merge([
+        paint(place(new BoxGeometry(0.09, 0.42, 0.05), 0.22, 0.78, 0), 'silver'),
+        paint(place(new BoxGeometry(0.26, 0.06, 0.06), 0.22, 0.62, 0), 'gold'),
+      ]),
+      merge([
+        paint(place(new BoxGeometry(0.3, 0.34, 0.06), 0.55, 0.74, 0), 'steel'),
+        paint(place(new BoxGeometry(0.1, 0.2, 0.07), 0.55, 0.76, 0), 'gold'),
+      ]),
+      merge([paint(place(new ConeGeometry(0.13, 0.4, 5), 0.88, 0.78, 0), 'fire')]),
+      merge([paint(place(new OctahedronGeometry(0.2, 0), -0.32, 2.05, 0), 'gold')]),
+    ];
+    this.pips = pipGeos.map((g) => {
+      const mesh = new InstancedMesh(g, mat, MAX_BATTALIONS);
+      mesh.frustumCulled = false;
+      mesh.castShadow = false;
+      mesh.count = 0;
+      mesh.name = 'battalion-gear';
+      return mesh;
+    });
+    this.meshes = [this.pole, this.flag, ...this.pips, ...this.bars.meshes];
   }
 
   update(
@@ -115,6 +139,7 @@ export class BattalionHud {
       camera.matrixWorld.elements[10] as number,
     );
     let i = 0;
+    const pipN = [0, 0, 0, 0];
     this.bars.begin(camera);
     for (const [b, a] of this.agg) {
       if (i >= MAX_BATTALIONS) break;
@@ -132,6 +157,12 @@ export class BattalionHud {
       const base = TEAM_COLORS[a.team] ?? (TEAM_COLORS[0] as Color);
       const gold = a.rank >= 5 ? 1 : a.rank >= 3 ? 0.55 : 0;
       this.flag.setColorAt(i, gold > 0 ? this.c.copy(base).lerp(GOLD, gold) : base);
+      const info = units.battalionInfo.get(b);
+      if (info) {
+        const bits = info.gear | (info.horde ? 8 : 0);
+        for (let k = 0; k < 4; k++)
+          if (bits & (1 << k)) (this.pips[k] as InstancedMesh).setMatrixAt((pipN[k] as number)++, this.m);
+      }
       i++;
       const ratio = a.hp / size;
       if (sel || this.showAllBars || ratio < 0.999)
@@ -141,6 +172,10 @@ export class BattalionHud {
     this.flag.count = i;
     this.pole.instanceMatrix.needsUpdate = true;
     this.flag.instanceMatrix.needsUpdate = true;
+    this.pips.forEach((p, k) => {
+      p.count = pipN[k] as number;
+      if (p.count > 0) p.instanceMatrix.needsUpdate = true;
+    });
     if (this.flag.instanceColor) this.flag.instanceColor.needsUpdate = true;
 
     for (const st of structures) {

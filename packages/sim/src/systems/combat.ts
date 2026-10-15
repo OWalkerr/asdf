@@ -54,6 +54,10 @@ const alive = (world: SimWorld, e: number): boolean =>
 export const hasUpgrade = (world: SimWorld, team: number, upgrade: number): boolean =>
   ((world.match.upgrades[team] ?? 0) & (1 << upgrade)) !== 0;
 
+/** Taburun kendi demirhane donanımı (BFME2: tabur başına satın alınır). */
+export const hasGear = (world: SimWorld, battalion: number, upgrade: number): boolean =>
+  battalion !== 0 && ((world.c.Battalion.gear[battalion] as number) & (1 << upgrade)) !== 0;
+
 /** Ok hasar tipi: Ateşli Oklar yükseltmesiyle 'fire'. */
 export const arrowDmgType = (world: SimWorld, team: number, base: number): number =>
   hasUpgrade(world, team, Upgrade.FireArrows) ? DMG_FIRE : base;
@@ -77,8 +81,8 @@ export const applyDamage = (
   }
   if (STAT.invulnerable[world.c.UnitType.id[target] as number] === 1) return;
   let pct = PERCENT[dmgType]?.[Combat.armor[target] as number] ?? 100;
-  // Ağır Zırh yükseltmesi: alınan hasar −%25.
-  if (hasUpgrade(world, world.c.Team.id[target] as number, Upgrade.HeavyArmor)) pct = (pct * 3) >> 2;
+  // Ağır Zırh (taburun kendi donanımı): alınan hasar −%25.
+  if (hasGear(world, world.c.Soldier.battalion[target] as number, Upgrade.HeavyArmor)) pct = (pct * 3) >> 2;
   // Tabur rütbesi dayanıklılığı.
   pct = ((pct * defensePercent(world, target)) / 100) | 0;
   Health.lastBy[target] = source;
@@ -264,7 +268,7 @@ const fireArrow = (world: SimWorld, s: number, target: number): void => {
     Position.z[s] as number,
     target,
     (((Combat.damage[s] as number) * attackPercent(world, b, team, false)) / 100) | 0,
-    arrowDmgType(world, team, Combat.dmgType[s] as number),
+    hasGear(world, b, Upgrade.FireArrows) ? DMG_FIRE : (Combat.dmgType[s] as number),
     150,
     b,
   );

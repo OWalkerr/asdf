@@ -274,6 +274,8 @@ export const hashWorld = (world: SimWorld): number => {
     h = hashInt(h, Battalion.stance[eid] as number);
     h = hashInt(h, Battalion.banner[eid] as number);
     h = hashInt(h, Battalion.weakUntil[eid] as number);
+    h = hashInt(h, Battalion.gear[eid] as number);
+    h = hashInt(h, Battalion.horde[eid] as number);
   }
   for (const eid of query(world, [Soldier])) {
     h = hashInt(h, Soldier.battalion[eid] as number);

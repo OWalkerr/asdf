@@ -119,6 +119,12 @@ export class Scenario {
     if (units.length > 0) this.sim.send({ type: 'buyBanner', units }, PLAYER);
   }
 
+  /** Taburlara demirhane donanımı al. */
+  buyGear(battalions: Iterable<number>, upgrade: number): void {
+    const units = [...battalions];
+    if (units.length > 0) this.sim.send({ type: 'buyGear', units, upgrade }, PLAYER);
+  }
+
   /** Seçili taburları durdur. */
   stop(battalions: Iterable<number>): void {
     const units = [...battalions];

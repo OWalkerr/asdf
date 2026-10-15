@@ -128,6 +128,14 @@ kademe kademe açılır (10 güç):
 
 Taburlar öldürdükçe 5 rütbeye kadar yükselir. Son dalgada boss **Lurtz** gelir.
 
+**Demirhane donanımı (tabur başına, BFME2 gibi):** demirhanedeki araştırma yükseltmeyi **açar**; sonra her tabur
+kendi donanımını komut çubuğundan alır — Dövme Kılıçlar (yakın dövüş, 120 altın, +%25 hasar), Ağır Zırh (her tabur,
+120 altın, −%25 alınan hasar), Ateşli Oklar (okçular, 100 altın; kuleler araştırmayla doğrudan alır). Alınan
+donanım taburun sancağının altında küçük işaretler olarak görünür (kılıç, kalkan, alev).
+
+**Birleşik ordu:** yakın dövüş taburu ile okçu taburu 18 m içinde birlikte durursa piyade %15 daha az hasar alır,
+okçular %15 daha fazla verir (sancakta altın elmas; komut çubuğunda yeşil "Birleşik ordu" satırı).
+
 **Kahraman seviyeleri (1–10):** kahramanlar öldürdükçe ve savaş alanında kaldıkça (saniyede +2 XP) deneyim kazanır;
 her seviye +%10 hasar ve dayanıklılık verir. Her kahramanın 4 yeteneği 1., 3., 6. ve 10. seviyede açılır — ör.
 Aragorn: Elendil'in Kılıcı, Athelas, Andúril Savuruşu, **Yeminbozanlar** (Ölüleri çağırır); Gandalf: Asa Patlaması,
@@ -162,14 +170,15 @@ ve sim hızı ayarı var.
 
 **Var:** Kale (FD) ve Kule (TD) savunması, klasik Tower Wars / Fortress Defence haritaları, işlevsel ve gelişen kale,
 kale yükseltmeleri, bina seviyeleri ve satış, çiftlik, kışla / demirhane, 3 iyi taraf (Gondor, Rohan, Lothlórien) ve
-9 kahraman (10 seviye, 4 yetenek), 4 kademeli 10 güç (Kartallar, Sel, Deprem, Güneş Parlaması dahil), tabur duruşları ve sancaktar, rütbe sistemi, kuşatma (koçbaşı, merdiven, kule), boss'lar (Lurtz, Balrog, Su Gözcüsü,
+9 kahraman (10 seviye, 4 yetenek), 4 kademeli 10 güç (Kartallar, Sel, Deprem, Güneş Parlaması dahil), tabur duruşları, sancaktar ve tabur başına donanım, birleşik ordu bonusu, rütbe sistemi, kuşatma (koçbaşı, merdiven, kule), boss'lar (Lurtz, Balrog, Su Gözcüsü,
 Ateş Ejderi), halka menü, bekleme sayaçları, palantír mini harita, portreler, oyun hızı, istatistik ve rekorlar.
 
 **Eksik (BFME2'de olup henüz olmayan):**
 1. Kötü tarafların oynanabilir olması (Mordor, Isengard, Goblinler) ve çok oyunculu / PvP (deterministik lockstep
    altyapısı hazır, ağ katmanı yok).
 2. Güç kitabının kalanı (Tom Bombadil, Kale Kuşatması, Ölülerin Çağrısı…; BFME2'de ~15, burada 10).
-3. Tabur başına demirhane yükseltmeleri (burada takım çapında), sürü (horde) bonusları.
+3. Birim türüne özgü sürü kombinasyonları (BFME2'deki ör. Gondor askeri + Kule Muhafızı) — burada genel yakın
+   dövüş + okçu bonusu var.
 4. Kahraman Yarat (Create-a-Hero), binekli kahramanlar (seviye 1–10 ve 4 yetenek var).
 5. Serbest inşa ve sur inşası, komuta noktası (nüfus) sınırı, deniz birimleri.
 6. Seslendirme (birim cevapları) ve müzik; War of the Ring kampanya modu; harita editörü.

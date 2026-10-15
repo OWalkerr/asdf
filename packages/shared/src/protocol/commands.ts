@@ -25,6 +25,8 @@ export type Command =
   | { type: 'stance'; units: readonly number[]; stance: number }
   /** Tabura sancaktar al (BANNER.cost altın). */
   | { type: 'buyBanner'; units: readonly number[] }
+  /** Taburlara demirhane donanımı al (UPGRADE_DEFS indeksi; araştırılmış olmalı). */
+  | { type: 'buyGear'; units: readonly number[]; upgrade: number }
   /** Haritanın `slot` indeksli inşa yerine yapı kur (BUILDING_KINDS indeksi). */
   | { type: 'build'; slot: number; kind: number }
   /** Kışlada birim yetiştir (kuyruğa ekle). building = yapı eid'i. */

@@ -8,6 +8,7 @@ import {
   ECONOMY,
   FORTRESS_UPGRADES,
   factionDef,
+  GEAR_DEFS,
   HERO_XP,
   MAX_ABILITIES,
   type MapDef,
@@ -95,6 +96,11 @@ const UNIT_ICON: Record<number, string> = {
   28: 'bow',
   29: 'leaf',
 };
+const GEAR_BODY = [
+  'Bu taburun kılıçları dövülür: +%25 yakın dövüş hasarı.',
+  'Bu tabur ağır zırh giyer: %25 daha az hasar alır.',
+  'Bu okçu taburu ateşli ok atar: Uruk zırhını ve koçbaşını deler.',
+];
 const STAT_HERO = new Set(UNIT_DEFS.filter((u) => u.hero).map((u) => u.id));
 const ABILITY_ICON: Record<string, string> = {
   elendil: 'blade',
@@ -142,7 +148,7 @@ const BUILD_ICON: Record<BuildingKind, string> = {
 const BUILD_DESC: Record<BuildingKind, string> = {
   arrow_tower: 'Menzildeki düşman taburlarına 3 oklu yaylım atar.',
   barracks: 'Gondor piyadesi, okçu ve Kule Muhafızı yetiştirir.',
-  forge: 'Takım çapında yükseltmeler: kılıç, zırh, ateşli ok.',
+  forge: 'Yükseltmeleri araştırır; sonra her tabur kendi kılıcını, zırhını, ateşli okunu alır.',
   catapult: 'Uzaktaki düşman kümelerine alan hasarlı taş atar; koçbaşı ve Uruk saflarına etkili.',
   farm: 'Kaynak binası: saniyede +1 altın (seviye başına). Düşman onu hedef alır — koruyun.',
 };
@@ -244,6 +250,24 @@ export class HudController {
     };
   }
 
+  /** Seçili taburların durum satırı: birleşik ordu, donanım, sancak, kamaşma. */
+  private battalionStatus(sel: ReadonlySet<number>): string[] {
+    const infos = [...sel].map((b) => this.d.units.battalionInfo.get(b)).filter((i) => i !== undefined);
+    if (infos.length === 0) return [];
+    const parts: string[] = [];
+    const horde = infos.filter((i) => i.horde).length;
+    if (horde > 0) {
+      const ranged = infos.some((i) => i.horde && UNIT_DEFS[i.type]?.ranged);
+      parts.push(
+        `<b class="ok">Birleşik ordu</b> (${ranged ? 'okçulara +%15 hasar' : ''}${ranged && infos.some((i) => i.horde && !UNIT_DEFS[i.type]?.ranged) ? ', ' : ''}${infos.some((i) => i.horde && !UNIT_DEFS[i.type]?.ranged) ? 'piyadeye −%15 alınan hasar' : ''})`,
+      );
+    }
+    const gearNames = UPGRADE_DEFS.filter((_d, u) => infos.some((i) => i.gear & (1 << u))).map((d) => d.name);
+    if (gearNames.length > 0) parts.push(gearNames.join(', '));
+    if (infos.some((i) => i.banner)) parts.push('Sancaktar');
+    return parts.length > 0 ? [parts.join(' · ')] : [];
+  }
+
   /** Tek kahraman seçiliyse seviye rozeti ve sonraki seviyeye XP ilerlemesi. */
   private heroLevel(type: number, level: number, single: boolean): { level?: number; xp?: number } {
     if (!single || !STAT_HERO.has(type)) return {};
@@ -330,6 +354,35 @@ export class HudController {
           run: () => this.d.scenario.stance(regular, i),
         });
       });
+      // Demirhane donanımı (tabur başına; araştırma açar).
+      const researched = this.match?.upgrades ?? 0;
+      GEAR_DEFS.forEach((gd, u) => {
+        const fits = regular.filter((b) => {
+          const t = this.d.units.battalionInfo.get(b)?.type ?? 0;
+          const ranged = UNIT_DEFS[t]?.ranged === true;
+          return gd.for === 'all' || (gd.for === 'ranged') === ranged;
+        });
+        if (fits.length === 0) return;
+        const def = UPGRADE_DEFS[u];
+        const lacking = fits.filter((b) => !((this.d.units.battalionInfo.get(b)?.gear ?? 0) & (1 << u)));
+        const open = (researched & (1 << u)) !== 0;
+        buttons.push({
+          icon: UP_ICON[u] ?? 'anvil',
+          label: def?.name ?? '',
+          state: !open ? 'locked' : lacking.length === 0 ? 'done' : this.gold >= gd.cost ? 'ready' : 'off',
+          badge: !open ? undefined : lacking.length === 0 ? '✓' : `${gd.cost * lacking.length}`,
+          tip: {
+            title: def?.name ?? '',
+            meta: !open
+              ? 'Önce demirhanede araştırın'
+              : lacking.length === 0
+                ? 'alındı'
+                : `◆ ${gd.cost} / tabur`,
+            body: GEAR_BODY[u],
+          },
+          run: () => this.d.scenario.buyGear(lacking, u),
+        });
+      });
       const need = regular.filter((b) => this.d.units.battalionInfo.get(b)?.banner !== 1);
       const cost = BANNER.cost * need.length;
       buttons.push({
@@ -369,6 +422,7 @@ export class HudController {
         STAT_HERO.has(main)
           ? 'Kahraman: liderlik aurası — 20 m içindeki taburlara +%25 hasar.'
           : (UNIT_DESC[main] ?? 'Sağ tık: yürü · düşmana sağ tık: saldır.'),
+        ...this.battalionStatus(sel),
       ],
       buttons,
     };

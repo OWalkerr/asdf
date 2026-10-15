@@ -177,7 +177,10 @@ describe('demirhane ve yükseltmeler', () => {
   it('Ağır Zırh alınan hasarı azaltır', () => {
     const run = (armor: boolean) => {
       const sim = newSim();
-      if (armor) sim.world.match.upgrades[0] = 1 << 1;
+      if (armor) {
+        sim.world.match.upgrades[0] = 1 << 1;
+        sim.world.match.gold[0] = 1000;
+      }
       sim.schedule(
         stamp(0, {
           type: 'spawnBattalion',
@@ -200,6 +203,14 @@ describe('demirhane ve yükseltmeler', () => {
           facing: 32768,
         }),
       );
+      sim.step();
+      if (armor) {
+        // Tabur başına donanım: araştırma açar, tabur kendi zırhını alır.
+        const mine = [...query(sim.world, [sim.world.c.Battalion])].filter(
+          (b) => sim.world.c.Team.id[b] === 0,
+        );
+        sim.schedule(stamp(sim.world.tick, { type: 'buyGear', units: mine, upgrade: 1 }));
+      }
       for (let i = 0; i < 200; i++) sim.step();
       const H = sim.world.c.Health;
       return [...query(sim.world, [H])]

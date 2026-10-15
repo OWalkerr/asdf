@@ -18,6 +18,7 @@ import {
   HERO,
   HERO_PASSIVE_XP,
   HERO_XP,
+  HORDE,
   KINGS_GLORY_DURATION,
   MAX_ABILITIES,
   MAX_HERO_LEVEL,
@@ -52,7 +53,7 @@ import { SIM_HZ } from '../constants';
 import { cellAt, isBlockedAt } from '../nav/grid';
 import { STAT } from '../unitStats';
 import { type SimWorld, SpellEffect } from '../world';
-import { applyDamage, arrowDmgType, fireProjectile, hasUpgrade, splash } from './combat';
+import { applyDamage, arrowDmgType, fireProjectile, hasGear, splash } from './combat';
 import { orderBattalions, spawnBattalion, spawnBattalionRow } from './commands';
 import { fortressDoor } from './fortress';
 import { forEachMember } from './spatial';
@@ -95,7 +96,9 @@ export const attackPercent = (world: SimWorld, b: number, team: number, melee: b
     if (Battalion.aura[b]) pct += HERO.auraDamagePercent;
   }
   if ((m.rallyUntil[team] as number) > world.tick) pct += RALLY_DAMAGE_PERCENT;
-  if (melee && hasUpgrade(world, team, Upgrade.ForgedBlades)) pct += 25;
+  if (melee && hasGear(world, b, Upgrade.ForgedBlades)) pct += 25;
+  // Birleşik ordu: yakın dövüş dostlarının önünde nişan alan okçular +%15.
+  if (!melee && b !== 0 && Battalion.horde[b]) pct = ((pct * HORDE.dealtPercent) / 100) | 0;
   if (b !== 0) {
     // Duruş ve Güneş Parlaması zayıflığı.
     pct = ((pct * (STANCE_DEFS[Battalion.stance[b] as number]?.dealt ?? 100)) / 100) | 0;
@@ -118,6 +121,9 @@ export const defensePercent = (world: SimWorld, target: number): number => {
   let pct = ((100 * 100) / (100 + RANK_BONUS_PERCENT * ((Battalion.rank[b] as number) - 1))) | 0;
   pct = ((pct * (STANCE_DEFS[Battalion.stance[b] as number]?.taken ?? 100)) / 100) | 0;
   if ((Battalion.weakUntil[b] as number) > world.tick) pct = ((pct * SUN_FLARE.takenPercent) / 100) | 0;
+  // Birleşik ordu: okçularla birlikte duran yakın dövüş taburu daha az hasar alır.
+  if (Battalion.horde[b] && STAT.ranged[Battalion.unitType[b] as number] !== 1)
+    pct = ((pct * HORDE.takenPercent) / 100) | 0;
   return pct;
 };
 
@@ -499,6 +505,36 @@ const floodRing = (world: SimWorld, team: number, x: Fx, z: Fx, k: number): void
   }
 };
 
+const HORDE_R: Fx = fxFromFloat(HORDE.radius);
+/** Birleşik ordu: taburun yakınında karşıt türden (yakın dövüş ↔ okçu) dost tabur var mı. */
+const hordeSystem = (world: SimWorld): void => {
+  const { Battalion, Position, Team } = world.c;
+  const list: number[] = [];
+  for (const b of query(world, [Battalion, Position])) {
+    Battalion.horde[b] = 0;
+    const t = Battalion.unitType[b] as number;
+    if (STAT.hero[t] === 1 || STAT.summoned[t] === 1 || (Battalion.count[b] as number) === 0) continue;
+    list.push(b);
+  }
+  for (let i = 0; i < list.length; i++) {
+    const a = list[i] as number;
+    const ra = STAT.ranged[Battalion.unitType[a] as number];
+    for (let j = i + 1; j < list.length; j++) {
+      const c = list[j] as number;
+      if (Team.id[a] !== Team.id[c] || STAT.ranged[Battalion.unitType[c] as number] === ra) continue;
+      if (Battalion.horde[a] && Battalion.horde[c]) continue;
+      const d = fxLen(
+        ((Position.x[a] as number) - (Position.x[c] as number)) | 0,
+        ((Position.z[a] as number) - (Position.z[c] as number)) | 0,
+      );
+      if (d <= HORDE_R) {
+        Battalion.horde[a] = 1;
+        Battalion.horde[c] = 1;
+      }
+    }
+  }
+};
+
 /** Hedef noktaya yan yana `count` tabur çağırır; `duration` sn sonra yok olurlar. */
 const summonAt = (
   world: SimWorld,
@@ -591,6 +627,7 @@ export const heroSystem = (world: SimWorld): void => {
       }
       Battalion.aura[b] = inAura;
     }
+    hordeSystem(world);
   }
   // Ateş aurası (Balrog): her saniye çevresini yakar.
   if (world.tick % SIM_HZ === 0)
