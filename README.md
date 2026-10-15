@@ -46,7 +46,12 @@ dört yönden aynı anda gelir, her 5. dalga özel (trol sürüsü, kuşatma, wa
 gibi 7. dalgada **Su Gözcüsü** (dokunaçlarıyla geniş alana vuran göl canavarı), 12. dalgada iki **Ateş Ejderi**
 (uzaktan alan hasarlı alev topu püskürtür, binaları yakar), 17. dalgada ikisi birden; dalga başı altın.
 
-**Kale Savunması (FD)** — *Taşkalkan Kalesi*, *İkiz Köprü Geçidi*, *Helm's Deep*: düşman dalgaları
+**BFME'nin ünlü haritaları:** *Minas Tirith* — üç halkalı Beyaz Şehir; Pelennor'a bakan Büyük Kapı düşerse
+savunma zikzak çizen İkinci ve Üçüncü kapılardan Beyaz Kule'ye çekilir (8 dalga, üç koldan). *İsen Geçitleri*
+(Fords of Isen) — İsen nehrini yalnızca üç sığ geçit aşar (ortadaki adacıklı); geçit kapılarını tut, kale
+yay surunun ardında. *Helm's Deep* — Hornburg, Menfez ve Arka Kapı.
+
+**Kale Savunması (FD)** — *Taşkalkan Kalesi*, *İkiz Köprü Geçidi*, *Helm's Deep*, *Minas Tirith*, *İsen Geçitleri*: düşman dalgaları
 koridorlarından kapılara yürür. Kapılar yalnızca engeldir: kırılan kapıdan (gedik) düşman içeri akar ve
 koridorundaki sıradaki kapıya, en sonda **kaleye** saldırır. **Kale düşerse savaş biter**; tüm dalgaları
 püskürtürseniz kazanırsınız. Kale seçilince (**K**, portre veya tıklama) yükseltmeleri satın alınır:
@@ -200,6 +205,26 @@ sancakları, altın başlıklar; 3+ yükseltmede Gondor sancakları ve taç, 5't
 yuvarlak komut düğmeleri (**Z X C V B N**, ipucu için üzerine gelin), solda güçler, sol üstte kahraman ve
 kale portreleri, üstte dalga/kale/kapı durumu, sağ üstte kaynaklar. **?** yardım, **M** ses.
 
+## Çok oyunculu (tarayıcı lobisi)
+Başlangıç ekranındaki **Çok Oyunculu** sekmesi lobidir: sayfayı açan herkes burada buluşur. **Oyun kur** ile
+oyun ilan edilir (harita, taraf, zorluk kurucuda); diğerleri listeden **katılır**, kurucu **Başlat** der.
+2–4 oyuncu **ortak savunma** oynar: aynı kale, ortak altın, ordu ve güçler; herkes her birime emir verebilir.
+
+Ağ modeli deterministik **lockstep**: zaman 4 tick'lik turlara bölünür, her oyuncu her tur için komut paketini
+oda presence'ına yazar (son turlar tekrar taşınır, kayıp telafi edilir); sim herkesin turunu alınca ilerler
+(giriş gecikmesi ~0,6 sn). 100 tick'te bir durum hash'i karşılaştırılır; ayrışma "senkron bozuldu" olarak
+gösterilir. Çok oyunculuda oyun hızı sabittir ve duraklatma yoktur. Bir oyuncu ayrılırsa oyun durur
+(durum şeridinde gösterilir). Yerel deneme: `?netlocal` ile aynı tarayıcıda iki sekme.
+
+Sınırlar: oda, claude.ai'de oturum açmış ve sayfaya erişimi olan kişileri bağlar; arka plana alınan sekme
+diğerlerini yavaşlatabilir. PvP (karşı karşıya) yok — yalnızca ortak savunma.
+
+**Grafik kalitesi:** başlangıç ekranında Düşük / Orta / Yüksek (piksel oranı, gölge, kenar yumuşatma).
+Kasma olursa Düşük seçin. Birim portreleri artık açılışta tek seferde değil, boşta parça parça üretilir.
+
+**Güçler:** maç 5 güç puanıyla başlar (1. kademe hemen açılabilir); kilitli bir güce tıklayınca neden açılamadığı
+(eksik puan veya önceki kademe) gösterilir.
+
 ## Birim kontrolleri
 Sol tık: tabur seç (Shift ile ekle/çıkar) · Sol sürükle: kutu seçimi · Sağ tık: seçili taburları yürüt
 (düşman askerinin üstünde: saldır) ·
@@ -209,14 +234,15 @@ ve sim hızı ayarı var.
 
 ## BFME2 ile karşılaştırma (yol haritası)
 
-**Var:** Kale (FD) ve Kule (TD) savunması, klasik Tower Wars / Fortress Defence haritaları, işlevsel ve gelişen kale,
+**Var:** Kale (FD) ve Kule (TD) savunması, klasik Tower Wars / Fortress Defence haritaları, Minas Tirith,
+İsen Geçitleri ve Helm's Deep, tarayıcı lobisi ile 2–4 kişilik çok oyunculu ortak savunma, işlevsel ve gelişen kale,
 kale yükseltmeleri, bina seviyeleri ve satış, çiftlik, kışla / demirhane, 3 iyi taraf (Gondor, Rohan, Lothlórien) + 2 kötü taraf (Isengard, Mordor) ve
 9 kahraman (10 seviye, 4 yetenek), 4 kademeli 10 güç (Kartallar, Sel, Deprem, Güneş Parlaması dahil), tabur duruşları, sancaktar ve tabur başına donanım, birleşik ordu bonusu, rütbe sistemi, kuşatma (koçbaşı, merdiven, kule), boss'lar (Lurtz, Balrog, Su Gözcüsü,
 Ateş Ejderi), halka menü, bekleme sayaçları, palantír mini harita, portreler, oyun hızı, istatistik ve rekorlar.
 
 **Eksik (BFME2'de olup henüz olmayan):**
-1. Goblinler'in oynanabilir olması (Isengard ve Mordor var) ve çok oyunculu / PvP (deterministik lockstep
-   altyapısı hazır, ağ katmanı yok).
+1. Goblinler'in oynanabilir olması (Isengard ve Mordor var); çok oyunculuda PvP ve ayrı ordular (ortak
+   savunma var), ayrılan oyuncunun yerini yapay zekânın alması.
 2. Güç kitabının kalanı (Tom Bombadil, Kale Kuşatması, Ölülerin Çağrısı…; BFME2'de ~15, burada 10).
 3. Birim türüne özgü sürü kombinasyonları (BFME2'deki ör. Gondor askeri + Kule Muhafızı) — burada genel yakın
    dövüş + okçu bonusu var.
