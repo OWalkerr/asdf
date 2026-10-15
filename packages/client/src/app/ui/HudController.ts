@@ -12,6 +12,7 @@ import {
   factionDef,
   GEAR_DEFS,
   HERO_XP,
+  HORDE_COMBOS,
   MAX_ABILITIES,
   type MapDef,
   type MatchInfo,
@@ -295,6 +296,10 @@ export class HudController {
       parts.push(
         `<b class="ok">Birleşik ordu</b> (${ranged ? 'okçulara +%15 hasar' : ''}${ranged && infos.some((i) => i.horde && !UNIT_DEFS[i.type]?.ranged) ? ', ' : ''}${infos.some((i) => i.horde && !UNIT_DEFS[i.type]?.ranged) ? 'piyadeye −%15 alınan hasar' : ''})`,
       );
+    }
+    for (const k of new Set(infos.map((i) => i.combo).filter((c) => c > 0))) {
+      const c = HORDE_COMBOS[k - 1];
+      if (c) parts.push(`<b class="ok">${c.name}</b> (${c.desc})`);
     }
     const gearNames = UPGRADE_DEFS.filter((_d, u) => infos.some((i) => i.gear & (1 << u))).map((d) => d.name);
     if (gearNames.length > 0) parts.push(gearNames.join(', '));

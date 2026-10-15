@@ -95,6 +95,8 @@ export const createComponents = (capacity = MAX_ENTITIES) => ({
     /** Tabur başına demirhane donanımı (1 << UPGRADE_DEFS indeksi) ve birleşik ordu bonusu (1 = etkin). */
     gear: new Uint8Array(capacity),
     horde: new Uint8Array(capacity),
+    /** Birime özgü sürü kombinasyonu (HORDE_COMBOS indeksi + 1; 0 = yok). */
+    combo: new Uint8Array(capacity),
   },
   /** Tabur askeri: hangi tabur, hangi yuva, yuva sapması (Fx). */
   Soldier: {

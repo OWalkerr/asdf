@@ -114,6 +114,7 @@ export const writeSnapshot = (world: SimWorld, view: Int32Array, simMicros = 0):
             (Battalion.weakUntil[bat] as number) > world.tick ? 1 : 0,
             Battalion.gear[bat] as number,
             Battalion.horde[bat] as number,
+            Battalion.combo[bat] as number,
           )
         : 0;
     o += SNAP_UNIT_INTS;

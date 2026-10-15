@@ -1,3 +1,5 @@
+import { UnitTypeId } from './units';
+
 /**
  * BFME2 tabur duruşları ve tabur başına yükseltmeler.
  * - Saldırgan: daha çok hasar verir, daha çok hasar alır; çatışmada daha uzağa kovalar.
@@ -82,3 +84,70 @@ export const GEAR_DEFS: readonly GearDef[] = [
  * dövüş taburu varsa rahat nişan alır (+%15 hasar). Kahramanlar ve çağrılmış birlikler sayılmaz.
  */
 export const HORDE = { radius: 18, takenPercent: 85, dealtPercent: 115 } as const;
+
+/**
+ * Birime özgü sürü kombinasyonları (BFME2'deki ör. kılıç + mızrak sürüleri): `a` ve `b` türünden iki
+ * dost tabur `HORDE.radius` içinde durursa ikisi de bonus alır. Yüzdeler: verilen / alınan hasar.
+ */
+export interface HordeCombo {
+  name: string;
+  a: number;
+  b: number;
+  aDealt: number;
+  aTaken: number;
+  bDealt: number;
+  bTaken: number;
+  desc: string;
+}
+export const HORDE_COMBOS: readonly HordeCombo[] = [
+  {
+    name: 'Kalkan Duvarı',
+    a: UnitTypeId.GondorSoldier,
+    b: UnitTypeId.TowerGuard,
+    aDealt: 100,
+    aTaken: 85,
+    bDealt: 120,
+    bTaken: 100,
+    desc: 'Gondor kılıçları kalkan duvarı kurar (−%15 alınan), arkadaki Kule Muhafızları mızrakla vurur (+%20).',
+  },
+  {
+    name: 'Mızrak ve Mahmuz',
+    a: UnitTypeId.RohanSpearman,
+    b: UnitTypeId.RohanRiders,
+    aDealt: 100,
+    aTaken: 85,
+    bDealt: 120,
+    bTaken: 100,
+    desc: 'Mızrakçılar hattı tutar (−%15 alınan), süvari kanattan çarpar (+%20).',
+  },
+  {
+    name: 'Galadhrim Dansı',
+    a: UnitTypeId.Galadhrim,
+    b: UnitTypeId.LorienArcherTrained,
+    aDealt: 115,
+    aTaken: 100,
+    bDealt: 115,
+    bTaken: 100,
+    desc: 'Elf kılıçları ve okları birlikte: iki tabur da +%15 hasar.',
+  },
+  {
+    name: 'Uruk Falanksı',
+    a: UnitTypeId.UrukHai,
+    b: UnitTypeId.UrukCrossbow,
+    aDealt: 100,
+    aTaken: 85,
+    bDealt: 125,
+    bTaken: 100,
+    desc: 'Uruk kalkanları siper olur (−%15 alınan), arbaletler ardından ateşler (+%25).',
+  },
+  {
+    name: 'Trol Kırbacı',
+    a: UnitTypeId.OrcWarrior,
+    b: UnitTypeId.CaveTroll,
+    aDealt: 125,
+    aTaken: 100,
+    bDealt: 100,
+    bTaken: 90,
+    desc: 'Trolün yanındaki orklar gözü kara saldırır (+%25); trol orklarca korunur (−%10 alınan).',
+  },
+];

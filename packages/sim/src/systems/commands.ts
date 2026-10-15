@@ -161,6 +161,7 @@ export const spawnBattalion = (
   Battalion.weakUntil[b] = 0;
   Battalion.gear[b] = 0;
   Battalion.horde[b] = 0;
+  Battalion.combo[b] = 0;
   const c = fxCos(facing);
   const sn = fxSin(facing);
   Battalion.cos[b] = c;

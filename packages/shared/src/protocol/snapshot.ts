@@ -135,7 +135,7 @@ export const unpackQueuePct = (v: number): number => (v >>> 12) & 0x7f;
 
 /**
  * Birim kaydı alan 5: tabur eid'i (16 bit) + donanım (3 bit, UPGRADE_DEFS bitleri) + birleşik ordu (1 bit)
- * + boş (4) + rütbe (4 bit) + duruş (2 bit, Stance) + sancaktar (1 bit) + Güneş Parlaması zayıflığı (1 bit).
+ * + sürü kombinasyonu (4) + rütbe (4 bit) + duruş (2 bit, Stance) + sancaktar (1 bit) + Güneş Parlaması zayıflığı (1 bit).
  */
 export const packBattalionRank = (
   battalion: number,
@@ -145,10 +145,12 @@ export const packBattalionRank = (
   weak = 0,
   gear = 0,
   horde = 0,
+  combo = 0,
 ): number =>
   (battalion & 0xffff) |
   ((gear & 0x7) << 16) |
   ((horde & 1) << 19) |
+  ((combo & 0xf) << 20) |
   ((rank & 0xf) << 24) |
   ((stance & 0x3) << 28) |
   ((banner & 1) << 30) |
@@ -156,6 +158,8 @@ export const packBattalionRank = (
 export const unpackBattalion = (v: number): number => v & 0xffff;
 export const unpackGear = (v: number): number => (v >>> 16) & 0x7;
 export const unpackHorde = (v: number): number => (v >>> 19) & 1;
+/** Birime özgü sürü kombinasyonu: HORDE_COMBOS indeksi + 1 (0 = yok). */
+export const unpackCombo = (v: number): number => (v >>> 20) & 0xf;
 export const unpackRank = (v: number): number => (v >>> 24) & 0xf;
 export const unpackStance = (v: number): number => (v >>> 28) & 0x3;
 export const unpackBanner = (v: number): number => (v >>> 30) & 1;

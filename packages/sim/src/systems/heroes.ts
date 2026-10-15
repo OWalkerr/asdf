@@ -19,6 +19,7 @@ import {
   HERO_PASSIVE_XP,
   HERO_XP,
   HORDE,
+  HORDE_COMBOS,
   KINGS_GLORY_DURATION,
   MAX_ABILITIES,
   MAX_HERO_LEVEL,
@@ -99,6 +100,10 @@ export const attackPercent = (world: SimWorld, b: number, team: number, melee: b
   if (melee && hasGear(world, b, Upgrade.ForgedBlades)) pct += 25;
   // Birleşik ordu: yakın dövüş dostlarının önünde nişan alan okçular +%15.
   if (!melee && b !== 0 && Battalion.horde[b]) pct = ((pct * HORDE.dealtPercent) / 100) | 0;
+  if (b !== 0 && Battalion.combo[b]) {
+    const c = HORDE_COMBOS[(Battalion.combo[b] as number) - 1];
+    if (c) pct = ((pct * (Battalion.unitType[b] === c.a ? c.aDealt : c.bDealt)) / 100) | 0;
+  }
   if (b !== 0) {
     // Duruş ve Güneş Parlaması zayıflığı.
     pct = ((pct * (STANCE_DEFS[Battalion.stance[b] as number]?.dealt ?? 100)) / 100) | 0;
@@ -124,6 +129,10 @@ export const defensePercent = (world: SimWorld, target: number): number => {
   // Birleşik ordu: okçularla birlikte duran yakın dövüş taburu daha az hasar alır.
   if (Battalion.horde[b] && STAT.ranged[Battalion.unitType[b] as number] !== 1)
     pct = ((pct * HORDE.takenPercent) / 100) | 0;
+  if (Battalion.combo[b]) {
+    const c = HORDE_COMBOS[(Battalion.combo[b] as number) - 1];
+    if (c) pct = ((pct * (Battalion.unitType[b] === c.a ? c.aTaken : c.bTaken)) / 100) | 0;
+  }
   return pct;
 };
 
@@ -508,6 +517,13 @@ const floodRing = (world: SimWorld, team: number, x: Fx, z: Fx, k: number): void
 };
 
 const HORDE_R: Fx = fxFromFloat(HORDE.radius);
+/** (a türü × 256 + b türü) → kombinasyon indeksi; iki yön de. */
+const COMBO_OF = new Map<number, number>(
+  HORDE_COMBOS.flatMap((c, k) => [
+    [c.a * 256 + c.b, k],
+    [c.b * 256 + c.a, k],
+  ]),
+);
 /** Birleşik ordu: taburun yakınında karşıt türden (yakın dövüş ↔ okçu) dost tabur var mı. */
 const hordeSystem = (world: SimWorld): void => {
   const { Battalion, Position, Team } = world.c;
@@ -524,9 +540,27 @@ const hordeSystem = (world: SimWorld): void => {
       continue;
     list.push(b);
   }
+  for (const b of list) Battalion.combo[b] = 0;
   for (let i = 0; i < list.length; i++) {
     const a = list[i] as number;
-    const ra = STAT.ranged[Battalion.unitType[a] as number];
+    const ta = Battalion.unitType[a] as number;
+    const ra = STAT.ranged[ta];
+    for (let j = i + 1; j < list.length; j++) {
+      const c = list[j] as number;
+      // Oyuncu tarafı (dalgalar mevcut dengeyle kalsın).
+      if (Team.id[a] !== 0 || Team.id[c] !== 0) continue;
+      const tc = Battalion.unitType[c] as number;
+      const k = COMBO_OF.get(ta * 256 + tc);
+      if (k === undefined || (Battalion.combo[a] && Battalion.combo[c])) continue;
+      const d = fxLen(
+        ((Position.x[a] as number) - (Position.x[c] as number)) | 0,
+        ((Position.z[a] as number) - (Position.z[c] as number)) | 0,
+      );
+      if (d <= HORDE_R) {
+        Battalion.combo[a] = k + 1;
+        Battalion.combo[c] = k + 1;
+      }
+    }
     for (let j = i + 1; j < list.length; j++) {
       const c = list[j] as number;
       if (Team.id[a] !== Team.id[c] || STAT.ranged[Battalion.unitType[c] as number] === ra) continue;
