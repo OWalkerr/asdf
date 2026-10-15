@@ -1,6 +1,5 @@
 import {
   abilityReadyAt,
-  H_HERO_XP,
   bufferOffset,
   FLAG_HIT,
   G_ACTIVE,
@@ -18,6 +17,7 @@ import {
   H_GOLD_EARNED,
   H_HERO_BUFF,
   H_HERO_READY,
+  H_HERO_XP,
   H_HEROES,
   H_KILLS,
   H_LIVES,
