@@ -28,6 +28,10 @@ export const TEAM_COLORS = ['#3a6fc4', '#b8322a', '#3a8f4a', '#c9a23a'].map((c) 
 export const setPlayerBannerColor = (hex: string): void => {
   (TEAM_COLORS[0] as Color).set(hex);
 };
+/** Takım `t` (eşlenmiş) sancak rengi (çatışma). */
+export const setTeamBannerColor = (t: number, hex: string): void => {
+  TEAM_COLORS[t]?.set(hex);
+};
 const BUILD_COLOR = new Color('#5aa6e8');
 const GOLD = new Color('#ffd34d');
 

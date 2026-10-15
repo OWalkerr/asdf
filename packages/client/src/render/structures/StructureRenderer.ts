@@ -12,10 +12,12 @@ import {
   unpackStructKind,
   unpackStructLevel,
   unpackStructSlot,
+  unpackStructTeam,
 } from '@bulwark/shared';
 import { type BufferGeometry, InstancedMesh, Matrix4, Quaternion, type Texture, Vector3 } from 'three/webgpu';
 import { catapultModel } from '../map/prefabs';
 import { createToonMaterial, type ToonParams } from '../materials/ToonMaterial';
+import { retintTeam } from '../teamTint';
 import { arrowTowerModel, barracksModel, farmModel, forgeModel, scaffoldModel } from './buildingModels';
 
 /** Snapshot'tan çözülmüş yapı durumu (komut paneli ve can çubukları için). */
@@ -40,6 +42,8 @@ export interface StructInfo {
   z: number;
   /** İşçiyle serbest inşa edildi (harita slotu değil). */
   free: boolean;
+  /** Sahip takım (eşlenmiş; 0 = biz). */
+  team: number;
   /** Yapının üst noktası (can çubuğu yüksekliği). */
   top: number;
 }
@@ -72,7 +76,10 @@ export class StructureRenderer {
   readonly gateRepair: number[] = [];
   /** Kale (kind 9) canı. */
   fortress: { hp: number; max: number } | null = null;
-  private readonly kindMeshes: InstancedMesh[] = [];
+  /** Takım (eşlenmiş, 0 = biz) × yapı türü; rakip yapılar kendi takım renginde. */
+  private readonly kindMeshes: InstancedMesh[][] = [];
+  /** Bütün kaleler (çatışmada birden çok): takım, can, konum. */
+  readonly fortresses: { eid: number; team: number; hp: number; max: number; x: number; z: number }[] = [];
   private readonly scaffold: InstancedMesh;
   private readonly m = new Matrix4();
   private readonly q = new Quaternion();
@@ -89,17 +96,22 @@ export class StructureRenderer {
     const mat = createToonMaterial(palette, params);
     // Harita slotları + serbest inşa edilen yapılar (işçiyle).
     const cap = Math.max(1, def.slots.length) + FREE_BUILD.max;
-    for (const kind of BUILDING_KINDS) {
-      const model = MODELS[kind];
-      if (!model) throw new Error(`Yapı modeli yok: ${kind}`);
-      const mesh = new InstancedMesh(model.build(), mat, cap);
-      mesh.name = `structures:${kind}`;
-      mesh.castShadow = true;
-      mesh.receiveShadow = true;
-      mesh.frustumCulled = false;
-      mesh.count = 0;
-      this.kindMeshes.push(mesh);
-      this.meshes.push(mesh);
+    const teams = def.mode === 'VS' ? 4 : 1;
+    for (let t = 0; t < teams; t++) {
+      const row: InstancedMesh[] = [];
+      for (const kind of BUILDING_KINDS) {
+        const model = MODELS[kind];
+        if (!model) throw new Error(`Yapı modeli yok: ${kind}`);
+        const mesh = new InstancedMesh(retintTeam(model.build(), t), mat, cap);
+        mesh.name = `structures:${kind}:${t}`;
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+        mesh.frustumCulled = false;
+        mesh.count = 0;
+        row.push(mesh);
+        this.meshes.push(mesh);
+      }
+      this.kindMeshes.push(row);
     }
     this.scaffold = new InstancedMesh(scaffoldModel(), mat, cap);
     this.scaffold.name = 'structures:scaffold';
@@ -113,7 +125,8 @@ export class StructureRenderer {
     if (frame.tick === this.lastTick) return;
     this.lastTick = frame.tick;
     this.bySlot.clear();
-    const counts = this.kindMeshes.map(() => 0);
+    const counts = this.kindMeshes.map((row) => row.map(() => 0));
+    this.fortresses.length = 0;
     let scaffolds = 0;
     const st = frame.structures;
     this.gateRepair.length = 0;
@@ -122,17 +135,27 @@ export class StructureRenderer {
       const kp = st[o + 1] as number;
       const kind = unpackStructKind(kp) - 1;
       const slot = unpackStructSlot(kp);
+      const team = unpackStructTeam(kp);
       if (kind < 0) {
         this.gateRepair[slot] = st[o + 4] as number;
         continue;
       }
       if (kind === 8) {
-        this.fortress = { hp: st[o + 2] as number, max: st[o + 3] as number };
+        const f = { hp: st[o + 2] as number, max: st[o + 3] as number };
+        if (team === 0) this.fortress = f;
+        this.fortresses.push({
+          eid: st[o] as number,
+          team,
+          ...f,
+          x: (st[o + 6] as number) / 65536,
+          z: (st[o + 7] as number) / 65536,
+        });
         continue;
       }
       const kindKey = BUILDING_KINDS[kind];
       const slotDef = this.def.slots[slot];
-      const mesh = this.kindMeshes[kind];
+      const tRow = Math.min(team, this.kindMeshes.length - 1);
+      const mesh = this.kindMeshes[tRow]?.[kind];
       if (!kindKey || !mesh) continue;
       const bdef = BUILDING_DEFS[kindKey];
       const model = MODELS[kindKey] as (typeof MODELS)[string];
@@ -166,6 +189,7 @@ export class StructureRenderer {
         y,
         z,
         free,
+        team,
         top: y + model.height * Math.max(0.15, built) * (1 + 0.09 * (level - 1)),
       };
       this.bySlot.set(slot, info);
@@ -174,17 +198,20 @@ export class StructureRenderer {
       // Seviye: her seviyede biraz daha iri ve yüksek (BFME2'de yükseltilen yapı büyür).
       const grow = 1 + 0.09 * (level - 1);
       this.m.compose(this.p.set(x, y, z), this.q, this.s.set(grow, rise * grow, grow));
-      mesh.setMatrixAt(counts[kind] as number, this.m);
-      counts[kind] = (counts[kind] as number) + 1;
+      const cRow = counts[tRow] as number[];
+      mesh.setMatrixAt(cRow[kind] as number, this.m);
+      cRow[kind] = (cRow[kind] as number) + 1;
       if (built < 1 || upgrading >= 0) {
         const [fx, fz] = model.footprint;
         this.m.compose(this.p.set(x, y, z), this.q, this.s.set(fx, model.height / 6, fz));
         this.scaffold.setMatrixAt(scaffolds++, this.m);
       }
     }
-    this.kindMeshes.forEach((mesh, k) => {
-      mesh.count = counts[k] as number;
-      mesh.instanceMatrix.needsUpdate = true;
+    this.kindMeshes.forEach((row, t) => {
+      row.forEach((mesh, k) => {
+        mesh.count = counts[t]?.[k] as number;
+        mesh.instanceMatrix.needsUpdate = true;
+      });
     });
     this.scaffold.count = scaffolds;
     this.scaffold.instanceMatrix.needsUpdate = true;

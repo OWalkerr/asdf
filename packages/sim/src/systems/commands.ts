@@ -344,6 +344,33 @@ export const applyCommand = (world: SimWorld, sc: StampedCommand): void => {
     }
     case 'attack': {
       const t = cmd.target;
+      // Yapıya saldırı (çatışma: rakip bina ve kale): yüzüne yürü, varınca vur.
+      if (
+        Number.isInteger(t) &&
+        t > 0 &&
+        entityExists(world, t) &&
+        hasComponent(world, t, world.c.Structure) &&
+        !allied(world, Team.id[t] as number, team) &&
+        (world.c.Structure.hp[t] as number) > 0
+      ) {
+        const split = splitOwned(world, sc.player, cmd.units);
+        if (split.battalions.length === 0) break;
+        const tx = Position.x[t] as number;
+        const tz = Position.z[t] as number;
+        let cx = 0;
+        let cz = 0;
+        for (const b of split.battalions) {
+          cx += ((Position.x[b] as number) - tx) / split.battalions.length;
+          cz += ((Position.z[b] as number) - tz) / split.battalions.length;
+        }
+        const d = fxLen(cx | 0, cz | 0);
+        const r = ((world.c.Structure.radius[t] as number) + fxFromFloat(2)) | 0;
+        const ax = d > 0 ? (tx + fxMul(fxDiv(cx | 0, d), r)) | 0 : tx;
+        const az = d > 0 ? (tz + fxMul(fxDiv(cz | 0, d), r)) | 0 : (tz + r) | 0;
+        orderBattalions(world, split.battalions, ax, az, team, BattalionMode.AttackMove);
+        for (const b of split.battalions) Battalion.targetStructure[b] = t;
+        break;
+      }
       if (
         !Number.isInteger(t) ||
         t <= 0 ||

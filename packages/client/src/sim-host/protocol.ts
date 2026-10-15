@@ -1,4 +1,4 @@
-import type { StampedCommand } from '@bulwark/shared';
+import type { StampedCommand, VersusSetup } from '@bulwark/shared';
 
 /** Ana thread ↔ sim worker mesajları. */
 export type ToWorker =
@@ -18,6 +18,9 @@ export type ToWorker =
       players?: number;
       /** Kahraman Yarat sınıfı (-1 = yok). */
       cah?: number;
+      /** Çatışma kurulumu ve snapshot'ın görüş takımı (yerel oyuncu). */
+      versus?: VersusSetup | null;
+      viewTeam?: number;
     }
   | { type: 'commands'; commands: StampedCommand[] }
   /** Bir oyuncunun bir tur paketi (komutlar o turun ilk tick'ine damgalı). */

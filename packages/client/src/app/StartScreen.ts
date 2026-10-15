@@ -1,4 +1,12 @@
-import { CAH_CLASSES, DEFAULT_DIFFICULTY, DIFFICULTIES, FACTIONS, MAP_DEFS } from '@bulwark/shared';
+import {
+  AI_LEVELS,
+  CAH_CLASSES,
+  DEFAULT_DIFFICULTY,
+  DIFFICULTIES,
+  FACTIONS,
+  MAP_DEFS,
+  type VersusSetup,
+} from '@bulwark/shared';
 import type { NetStart } from '../net/NetSession';
 import type { NamedRoom } from '../net/room';
 import { getQuality, QUALITY_NAMES, type Quality, setQuality } from '../render/quality';
@@ -22,6 +30,10 @@ export interface MatchChoice {
   /** Kahraman Yarat sınıfı ve adı (serbest savaş). */
   cah?: number;
   cahName?: string;
+  /**
+   * Çatışma (VS): kurulum, yerel oyuncunun takımı, takım başına renk (PLAYER_COLORS) ve ad.
+   */
+  versus?: { setup: VersusSetup; me: number; colors: number[]; names: string[] };
   /** Çok oyunculu ortak savunma (lobi başlattı). */
   net?: { room: NamedRoom; start: NetStart };
 }
@@ -87,6 +99,33 @@ export const chooseMatch = (): Promise<MatchChoice> => {
     const c = loadCah();
     return c.on ? { cah: c.cls, cahName: c.name } : {};
   };
+  // `?vs=<harita>`: doğrudan çatışma (sen + bilgisayar rakipler; test ve hızlı oyun).
+  const vsMap = params.get('vs');
+  if (vsMap && MAP_DEFS[vsMap]?.mode === 'VS') {
+    const n = MAP_DEFS[vsMap]?.starts?.length ?? 2;
+    const ai = Math.max(
+      0,
+      AI_LEVELS.findIndex((a) => a.key === params.get('ai')),
+    );
+    const slots = Array.from({ length: n }, (_, t) => ({
+      team: t,
+      faction: t === 0 ? faction : ([4, 3, 5, 1][t - 1] ?? 4),
+      alliance: -1,
+      ai: t === 0 ? -1 : ai,
+      start: t,
+    }));
+    return Promise.resolve({
+      mapId: vsMap,
+      difficulty: 1,
+      faction,
+      versus: {
+        setup: { slots, humans: [0], startGold: 2000, cpLimit: 1000 },
+        me: 0,
+        colors: slots.map((_, t) => t),
+        names: slots.map((_, t) => (t === 0 ? 'Sen' : `Bilgisayar ${t}`)),
+      },
+    });
+  }
   if (fromUrl >= 0 && urlMap)
     return Promise.resolve({ mapId: mapPick, difficulty: fromUrl, faction, ...cahPick() });
   if (navigator.webdriver && !params.has('intro'))

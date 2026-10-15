@@ -298,6 +298,18 @@ export class HudController {
   }
 
   private idle(): CommandContext {
+    if (this.d.def.mode === 'VS')
+      return {
+        key: `idle:${this.d.def.id}`,
+        portrait: 'castle',
+        title: this.d.def.name,
+        subtitle: 'Çatışma',
+        lines: [
+          'Kaleni koru, rakiplerin kalesini yık: kalesi düşen oyuncu elenir.',
+          'İşçiyle kışla, çiftlik ve kule kur; ordunu seçip sağ tıkla rakip birliğe, binaya ya da kaleye saldır.',
+        ],
+        buttons: [],
+      };
     const fd = this.d.def.mode === 'FD';
     return {
       key: `idle:${this.d.def.id}`,

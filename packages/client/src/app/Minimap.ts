@@ -16,6 +16,10 @@ const TEAM = ['#6fa8ff', '#ff5a4a', '#5ad16a', '#f0c95a'];
 export const setPlayerMinimapColor = (hex: string): void => {
   TEAM[0] = hex;
 };
+/** Takım `t` (eşlenmiş) mini harita rengi (çatışma). */
+export const setMinimapTeamColor = (t: number, hex: string): void => {
+  TEAM[t] = hex;
+};
 
 export class Minimap {
   private readonly canvas: HTMLCanvasElement;

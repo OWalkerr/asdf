@@ -17,6 +17,10 @@ import type { Selection } from './Selection';
 const DRAG_THRESHOLD_PX = 6;
 
 export interface PlayerInputDeps {
+  /** Takım düşman mı (çatışmada müttefikler hariç); verilmezse "biz olmayan herkes". */
+  isHostile?: (team: number) => boolean;
+  /** Zemin noktasındaki rakip yapının eid'i (çatışma: bina/kale saldırısı), yoksa 0. */
+  enemyStructureAt?: (x: number, z: number) => number;
   canvas: HTMLCanvasElement;
   selBox: HTMLDivElement;
   cam: RTSCamera;
@@ -209,12 +213,19 @@ export class PlayerInput {
     if (selection.selected.size === 0) return;
     const { w, h } = this.size;
     const enemy = selection.pickAny(cam.camera, sx, sy, w, h);
-    if (enemy && enemy.team !== selection.team) {
+    const hostile = this.d.isHostile ?? ((t: number) => t !== selection.team);
+    if (enemy && hostile(enemy.team)) {
       scenario.attack(selection.selected, enemy.battalion);
       return;
     }
     const hit = picker.pick(cam.camera, sx, sy, w, h);
     if (!hit) return;
+    const building = this.d.enemyStructureAt?.(hit.point.x, hit.point.z) ?? 0;
+    if (building !== 0) {
+      scenario.attack(selection.selected, building);
+      marker.show(hit.point, performance.now());
+      return;
+    }
     scenario.order(selection.selected, hit.point.x, hit.point.z);
     marker.show(hit.point, performance.now());
   }

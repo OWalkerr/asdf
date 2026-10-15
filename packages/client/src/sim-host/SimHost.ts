@@ -6,6 +6,7 @@ import {
   SNAP_UNIT_INTS,
   type SnapshotFrame,
   type StampedCommand,
+  type VersusSetup,
 } from '@bulwark/shared';
 import { MAX_ENTITIES } from '@bulwark/sim';
 import { type FromWorker, SIM_TICK_MS, type ToWorker } from './protocol';
@@ -32,6 +33,8 @@ export interface SimHostOptions {
   players?: number;
   /** Kahraman Yarat sınıfı (-1 = yok). */
   cah?: number;
+  versus?: VersusSetup | null;
+  viewTeam?: number;
 }
 
 export class SimHost {
@@ -87,6 +90,8 @@ export class SimHost {
         faction: opts.faction ?? 0,
         players: opts.players,
         cah: opts.cah ?? -1,
+        versus: opts.versus ?? null,
+        viewTeam: opts.viewTeam ?? 0,
       });
     });
     return host;

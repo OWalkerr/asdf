@@ -31,6 +31,8 @@ const fmt = (ticks: number) => {
 
 export interface TopHudDeps {
   def: MapDef;
+  /** Çatışma: eşlenmiş takım başına oyuncu adı ve rengi (0 = biz). */
+  versus?: { names: string[]; colors: string[] };
   /** FACTIONS indeksi (kahraman kadrosu). */
   faction: number;
   scenario: Scenario;
@@ -177,7 +179,20 @@ export class TopHud {
         .join('');
       defense = `<div class="fort"><span class="bar"><i style="width:${fhp * 100}%"></i></span><em>${def.citadel.name ?? 'Kale'}</em></div><div class="gates">${gates}</div>`;
     }
-    const st = `<div class="wave">${wave}<span class="foes">${icon('army')} ${m.enemiesAlive}</span></div>${defense}`;
+    const vs = this.d.versus;
+    const st = vs
+      ? `<div class="wave"><b>Çatışma</b><span>${fmt(tick)}</span></div><div class="vsforts">${(
+          this.d.structures?.fortresses ?? []
+        )
+          .slice()
+          .sort((a, b) => a.team - b.team)
+          .map((f) => {
+            const r = Math.max(0, f.hp) / Math.max(1, f.max);
+            const ally = f.team !== 0 && ((m.allyMask >> f.team) & 1) === 1;
+            return `<div class="vsf ${r <= 0 ? 'down' : ''}"><i style="background:${vs.colors[f.team] ?? '#999'}"></i><em>${vs.names[f.team] ?? ''}${f.team === 0 ? ' (sen)' : ally ? ' (müttefik)' : ''}</em><span class="bar"><i style="width:${r * 100}%"></i></span></div>`;
+          })
+          .join('')}</div>`
+      : `<div class="wave">${wave}<span class="foes">${icon('army')} ${m.enemiesAlive}</span></div>${defense}`;
     if (this.status.innerHTML !== st) this.status.innerHTML = st;
 
     // Kaynaklar

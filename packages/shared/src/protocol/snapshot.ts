@@ -173,6 +173,7 @@ export const packStructKind = (kind: number, slot: number, team: number, level =
   ((level & 0x0f) << 24) | ((kind & 0xff) << 16) | ((slot & 0xff) << 8) | (team & 0xff);
 export const unpackStructLevel = (v: number): number => Math.max(1, (v >>> 24) & 0x0f);
 export const unpackStructKind = (v: number): number => (v >>> 16) & 0xff;
+export const unpackStructTeam = (v: number): number => v & 0xff;
 export const unpackStructSlot = (v: number): number => (v >>> 8) & 0xff;
 
 export const createSnapshotView = (capacity: number, shared: boolean, projCapacity = 2048): Int32Array => {

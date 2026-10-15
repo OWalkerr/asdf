@@ -2171,3 +2171,45 @@ body.debug #hud {
 #startscreen .cah:not(.on) .cah-name {
   opacity: 0.45;
 }
+
+/* ---------- Çatışma üst durum ---------- */
+#status .vsforts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(150px, 1fr));
+  gap: 3px 14px;
+}
+#status .vsf {
+  display: grid;
+  grid-template-columns: 10px 1fr;
+  align-items: center;
+  gap: 2px 6px;
+  font-size: 11px;
+}
+#status .vsf > i {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+}
+#status .vsf em {
+  font-style: normal;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#status .vsf .bar {
+  grid-column: 1 / -1;
+  height: 6px;
+  background: #0009;
+  border-radius: 3px;
+  overflow: hidden;
+}
+#status .vsf .bar i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(180deg, #a8e070, #4f8f2a);
+}
+#status .vsf.down {
+  opacity: 0.4;
+  text-decoration: line-through;
+}

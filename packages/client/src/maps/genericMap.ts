@@ -27,6 +27,7 @@ import {
 } from '../render/map/terrain';
 import { createToonMaterial, type ToonParams } from '../render/materials/ToonMaterial';
 import type { Swatch } from '../render/palette';
+import { retintTeam } from '../render/teamTint';
 
 /**
  * Veriye dayalı harita oluşturucu (özgün FD/TD haritaları): arazi, nehir ve köprüler, surlar,
@@ -133,7 +134,17 @@ const createGenericPaint = (def: MapDef): PaintFn => {
   };
 };
 
-export const buildGenericMap = (palette: Texture, params: ToonParams, def: MapDef, faction = 0): MapScene => {
+/**
+ * `startTeams`: çatışma haritalarında her başlangıç konumunun sahibi (eşlenmiş takım, −1 = boş) ve
+ * tarafı; kale o tarafın kalesi olur, sancak renkleri sahibin takım satırına kaydırılır.
+ */
+export const buildGenericMap = (
+  palette: Texture,
+  params: ToonParams,
+  def: MapDef,
+  faction = 0,
+  startTeams?: readonly { team: number; faction: number }[],
+): MapScene => {
   const heightAt = createGenericHeight(def);
   const rng = new Rng(def.seed);
   const rand = () => rng.nextU32() / 4294967296;
@@ -238,24 +249,33 @@ export const buildGenericMap = (palette: Texture, params: ToonParams, def: MapDe
     solid.add(P.bridgeDeck(len, b.width), at(cx, cz, rot, 1, 0.05), true);
   }
 
-  // --- Kale -----------------------------------------------------------------------
-  const c = def.citadel;
-  const keepRot = Math.PI / 2 - (c.facing ?? 90) * DEG;
-  const keepY = heightAt(c.pos[0], c.pos[1]) + (c.elevation ?? 0) - 0.4;
-  // Kale: Gondor taş kalesi, Rohan'ın Altın Salonu, Lórien'in mallorn kalesi Orthanc veya Barad-dûr (taraf seçimi).
+  // --- Kale(ler) -------------------------------------------------------------------
+  // Kale: Gondor taş kalesi, Rohan'ın Altın Salonu, Lórien'in mallorn kalesi, Orthanc veya Barad-dûr (taraf seçimi).
   const KEEPS = [P.fortressKeep, P.rohanKeep, P.elfKeep, P.isengardKeep, P.baradDurKeep, P.baradDurKeep];
-  const keep = (KEEPS[faction] ?? P.fortressKeep)();
-  solid.add(keep, at(c.pos[0], c.pos[1], keepRot, def.mode === 'TD' ? 0.7 : 1, keepY), true);
-  if (c.door) {
-    for (const side of [-1, 1]) {
-      const dx = Math.cos((c.facing ?? 90) * DEG);
-      const dz = Math.sin((c.facing ?? 90) * DEG);
-      const bx = c.door[0] - dz * side * 5;
-      const bz = c.door[1] + dx * side * 5;
-      solid.add(brazier, at(bx, bz));
-      glow.add(flame, at(bx, bz, rand() * 6));
+  const keeps =
+    def.mode === 'VS' && def.starts
+      ? def.starts.flatMap((c, i) => {
+          const o = startTeams?.[i];
+          return o && o.team >= 0 ? [{ c, faction: o.faction, team: o.team }] : [];
+        })
+      : [{ c: def.citadel, faction, team: 0 }];
+  for (const k of keeps) {
+    const c = k.c;
+    const keepRot = Math.PI / 2 - (c.facing ?? 90) * DEG;
+    const keepY = heightAt(c.pos[0], c.pos[1]) + (c.elevation ?? 0) - 0.4;
+    const keep = retintTeam((KEEPS[k.faction] ?? P.fortressKeep)(), k.team);
+    solid.add(keep, at(c.pos[0], c.pos[1], keepRot, def.mode === 'TD' ? 0.7 : 1, keepY), true);
+    if (c.door) {
+      for (const side of [-1, 1]) {
+        const dx = Math.cos((c.facing ?? 90) * DEG);
+        const dz = Math.sin((c.facing ?? 90) * DEG);
+        const bx = c.door[0] - dz * side * 5;
+        const bz = c.door[1] + dx * side * 5;
+        solid.add(brazier, at(bx, bz));
+        glow.add(flame, at(bx, bz, rand() * 6));
+      }
+      torches.push([c.door[0], heightAt(c.door[0], c.door[1]) + 4, c.door[1]]);
     }
-    torches.push([c.door[0], heightAt(c.door[0], c.door[1]) + 4, c.door[1]]);
   }
 
   // --- Dekor ----------------------------------------------------------------------
@@ -289,7 +309,8 @@ export const buildGenericMap = (palette: Texture, params: ToonParams, def: MapDe
     for (const s of def.slots) if (Math.hypot(x - s.pos[0], z - s.pos[1]) < 7 + pad) return false;
     for (const g of def.gates) if (Math.hypot(x - g.pos[0], z - g.pos[1]) < 12 + pad) return false;
     for (const l of def.lanes) if (def.mode === 'FD' && polyDist(x, z, l.points) < 7 + pad) return false;
-    if (Math.hypot(x - c.pos[0], z - c.pos[1]) < c.radius + 12 + pad) return false;
+    for (const c of def.starts ?? [def.citadel])
+      if (Math.hypot(x - c.pos[0], z - c.pos[1]) < c.radius + 12 + pad) return false;
     for (const p of def.terrain.plateaus)
       if (Math.hypot(x - p.center[0], z - p.center[1]) < p.radius + pad) return false;
     return true;
@@ -345,7 +366,8 @@ export const buildGenericMap = (palette: Texture, params: ToonParams, def: MapDe
       (g) => [g.pos[0], heightAt(g.pos[0], g.pos[1]) + 5, g.pos[1]] as [number, number, number],
     ),
   ];
-  if (c.door) lightSpots.push([c.door[0], heightAt(c.door[0], c.door[1]) + 5, c.door[1]]);
+  for (const { c } of keeps)
+    if (c.door) lightSpots.push([c.door[0], heightAt(c.door[0], c.door[1]) + 5, c.door[1]]);
   for (const k of [0.25, 0.75]) {
     const tp = torches[Math.floor(torches.length * k)];
     if (tp) lightSpots.push(tp);

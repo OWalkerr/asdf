@@ -30,6 +30,8 @@ export class MatchHud {
   faction = 0;
   /** Sefer görevi (yoksa serbest savaş). */
   campaign: { id: string; index: number } | null = null;
+  /** Çatışma maçı (sonuç metinleri). */
+  versus = false;
   health: () => number = () => 1;
   private tick = 0;
 
@@ -101,8 +103,11 @@ export class MatchHud {
       this.ended = true;
       const victory = info.state === MatchState.Victory;
       this.onEnd?.(victory);
-      const lost =
-        this.def.mode === 'TD' ? 'Düşman sınırı aştı.' : `${this.def.citadel.name ?? 'Kale'} düştü.`;
+      const lost = this.versus
+        ? 'Kalen düştü — ordun dağıldı.'
+        : this.def.mode === 'TD'
+          ? 'Düşman sınırı aştı.'
+          : `${this.def.citadel.name ?? 'Kale'} düştü.`;
       const health = Math.max(0, Math.min(1, this.health()));
       const stats = {
         victory,
@@ -142,7 +147,7 @@ export class MatchHud {
           <small>${this.def.name} · ${FACTIONS[this.faction]?.name ?? ''} · ${DIFFICULTIES[this.difficulty]?.name ?? ''}</small>
           <h1>${victory ? 'Zafer' : 'Yenilgi'}</h1>
           <div class="stars">${starText(entry.stars)}</div>
-          <p>${victory ? `${waveCount} dalga püskürtüldü. ${this.def.citadel.name ?? 'Kale'} ayakta.` : lost}</p>
+          <p>${victory ? (this.versus ? 'Bütün rakip kaleler yıkıldı. Orta Dünya senin.' : `${waveCount} dalga püskürtüldü. ${this.def.citadel.name ?? 'Kale'} ayakta.`) : lost}</p>
           <div class="stats">
             ${row('Dalga', `${waveIndex} / ${waveCount}`)}
             ${row('Öldürülen düşman', info.kills)}

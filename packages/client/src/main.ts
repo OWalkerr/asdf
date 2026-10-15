@@ -4,6 +4,7 @@ import {
   factionDef,
   MAP_DEFS,
   type MatchInfo,
+  PLAYER_COLORS,
   type SlotDef,
   UNIT_DEFS,
   UnitTypeId,
@@ -13,7 +14,7 @@ import { Scene, type Texture, Timer, Vector3 } from 'three/webgpu';
 import { CAH_UNITS, cahName, roster, setActiveCah } from './app/cah';
 import { GALLERY_CENTER, updateGallery } from './app/gallery';
 import { MatchHud } from './app/MatchHud';
-import { Minimap, setPlayerMinimapColor } from './app/Minimap';
+import { Minimap, setMinimapTeamColor, setPlayerMinimapColor } from './app/Minimap';
 import { chooseMatch } from './app/StartScreen';
 import { PLAYER, Scenario } from './app/scenario';
 import { CommandBar } from './app/ui/CommandBar';
@@ -44,14 +45,14 @@ import { ProjectileRenderer } from './render/fx/ProjectileRenderer';
 import { SelectionRings } from './render/fx/SelectionRings';
 import { SpellFx } from './render/fx/SpellFx';
 import { SpellShow } from './render/fx/SpellShow';
-import { BattalionHud, setPlayerBannerColor } from './render/hud/BattalionHud';
+import { BattalionHud, setPlayerBannerColor, setTeamBannerColor } from './render/hud/BattalionHud';
 import { createLighting, FOG_COLOR } from './render/lighting';
 import { HeightGrid } from './render/map/HeightGrid';
 import { buildLookdevScene } from './render/map/lookdev';
 import type { MapScene } from './render/map/MapScene';
 import { buildNavOverlay } from './render/map/NavOverlay';
 import { createToonParams, type ToonParams } from './render/materials/ToonMaterial';
-import { createPaletteTexture, setTeamColor } from './render/palette';
+import { createPaletteTexture, setTeamColor, setTeamRowColor } from './render/palette';
 import { createRenderContext } from './render/renderer';
 import { BuildGhost } from './render/structures/BuildGhost';
 import { FortressRenderer } from './render/structures/FortressRenderer';
@@ -68,12 +69,18 @@ import { SimHost } from './sim-host/SimHost';
  * Harita `?map=helms_deep` (varsayılan) veya `?map=lookdev` ile seçilir.
  * Sim Web Worker'da çalışır (SimHost); birimler snapshot'tan ara değerlenerek çizilir.
  */
-const buildMap = (mapId: string, palette: Texture, toon: ToonParams, faction = 0): MapScene => {
+const buildMap = (
+  mapId: string,
+  palette: Texture,
+  toon: ToonParams,
+  faction = 0,
+  startTeams?: { team: number; faction: number }[],
+): MapScene => {
   if (mapId === 'lookdev') return buildLookdevScene(palette, toon);
   if (mapId === 'helms_deep') return buildHelmsDeep(palette, toon);
   const def = MAP_DEFS[mapId];
   if (!def) throw new Error(`Bilinmeyen harita: ${mapId} (seçenekler: ${Object.keys(MAP_DEFS).join(', ')})`);
-  return buildGenericMap(palette, toon, def, faction);
+  return buildGenericMap(palette, toon, def, faction, startTeams);
 };
 
 /** Çok oyunculu durum şeridi: oyuncular, bekleme, ayrılma, desync. */
@@ -126,16 +133,37 @@ const boot = async () => {
   // Kahraman Yarat: seçilen sınıf J kahramanının yerini alır; adı arayüzde görünür.
   setActiveCah(choice.cah ?? -1, choice.cahName ?? '');
   for (const u of CAH_UNITS) UNIT_LABELS[u] = cahName(u) ?? '';
-  // Takım rengi: tarafın sancak rengi (Gondor mavi, Rohan yeşil).
+  // Çatışma: snapshot görüş takımı = 0; gerçek takım t ↔ eşlenmiş takım (yerel oyuncu ile 0 yer değiştirir).
+  const vs = choice.versus ?? null;
+  const mapped = (t: number): number => (vs ? (t === vs.me ? 0 : t === 0 ? vs.me : t) : t);
+  // Takım rengi: tarafın sancak rengi (Gondor mavi, Rohan yeşil); çatışmada lobide seçilen renkler.
   setTeamColor(palette, factionDef(faction).color);
   setPlayerBannerColor(factionDef(faction).color.main);
-  if (faction > 0)
+  if (vs) {
+    for (let t = 0; t < 4; t++) {
+      const c = PLAYER_COLORS[vs.colors[t] ?? t]?.main;
+      if (!c) continue;
+      setTeamRowColor(palette, mapped(t), c);
+      setTeamBannerColor(mapped(t), c);
+      setMinimapTeamColor(mapped(t), c);
+    }
+  } else if (faction > 0)
     setPlayerMinimapColor(
       ['#8fb8ff', '#8be07a', '#8fe0d0', '#ecece4', '#ff8a5a', '#e0c060'][faction] ?? '#8fb8ff',
     );
   const mapId = choice.mapId;
   const difficulty = choice.difficulty;
-  const world = buildMap(mapId, palette, toon, faction);
+  const vsDef = vs ? MAP_DEFS[mapId] : undefined;
+  const startTeams = vs
+    ? (vsDef?.starts ?? []).map((_, i) => {
+        const slot = vs.setup.slots.find((s) => s.start === i);
+        return slot ? { team: mapped(slot.team), faction: slot.faction } : { team: -1, faction: 0 };
+      })
+    : undefined;
+  const myStart = vs ? vsDef?.starts?.[vs.setup.slots.find((s) => s.team === vs.me)?.start ?? 0] : undefined;
+  const world = buildMap(mapId, palette, toon, faction, startTeams);
+  // Çatışma: arayüzde "kale" = kendi başlangıç kalemiz (seçim, panel, yükseltme görselleri).
+  if (myStart && world.def) world.def = { ...world.def, citadel: myStart };
   scene.add(world.root);
   subtitle.textContent = `· ${world.name}`;
 
@@ -157,6 +185,8 @@ const boot = async () => {
     heightAt: ground.sample,
   });
   if (gallery) cam.setHome(GALLERY_CENTER.x, GALLERY_CENTER.z, 0, 24);
+  else if (myStart)
+    cam.setHome(myStart.pos[0] * 0.72, myStart.pos[1] * 0.72, world.home.yaw, world.home.distance * 0.9);
   else cam.setHome(world.home.x, world.home.z, world.home.yaw, world.home.distance);
   cam.attach(canvas);
 
@@ -171,6 +201,8 @@ const boot = async () => {
     mapSize: world.size,
     players: choice.net?.start.order.length,
     cah: choice.cah ?? -1,
+    versus: vs?.setup ?? null,
+    viewTeam: vs?.me ?? 0,
   });
   // Çok oyunculu: komutlar tur paketlerine (lockstep); oyuncu numarası başlatma sırası.
   const net = choice.net ? new NetSession(choice.net.room, sim, choice.net.start) : null;
@@ -191,7 +223,7 @@ const boot = async () => {
   scene.add(...bannerCarriers.meshes);
   const scenario = new Scenario(sim, world.def, faction);
   // Başlangıç garnizonunu yalnızca kurucu (oyuncu 0) kurar; diğerleri aynı komutları turundan alır.
-  if (!gallery && (!net || net.start.me === 0)) scenario.start();
+  if (!gallery && !vs && (!net || net.start.me === 0)) scenario.start();
 
   // --- Girdi: zemin/slot seçimi (BVH), tabur seçimi, emirler ----------------------
   const picker = new GroundPicker(world.collider);
@@ -217,6 +249,7 @@ const boot = async () => {
     hud.difficulty = difficulty;
     hud.faction = faction;
     hud.campaign = choice.campaign ?? null;
+    hud.versus = vs !== null;
     hud.health = () => {
       const m = sim.frame.match;
       if (world.def?.mode === 'TD') return m.lives / Math.max(1, world.def.lives ?? 20);
@@ -271,7 +304,13 @@ const boot = async () => {
   if (gates) scene.add(...gates.meshes);
   const fortressFx =
     world.def && world.def.id !== 'helms_deep'
-      ? new FortressRenderer(world.def, world.heightAt, palette, toon, faction)
+      ? new FortressRenderer(
+          myStart ? { ...world.def, citadel: myStart } : world.def,
+          world.heightAt,
+          palette,
+          toon,
+          faction,
+        )
       : null;
   if (fortressFx) scene.add(...fortressFx.meshes);
   const banners = new BattalionHud(palette, toon);
@@ -280,7 +319,17 @@ const boot = async () => {
   let fortressSelected = false;
   const citadel = world.def?.citadel;
   const fortressScreen = new Vector3();
+  const hostile = (t: number): boolean => t !== 0 && ((sim.frame.match.allyMask >> t) & 1) === 0;
   const input = new PlayerInput({
+    isHostile: hostile,
+    enemyStructureAt: (x, z) => {
+      if (!vs || !structures) return 0;
+      for (const f of structures.fortresses)
+        if (hostile(f.team) && f.hp > 0 && Math.hypot(f.x - x, f.z - z) < 15) return f.eid;
+      for (const st of structures.bySlot.values())
+        if (hostile(st.team) && st.hp > 0 && Math.hypot(st.x - x, st.z - z) < 7) return st.eid;
+      return 0;
+    },
     onSelectFortress: (on) => {
       fortressSelected = on;
     },
@@ -506,6 +555,12 @@ const boot = async () => {
     ui && world.def
       ? new TopHud({
           def: world.def,
+          versus: vs
+            ? {
+                names: [0, 1, 2, 3].map((m) => vs.names[mapped(m)] ?? ''),
+                colors: [0, 1, 2, 3].map((m) => PLAYER_COLORS[vs.colors[mapped(m)] ?? 0]?.main ?? '#999'),
+              }
+            : undefined,
           faction,
           portrait: (t) => portraits.get(t),
           scenario,
@@ -617,7 +672,7 @@ const boot = async () => {
       if (world.slots && structures) {
         world.slots.extra.clear();
         for (const st of structures.bySlot.values())
-          if (st.free)
+          if (st.free && st.team === 0)
             world.slots.extra.set(st.slot, {
               x: st.x,
               y: st.y,

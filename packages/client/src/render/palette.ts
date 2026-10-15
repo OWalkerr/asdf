@@ -97,6 +97,19 @@ export const setTeamColor = (tex: DataTexture, c: { main: string; dark: string; 
   tex.needsUpdate = true;
 };
 
+/** Takım satırı `row` (0–3) için ana renkten koyu/vurgu türeterek boyar (çatışma oyuncu renkleri). */
+export const setTeamRowColor = (tex: DataTexture, row: number, main: string): void => {
+  const data = tex.image.data as Uint8Array;
+  const n = Number.parseInt(main.slice(1), 16);
+  const rgb = [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  const shade = (k: number) => rgb.map((c) => Math.max(0, Math.min(255, Math.round(c * k))));
+  const tint = (k: number) => rgb.map((c) => Math.round(c + (255 - c) * k));
+  [rgb, shade(0.62), tint(0.72)].forEach((c, col) => {
+    data.set([c[0] as number, c[1] as number, c[2] as number, 255], ((12 + row) * PALETTE_SIZE + col) * 4);
+  });
+  tex.needsUpdate = true;
+};
+
 export const createPaletteTexture = (): DataTexture => {
   const data = new Uint8Array(PALETTE_SIZE * PALETTE_SIZE * 4);
   // Boş hücreler magenta: yanlış UV hemen göze çarpar.
