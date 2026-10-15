@@ -1,4 +1,12 @@
-import { ELF_HEROES, HEROES, type HeroDef, ISENGARD_HEROES, ROHAN_HEROES, type SpellDef } from './spells';
+import {
+  ELF_HEROES,
+  HEROES,
+  type HeroDef,
+  ISENGARD_HEROES,
+  MORDOR_HEROES,
+  ROHAN_HEROES,
+  type SpellDef,
+} from './spells';
 import { UnitTypeId } from './units';
 
 /**
@@ -6,7 +14,7 @@ import { UnitTypeId } from './units';
  * harita garnizonunun karşılıkları ve takım rengi. İndeks = sim'deki faction değeri.
  */
 export interface FactionDef {
-  key: 'gondor' | 'rohan' | 'elves' | 'isengard';
+  key: 'gondor' | 'rohan' | 'elves' | 'isengard' | 'mordor';
   name: string;
   desc: string;
   /** Kışlanın yetiştirdiği birimler (komut paneli sırası). */
@@ -25,6 +33,16 @@ export interface FactionDef {
     Record<SpellDef['key'], { name: string; desc: string; icon?: string; unit?: number; count?: number }>
   >;
 }
+
+/** Kötü taraf oynanırken dalgalar: karanlık birimler → iyi tarafların karşılıkları. */
+const GOOD_ATTACKERS: Readonly<Record<number, number>> = {
+  [UnitTypeId.OrcWarrior]: UnitTypeId.GondorSoldier,
+  [UnitTypeId.UrukHai]: UnitTypeId.TowerGuard,
+  [UnitTypeId.OrcArcher]: UnitTypeId.GondorArcher,
+  [UnitTypeId.WargRider]: UnitTypeId.RohanRiders,
+  [UnitTypeId.CaveTroll]: UnitTypeId.Galadhrim,
+  [UnitTypeId.Lurtz]: UnitTypeId.Watcher,
+};
 
 export const FACTIONS: readonly FactionDef[] = [
   {
@@ -75,14 +93,7 @@ export const FACTIONS: readonly FactionDef[] = [
     },
     color: { main: '#d8d8d2', dark: '#3a3a3e', accent: '#c0302a' },
     evil: true,
-    enemyMap: {
-      [UnitTypeId.OrcWarrior]: UnitTypeId.GondorSoldier,
-      [UnitTypeId.UrukHai]: UnitTypeId.TowerGuard,
-      [UnitTypeId.OrcArcher]: UnitTypeId.GondorArcher,
-      [UnitTypeId.WargRider]: UnitTypeId.RohanRiders,
-      [UnitTypeId.CaveTroll]: UnitTypeId.Galadhrim,
-      [UnitTypeId.Lurtz]: UnitTypeId.Watcher,
-    },
+    enemyMap: GOOD_ATTACKERS,
     spells: {
       heal: {
         name: 'Ateşleri Körükle',
@@ -131,6 +142,71 @@ export const FACTIONS: readonly FactionDef[] = [
         name: 'Kara Fırtına',
         desc: "Saruman'ın fırtınası hedeften dışa yayılır: düşmanı yaralar ve sürükler.",
         icon: 'wave',
+      },
+    },
+  },
+  {
+    key: 'mordor',
+    name: 'Mordor',
+    desc: 'Karanlık Lord’un orduları: ucuz ork sürüleri, ork okçuları ve mağara trolleri. Cadı Kral, Gothmog, Sauron’un Ağzı. Gondor ve Rohan saldırır.',
+    trains: [UnitTypeId.OrcWarrior, UnitTypeId.OrcArcher, UnitTypeId.CaveTroll],
+    heroes: MORDOR_HEROES,
+    garrison: {
+      [UnitTypeId.GondorSoldier]: UnitTypeId.OrcWarrior,
+      [UnitTypeId.TowerGuard]: UnitTypeId.CaveTroll,
+      [UnitTypeId.GondorArcher]: UnitTypeId.OrcArcher,
+    },
+    color: { main: '#3b3431', dark: '#1c1817', accent: '#e0502a' },
+    evil: true,
+    enemyMap: GOOD_ATTACKERS,
+    spells: {
+      heal: {
+        name: 'Ork Ziyafeti',
+        desc: 'Sürü kendini toparlar: alandaki dost birimlerin canını %60 yeniler.',
+      },
+      rally: { name: 'Mordor Davulları', desc: '30 sn boyunca tüm birlikleriniz +%25 hasar verir.' },
+      arrow_volley: {
+        name: 'Kara Oklar',
+        desc: 'Hedef alana üç dalga kara ok yağdırır. Bir 1. kademe güç gerektirir.',
+      },
+      elven_allies: {
+        name: 'Ork Sürüsü',
+        desc: 'Hedef noktada 60 sn kalan üç tabur Mordor orku belirir.',
+        icon: 'army',
+        unit: UnitTypeId.OrcWarrior,
+        count: 3,
+      },
+      sun_flare: {
+        name: 'Karanlık',
+        desc: "Sauron'un bulutları güneşi örter: alandaki düşmanlar 60 hasar alır, 15 sn −%40 hasar verir, +%25 alır.",
+        icon: 'ghost',
+      },
+      rohirrim: {
+        name: 'Warg Akını',
+        desc: 'Warg binicileri doğudan hedef noktanın üzerinden batıya akar, yoldaki düşmanla çarpışır.',
+        icon: 'wolf',
+        unit: UnitTypeId.WargRider,
+      },
+      earthquake: {
+        name: 'Yer Yarılır',
+        desc: 'Orodruin uyanır: 4 sn boyunca toprak yarılır, askerlere ve kuşatma yapılarına ağır hasar.',
+      },
+      army_of_dead: {
+        name: "Balrog'u Uyandır",
+        desc: 'Derinlerden bir Balrog yükselir ve 45 sn sizin için savaşır.',
+        icon: 'flame',
+        unit: UnitTypeId.Balrog,
+        count: 1,
+      },
+      eagles: {
+        name: 'Fell Beast Dalışı',
+        desc: 'Kanatlı Nazgûl üç kez dalış yapar: her dalış alandaki düşmanlara 220 hasar.',
+        icon: 'eagle',
+      },
+      flood: {
+        name: 'Lav Dalgası',
+        desc: 'Hedeften dışa yayılan kızgın dalga düşmanı yaralar ve sürükler.',
+        icon: 'flame',
       },
     },
   },

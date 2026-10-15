@@ -1658,3 +1658,13 @@ body.debug #hud {
   font-size: 11px;
   letter-spacing: 0.05em;
 }
+#startscreen .factions button.mordor {
+  border-color: #7a2a24;
+  background: linear-gradient(160deg, rgba(70, 24, 10, 0.55), rgba(10, 6, 6, 0.6));
+}
+#startscreen .factions button.mordor b::after {
+  content: " · Kötü taraf";
+  color: #e06a5a;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+}

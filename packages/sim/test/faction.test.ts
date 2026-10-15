@@ -162,3 +162,23 @@ describe('Isengard tarafı (kötü)', () => {
     expect(battalionsOf(sim, 0, UnitTypeId.Balrog).length).toBe(1);
   });
 });
+
+describe('Mordor tarafı (kötü)', () => {
+  const MORDOR = 4;
+  it('Cadı Kral çağrılır; Gothmog ork takviyesi getirir; Ork Sürüsü üç tabur', () => {
+    const sim = new Simulation(9, buildNavGrid(QUIET), QUIET, 1, MORDOR);
+    sim.world.match.gold[0] = 99_999;
+    send(sim, { type: 'summonHero', unitType: UnitTypeId.WitchKing });
+    send(sim, { type: 'summonHero', unitType: UnitTypeId.Gothmog });
+    run(sim);
+    expect(battalionsOf(sim, 0, UnitTypeId.WitchKing).length).toBe(1);
+    const goth = battalionsOf(sim, 0, UnitTypeId.Gothmog)[0] as number;
+    awardXp(sim.world, goth, 99_999);
+    send(sim, { type: 'ability', unit: goth, ability: 1 });
+    const idx = SPELL_DEFS.findIndex((s) => s.key === 'elven_allies');
+    sim.world.match.spells[0] = 1 << idx;
+    send(sim, { type: 'castSpell', spell: idx, x: F(10), z: F(-60) });
+    run(sim);
+    expect(battalionsOf(sim, 0, UnitTypeId.OrcWarrior).length).toBe(5);
+  });
+});

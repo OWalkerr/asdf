@@ -231,7 +231,7 @@ export const useAbility = (world: SimWorld, team: number, unit: number, ability:
       summonAt(
         world,
         team,
-        UnitTypeId.RohanRiders,
+        def.unit ?? UnitTypeId.RohanRiders,
         x,
         (z + fxFromFloat(6)) | 0,
         def.count ?? 1,
@@ -243,7 +243,7 @@ export const useAbility = (world: SimWorld, team: number, unit: number, ability:
       summonAt(
         world,
         team,
-        UnitTypeId.DeadArmy,
+        def.unit ?? UnitTypeId.DeadArmy,
         x,
         (z + fxFromFloat(6)) | 0,
         def.count ?? 2,
@@ -255,7 +255,7 @@ export const useAbility = (world: SimWorld, team: number, unit: number, ability:
       summonAt(
         world,
         team,
-        UnitTypeId.LorienArcher,
+        def.unit ?? UnitTypeId.LorienArcher,
         x,
         (z - fxFromFloat(6)) | 0,
         def.count ?? 2,

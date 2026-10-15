@@ -5,6 +5,7 @@ import {
   ConeGeometry,
   CylinderGeometry,
   Euler,
+  IcosahedronGeometry,
   Matrix4,
   OctahedronGeometry,
 } from 'three/webgpu';
@@ -1250,6 +1251,74 @@ export const worker = (): BufferGeometry => {
   return b.build();
 };
 
+/**
+ * Cadı Kral (BFME2): yere değen kara pelerin, yüz yerine karanlık boşluk, sivri taçlı demir
+ * miğfer, zincirli alevli topuz ve sol elde kılıç. Siluet: dar omuz, uzun ve dimdik.
+ */
+export const witchKing = (): BufferGeometry => {
+  const b = new ModelBuilder();
+  legs(b, 'sootBlack', 'ironDark');
+  b.add(Part.Body, cyl(0.24, 0.48, 1.0, 8), 'sootBlack', [0, 0.5, 0]); // cüppe eteği
+  b.add(Part.Body, box(0.36, 0.64, 0.48), 'ironDark', [0, 1.14, 0]); // zırh
+  b.add(Part.Body, box(0.1, 1.5, 0.7), 'sootBlack', [-0.22, 0.86, 0]); // pelerin
+  for (const z of [-0.22, 0.22]) b.add(Part.Body, box(0.26, 0.12, 0.2), 'iron', [0, 1.42, z]); // omuzluk
+  b.add(Part.Head, box(0.22, 0.24, 0.22), 'sootBlack', [0.02, 1.62, 0]); // boş yüz
+  b.add(Part.Head, cyl(0.16, 0.14, 0.22, 7), 'ironDark', [0, 1.78, 0]);
+  for (let k = 0; k < 7; k++) {
+    const a = (k / 7) * Math.PI * 2;
+    b.add(Part.Head, new ConeGeometry(0.035, 0.34, 4), 'iron', [
+      Math.cos(a) * 0.14,
+      2.02,
+      Math.sin(a) * 0.14,
+    ]); // taç dikenleri
+  }
+  b.add(Part.Head, box(0.03, 0.04, 0.12), 'fire', [0.13, 1.64, 0]); // kor gözler
+  arm(b, Part.ArmR, 0.3, 'sootBlack', 'ironDark');
+  b.add(Part.ArmR, box(0.05, 0.5, 0.05), 'ironDark', [0.12, 0.62, 0.3], [0, 0, 0.6]); // topuz sapı
+  b.add(Part.ArmR, new IcosahedronGeometry(0.16, 0), 'fire', [0.38, 0.42, 0.3]); // alevli topuz başı
+  arm(b, Part.ArmL, -0.3, 'sootBlack', 'ironDark');
+  b.add(Part.ArmL, box(0.8, 0.06, 0.04), 'steel', [0.5, 0.74, -0.3], [0, 0, 0.35]); // Morgul kılıcı
+  return b.build(1.15);
+};
+
+/** Gothmog (BFME2): kambur, çarpık yüzlü ork komutanı; kemik ve deri zırh, iri pala, kırmızı Göz bezi. */
+export const gothmog = (): BufferGeometry => {
+  const b = new ModelBuilder({ ...HUMAN, shoulderZ: 0.34 });
+  legs(b, 'leather', 'ironDark', 0.15);
+  b.add(Part.Body, box(0.46, 0.62, 0.6), 'rust', [0, 1.1, 0], [0, 0, -0.18]); // kambur gövde
+  b.add(Part.Body, box(0.4, 0.3, 0.56), 'leather', [0, 0.8, 0]);
+  b.add(Part.Body, box(0.06, 0.3, 0.24), 'eyeRed', [0.22, 0.86, 0]); // Göz bezi
+  b.add(Part.Body, box(0.3, 0.16, 0.7), 'gondorWhite', [-0.06, 1.4, 0]); // kemik omuz
+  b.add(Part.Head, box(0.24, 0.24, 0.24), 'orcSkin', [0.08, 1.54, 0]);
+  b.add(Part.Head, box(0.1, 0.16, 0.12), 'urukSkin', [0.18, 1.56, 0.07]); // çarpık şiş yanak
+  b.add(Part.Head, cyl(0.15, 0.17, 0.12, 6), 'ironDark', [0.06, 1.7, 0]);
+  arm(b, Part.ArmR, 0.34, 'rust', 'orcSkin', 0.62);
+  b.add(Part.ArmR, box(0.9, 0.14, 0.05), 'iron', [0.56, 0.74, 0.34], [0, 0, 0.3]); // pala
+  arm(b, Part.ArmL, -0.34, 'rust', 'orcSkin', 0.62);
+  b.add(Part.ArmL, cyl(0.03, 0.03, 1.6, 4), 'woodDark', [0.1, 1.0, -0.36]); // destek asası
+  return b.build(1.12);
+};
+
+/** Sauron'un Ağzı (BFME2): yalnızca dişli ağzı görünen yüksek kara miğfer, işlemeli kızıl-kara cüppe. */
+export const mouthOfSauron = (): BufferGeometry => {
+  const b = new ModelBuilder();
+  legs(b, 'sootBlack', 'ironDark');
+  b.add(Part.Body, cyl(0.24, 0.44, 0.96, 8), 'sootBlack', [0, 0.5, 0]);
+  b.add(Part.Body, box(0.36, 0.64, 0.48), 'sootBlack', [0, 1.14, 0]);
+  b.add(Part.Body, box(0.05, 0.56, 0.12), 'eyeRed', [0.2, 1.12, 0]); // işleme şeridi
+  b.add(Part.Body, box(0.05, 0.14, 0.32), 'eyeRed', [0.2, 1.3, 0]);
+  b.add(Part.Body, box(0.08, 1.3, 0.62), 'team0Dark', [-0.22, 0.86, 0]);
+  b.add(Part.Head, box(0.22, 0.12, 0.2), 'sand', [0.02, 1.54, 0]); // yalnız ağız
+  b.add(Part.Head, box(0.03, 0.04, 0.14), 'gondorWhite', [0.13, 1.54, 0]); // dişler
+  b.add(Part.Head, box(0.26, 0.42, 0.26), 'ironDark', [0, 1.8, 0]); // yüksek miğfer
+  b.add(Part.Head, new ConeGeometry(0.13, 0.3, 4), 'ironDark', [0, 2.15, 0]);
+  b.add(Part.Head, box(0.03, 0.16, 0.08), 'eyeRed', [0.14, 1.82, 0]); // Göz arması
+  arm(b, Part.ArmR, 0.3, 'sootBlack', 'ironDark');
+  b.add(Part.ArmR, box(0.78, 0.07, 0.04), 'steel', [0.48, 0.72, 0.3], [0, 0, 0.35]);
+  arm(b, Part.ArmL, -0.3, 'sootBlack', 'ironDark');
+  return b.build(1.1);
+};
+
 export const UNIT_MODELS: Record<number, () => BufferGeometry> = {
   0: gondorSoldier,
   1: orcWarrior,
@@ -1289,4 +1358,7 @@ export const UNIT_MODELS: Record<number, () => BufferGeometry> = {
   32: saruman,
   33: sharku,
   34: urukCrossbow,
+  35: witchKing,
+  36: gothmog,
+  37: mouthOfSauron,
 };

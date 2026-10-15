@@ -69,6 +69,9 @@ export const UNIT_LABELS: Record<number, string> = {
   32: 'Saruman',
   33: 'Sharku',
   34: 'Uruk Arbaletçileri',
+  35: 'Cadı Kral',
+  36: 'Gothmog',
+  37: "Sauron'un Ağzı",
 };
 const UNIT_ICON: Record<number, string> = {
   0: 'sword',
@@ -106,6 +109,9 @@ const UNIT_ICON: Record<number, string> = {
   32: 'staff',
   33: 'wolf',
   34: 'bow',
+  35: 'crown',
+  36: 'club',
+  37: 'eye',
 };
 const GEAR_BODY = [
   'Bu taburun kılıçları dövülür: +%25 yakın dövüş hasarı.',
@@ -141,6 +147,9 @@ const HERO_DESC: Record<number, string> = {
   31: 'Lurtz: Uruk Öfkesi, Kara Ok Yağmuru; 10. seviyede Kral Avcısı.',
   32: 'Saruman: Ateş Topu, Söz Ustalığı (ordu +%25); 10. seviyede Orthanc Yıldırımı.',
   33: 'Sharku: warg binici komutanı; Warg Uluması ve Warg Sürüsü çağırır.',
+  35: "Cadı Kral: Morgul Bıçağı, Kara Nefes; 10. seviyede Angmar'ın Gazabı.",
+  36: 'Gothmog: Savaşa! (ordu +%25), Ork Takviyesi; 10. seviyede Trolleri Getirin.',
+  37: "Sauron'un Ağzı: Sauron'un Sesi, Karanlık Lütuf; 10. seviyede Kanatlı Nazgûl.",
 };
 const UNIT_DESC: Record<number, string> = {
   0: 'Kılıç ve kalkanlı çok yönlü piyade. Orklara karşı güçlü.',
@@ -151,7 +160,10 @@ const UNIT_DESC: Record<number, string> = {
   25: 'Ezen süvari: hücumda yoldaki düşmanı çiğner; Ork sürülerine karşı yıkıcı.',
   26: 'Az ama keskin elf piyadesi: yüksek hasar ve dayanıklılık; Uruk saflarını yarar.',
   27: 'En uzun menzilli okçular (38 m); kulelerin ardından düşmanı erkenden avlar.',
+  1: 'Ucuz ve kalabalık ork sürüsü: sayıyla boğar, hızlı yetişir.',
   3: 'Ağır zırhlı Uruk-hai: yakın dövüşte güçlü, insan piyadesini ezer.',
+  11: 'Ucuz ork okçuları: zırhsız düşmana karşı yaylım.',
+  13: 'Dev mağara trolü: vuruşu çevresine yayılır, kapı ve binaları ezer.',
   12: 'Hızlı warg binicileri: okçuları ve kaçan birlikleri avlar.',
   34: 'Ağır cıvatalı Uruk arbaletçileri: zırhı deler, yavaş ama sert vurur.',
   30: 'İşçi: bir yapı seç, haritada uygun yere yerleştir (Shift: art arda). İnşaat işçi başındayken ilerler.',

@@ -462,6 +462,65 @@ export const isengardKeep = (): BufferGeometry => {
 };
 
 /**
+ * Mordor kalesi (Barad-dûr): kara kayadan dikenli kademeli kule, tepesinde iki çatal sivri uç
+ * arasında kor gözlü Göz; köşelerde dikenli kara kuleler ve kızıl sancaklar.
+ */
+export const baradDurKeep = (): BufferGeometry => {
+  const parts: BufferGeometry[] = [
+    paint(place(new BoxGeometry(19, 1.6, 19), 0, 0.8, 0), 'sootBlack'),
+    paint(place(new BoxGeometry(15, 10.4, 15), 0, 6.2, 0), 'rockDark'),
+    paint(place(new BoxGeometry(15.6, 0.8, 15.6), 0, 11.6, 0), 'sootBlack'),
+    paint(place(new BoxGeometry(9, 8, 9), 0, 16, 0, Math.PI / 4), 'sootBlack'),
+    paint(place(new BoxGeometry(6.6, 7, 6.6), 0, 23.5, 0), 'rockDark'),
+    paint(place(new BoxGeometry(4.4, 5, 4.4), 0, 29.5, 0, Math.PI / 4), 'sootBlack'),
+    // Kapı: sivri kemer
+    paint(place(new BoxGeometry(4, 5.4, 0.6), 0, 3.9, 7.6), 'ironDark'),
+    paint(place(new ConeGeometry(2.2, 2.4, 4), 0, 7.6, 7.6, Math.PI / 4), 'ironDark'),
+  ];
+  // Kademelerden fırlayan dikenler
+  for (const [y, r, n] of [
+    [12.4, 7.6, 12],
+    [20.2, 5.2, 8],
+    [27.2, 3.6, 8],
+  ] as const)
+    for (let k = 0; k < n; k++) {
+      const a = (k / n) * Math.PI * 2;
+      const spike = new ConeGeometry(0.4, 2.4, 4);
+      spike.rotateZ(-0.6);
+      spike.rotateY(-a);
+      spike.translate(Math.cos(a) * r, y + 0.8, Math.sin(a) * r);
+      parts.push(paint(spike, 'ironDark'));
+    }
+  // Tepede iki çatal ve aralarında Göz
+  for (const side of [-1, 1]) {
+    const prong = new ConeGeometry(0.8, 7, 5);
+    prong.rotateX(side * -0.25);
+    prong.translate(0, 35, side * 1.6);
+    parts.push(paint(prong, 'sootBlack'));
+  }
+  parts.push(paint(place(new IcosahedronGeometry(1.3, 1), 0, 34.6, 0, 0, 0.5, 1, 1), 'fire'));
+  parts.push(paint(place(new BoxGeometry(0.5, 1.6, 0.3), 0.6, 34.6, 0), 'sootBlack')); // göz bebeği
+  // Köşe kuleleri (dikenli kara)
+  for (const [x, z] of [
+    [-7.5, -7.5],
+    [7.5, -7.5],
+    [-7.5, 7.5],
+    [7.5, 7.5],
+  ] as const) {
+    parts.push(paint(place(new BoxGeometry(4.4, 15, 4.4), x, 7.5, z, Math.PI / 4), 'sootBlack'));
+    parts.push(paint(place(new ConeGeometry(3, 5, 4), x, 17.5, z, Math.PI / 4), 'rockDark'));
+    parts.push(paint(place(new ConeGeometry(0.3, 3, 4), x, 21, z), 'ironDark'));
+  }
+  // Kızıl Göz sancakları
+  for (const x of [-5.2, 5.2]) {
+    parts.push(paint(place(new BoxGeometry(2.2, 5, 0.12), x, 8.6, 8.2), 'sootBlack'));
+    parts.push(paint(place(new BoxGeometry(1.2, 0.6, 0.14), x, 9.2, 8.25), 'eyeRed'));
+    parts.push(paint(place(new BoxGeometry(0.2, 0.5, 0.15), x, 9.2, 8.26), 'sootBlack'));
+  }
+  return verticalShade(merge(parts), 0.7, 1.0);
+};
+
+/**
  * Lothlórien kalesi (Caras Galadhon): dev gümüş gövdeli mallorn, altın taç yaprakları ve gövdeye
  * sarılan ahşap flet platformları; dört köşede ince mallorn kuleleri (±7.5, külah tepesi ~20) —
  * kale yükseltme parçalarıyla aynı ölçüler.
