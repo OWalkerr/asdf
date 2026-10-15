@@ -514,6 +514,7 @@ const boot = async () => {
       .build(ctx.renderer, palette, toon, [
         ...factionDef(faction).heroes.map((h) => h.unitType),
         ...factionDef(faction).trains,
+        UnitTypeId.Worker,
       ])
       .then(() => {
         bar?.invalidate();

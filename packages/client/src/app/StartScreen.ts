@@ -1,4 +1,5 @@
 import { DEFAULT_DIFFICULTY, DIFFICULTIES, FACTIONS, MAP_DEFS } from '@bulwark/shared';
+import { getQuality, QUALITY_NAMES, type Quality, setQuality } from '../render/quality';
 import { CAMPAIGNS, type Campaign, campaignProgress, takeCampaignTab, takeQueuedMission } from './campaign';
 import { bestForMap, starText } from './records';
 
@@ -171,6 +172,12 @@ export const chooseMatch = (): Promise<MatchChoice> => {
         </div>
         <button type="button" class="go">Savunmayı başlat</button>
         </div>
+        <div class="quality">Grafik: ${(['low', 'medium', 'high'] as const)
+          .map(
+            (q) =>
+              `<button type="button" data-q="${q}" class="${q === getQuality() ? 'sel' : ''}">${QUALITY_NAMES[q]}</button>`,
+          )
+          .join('')}<span>Kasma olursa Düşük veya Orta seç.</span></div>
         <p class="keys">Sol tık: seç · Sağ tık: yürü/saldır · WASD/Q/E: kamera · F/G/J: kahramanlar · P: duraklat · 1–0: güçler · M: ses · F7/F8: müzik / birim sesleri</p>
       </div>`;
     document.body.appendChild(root);
@@ -200,6 +207,14 @@ export const chooseMatch = (): Promise<MatchChoice> => {
         });
       });
       b.addEventListener('dblclick', () => go());
+    });
+    root.querySelectorAll<HTMLButtonElement>('.quality button').forEach((b) => {
+      b.addEventListener('click', () => {
+        setQuality(b.dataset.q as Quality);
+        root.querySelectorAll('.quality button').forEach((x) => {
+          x.classList.toggle('sel', x === b);
+        });
+      });
     });
     // Sekmeler ve sefer görevleri.
     root.querySelectorAll<HTMLButtonElement>('.tabs button').forEach((b) => {

@@ -26,17 +26,30 @@ const SIZE = 128;
 
 export class Portraits {
   private readonly urls = new Map<number, string>();
+  /** İstenip henüz üretilmemiş portreler (sırayla, boşta üretilir). */
+  private readonly queue: number[] = [];
+  private render: ((id: number) => Promise<void>) | null = null;
+  private pumping = false;
   /** Portreler hazır olunca (arayüzü tazelemek için). */
   onReady: (() => void) | null = null;
-
-  get(unitType: number): string | undefined {
-    return this.urls.get(unitType);
-  }
-
   /** Her birkaç portrede bir (arayüzü aşamalı tazelemek için). */
   onProgress: (() => void) | null = null;
 
-  /** `first`: önce üretilecek birimler (tarafın kahramanları ve kışla birimleri). */
+  /** Portre (yoksa undefined; istenen portre sıraya alınır ve kısa süre sonra hazır olur). */
+  get(unitType: number): string | undefined {
+    const u = this.urls.get(unitType);
+    if (u === undefined && this.render && !this.queue.includes(unitType) && UNIT_MODELS[unitType]) {
+      this.queue.push(unitType);
+      this.pump();
+    }
+    return u;
+  }
+
+  /**
+   * `first`: hemen üretilecek birimler (tarafın kahramanları, kışla birimleri, işçi). Diğerleri
+   * yalnızca arayüz isteyince üretilir. Kodlama asenkron (toBlob) ve portreler arasında ana
+   * döngüye nefes payı bırakılır — maç başında kasma olmasın.
+   */
   async build(
     renderer: WebGPURenderer,
     palette: Texture,
@@ -60,19 +73,15 @@ export class Portraits {
     canvas.height = SIZE;
     const g = canvas.getContext('2d');
     if (!g) return;
-    const prevTarget = renderer.getRenderTarget();
-    const prevAlpha = renderer.getClearAlpha();
     const box = new Box3();
     const center = new Vector3();
     const flip =
       (renderer as unknown as { backend: { isWebGLBackend?: boolean } }).backend.isWebGLBackend === true;
-    const order = [...first, ...UNIT_DEFS.map((d) => d.id).filter((id) => !first.includes(id))];
-    let done = 0;
-    for (const id of order) {
+    this.render = async (id: number) => {
       const def = UNIT_DEFS[id];
-      if (!def || this.urls.has(id)) continue;
+      if (!def || this.urls.has(id)) return;
       const make = UNIT_MODELS[def.id];
-      if (!make) continue;
+      if (!make) return;
       const geo = make();
       const mesh = new Mesh(geo, mat);
       scene.add(mesh);
@@ -88,12 +97,16 @@ export class Portraits {
       cam.position.set(center.x + dist * 0.94, center.y + dist * 0.12, center.z + dist * 0.32);
       cam.lookAt(center);
       // Hedefi ve temizleme alfasını hemen geri al: okuma beklerken ana döngü ekrana çizer.
+      const prevTarget = renderer.getRenderTarget();
+      const prevAlpha = renderer.getClearAlpha();
       renderer.setRenderTarget(rt);
       renderer.setClearAlpha(0);
       renderer.clear();
       renderer.render(scene, cam);
       renderer.setRenderTarget(prevTarget);
       renderer.setClearAlpha(prevAlpha);
+      scene.remove(mesh);
+      geo.dispose();
       const px = (await renderer.readRenderTargetPixelsAsync(rt, 0, 0, SIZE, SIZE)) as Uint8Array;
       const img = g.createImageData(SIZE, SIZE);
       for (let y = 0; y < SIZE; y++) {
@@ -101,12 +114,35 @@ export class Portraits {
         img.data.set(px.subarray(src, src + SIZE * 4), y * SIZE * 4);
       }
       g.putImageData(img, 0, 0);
-      this.urls.set(def.id, canvas.toDataURL('image/png'));
-      scene.remove(mesh);
-      geo.dispose();
-      if (++done % 3 === 0 || done === first.length) this.onProgress?.();
+      // Asenkron PNG kodlama (toDataURL ana iş parçacığını kilitler).
+      const blob = await new Promise<Blob | null>((res) => canvas.toBlob(res, 'image/png'));
+      if (blob) this.urls.set(def.id, URL.createObjectURL(blob));
+    };
+    for (const id of first) {
+      await this.render(id);
+      await idle();
     }
-    rt.dispose();
+    this.onProgress?.();
     this.onReady?.();
+    this.pump();
+  }
+
+  private pump(): void {
+    if (this.pumping || !this.render) return;
+    this.pumping = true;
+    void (async () => {
+      let n = 0;
+      while (this.queue.length > 0 && this.render) {
+        const id = this.queue.shift() as number;
+        await this.render(id);
+        await idle();
+        if (++n % 2 === 0) this.onProgress?.();
+      }
+      if (n > 0) this.onProgress?.();
+      this.pumping = false;
+    })();
   }
 }
+
+/** Ana döngüye bir-iki kare bırak. */
+const idle = () => new Promise<void>((r) => setTimeout(r, 60));

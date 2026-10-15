@@ -8,6 +8,7 @@ import {
   type Scene,
   WebGPURenderer,
 } from 'three/webgpu';
+import { getQuality, QUALITY } from './quality';
 import type { FloatUniform } from './tsl-types';
 
 export type Backend = 'webgpu' | 'webgl2';
@@ -37,16 +38,17 @@ export const createRenderContext = async (
   const forceWebGL =
     new URLSearchParams(location.search).has('webgl') ||
     (globalThis as { BULWARK_FORCE_WEBGL?: boolean }).BULWARK_FORCE_WEBGL === true;
+  const q = QUALITY[getQuality()];
   const renderer = new WebGPURenderer({
     canvas,
-    antialias: true,
+    antialias: q.antialias,
     forceWebGL,
     powerPreference: 'high-performance',
   });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, q.pixelRatio));
   renderer.toneMapping = ACESFilmicToneMapping;
   renderer.toneMappingExposure = 0.92;
-  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.enabled = q.shadows;
   renderer.shadowMap.type = PCFShadowMap; // r186: PCFSoft kaldırıldı, PCF zaten yumuşak filtreli
   // WebGPU sürücü/tarayıcı uyumsuzluğunda sayfayı WebGL2 ile yeniden aç. İki belirti var:
   // cihaz kaybı (onDeviceLost) ve kısmi WebGPU desteğinde her karede fırlayan istisnalar.

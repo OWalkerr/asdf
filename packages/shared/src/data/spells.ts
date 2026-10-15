@@ -509,7 +509,7 @@ export const RALLY_DAMAGE_PERCENT = 25;
 /** Ok Yağmuru: dalga sayısı, dalga arası (s), dalga başına ok, ok hasarı. */
 export const VOLLEY = { waves: 3, gap: 0.8, arrows: 30, damage: 30 } as const;
 /** Güç Puanı kazancı: öldürülen birimin asker başı değeri / 100, dalga başı +2 (GDD §9.1 oranı yarıya indirildi: 3 büyülük kitapta PP taşmasın). */
-export const PP = { perValue: 100, waveBonus: 2 } as const;
+export const PP = { perValue: 100, waveBonus: 2, start: 5 } as const;
 /** Güneş Parlaması: anlık hasar, zayıflama süresi (s), verilen/alınan hasar yüzdeleri. */
 export const SUN_FLARE = { damage: 60, duration: 15, dealtPercent: 60, takenPercent: 125 } as const;
 /** Deprem: sarsıntı sayısı, aralığı (s), asker ve yapı hasarı. */

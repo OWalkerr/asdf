@@ -71,6 +71,8 @@ export const setupMatch = (world: SimWorld, map: MapDef): void => {
   schedule.sort((a, b) => a.tick - b.tick);
   world.match.schedule = schedule;
   world.match.gold[0] = diff.startGold;
+  // Başlangıç Güç Puanı: ilk kademe güçlerden biri hemen açılabilsin.
+  world.match.pp[0] = PP.start * 10;
   world.match.waveCount = map.waves.length;
 };
 

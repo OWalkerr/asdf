@@ -1881,3 +1881,53 @@ body.debug #hud {
   color: var(--gold-hi);
   align-self: center;
 }
+#powers .power.deny {
+  animation: denyShake 0.35s ease-in-out;
+}
+@keyframes denyShake {
+  25% {
+    transform: translateX(-3px);
+  }
+  75% {
+    transform: translateX(3px);
+  }
+}
+#powers .power[data-state="open"]::after {
+  content: "AÇ";
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 0 4px;
+  color: #10233f;
+  background: #9cc4ff;
+  border-radius: 6px;
+}
+#startscreen .quality {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 0 2px;
+  font-size: 13px;
+  color: var(--ink-dim);
+}
+#startscreen .quality button {
+  padding: 4px 12px;
+  color: var(--ink);
+  background: rgba(20, 16, 10, 0.7);
+  border: 1px solid var(--gold-lo);
+  border-radius: 5px;
+  cursor: pointer;
+}
+#startscreen .quality button.sel {
+  border-color: var(--gold-hi);
+  color: var(--gold-hi);
+}
+#startscreen .quality span {
+  margin-left: 6px;
+  font-size: 11px;
+}

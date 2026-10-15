@@ -1,4 +1,5 @@
 import { Color, DirectionalLight, Fog, HemisphereLight, MathUtils, type Scene } from 'three/webgpu';
+import { getQuality, QUALITY } from './quality';
 
 /**
  * Stilize aydınlatma (GDD §3.1): tek directional güneş + hemisphere ambient + mesafe sisi.
@@ -31,7 +32,8 @@ export const createLighting = (scene: Scene, mapHalfSize: number): LightingRig =
 
   const sun = new DirectionalLight('#ffd2a6', 1.75);
   sun.castShadow = true;
-  sun.shadow.mapSize.set(2048, 2048);
+  const sm = QUALITY[getQuality()].shadowMap;
+  sun.shadow.mapSize.set(sm, sm);
   const cam = sun.shadow.camera;
   cam.left = -mapHalfSize;
   cam.right = mapHalfSize;

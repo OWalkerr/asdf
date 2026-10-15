@@ -126,6 +126,28 @@ export class PowersColumn {
     this.tip.classList.add('show');
   }
 
+  /** Kilitli güce tıklandı ama açılamıyor: nedenini kısa süre göster. */
+  private explain(i: number): void {
+    const m = this.match;
+    const def = SPELL_DEFS[i];
+    const btn = this.btns[i];
+    if (!m || !def || !btn) return;
+    const tierOk =
+      def.tier === 1 || SPELL_DEFS.some((s, k) => s.tier === def.tier - 1 && m.spells & (1 << k));
+    const need = def.cost - m.pp / 10;
+    this.tip.innerHTML = `<b>${spellView(this.d.faction ?? 0, def).name} kilitli</b><p>${
+      !tierOk
+        ? `Önce ${ROMAN[def.tier - 1]}. kademeden bir güç aç.`
+        : `${need.toFixed(1)} Güç Puanı daha gerekli. Güç Puanı düşman öldürerek ve her dalga başında kazanılır.`
+    }</p>`;
+    this.tip.style.top = `${btn.offsetTop}px`;
+    this.tip.classList.add('show');
+    btn.classList.remove('deny');
+    void btn.offsetWidth;
+    btn.classList.add('deny');
+    window.setTimeout(() => this.tip.classList.remove('show'), 2600);
+  }
+
   private canUnlock(i: number): boolean {
     const m = this.match;
     const def = SPELL_DEFS[i];
@@ -143,7 +165,7 @@ export class PowersColumn {
       if (this.canUnlock(i)) {
         this.d.scenario.unlockSpell(i);
         this.d.onClick?.();
-      }
+      } else this.explain(i);
       return;
     }
     if (this.tick < (m.spellReady[i] ?? 0)) return;
