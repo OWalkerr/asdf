@@ -104,6 +104,8 @@ export interface MatchContext {
   heroBuff: Int32Array;
   /** Bekleyen zamanlı büyü etkileri (Ok Yağmuru dalgaları, Deprem, Kartallar, Sel). */
   volleys: { kind: number; x: number; z: number; team: number; next: number; left: number }[];
+  /** Ortak savunma (çok oyunculu): bütün oyuncular takım 0'ı yönetir. */
+  coop: boolean;
   /** Kaleden işçi yetiştirmenin yeniden mümkün olduğu tick. */
   workerReady: number;
   /** Serbest yapıların nav'da kapattığı hücreler ve eski maskeleri (yapı eid'i → taban). */
@@ -190,6 +192,7 @@ export const createSimWorld = (
       abilityReady: new Int32Array(4 * MAX_HEROES * MAX_ABILITIES),
       heroBuff: new Int32Array(4 * MAX_HEROES),
       volleys: [],
+      coop: false,
       workerReady: 0,
       footprints: new Map(),
       slots: new Int32Array(map?.slots.length ?? 0),

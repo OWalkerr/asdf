@@ -28,6 +28,8 @@ export interface SimHostOptions {
   faction?: number;
   /** Komutun uygulanacağı tick = son görülen tick + inputDelay (lockstep'te ≥ 2). */
   inputDelay?: number;
+  /** Çok oyunculu lockstep oyuncu sayısı (yoksa tek oyunculu). */
+  players?: number;
 }
 
 export class SimHost {
@@ -81,6 +83,7 @@ export class SimHost {
         mapSize: opts.mapSize,
         difficulty: opts.difficulty ?? 1,
         faction: opts.faction ?? 0,
+        players: opts.players,
       });
     });
     return host;
@@ -99,7 +102,14 @@ export class SimHost {
     this.frameListeners.push(cb);
   }
 
+  /** Çok oyunculu: komutlar tur paketine toplanır (NetSession); null = yerel. */
+  net: ((cmd: Command) => void) | null = null;
+
   send(cmd: Command, player = this.player): void {
+    if (this.net) {
+      this.net(cmd);
+      return;
+    }
     const stamped: StampedCommand = {
       tick: Math.max(0, this.curr.tick) + this.inputDelay,
       player,
@@ -109,10 +119,27 @@ export class SimHost {
     this.post({ type: 'commands', commands: [stamped] });
   }
 
+  /** Lockstep: bir oyuncunun tur paketini worker'a ilet. */
+  postTurn(player: number, turn: number, commands: StampedCommand[]): void {
+    this.post({ type: 'turn', player, turn, commands });
+  }
+
+  private waitListeners: ((waiting: number[]) => void)[] = [];
+  private hashListeners: ((tick: number, hash: number) => void)[] = [];
+
+  onWait(cb: (waiting: number[]) => void): void {
+    this.waitListeners.push(cb);
+  }
+
+  onHash(cb: (tick: number, hash: number) => void): void {
+    this.hashListeners.push(cb);
+  }
+
   /** Oyun hızı (0 = duraklat). Ara değerleme tick süresini buna göre ölçekler. */
   speed = 1;
 
   setSpeed(value: number): void {
+    if (this.net) return; // çok oyunculuda hız sabit
     this.speed = value;
     this.post({ type: 'speed', value });
   }
@@ -163,6 +190,10 @@ export class SimHost {
         break;
       case 'hash':
         this.lastHash = { tick: msg.tick, hash: msg.hash };
+        for (const cb of this.hashListeners) cb(msg.tick, msg.hash);
+        break;
+      case 'wait':
+        for (const cb of this.waitListeners) cb(msg.waiting);
         break;
       case 'error':
         console.error('[sim]', msg.message);

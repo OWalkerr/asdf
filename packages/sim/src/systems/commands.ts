@@ -36,7 +36,8 @@ import {
 import { constructAt, trainWorker } from './workers';
 
 /** Oyuncu → takım eşlemesi (Phase 1: oyuncu N = takım N). Co-op'ta lobi belirleyecek. */
-const teamOf = (player: number): number => player;
+/** Oyuncu → takım (ortak savunmada herkes takım 0). */
+const teamOf = (world: SimWorld, player: number): number => (world.match.coop ? 0 : player);
 
 /** Taburlar arası yan boşluk (m). */
 const BATTALION_GAP: Fx = fxFromFloat(2);
@@ -222,7 +223,7 @@ const splitOwned = (
   player: number,
   eids: readonly number[],
 ): { battalions: number[]; free: number[] } => {
-  const team = teamOf(player);
+  const team = teamOf(world, player);
   const { Battalion, Soldier, Team, Dead, UnitType } = world.c;
   const battalions = new Set<number>();
   const free: number[] = [];
@@ -308,7 +309,7 @@ const gridOffset = (i: number, n: number, spacing: Fx): [Fx, Fx] => {
 
 export const applyCommand = (world: SimWorld, sc: StampedCommand): void => {
   const { cmd } = sc;
-  const team = teamOf(sc.player);
+  const team = teamOf(world, sc.player);
   const { MoveTarget, Velocity, Battalion, Position, Team } = world.c;
   switch (cmd.type) {
     case 'spawn': {

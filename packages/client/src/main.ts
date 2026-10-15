@@ -31,6 +31,7 @@ import { PlayerInput } from './input/PlayerInput';
 import { Selection } from './input/Selection';
 import { buildGenericMap } from './maps/genericMap';
 import { buildHelmsDeep } from './maps/helmsDeep';
+import { NetSession } from './net/NetSession';
 import { createRain } from './render/atmosphere/rain';
 import { createSky } from './render/atmosphere/sky';
 import { Lightning } from './render/atmosphere/weather';
@@ -72,6 +73,35 @@ const buildMap = (mapId: string, palette: Texture, toon: ToonParams, faction = 0
   const def = MAP_DEFS[mapId];
   if (!def) throw new Error(`Bilinmeyen harita: ${mapId} (seçenekler: ${Object.keys(MAP_DEFS).join(', ')})`);
   return buildGenericMap(palette, toon, def, faction);
+};
+
+/** Çok oyunculu durum şeridi: oyuncular, bekleme, ayrılma, desync. */
+const mountNetStatus = (net: NetSession) => {
+  const el = document.createElement('div');
+  el.id = 'net-status';
+  document.body.appendChild(el);
+  const colors = ['#4a8fe0', '#e0c34a', '#59c06a', '#d0604a'];
+  const render = () => {
+    const wait = net.waiting();
+    const names = net.start.nicks
+      .map(
+        (n, i) =>
+          `<span class="${net.gone.has(i) ? 'gone' : ''}"><i style="background:${colors[i] ?? '#999'}"></i>${n
+            .replace(/[&<>"']/g, '')
+            .slice(0, 20)}${i === net.start.me ? ' (sen)' : ''}</span>`,
+      )
+      .join('');
+    const gone = [...net.gone].map((i) => net.start.nicks[i] ?? `Oyuncu ${i + 1}`);
+    let msg = '';
+    if (net.desync) msg = '<b class="bad">Senkron bozuldu — oyun durumları ayrıştı.</b>';
+    else if (gone.length > 0 && wait.length > 0)
+      msg = `<b class="bad">${gone.join(', ')} oyundan ayrıldı — oyun devam edemiyor.</b>`;
+    else if (wait.length > 0) msg = `<b>Bekleniyor: ${wait.join(', ')}…</b>`;
+    el.innerHTML = `<div class="who">${names}</div>${msg}`;
+  };
+  net.onStatus = render;
+  setInterval(render, 300);
+  render();
 };
 
 const boot = async () => {
@@ -133,7 +163,16 @@ const boot = async () => {
     capacity: UNIT_CAPACITY,
     mapId: world.def?.id ?? null,
     mapSize: world.size,
+    players: choice.net?.start.order.length,
   });
+  // Çok oyunculu: komutlar tur paketlerine (lockstep); oyuncu numarası başlatma sırası.
+  const net = choice.net ? new NetSession(choice.net.room, sim, choice.net.start) : null;
+  if (net) {
+    sim.player = net.start.me;
+    mountNetStatus(net);
+    // Hata ayıklama / otomatik test erişimi.
+    Object.assign(globalThis, { __net: net });
+  }
   // Kuşatma merdivenleri: birimler merdiven geçidinde surun üstüne tırmanır (zemin + ek yükseklik).
   let ladders: LadderRenderer | null = null;
   const units = new UnitRenderer(UNIT_CAPACITY, palette, toon, (x, z) =>
@@ -144,7 +183,8 @@ const boot = async () => {
   const bannerCarriers = new BannerCarriers(palette, toon);
   scene.add(...bannerCarriers.meshes);
   const scenario = new Scenario(sim, world.def, faction);
-  if (!gallery) scenario.start();
+  // Başlangıç garnizonunu yalnızca kurucu (oyuncu 0) kurar; diğerleri aynı komutları turundan alır.
+  if (!gallery && (!net || net.start.me === 0)) scenario.start();
 
   // --- Girdi: zemin/slot seçimi (BVH), tabur seçimi, emirler ----------------------
   const picker = new GroundPicker(world.collider);
@@ -441,7 +481,7 @@ const boot = async () => {
       if (key === 'word_of_power' || key === 'wizard_blast') sfx.thunder();
       else sfx.chime(true);
     };
-  const speedUi = ui ? new SpeedControl(sim) : null;
+  const speedUi = ui && !net ? new SpeedControl(sim) : null;
   if (speedUi) speedUi.onClick = () => sfx.click();
   const powers = ui
     ? new PowersColumn({

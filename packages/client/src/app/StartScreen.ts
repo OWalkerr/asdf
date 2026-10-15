@@ -1,6 +1,9 @@
 import { DEFAULT_DIFFICULTY, DIFFICULTIES, FACTIONS, MAP_DEFS } from '@bulwark/shared';
+import type { NetStart } from '../net/NetSession';
+import type { NamedRoom } from '../net/room';
 import { getQuality, QUALITY_NAMES, type Quality, setQuality } from '../render/quality';
 import { CAMPAIGNS, type Campaign, campaignProgress, takeCampaignTab, takeQueuedMission } from './campaign';
+import { mountLobby } from './Lobby';
 import { bestForMap, starText } from './records';
 
 /**
@@ -15,6 +18,8 @@ export interface MatchChoice {
   faction: number;
   /** Sefer görevi (yoksa serbest savaş). */
   campaign?: { id: string; index: number };
+  /** Çok oyunculu ortak savunma (lobi başlattı). */
+  net?: { room: NamedRoom; start: NetStart };
 }
 
 /** Sefer görevi seçimi. */
@@ -115,7 +120,9 @@ export const chooseMatch = (): Promise<MatchChoice> => {
         <div class="tabs">
           <button type="button" data-tab="skirmish" class="${campaignTab ? '' : 'sel'}">Serbest Savaş</button>
           <button type="button" data-tab="campaign" class="${campaignTab ? 'sel' : ''}">Sefer</button>
+          <button type="button" data-tab="multi">Çok Oyunculu</button>
         </div>
+        <div class="pane multi"></div>
         <div class="pane campaign ${campaignTab ? 'on' : ''}">
           ${CAMPAIGNS.map((c) => {
             const done = campaignProgress(c.id);
@@ -217,6 +224,7 @@ export const chooseMatch = (): Promise<MatchChoice> => {
       });
     });
     // Sekmeler ve sefer görevleri.
+    let lobbyOn = false;
     root.querySelectorAll<HTMLButtonElement>('.tabs button').forEach((b) => {
       b.addEventListener('click', () => {
         root.querySelectorAll('.tabs button').forEach((x) => {
@@ -225,8 +233,20 @@ export const chooseMatch = (): Promise<MatchChoice> => {
         root.querySelectorAll('.pane').forEach((p) => {
           p.classList.toggle('on', p.classList.contains(b.dataset.tab ?? ''));
         });
+        if (b.dataset.tab === 'multi' && !lobbyOn) {
+          lobbyOn = true;
+          const pane = root.querySelector<HTMLElement>('.pane.multi');
+          if (pane)
+            mountLobby(pane, (c) => {
+              root.classList.add('out');
+              setTimeout(() => root.remove(), 400);
+              resolve(c);
+            });
+        }
       });
     });
+    if (params.get('tab') === 'multi')
+      root.querySelector<HTMLButtonElement>('.tabs [data-tab="multi"]')?.click();
     root.querySelectorAll<HTMLButtonElement>('.camp button').forEach((b) => {
       b.addEventListener('click', () => {
         const c = CAMPAIGNS.find((x) => x.id === b.dataset.c);
