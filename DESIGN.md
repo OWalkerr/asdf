@@ -27,7 +27,18 @@ Sonuç olarak ritim şu: **saldır → sek → saldır → sek**. Yürümek yava
 - **Klavye:** WASD/oklar yön, `E` veya boşluk Söküm, `Q` Delici Mızrak, `R` Kader Çağrısı, `Esc`/`P` duraklat.
 - Saldırı otomatik: menzildeki en yakın düşmana atar. Bu, telefonda tek başparmakla kite yapmayı mümkün kılıyor.
 
-## 3. Çekirdek döngü
+## 3. Mızrakçılar
+
+"Ava başla" sonrası karakter seçilir (son seçim hatırlanır). Her birinin pelerin rengi farklıdır.
+
+| Mızrakçı | Artı | Eksi |
+|---|---|---|
+| Yeminli | Dengeli | — |
+| Gölge Koşucu | Sekme +%35, sekerken hasar almaz | Mızrak hasarı -%15, can -20 |
+| Kemik Kıran | Mızrak hasarı +%30, %25 şansla çift saplanma | Saldırı hızı -%15, sekme -%10 |
+| Ruh Çağıran | 1 Yeminli Ruh ile başlar, Kader bekleme -%30 | Mızrak hasarı -%10 |
+
+## 4. Çekirdek döngü
 
 1. Odaya gir → 2–4 dalga düşman (dalga, kalan düşman ≤2 olunca ya da 16 sn sonra gelir).
 2. Oda temizlenince %15 can yenilenir, 3 güç kartından birini seçersin (yeniden çekme hakkı Ruh Sunağı'ndan).
@@ -39,7 +50,7 @@ Sonuç olarak ritim şu: **saldır → sek → saldır → sek**. Yürümek yava
    | Elit Oda | Orta: düşmanların %35'i elit | Nadir ağırlıklı güçler, +5 ruh parçası |
    | Lanetli Oda | Yüksek: %60 elit, düşmanlar %15 hızlı | 2 güç seçimi, +8 ruh parçası |
    | Ruh Pınarı | Savaş yok | %40 can, +1 yeniden çekme; güç yok |
-   | Ruh Tüccarı | Savaş yok | Bu avın ruh parçalarıyla alışveriş: 3 güç (Sıradan 15, Nadir 25, Destansı 40, Efsanevi 55), Ruh İksiri (%50 can, 12), Kehanet Kartı (+1 yeniden çekme, 10). Harcanan parçalar kalıcı birikime eklenmez. |
+   | Ruh Tüccarı | Savaş yok | Bu avın ruh parçalarıyla alışveriş: 3 güç (Sıradan 15, Nadir 25, Destansı 40, Efsanevi 55), Ruh İksiri (%50 can, 12), Kehanet Kartı (+1 yeniden çekme, 10). Unutuş Ritüeli (15): bir gücün bir seviyesini siler; tüm istatistikler baştan hesaplanır. Harcanan parçalar kalıcı birikime eklenmez. |
 
 4. Her 5. oda **Muhafız** odası; muhafızlar sırayla Kemik Lordu, Gölge Atlı ve Yas Kraliçesi.
 5. Ölünce topladığın **ruh parçaları** kalıcı olarak saklanır; Ruh Sunağı'ndan kalıcı güç alırsın.
@@ -56,6 +67,7 @@ Sonuç olarak ritim şu: **saldır → sek → saldır → sek**. Yürümek yava
 | Tükürgen | Durur, çevresine halka halinde mermi saçar (çekirdek dolunca) | Halkalar arasındaki boşluğa sek |
 | **Kemik Lordu** (5., 20. oda) | Hücum, mermi novası, çağırma; %50 canın altında öfke (çift hücum, yoğun nova) | Mızrak biriktir, Söküm ile büyük hasar |
 | **Yas Kraliçesi** (15., 30. oda) | Süzülen hayalet kraliçe. Çığlık dalgası (genişleyen mor halka: yerdeyken vurur, **üstünden sekerek atlanır**), oyuncuyu takip eden ruh mermileri, mor halkayla işaretlenen ışınlanma, ateş ruhu çağırma; %50 altında 3'lü çığlık | Dalga yaklaşınca sek, Kader Çağrısı ile havada kal |
+| **Yükselmiş muhafızlar** (20. oda ve sonrası) | Can +%20, altın aura; saldırılarının %40'ında diğer muhafızlardan ödünç bir saldırı kullanır: Lord → çığlık dalgası / mızrak hatları, Atlı → çığlık / ruh mermileri, Kraliçe → mızrak hatları / mermi halkası | Altın parlama = ödünç saldırı geliyor |
 | **Gölge Atlı** (10., 25. oda) | Arka arkaya 3–4 dörtnala hücum ve arkasında yakan mor iz; çift kollu spiral mermi; yelpaze şeklinde mızrak hatları (önce çizgiyle uyarır) | Hatların arasına sek, Kader Çağrısı ile sersemlet |
 
 **Elit düşmanlar** (altın kesikli halka): can ×1.8, hasar ×1.2 ve bir özellik: *Kalkanlı* (canın %40'ı kadar mavi kalkan), *Hızlı* (+%35 hız), *Patlayan* (ölünce 8 mermi saçar). Elit başına 3 ruh parçası.
@@ -97,14 +109,12 @@ Kayıt tarayıcının yerel depolamasında tutulur.
 
 ## 7. Sıradaki adımlar (yol haritası)
 
-Tamamlananlar: Ruh Tüccarı kapısı, üçüncü muhafız Yas Kraliçesi, üretken müzik (dron + minör pentatonik arpej; savaşta davul, muhafızda hızlanır), Kader Çağrısı (R), kapı seçimi (Savaş/Elit/Lanetli/Ruh Pınarı), elit düşmanlar, ikinci muhafız Gölge Atlı, 5 efsanevi sinerji, vuruş durması (hit-stop) ve titreşim.
+Tamamlananlar: 4 mızrakçı, Unutuş Ritüeli (güç silme), Yükselmiş muhafızlar, PWA (ana ekrana ekleme + çevrimdışı önbellek), Ruh Tüccarı kapısı, üçüncü muhafız Yas Kraliçesi, üretken müzik (dron + minör pentatonik arpej; savaşta davul, muhafızda hızlanır), Kader Çağrısı (R), kapı seçimi (Savaş/Elit/Lanetli/Ruh Pınarı), elit düşmanlar, ikinci muhafız Gölge Atlı, 5 efsanevi sinerji, vuruş durması (hit-stop) ve titreşim.
 
 Sıradakiler:
-1. **Muhafız sırası sonrası:** 15. odadan sonra muhafızların birleşik saldırı desenleri.
-2. **Tüccarda güç silme** ve nadir eşya stoku.
-3. **Karakter seçimi:** farklı başlangıç gücüyle 2–3 mızrakçı varyantı.
-4. **PWA:** ana ekrana eklenip çevrimdışı oynanabilmesi.
-5. Dengeleme için oda başına istatistik kaydı.
+1. Dengeleme için oda başına istatistik kaydı ve zorluk eğrisi ayarı.
+2. Mızrakçılara özel efsanevi kartlar.
+3. Günlük meydan okuma (sabit tohumlu av).
 
 ## 8. Oyun hissi (Metal Slug esinli)
 
@@ -145,7 +155,11 @@ Tema: **ruhani mezar arenası**. Karanlık taş zemin, turkuaz ruh ışığı, y
 - **Ekran sonrası:** Vinyet, film greni, hasar alınca ve can %30'un altındayken kırmızı kenar.
 - **Arayüz:** İkonlu yetenek düğmeleri (dairesel bekleme süresi), gecikmeli (beyaz iz bırakan) can barı, muhafız barı ve sinematik siyah şeritli giriş, seri sayacı, ikonlu ve nadirliğe göre renklenen kartlar.
 
-## 10. Teknik
+## 10. Telefona kurulum (PWA)
+
+`game/` klasörü herhangi bir statik sunucuda (ör. GitHub Pages) yayınlanınca tarayıcının "Ana ekrana ekle" seçeneğiyle tam ekran uygulama gibi kurulur; `sw.js` dosyaları önbelleğe alır, oyun çevrimdışı açılır. Claude artifact sürümünde servis çalışanı devre dışıdır.
+
+## 11. Teknik
 
 - Tek dosya HTML5 Canvas + saf JavaScript, kütüphane yok.
 - Dünya: 820 birim yarıçaplı dairesel arena, kamera oyuncuyu takip eder, zoom ekran boyutuna göre ölçeklenir.

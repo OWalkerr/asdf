@@ -1,0 +1,15 @@
+{
+  "name": "Yeminli Mızrak",
+  "short_name": "Yeminli Mızrak",
+  "description": "Sekmeli mızrakçı zindan avı",
+  "lang": "tr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "portrait",
+  "background_color": "#060d10",
+  "theme_color": "#060d10",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

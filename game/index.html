@@ -1,5 +1,9 @@
 <title>Yeminli Mızrak</title>
 <meta name="claude:viewport-fit-sides" content="cover">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#060d10">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Marcellus+SC&family=Barlow+Semi+Condensed:wght@400;500;600;700;800&display=swap">
@@ -181,6 +185,8 @@ p{margin:0;line-height:1.45;color:var(--ink)}
 .card .ds{grid-column:2/-1;font-size:15px;line-height:1.35;color:#c3d2ce}
 .card .lv{grid-column:2/-1;font-size:11px;color:var(--dim);letter-spacing:.12em;text-transform:uppercase;font-weight:700}
 .card.sold{opacity:.4;pointer-events:none}
+.card.hero .ic svg{transform:rotate(-45deg) scale(1.2);filter:none}
+.card.hero.sel{box-shadow:0 0 0 2px var(--rc),0 6px 18px rgba(0,0,0,.4)}
 .card .price{grid-column:2/-1;font-size:14px;font-weight:800;color:var(--gold);letter-spacing:.06em}
 .card:disabled{opacity:.45;cursor:default}
 .card.rare{--rc:#9fb6ff}.card.epic{--rc:var(--gold)}.card.leg{--rc:#f29ad0}
@@ -250,6 +256,15 @@ p{margin:0;line-height:1.45;color:var(--ink)}
   </div>
 </section>
 
+<section class="screen" id="scrHero" hidden>
+  <div class="panel">
+    <div class="eyebrow">Ava başla</div>
+    <h2>Mızrakçını seç</h2>
+    <div class="cards" id="heroes"></div>
+    <div class="btns"><button class="btn" data-back>Geri</button></div>
+  </div>
+</section>
+
 <section class="screen" id="scrHow" hidden>
   <div class="panel">
     <div class="eyebrow">Nasıl oynanır</div>
@@ -261,7 +276,7 @@ p{margin:0;line-height:1.45;color:var(--ink)}
       <li><span class="k"><span>Q</span></span><div><h3>Delici Mızrak</h3><p>Uzun menzilli güçlü atış. Öldürdüğü düşmanın içinden geçip mızraklarını sonraki hedefe aktarır. Atıştan sonra da sekebilirsin.</p></div></li>
       <li><span class="k"><span>R</span></span><div><h3>Kader Çağrısı</h3><p>Ruhun seni havaya kaldırır, sonra tuttuğun yöne (ya da en yakın düşmana) fırlatır. İndiğin yerde düşmanları sersemletir, iter ve 2 mızrak saplar. Havadayken hasar almazsın.</p></div></li>
     </ul>
-    <p class="fine">Her odadan sonra 3 güçten birini seç. Odalar arasında kapı seçersin: Savaş, Elit, Lanetli, Ruh Pınarı ya da Ruh Tüccarı. Her 5. odada bir muhafız var: Kemik Lordu, Gölge Atlı ve Yas Kraliçesi. Kraliçe'nin çığlık dalgalarının üstünden sekerek atla. Ölünce topladığın ruh parçalarıyla Ruh Sunağı'ndan kalıcı güç al.</p>
+    <p class="fine">Her odadan sonra 3 güçten birini seç. Odalar arasında kapı seçersin: Savaş, Elit, Lanetli, Ruh Pınarı ya da Ruh Tüccarı. Her 5. odada bir muhafız var: Kemik Lordu, Gölge Atlı ve Yas Kraliçesi; 20. odadan sonra Yükselmiş halleri birbirlerinin saldırılarını da kullanır. Kraliçe'nin çığlık dalgalarının üstünden sekerek atla. Ölünce topladığın ruh parçalarıyla Ruh Sunağı'ndan kalıcı güç al.</p>
     <div class="btns"><button class="btn" data-back>Geri</button></div>
   </div>
 </section>
@@ -332,6 +347,7 @@ p{margin:0;line-height:1.45;color:var(--ink)}
 <script>
 'use strict';
 document.documentElement.lang = 'tr';
+if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol) && !/claude/.test(location.hostname)) navigator.serviceWorker.register('sw.js').catch(() => {});
 // ---------- utils ----------
 const TAU = Math.PI * 2;
 const rand = (a, b) => a + Math.random() * (b - a);
@@ -482,7 +498,7 @@ const UPS = [
   { id:'harvest', n:'Ruh Hasadı', r:'common', max:3, tag:'Söküm', d:'Sökümle her öldürme 3 can verir.', a:s => s.harvest += 3 },
   { id:'qup', n:'Delici Yemin', r:'common', max:3, tag:'Delici', d:'Delici Mızrak hasarı +%40, bekleme -0.8 sn.', a:s => { s.qDmg *= 1.4; s.qCd -= .8; } },
   { id:'rcd', n:'Kader Yemini', r:'common', max:3, tag:'Kader', d:'Kader Çağrısı bekleme -%20, sersemletme +0.3 sn.', a:s => { s.rCd *= .8; s.rStun += .3; } },
-  { id:'phantom', n:'Hayalet Ordusu', r:'leg', max:1, tag:'Sinerji', req:u => u.ghost && u.shadow, d:'Hayalet Adım + Gölge Mızrak: her sekmede +2 gölge mızrak, inişten sonra 0.4 sn hasarsızlık.', a:s => { s.shadow += 2; s.postIframe = .4; } },
+  { id:'phantom', n:'Hayalet Ordusu', r:'leg', max:1, tag:'Sinerji', req:u => (u.ghost || G.s.ghostHop) && u.shadow, d:'Hayalet Adım + Gölge Mızrak: her sekmede +2 gölge mızrak, inişten sonra 0.4 sn hasarsızlık.', a:s => { s.shadow += 2; s.postIframe = .4; } },
   { id:'bonebreak', n:'Kemik Kıran', r:'leg', max:1, tag:'Sinerji', req:u => u.heavy && u.rend, d:'Ağır Mızrak + Yırtıcı: Söküm\'de her ek mızrağın hasarı %60 yerine %95.', a:s => s.rendPer = .95 },
   { id:'wildfire', n:'Ruh Yangını', r:'leg', max:1, tag:'Sinerji', req:u => u.trail && u.shock, d:'Ruh İzi + İniş Şoku: iz hasarı iki katına çıkar, şok yarıçapı +40.', a:s => { s.trailMul = 2; s.shockR += 40; } },
   { id:'legion', n:'Lejyon', r:'leg', max:1, tag:'Sinerji', req:u => (u.spirit || 0) >= 2 && u.as, d:'2+ Yeminli Ruh + Hızlı El: ruhlar iki kat sık mızrak atar.', a:s => s.spiritRate = .5 },
@@ -511,12 +527,28 @@ const SHOP = [
 
 // ---------- run state ----------
 let G = null, paused = false;
-function newRun() {
-  const s = { dmg: 18 * (1 + .06 * meta.dmg), as: 1.1, range: 400, spearSpd: 1250, hopDist: 160 * (1 + .06 * meta.hop), hopTime: .15, walk: 140,
+const HEROES = [
+  { id: 'oath', n: 'Yeminli', d: 'Dengeli mızrakçı. Ek bir özelliği yok, her yola uyar.', cloak: ['#348478', '#17463f', '#0a2420'], rim: '170,255,235', a: s => {} },
+  { id: 'shade', n: 'Gölge Koşucu', d: 'Sekme mesafesi +%35 ve sekerken hasar almaz. Mızrak hasarı -%15, can -20.', cloak: ['#5a58a0', '#29275a', '#0e0d22'], rim: '200,190,255', a: s => { s.hopDist *= 1.35; s.ghostHop = true; s.dmg *= .85; s.maxHp -= 20; } },
+  { id: 'heavy', n: 'Kemik Kıran', d: 'Mızrak hasarı +%30, mızraklar %25 şansla 2 saplanır. Saldırı hızı -%15, sekme -%10.', cloak: ['#9a6838', '#4e2e18', '#1e1008'], rim: '255,205,140', a: s => { s.dmg *= 1.3; s.heavy += .25; s.as *= .85; s.hopDist *= .9; } },
+  { id: 'caller', n: 'Ruh Çağıran', d: 'Bir Yeminli Ruh ile başlar, Kader Çağrısı bekleme süresi -%30. Mızrak hasarı -%10.', cloak: ['#3c84a8', '#1a3a56', '#081624'], rim: '165,225,255', a: s => { s.spirits += 1; s.rCd *= .7; s.dmg *= .9; } },
+];
+const heroById = id => HEROES.find(x => x.id === id) || HEROES[0];
+function baseStats() {
+  return { dmg: 18 * (1 + .06 * meta.dmg), as: 1.1, range: 400, spearSpd: 1250, hopDist: 160 * (1 + .06 * meta.hop), hopTime: .15, walk: 140,
     rendMul: 1, rendCd: 6, qDmg: 70, qCd: 5, crit: .05, multi: 0, pierce: 0, heavy: 0, slow: 0, storm: false, ghostHop: false, trail: 0, shock: 0,
     rhythm: 0, shadow: 0, exec: 0, spread: false, harvest: 0, leech: 0, regen: 0, spirits: 0, maxHp: 100 + 12 * meta.hp,
     rCd: 20, rStun: 1, rR: 150, rendPer: .6, trailMul: 1, shockR: 0, spiritRate: 1, postIframe: 0, rRend: false };
-  G = { s, ups: {}, room: 0, kills: 0, time: 0, shards: 0, rerolls: meta.reroll, hops: 0, phase: 'fight',
+}
+function recomputeStats() {
+  const s = baseStats(), dummy = { hp: 0 }; G.hero.a(s);
+  for (const [id, n] of Object.entries(G.ups)) { const u = UPS.find(x => x.id === id); for (let i = 0; i < n; i++) u.a(s, dummy); }
+  const ratio = G.p.hp / G.s.maxHp; G.s = s; G.p.hp = Math.max(1, Math.min(s.maxHp, s.maxHp * ratio));
+}
+function newRun() {
+  const hero = heroById(meta.hero), s = baseStats(); hero.a(s);
+  document.querySelector('#hud .medal').innerHTML = heroSvg(hero);
+  G = { s, hero, ups: {}, room: 0, kills: 0, time: 0, shards: 0, rerolls: meta.reroll, hops: 0, phase: 'fight',
     p: { x: 0, y: 0, hp: s.maxHp, state: 'idle', t: 0, atkCd: .3, face: -Math.PI / 2, target: null, iT: 0, hvx: 0, hvy: 0, buf: false,
       lastHop: -9, rStacks: 0, ghosts: [], qCd: 0, rendCd: 0, rCd: 0, qQueued: false, shots: 0, spA: 0, spCd: [], trailAcc: 0 },
     enemies: [], spears: [], eshots: [], parts: [], texts: [], trails: [], spawns: [], hazards: [], hitstop: 0, gibs: [], decals: [], booms: [], flashA: 0, combo: 0, comboT: 0, zp: 0, hurtA: 0, twinkles: [], rings: [], orbs: [], hitstars: [], impactT: 0, speedT: 0, beamT: 0, lastKill: null, slowT: 0, slowS: 1, roomType: 'fight', pending: 0, waves: [], waveIdx: 0, waveT: 0, shake: 0, clearT: 0,
@@ -568,7 +600,8 @@ function makeEnemy(type, x, y, elite) {
 }
 function makeEnemyFull(type, x, y, elite) {
   const e = makeEnemy(type, x, y), r = G.room;
-  if (e.boss) { e.kind = bossKind(r); e.name = bossName(r); e.t = 1.2; if (e.kind === 'rider') { e.spd *= 1.3; e.r = 40; e.hp *= .9; e.maxHp = e.hp; } if (e.kind === 'queen') { e.r = 38; e.spd *= 1.1; e.hp *= .95; e.maxHp = e.hp; e.fade = 1; } }
+  if (e.boss) { e.kind = bossKind(r); e.name = bossName(r); e.t = 1.2; if (e.kind === 'rider') { e.spd *= 1.3; e.r = 40; e.hp *= .9; e.maxHp = e.hp; } if (e.kind === 'queen') { e.r = 38; e.spd *= 1.1; e.hp *= .95; e.maxHp = e.hp; e.fade = 1; }
+    if (Math.floor(r / 5) >= 4) { e.asc = true; e.name = 'Yükselmiş ' + e.name; e.hp *= 1.2; e.maxHp = e.hp; } }
   if (elite) {
     e.elite = ['shield', 'swift', 'burst'][Math.floor(Math.random() * 3)];
     e.hp *= 1.8; e.maxHp = e.hp; e.r *= 1.2; e.dmg *= 1.2;
@@ -944,7 +977,11 @@ function updEnemy(e, dt) {
       if (e.cd <= 0) { e.cd = 3.2; const n = G.room >= 8 ? 10 : 8, o = rand(0, TAU); for (let i = 0; i < n; i++) eshot(e.x, e.y, o + i * TAU / n, 170, e.dmg, 8); }
       break;
     }
-    case 'boss': (e.kind === 'rider' ? riderAI : e.kind === 'queen' ? queenAI : bossAI)(e, dt, nx, ny, d); return finishEnemy(e, dt, 0, 0, sp, d, e.kind === 'queen' && e.fade < .6);
+    case 'boss':
+      if (e.xst) bossExtra(e);
+      else if (e.asc && e.st === 'walk' && e.t <= 0 && Math.random() < .4) startExtra(e);
+      else (e.kind === 'rider' ? riderAI : e.kind === 'queen' ? queenAI : bossAI)(e, dt, nx, ny, d);
+      return finishEnemy(e, dt, 0, 0, sp, d, e.kind === 'queen' && e.fade < .6);
   }
   finishEnemy(e, dt, mx, my, sp, d);
 }
@@ -953,6 +990,21 @@ function finishEnemy(e, dt, mx, my, sp, d, stunned) {
   e.x += e.kx * dt; e.y += e.ky * dt; e.kx *= Math.pow(.02, dt); e.ky *= Math.pow(.02, dt);
   const l = hyp(e.x, e.y); if (l > ARENA - e.r) { e.x *= (ARENA - e.r) / l; e.y *= (ARENA - e.r) / l; }
   if (d < e.r + 12 && !stunned) hurt(e.dmg);
+}
+// Ascended bosses (room 20+) borrow one attack from the other guardians.
+const EXTRA = { lord: ['xring', 'xlances'], rider: ['xring', 'xsouls'], queen: ['xlances', 'xnova'] };
+function startExtra(e) {
+  const o = EXTRA[e.kind] || EXTRA.lord; e.xst = o[Math.floor(Math.random() * o.length)]; e.t = .8;
+  if (e.xst === 'xlances') { const n = 5, base = Math.atan2(G.p.y - e.y, G.p.x - e.x); e.lanes = []; for (let i = 0; i < n; i++) e.lanes.push(base + (i - (n - 1) / 2) * .3); }
+}
+function bossExtra(e) {
+  if (e.t > 0) return;
+  const p = G.p, b = Math.atan2(p.y - e.y, p.x - e.x);
+  if (e.xst === 'xring') { G.rings.push({ x: e.x, y: e.y, r: e.r, spd: 270, w: 12, dmg: e.dmg * .6, hit: false }); sfx('scream'); }
+  if (e.xst === 'xsouls') for (let i = 0; i < 6; i++) { const a = b + (i - 2.5) * .35; G.eshots.push({ x: e.x, y: e.y, vx: Math.cos(a) * 170, vy: Math.sin(a) * 170, dmg: e.dmg * .5, r: 8, life: 4.5, home: 1.6, soul: true }); }
+  if (e.xst === 'xlances' && e.lanes) for (const a of e.lanes) for (let k = 0; k < 4; k++) G.eshots.push({ x: e.x + Math.cos(a) * k * 34, y: e.y + Math.sin(a) * k * 34, vx: Math.cos(a) * 560, vy: Math.sin(a) * 560, dmg: e.dmg * .6, r: 7, life: 2.5 });
+  if (e.xst === 'xnova') for (let i = 0; i < 16; i++) eshot(e.x, e.y, b + i * TAU / 16, 210, e.dmg * .6, 9);
+  G.shake = Math.max(G.shake, 6); e.xst = null; e.lanes = null; e.st = 'walk'; e.t = rand(1.4, 2.2);
 }
 function queenAI(e, dt, nx, ny, d) {
   const p = G.p, rage = e.hp < e.maxHp * .5, sp = e.spd * .8 * (1 - e.slowAmt * .5);
@@ -1201,6 +1253,7 @@ function drawWorld(T, now) {
       emit('255,200,90', e.x, e.y - e.r, e.r * 2.6, .35 + .2 * Math.sin(now * 12));
     }
     if (e.elite) emit('216,178,90', e.x, e.y, e.r * 2.2, .3);
+    if (e.asc) emit('255,200,90', e.x, e.y - e.r, e.r * 3.2, .22 + .08 * Math.sin(now * 4));
     shadow(e.x, e.y, e.r * (e.type === 'wisp' ? .8 : 1.15), e.boss ? .6 : .5);
   }
   if (G.phase !== 'over') shadow(p.x, p.y, 14 * (1 - pz(p) / 120), .55);
@@ -1253,7 +1306,8 @@ function drawTelegraph(e, now) {
     const k = clamp(1 - e.t / .45, 0, 1); ctx.save(); ctx.translate(e.bx, e.by); ctx.scale(1, .5); ctx.strokeStyle = `rgba(200,170,255,${.4 + .5 * k})`; ctx.lineWidth = 3;
     ctx.beginPath(); ctx.arc(0, 0, e.r * (2 - k), 0, TAU); ctx.stroke(); ctx.restore(); emit('170,130,255', e.bx, e.by, e.r * 2, .5 * k);
   }
-  if (e.lanes && e.st === 'lances') { const k = clamp(1 - e.t / .8, 0, 1); for (const a of e.lanes) zone(e.x, e.y, a, 900, 16, k, '170,120,255', now); }
+  if (e.xst && e.xst !== 'xlances') { const k = clamp(1 - e.t / .8, 0, 1); emit('255,200,90', e.x, e.y - e.r, e.r * (1.5 + 2 * k), .3 + .5 * k); }
+  if (e.lanes && (e.st === 'lances' || e.xst === 'xlances')) { const k = clamp(1 - e.t / .8, 0, 1); for (const a of e.lanes) zone(e.x, e.y, a, 900, 16, k, '170,120,255', now); }
   let tot = 0;
   if (e.type === 'brute' && e.st === 'aim') tot = .75;
   else if (e.boss && e.sub === 'aim' && (e.st === 'charge' || e.st === 'gallop')) tot = e.kind === 'rider' ? .5 : .85;
@@ -1500,7 +1554,7 @@ function drawPlayer(p, s, T, now) {
   const bx = p.x, by = p.y - z, sway = clamp(-(p.vx || 0) / 500, -1, 1);
   ctx.save(); ctx.translate(bx, by); ctx.globalAlpha = blink ? .45 : 1; ctx.scale(sxs, sys);
   cloakPath(0, 0, 1, sway, now);
-  const cg = ctx.createLinearGradient(0, -40, 0, 2); cg.addColorStop(0, '#348478'); cg.addColorStop(.55, '#17463f'); cg.addColorStop(1, '#0a2420');
+  const cg = ctx.createLinearGradient(0, -40, 0, 2); const HC = G.hero.cloak; cg.addColorStop(0, HC[0]); cg.addColorStop(.55, HC[1]); cg.addColorStop(1, HC[2]);
   ctx.fillStyle = cg; ctx.fill(); ctx.strokeStyle = '#031210'; ctx.lineWidth = 2; ctx.stroke();
   ctx.strokeStyle = 'rgba(170,255,235,.6)'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(-8 * fx, -28); ctx.quadraticCurveTo(-12 * fx, -14, -12 * fx + sway * 6, -2); ctx.stroke();
   ctx.fillStyle = '#d8b25a'; ctx.fillRect(-7, -18, 14, 2.4);
@@ -1508,7 +1562,7 @@ function drawPlayer(p, s, T, now) {
   ctx.fillStyle = '#020807'; ctx.beginPath(); ctx.ellipse(fx * 2, -33, 5.3, 5.8, 0, 0, TAU); ctx.fill();
   ctx.fillStyle = '#d2fff4'; ctx.beginPath(); ctx.arc(fx * 2 - 2.2, -33.5, 1.3, 0, TAU); ctx.arc(fx * 2 + 2.2, -33.5, 1.3, 0, TAU); ctx.fill();
   ctx.restore(); ctx.globalAlpha = 1;
-  emit('170,255,235', bx + fx * 2 * sxs, by - 33 * sys, 11, .9);
+  emit(G.hero.rim, bx + fx * 2 * sxs, by - 33 * sys, 11, .9);
   for (let i = 0; i < 4; i++) emit('110,230,205', bx + (-9 + i * 6) * sxs + sway * 6, by - 2 + Math.sin(now * 12 + i * 2) * 2, 10 + 3 * Math.sin(now * 17 + i), .5);
   const charging = p.state === 'windup' || p.state === 'qcast', tot = p.state === 'qcast' ? .22 : Math.max(.07, .3 / s.as), k = charging ? 1 - clamp(p.t / tot, 0, 1) : 0;
   const pull = charging ? -12 * k : p.state === 'post' ? 8 : 0, hx = bx + fx * 5, hy = by - 21 * sys;
@@ -1748,12 +1802,22 @@ const icon = k => `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" s
 
 
 // ---------- screens ----------
-const screens = ['scrTitle', 'scrHow', 'scrShop', 'scrDraft', 'scrPath', 'scrMerchant', 'scrPause', 'scrOver'];
+const screens = ['scrTitle', 'scrHero', 'scrHow', 'scrShop', 'scrDraft', 'scrPath', 'scrMerchant', 'scrPause', 'scrOver'];
 let backTo = 'scrTitle';
 function show(id) { screens.forEach(s => $(s).hidden = s !== id); $('hud').hidden = !G || id === 'scrTitle' || id === 'scrHow' || id === 'scrShop'; }
 function titleScreen() { G = null; paused = false; $('tBest').textContent = meta.best; $('tShards').textContent = meta.shards; show('scrTitle'); }
 document.querySelectorAll('[data-back]').forEach(b => b.addEventListener('click', () => titleScreen()));
-$('btnStart').addEventListener('click', () => { initAudio(); newRun(); show(null); });
+$('btnStart').addEventListener('click', () => { initAudio(); renderHeroes(); show('scrHero'); });
+const heroSvg = h => `<svg width="30" height="30" viewBox="0 0 48 48"><path d="M24 4C13 4 8 16 8 27v15h32V27C40 16 35 4 24 4Z" fill="${h.cloak[1]}" stroke="rgb(${h.rim})" stroke-width="2"/><path d="M24 14c-6 0-9 6-9 12v4h18v-4c0-6-3-12-9-12Z" fill="#030808"/><circle cx="20" cy="25" r="2.2" fill="rgb(${h.rim})"/><circle cx="28" cy="25" r="2.2" fill="rgb(${h.rim})"/></svg>`;
+function renderHeroes() {
+  const c = $('heroes'); c.innerHTML = '';
+  for (const hr of HEROES) {
+    const b = document.createElement('button'); b.className = 'card hero' + (hr.id === (meta.hero || 'oath') ? ' sel' : ''); b.style.setProperty('--rc', `rgb(${hr.rim})`);
+    b.innerHTML = `<span class="ic">${heroSvg(hr)}</span><span class="nm"></span><span class="rr">${hr.id === (meta.hero || 'oath') ? 'Son seçim' : ''}</span><span class="ds"></span>`;
+    b.querySelector('.nm').textContent = hr.n; b.querySelector('.ds').textContent = hr.d;
+    b.addEventListener('click', () => { meta.hero = hr.id; store.set('ym_meta', meta); sfx('pick'); newRun(); show(null); }); c.appendChild(b);
+  }
+}
 $('btnHow').addEventListener('click', () => show('scrHow'));
 $('btnShop').addEventListener('click', () => { renderShop(); show('scrShop'); });
 $('btnPause').addEventListener('pointerdown', e => { e.stopPropagation(); pause(); });
@@ -1772,7 +1836,7 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) pause
 
 let draftOpts = [];
 function rollDraft() {
-  const avail = UPS.filter(u => (G.ups[u.id] || 0) < u.max && (!u.req || u.req(G.ups))); const out = [];
+  const avail = UPS.filter(u => (G.ups[u.id] || 0) < u.max && (!u.req || u.req(G.ups)) && !(u.id === 'ghost' && G.s.ghostHop)); const out = [];
   const boost = G.roomType !== 'fight', w = u => boost && u.r === 'common' ? 2 : RW[u.r];
   while (out.length < 3 && avail.length) {
     const tot = avail.reduce((a, u) => a + w(u), 0); let r = Math.random() * tot, i = 0;
@@ -1819,33 +1883,56 @@ function showPath() {
   show('scrPath');
 }
 const PRICE = { common: 15, rare: 25, epic: 40, leg: 55 };
-let wares = [];
+let wares = [], purging = false;
+const WARE = {
+  heal:   { n: 'Ruh İksiri', d: 'Canının %50\'sini yenile.', cls: 'common', ic: 'Ruh' },
+  reroll: { n: 'Kehanet Kartı', d: '+1 yeniden çekme hakkı.', cls: 'epic', ic: 'Sinerji' },
+  purge:  { n: 'Unutuş Ritüeli', d: 'Sahip olduğun bir gücün bir seviyesini sil. İstemediğin bir gücü atıp havuzu daraltmak için.', cls: 'leg', ic: 'cursed' },
+};
 function showMerchant() {
-  G.phase = 'shop';
+  G.phase = 'shop'; purging = false;
   wares = rollDraft().map(u => ({ kind: 'up', u, price: PRICE[u.r] }));
-  wares.push({ kind: 'heal', price: 12 }, { kind: 'reroll', price: 10 });
+  wares.push({ kind: 'heal', price: 12 }, { kind: 'reroll', price: 10 }, { kind: 'purge', price: 15 });
   renderMerchant(); show('scrMerchant');
 }
 function renderMerchant() {
   $('mShards').textContent = G.shards; const c = $('wares'); c.innerHTML = '';
+  if (purging) {
+    const ids = Object.keys(G.ups);
+    for (const id of ids) {
+      const u = UPS.find(x => x.id === id), b = document.createElement('button'); b.className = 'card ' + u.r;
+      b.innerHTML = `<span class="ic">${icon(u.tag)}</span><span class="nm"></span><span class="rr">Seviye ${G.ups[id]}</span><span class="ds">Bir seviyesini sil</span>`;
+      b.querySelector('.nm').textContent = u.n;
+      b.addEventListener('click', () => purgeUp(id)); c.appendChild(b);
+    }
+    const back = document.createElement('button'); back.className = 'btn'; back.textContent = 'Vazgeç'; back.addEventListener('click', () => { purging = false; renderMerchant(); }); c.appendChild(back);
+    return;
+  }
   for (const w of wares) {
-    const b = document.createElement('button'), up = w.kind === 'up';
-    b.className = 'card ' + (up ? w.u.r : w.kind === 'heal' ? 'common' : 'epic') + (w.sold ? ' sold' : '');
-    b.innerHTML = `<span class="ic">${icon(up ? w.u.tag : w.kind === 'heal' ? 'Ruh' : 'Sinerji')}</span><span class="nm"></span><span class="rr"></span><span class="ds"></span><span class="price"></span>`;
-    b.querySelector('.nm').textContent = up ? w.u.n : w.kind === 'heal' ? 'Ruh İksiri' : 'Kehanet Kartı';
+    const b = document.createElement('button'), up = w.kind === 'up', D = WARE[w.kind];
+    b.className = 'card ' + (up ? w.u.r : D.cls) + (w.sold ? ' sold' : '');
+    b.innerHTML = `<span class="ic">${icon(up ? w.u.tag : D.ic)}</span><span class="nm"></span><span class="rr"></span><span class="ds"></span><span class="price"></span>`;
+    b.querySelector('.nm').textContent = up ? w.u.n : D.n;
     b.querySelector('.rr').textContent = up ? RN[w.u.r] : '';
-    b.querySelector('.ds').textContent = up ? w.u.d : w.kind === 'heal' ? 'Canının %50\'sini yenile.' : '+1 yeniden çekme hakkı.';
+    b.querySelector('.ds').textContent = up ? w.u.d : D.d;
     b.querySelector('.price').textContent = w.sold ? 'Satıldı' : '◆ ' + w.price;
-    b.disabled = !w.sold && G.shards < w.price;
+    b.disabled = !w.sold && (G.shards < w.price || (w.kind === 'purge' && !Object.keys(G.ups).length));
     b.addEventListener('click', () => buy(w)); c.appendChild(b);
   }
 }
 function buy(w) {
   if (!G || G.phase !== 'shop' || w.sold || G.shards < w.price) return;
+  if (w.kind === 'purge') { if (!Object.keys(G.ups).length) return; purging = w; renderMerchant(); return; }
   G.shards -= w.price; w.sold = true; sfx('pick');
   if (w.kind === 'up') { G.ups[w.u.id] = (G.ups[w.u.id] || 0) + 1; w.u.a(G.s, G.p); G.p.hp = Math.min(G.p.hp, G.s.maxHp); G.beamT = 1.1; }
   else if (w.kind === 'heal') heal(G.s.maxHp * .5); else G.rerolls++;
   renderMerchant(); updHud();
+}
+function purgeUp(id) {
+  const w = purging; if (!w || G.shards < w.price) return;
+  G.shards -= w.price; w.sold = true; purging = false;
+  if (--G.ups[id] <= 0) delete G.ups[id];
+  recomputeStats(); sfx('rend'); renderMerchant(); updHud();
 }
 $('btnLeave').addEventListener('click', () => { if (G && G.phase === 'shop') { sfx('pick'); showPath(); } });
 function chooseDoor(t) {
