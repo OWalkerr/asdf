@@ -98,7 +98,7 @@ export const FACTIONS: readonly FactionDef[] = [
     },
     color: { main: '#d8d8d2', dark: '#3a3a3e', accent: '#c0302a' },
     evil: true,
-    enemyHpPercent: 82,
+    enemyHpPercent: 78,
     enemyMap: GOOD_ATTACKERS,
     spells: {
       heal: {
