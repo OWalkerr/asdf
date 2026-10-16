@@ -28,6 +28,7 @@
 [hidden]{display:none!important}
 html,body{height:100%;margin:0;overflow:hidden;background:var(--abyss);color:var(--ink);font-family:var(--f-ui);font-size:16px;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;overscroll-behavior:none}
 canvas#game{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+#glc{position:fixed;inset:0;width:100%;height:100%;display:none;pointer-events:none}
 button{font-family:var(--f-ui);cursor:pointer}
 button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
 svg{display:block}
@@ -235,6 +236,7 @@ p{margin:0;line-height:1.45;color:var(--ink)}
 </style>
 
 <canvas id="game" aria-label="Oyun alanı"></canvas>
+<canvas id="glc" aria-hidden="true"></canvas>
 
 <div id="toast" role="status"></div>
 <div id="hud" hidden>
@@ -869,7 +871,7 @@ function rImpact() {
       if (!e.boss) { e.kx += dx / (d || 1) * 420; e.ky += dy / (d || 1) * 420; } }
   }
   G.parts.push({ ring: true, x: p.x, y: p.y, r: s.rR, life: .35, max: .35, c: COL.gold }); burst(p.x, p.y, COL.gold, 24, 320, .5);
-  G.shake = Math.max(G.shake, 12); G.hitstop = Math.max(G.hitstop, .05); buzz(30); sfx('boom');
+  G.shake = Math.max(G.shake, 12); G.hitstop = Math.max(G.hitstop, .05); buzz(30); sfx('boom'); shock(p.x, p.y, 300, 1.3, .55);
   if (s.rRend) { p.rendCd = 0; castRend(); }
 }
 function queueQ() { if (!G || G.phase !== 'fight' || paused) return; if (G.p.qCd <= 0) G.p.qQueued = true; }
@@ -895,7 +897,7 @@ function castRend() {
   if (killed >= 5) unlock('rend5');
   if (s.loyal && killed) p.rCd = Math.max(0, p.rCd - 3 * killed);
   G.shake = Math.max(G.shake, 7); sfx('rend'); buzz(killed ? 25 : 12); if (killed) G.hitstop = Math.max(G.hitstop, .05);
-  G.parts.push({ ring: true, x: p.x, y: p.y, r: 420, life: .4, max: .4, c: '#d8fff4' });
+  G.parts.push({ ring: true, x: p.x, y: p.y, r: 420, life: .4, max: .4, c: '#d8fff4' }); shock(p.x, p.y, 460, .8, .45);
   if (killed >= 3) { G.impactT = .06; G.speedT = .4; twinkleWorld(p.x, p.y - 30, Math.min(W, H) * .32); }
 }
 const rendDmg = e => G.s.dmg * (1 + G.s.rendPer * (e.stacks - 1)) * G.s.rendMul;
@@ -968,7 +970,7 @@ function shatter(e, big) {
     G.shake = Math.max(G.shake, e.boss ? 28 : 14); G.zp = Math.max(G.zp, e.boss ? .12 : .05); buzz(e.boss ? 120 : 45); sfx('bigboom'); if (!e.boss && e.type !== 'player') sfx('die_' + e.type); }
   else { G.shake = Math.max(G.shake, 3.5); sfx('die_' + e.type); }
 }
-function starBoom(x, y, R) { G.booms.push({ x, y, R, life: .45, max: .45, rot: rand(0, TAU), pts: R > 100 ? 8 : Math.random() < .5 ? 4 : 6 }); }
+function starBoom(x, y, R) { shock(x, y - 10, R * 2.4, R > 100 ? 1.3 : .9, .5); G.booms.push({ x, y, R, life: .45, max: .45, rot: rand(0, TAU), pts: R > 100 ? 8 : Math.random() < .5 ? 4 : 6 }); }
 function flashScreen(a) { G.flashA = Math.max(G.flashA, a); }
 function slowmo(dur, scale) { G.slowT = Math.max(G.slowT, dur); G.slowS = Math.min(G.slowT > dur ? G.slowS : 1, scale); }
 function updFx(dt) {
@@ -1665,6 +1667,7 @@ function draw() {
   if (G) drawTexts();
   if (G) drawSky(now);
   post(now);
+  glPost(TH);
 }
 function renderLights(Z, ox, oy, amb, tint = '5,3,12') {
   const w = Math.max(1, Math.ceil(W * LS)), h = Math.max(1, Math.ceil(H * LS));
@@ -2343,6 +2346,7 @@ function updFlares(dt) {
   for (let i = G.twinkles.length - 1; i >= 0; i--) {
     const t = G.twinkles[i], was = t.t; t.t += dt;
     if (was <= 0 && t.t > 0) sfx('ding');
+    if (was < .26 && t.t >= .26 && t.wx !== undefined) shock(t.wx, t.wy, t.S / CAM.Z * 1.2, 1.1, .6);
     if (was < .26 && t.t >= .26) { sfx('shimmer'); flashScreen(Math.min(.4, t.S / Math.min(W, H) * .45)); G.shake = Math.max(G.shake, 4); }
     if (t.t > 1.25) G.twinkles.splice(i, 1);
   }
@@ -2406,6 +2410,74 @@ function drawTwinkle(t) {
   }
   ctx.globalAlpha = a; ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(t.x, t.y, R * .08, 0, TAU); ctx.fill(); ctx.globalAlpha = 1;
 }
+
+// ---------- GPU post-processing (WebGL1): bloom, shockwave refraction, chromatic aberration, biome grading ----------
+// The 2D canvas stays the scene renderer; each frame it is uploaded as a texture and finished here. Without WebGL or on low quality it is shown as is.
+const glc = $('glc'), GLX = {};
+let GL = null, GLOK = false, GLSZ = '', GLSLOW = false;
+function glInit() {
+  try { GL = glc.getContext('webgl', { alpha: false, antialias: false, premultipliedAlpha: false, powerPreference: 'high-performance' }); } catch (e) { GL = null; }
+  if (!GL) return;
+  const gl = GL;
+  const sh = (type, src) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s)); return s; };
+  const VS = 'attribute vec2 p;varying vec2 uv;void main(){uv=p*.5+.5;gl_Position=vec4(p,0.,1.);}';
+  const prog = fs => {
+    const pr = gl.createProgram(); gl.attachShader(pr, sh(gl.VERTEX_SHADER, VS)); gl.attachShader(pr, sh(gl.FRAGMENT_SHADER, 'precision mediump float;varying vec2 uv;' + fs));
+    gl.bindAttribLocation(pr, 0, 'p'); gl.linkProgram(pr); if (!gl.getProgramParameter(pr, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(pr));
+    const U = {}, n = gl.getProgramParameter(pr, gl.ACTIVE_UNIFORMS); for (let i = 0; i < n; i++) { const a = gl.getActiveUniform(pr, i); U[a.name.replace('[0]', '')] = gl.getUniformLocation(pr, a.name); }
+    return { pr, U };
+  };
+  try {
+    GLX.bright = prog('uniform sampler2D t;uniform float th;void main(){vec3 c=texture2D(t,uv).rgb;float l=max(c.r,max(c.g,c.b));gl_FragColor=vec4(c*smoothstep(th,th+.3,l),1.);}');
+    GLX.blur = prog('uniform sampler2D t;uniform vec2 d;void main(){vec3 c=texture2D(t,uv).rgb*.227027;c+=(texture2D(t,uv+d*1.3846154).rgb+texture2D(t,uv-d*1.3846154).rgb)*.3162162;c+=(texture2D(t,uv+d*3.2307692).rgb+texture2D(t,uv-d*3.2307692).rgb)*.0702703;gl_FragColor=vec4(c,1.);}');
+    GLX.comp = prog('uniform sampler2D s,b1,b2;uniform vec4 w[8];uniform float ca,bloom,sat,con,aspect;uniform vec3 tint;' +
+      'void main(){vec2 u=uv;' +
+      'for(int i=0;i<8;i++){vec4 W=w[i];if(W.w<=0.)continue;vec2 dv=(u-W.xy)*vec2(aspect,1.);float dl=length(dv);float x=(dl-W.z)/.07;' +
+      'if(abs(x)<1.){float f=W.w*x*(1.-abs(x));u-=dv/(dl+1e-4)/vec2(aspect,1.)*f*.04;}}' +
+      'vec2 cd=(u-.5)*ca;vec3 c=vec3(texture2D(s,u+cd).r,texture2D(s,u).g,texture2D(s,u-cd).b);' +
+      'c+=(texture2D(b1,u).rgb*.7+texture2D(b2,u).rgb*1.1)*bloom;' +
+      'float l=dot(c,vec3(.299,.587,.114));c=mix(vec3(l),c,sat);c=(c-.5)*con+.5;c*=tint;' +
+      'c=max(c,0.);c=c*(1.+c*.1)/(1.+c*.55)*1.25;gl_FragColor=vec4(c,1.);}');
+  } catch (e) { console.warn('GL post disabled:', e.message); GL = null; return; }
+  GLX.buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, GLX.buf); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+  gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+  GLX.src = glTex(); gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+  glc.addEventListener('webglcontextlost', e => { e.preventDefault(); GLOK = false; });
+  GLOK = true;
+}
+function glTex() { const gl = GL, t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t); for (const [k, v] of [[gl.TEXTURE_MIN_FILTER, gl.LINEAR], [gl.TEXTURE_MAG_FILTER, gl.LINEAR], [gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE], [gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE]]) gl.texParameteri(gl.TEXTURE_2D, k, v); return t; }
+function glFbo(w, h) { const gl = GL, t = glTex(); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, null); const f = gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER, f); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, t, 0); return { t, f, w, h }; }
+function glSize() {
+  const w = Math.max(1, cv.width), h = Math.max(1, cv.height), key = w + 'x' + h; if (key === GLSZ) return; GLSZ = key;
+  for (const k of ['h1', 'h2', 'q1', 'q2']) if (GLX[k]) { GL.deleteTexture(GLX[k].t); GL.deleteFramebuffer(GLX[k].f); }
+  glc.width = w; glc.height = h;
+  GLX.h1 = glFbo(Math.max(1, w >> 1), Math.max(1, h >> 1)); GLX.h2 = glFbo(GLX.h1.w, GLX.h1.h);
+  GLX.q1 = glFbo(Math.max(1, w >> 2), Math.max(1, h >> 2)); GLX.q2 = glFbo(GLX.q1.w, GLX.q1.h);
+}
+const WAVES = [], WU = new Float32Array(32);
+function shock(x, y, R, str = 1, dur = .5) { if (WAVES.length < 8) WAVES.push({ x, y, R, str, dur, t: 0 }); }
+const GRADE = { witch: { tint: [1, .97, 1.05], sat: 1.12, con: 1.05, bloom: .8 }, ice: { tint: [.92, 1, 1.1], sat: .86, con: 1.07, bloom: .75 }, blood: { tint: [1.1, .94, .9], sat: 1.15, con: 1.07, bloom: .9 } };
+function glPost(TH) {
+  const use = GLOK && !LOWQ && !(GLSLOW && OPTS.gfx === 'auto');
+  if (glc.style.display !== (use ? 'block' : 'none')) glc.style.display = use ? 'block' : 'none';
+  if (!use) { WAVES.length = 0; return; }
+  const gl = GL; glSize();
+  gl.bindTexture(gl.TEXTURE_2D, GLX.src); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, cv);
+  const pass = (P, fbo, set) => { gl.bindFramebuffer(gl.FRAMEBUFFER, fbo ? fbo.f : null); gl.viewport(0, 0, fbo ? fbo.w : glc.width, fbo ? fbo.h : glc.height); gl.useProgram(P.pr); set(P.U); gl.drawArrays(gl.TRIANGLES, 0, 3); };
+  const bind = (unit, tex, loc) => { gl.activeTexture(gl.TEXTURE0 + unit); gl.bindTexture(gl.TEXTURE_2D, tex); gl.uniform1i(loc, unit); };
+  pass(GLX.bright, GLX.h1, U => { bind(0, GLX.src, U.t); gl.uniform1f(U.th, .55); });
+  pass(GLX.blur, GLX.h2, U => { bind(0, GLX.h1.t, U.t); gl.uniform2f(U.d, 1 / GLX.h1.w, 0); });
+  pass(GLX.blur, GLX.h1, U => { bind(0, GLX.h2.t, U.t); gl.uniform2f(U.d, 0, 1 / GLX.h1.h); });
+  pass(GLX.blur, GLX.q1, U => { bind(0, GLX.h1.t, U.t); gl.uniform2f(U.d, 1 / GLX.h1.w, 1 / GLX.h1.h); });
+  pass(GLX.blur, GLX.q2, U => { bind(0, GLX.q1.t, U.t); gl.uniform2f(U.d, 1 / GLX.q1.w, 0); });
+  pass(GLX.blur, GLX.q1, U => { bind(0, GLX.q2.t, U.t); gl.uniform2f(U.d, 0, 1 / GLX.q1.h); });
+  WU.fill(0);
+  for (let i = WAVES.length - 1; i >= 0; i--) { const w = WAVES[i]; w.t += FDT; if (w.t >= w.dur) WAVES.splice(i, 1); }
+  WAVES.forEach((w, i) => { const k = w.t / w.dur; WU[i * 4] = (w.x * CAM.Z + CAM.ox) / W; WU[i * 4 + 1] = 1 - (w.y * CAM.Z + CAM.oy) / H; WU[i * 4 + 2] = w.R * CAM.Z * (.12 + .88 * Math.sqrt(k)) / H; WU[i * 4 + 3] = RM ? 0 : w.str * (1 - k) * (1 - k); });
+  const gr = GRADE[TH.id] || GRADE.witch, ca = G && !RM ? Math.min(.03, .002 + (G.hurtA || 0) * .012 + (G.impactT > 0 ? .02 : 0) + G.shake * .0005) : .0015;
+  pass(GLX.comp, null, U => { bind(0, GLX.src, U.s); bind(1, GLX.h1.t, U.b1); bind(2, GLX.q1.t, U.b2); gl.uniform4fv(U.w, WU); gl.uniform1f(U.ca, ca); gl.uniform1f(U.bloom, gr.bloom); gl.uniform1f(U.sat, gr.sat); gl.uniform1f(U.con, gr.con); gl.uniform1f(U.aspect, W / H); gl.uniform3fv(U.tint, gr.tint); });
+}
+glInit();
 
 // ---------- HUD ----------
 const hud = { hp: $('hpfill'), lag: $('hplag'), hpbar: $('hpbar'), hpn: $('hpnum'), room: $('roomlbl'), wave: $('wavelbl'), pips: $('wavepips'), sh: $('shardlbl'),
@@ -2518,9 +2590,9 @@ $('btnAgain').addEventListener('click', () => { const d = G && G.daily ? dailyIn
 $('btnMenu').addEventListener('click', () => titleScreen());
 function syncMute() { $('btnMute').textContent = 'Ses: ' + (muted ? 'kapalı' : 'açık'); }
 const GFXN = { auto: 'otomatik', high: 'yüksek', low: 'düşük' };
-function syncGfx() { $('btnGfx').textContent = 'Grafik: ' + GFXN[OPTS.gfx] + (OPTS.gfx === 'auto' ? (LOWQ ? ' (düşük)' : ' (yüksek)') : ''); }
+function syncGfx() { $('btnGfx').textContent = 'Grafik: ' + GFXN[OPTS.gfx] + (OPTS.gfx === 'auto' ? (LOWQ ? ' (düşük)' : typeof GLSLOW !== 'undefined' && GLSLOW ? ' (orta)' : ' (yüksek)') : ''); }
 function setLowQ(v) { if (LOWQ === v) return; LOWQ = v; resize(); if (v) SMOKE.length = Math.min(SMOKE.length, 130); syncGfx(); }
-$('btnGfx').addEventListener('click', () => { OPTS.gfx = { auto: 'high', high: 'low', low: 'auto' }[OPTS.gfx]; store.set('ym_opts', OPTS); setLowQ(OPTS.gfx === 'low'); PERF.t = PERF.n = 0; syncGfx(); });
+$('btnGfx').addEventListener('click', () => { GLSLOW = false; OPTS.gfx = { auto: 'high', high: 'low', low: 'auto' }[OPTS.gfx]; store.set('ym_opts', OPTS); setLowQ(OPTS.gfx === 'low'); PERF.t = PERF.n = 0; syncGfx(); });
 syncGfx();
 function syncTouch() {
   $('btnJoy').textContent = 'Joystick: ' + (OPTS.joy === 'fixed' ? 'sabit' : 'serbest');
@@ -2704,7 +2776,7 @@ let last = performance.now();
 function frame(now) {
   const raw = (now - last) / 1000, dt = clamp(raw, 0, .05); last = now; FDT = dt;
   // automatic quality: drop to low effects if the fight averages under ~38 fps for 3 s
-  if (OPTS.gfx === 'auto' && !LOWQ && G && G.phase === 'fight' && !paused && raw > 0 && raw < .5) { PERF.t += raw; PERF.n++; if (PERF.t > 3) { if (PERF.t / PERF.n > .026) setLowQ(true); PERF.t = PERF.n = 0; } }
+  if (OPTS.gfx === 'auto' && !LOWQ && G && G.phase === 'fight' && !paused && raw > 0 && raw < .5) { PERF.t += raw; PERF.n++; if (PERF.t > 3) { if (PERF.t / PERF.n > .026) { if (GLOK && !GLSLOW) { GLSLOW = true; syncGfx(); } else setLowQ(true); } PERF.t = PERF.n = 0; } }
   if (G && !paused && (G.phase === 'fight' || G.phase === 'clear')) {
     let d = dt; if (G.hitstop > 0) { G.hitstop -= dt; d *= .15; }
     if (G.slowT > 0) { G.slowT -= dt; d *= G.slowS; if (G.slowT <= 0) G.slowS = 1; }

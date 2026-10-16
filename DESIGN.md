@@ -209,6 +209,12 @@ Mevcut 2D tuval her kare bir WebGL dokusuna aktarılır ve tek bir shader zincir
 - GPU örnekleme ile binlerce parçacık: yoğun duman, kıvılcım, kar.
 - Akış dokulu kurdele izleri, flipbook patlamalar, gürültü dokulu hacimsel sis.
 
+**Durum (Aşama 3 yolu seçildi):**
+- [x] Adım 1: WebGL altyapısı ve son işlem. 2D tuval her kare dokuya aktarılır; parlak geçiş + yarım ve çeyrek çözünürlükte ayrılabilir Gauss bulanıklığı (bloom), 8 eşzamanlı şok dalgası kırılması (yıldız patlamaları, Kader inişi, Söküm, dev parlamalar), hasar ve darbe karelerinde renk ayrışması, biyom başına doygunluk/kontrast/renk tonu ve yumuşak film eğrisi. WebGL yoksa, bağlam kaybolursa ya da düşük kalitede eski çizim gösterilir; otomatik kalite yavaşlıkta önce bu katmanı kapatır ("orta"), sonra düşük kaliteye iner.
+- [ ] Adım 2: zemin, ada, uçurum ve arka planın GPU'ya taşınması, yönlü ışık.
+- [ ] Adım 3: karakterlerin animasyonlu sprite atlaslarına çevrilmesi.
+- [ ] Adım 4: parçacık ve duman sisteminin GPU'ya taşınması.
+
 **Önerilen sıra:** Aşama 2 (en çok "vay" etkisi, en az risk) → Aşama 1'in kamera ve fizik maddeleri → Aşama 3. Her aşamada grafik kalitesi ayarına bağlı kademeler ve telefonda 60 fps hedefi korunur.
 
 ## 12. Sıradaki adımlar (yol haritası)
