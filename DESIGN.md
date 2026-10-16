@@ -233,6 +233,12 @@ Mevcut 2D tuval her kare bir WebGL dokusuna aktarılır ve tek bir shader zincir
   - Buz Hortlağı, Hortlak atlasının buz tonlu kopyasıyla çizilir. Muhafızlar `walk`, `rest` ve `appear` dışındaki her durumda saldırı karelerini kullanır.
   - Atlaslar ilk kullanımda açılır (muhafızlarınki ancak o muhafız gelince). Ateş Ruhu, Kan Yarasası, Kemik Bombası ve sandıklar kod çizimiyle kalır.
   - GPU yolunda yağlı boya karışımı %82'den %55'e, varlıklar üzerindeki karanlık .52'den .34'e indi ki modeller okunsun.
+- [x] Üçte dört görünüm için düzenleme:
+  - Arka plan: uçurumun üst kenarı eğik arena kenarını izler, kaya yüzü dik sarkar; yüzen adalar ve kaya parçaları yerde eğik konumlanır ama dik çizilir.
+  - Tepeden bakış için önceden basık çizilen yer şekilleri (lekeler, tehlike alanları, kan fışkırması, doğma çemberi, ışınlanma ve sıçrama uyarıları) artık gerçek daire; eğim onları kendiliğinden elips yapar.
+  - Yetenek ve vuruş halkaları (sekme, Söküm, Ay Sıçrayışı inişi ve yükselişi, Delici, ölümler, toplama, yıldız patlaması, Kraliçe çığlık dalgaları) 1–4 piksellik çizgi yerine yumuşak, renkli, kenarı beyaz parlayan, yavaşlayarak genişleyen ışık dalgaları; başta kısa bir parlama.
+  - Menzil göstergesi kesik çizgi yerine soluk, nefes alan bir ışık halkası. Söküm infaz işareti kesik çizgi yerine nabız gibi atan altın halka ve etrafında dönen üç kıvılcım.
+  - Kıvılcımlar ince çizgi yerine toplamalı, beyaz çekirdekli ışık izleri. Mızrak izleri titreşen çizgiler yerine mızraktan kuyruğa incelen ışık şeridi. Düşmana saplı mızraklar çubuk yerine beyaz çekirdekli ışık kıymıkları.
 - [ ] Gerçek boyanmış arka plan katmanları eklenirse kodla çizilenlerin yerini alacak.
 
 **Önerilen sıra:** Aşama 2 (en çok "vay" etkisi, en az risk) → Aşama 1'in kamera ve fizik maddeleri → Aşama 3. Her aşamada grafik kalitesi ayarına bağlı kademeler ve telefonda 60 fps hedefi korunur.
