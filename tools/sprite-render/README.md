@@ -1,6 +1,6 @@
 # Sprite atlas üretici (3B model → oyun kareleri)
 
-Meshy'den gelen rigli GLB modelleri oyunun kamera açısıyla (yandan, 22° yukarıdan) işler ve animasyon atlasına çevirir. Kamera her modele kendiliğinden oturur.
+Meshy'den gelen rigli GLB modelleri oyunun kamera açısıyla (51° yukarıdan, `dirs` ile 5 yönde: doğu, güneydoğu, güney, kuzeydoğu, kuzey) işler; batı yarısını oyun aynalar. Kamera her modele kendiliğinden oturur, `pack.py` kareleri kırpıp tek sayfaya dizer.
 
 ## Yeni düşman eklemek
 
@@ -22,4 +22,6 @@ python3 pack.py ghoul:3.2     # game/index.html içine gömer; 3.2 = gövde uzun
 
 ## Tilki
 
-`fox` girişi kahramanın atlasını üretir. Modelde yalnızca yürüme olduğu için bekleme, koşu, sekme ve fırlatma hazırlığı kemik dönüşleriyle kurulur. Çıktı `game/index.html` içindeki `FOXI` / `FOXM` değerlerine elle konur.
+`fox` girişi kahramanın atlasını üretir (`python3 pack.py fox:1`). Modelde yalnızca yürüme olduğu için bekleme, koşu, sekme ve fırlatma hazırlığı kemik dönüşleriyle kurulur.
+
+Rigli ama animasyonsuz modeller için de `pose(H, u)` ile hareket yazılabilir: `H.rotW(kemik, eksen, açı)` dünya ekseninde döndürür, `H.clip(i, u)` klip oynatır, `H.exaggerate(kemikler, k)` hareketi büyütür.

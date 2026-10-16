@@ -30,30 +30,34 @@ const H = {
   clip(ref, u) { const c = typeof ref === 'number' ? clips[ref] : clips.find(c => c.name.includes(ref)); if (!c) throw new Error('clip ' + ref); H.reset(); const a = mixer.clipAction(c); a.reset().play(); mixer.setTime(u * c.duration); },
   exaggerate(names, k) { for (const n of names) { const b = bones[n]; if (!b) continue; const d = b.quaternion.clone().multiply(rest[n].q.clone().invert()); const ang = 2 * Math.acos(Math.min(1, Math.abs(d.w))); if (ang < 1e-5) continue; const ax = new THREE.Vector3(d.x, d.y, d.z).normalize(); if (d.w < 0) ax.negate(); b.quaternion.copy(new THREE.Quaternion().setFromAxisAngle(ax, ang * k).multiply(rest[n].q)); } },
 };
-// model faces +z by default; the camera looks from -x so the head is on the right of the frame
-const yaw = C.yaw ?? 0; root.rotation.y = yaw; root.updateMatrixWorld(true);
-const pose = (A, u) => { const lift = A.pose ? A.pose(H, u) : (H.clip(A.clip, A.from + (A.to - A.from) * u), 0); root.position.y = lift || 0; root.updateMatrixWorld(true); };
+// Model faces +z; the camera looks from -x, so yaw 0 shows the head on the right (east).
+// dirs: facing angles to bake, in screen terms: 0 east, 45 south-east (toward the viewer), 90 south, -45 north-east, -90 north.
+// The west half is the mirror image and is flipped in the game.
+const DIRS = C.dirs || [0];
+const pose = (A, u, yaw) => { root.rotation.y = 0; root.updateMatrixWorld(true); const lift = A.pose ? A.pose(H, u) : (H.clip(A.clip, A.from + (A.to - A.from) * u), 0);
+  root.rotation.y = -yaw * Math.PI / 180; root.position.y = lift || 0; root.updateMatrixWorld(true); };
 // fit the orthographic camera to every frame of every animation
 const box = new THREE.Box3(), tb = new THREE.Box3();
-for (const A of C.anims) for (let i = 0; i < A.n; i++) { pose(A, i / A.n); root.traverse(o => { if (o.isSkinnedMesh) { o.skeleton.update(); tb.setFromObject(o, true); box.union(tb); } }); }
+for (const d of DIRS) for (const A of C.anims) for (let i = 0; i < A.n; i++) { pose(A, i / A.n, d); root.traverse(o => { if (o.isSkinnedMesh) { o.skeleton.update(); tb.setFromObject(o, true); box.union(tb); } }); }
 box.min.y = Math.min(box.min.y, 0);
 const EL = (C.elev ?? 22) * Math.PI / 180, size = box.getSize(new THREE.Vector3()), ctr = box.getCenter(new THREE.Vector3());
-const halfZ = size.z / 2, halfY = (size.y * Math.cos(EL) + size.x * Math.sin(EL)) / 2;
+const halfZ = Math.max(size.z, size.x) / 2, halfY = (size.y * Math.cos(EL) + Math.max(size.x, size.z) * Math.sin(EL)) / 2;
 let HH = Math.max(halfY, halfZ * FH / FW) * (C.margin ?? 1.08), HW = HH * FW / FH;
 const cam = new THREE.OrthographicCamera(-HW, HW, HH, -HH, -100, 100), D = size.length() * 4;
 cam.position.set(ctr.x - Math.cos(EL) * D, ctr.y + Math.sin(EL) * D, ctr.z); cam.lookAt(ctr.x, ctr.y, ctr.z); cam.updateMatrixWorld(); cam.updateProjectionMatrix();
 const proj = v => { const p = v.clone().project(cam); return [+(((p.x + 1) / 2) * FW).toFixed(1), +(((1 - p.y) / 2) * FH).toFixed(1)]; };
-const cols = Math.max(...C.anims.map(a => a.n));
-const atlas = document.createElement('canvas'); atlas.width = cols * FW; atlas.height = C.anims.length * FH; const ag = atlas.getContext('2d');
-const meta = { fw: FW, fh: FH, ground: proj(new THREE.Vector3(ctr.x, 0, ctr.z)), unit: FW / (2 * HW), len: size.z, anims: {} };
-C.anims.forEach((A, row) => {
-  const fr = [];
+const cols = Math.max(...C.anims.map(a => a.n)), rows = C.anims.length;
+const atlas = document.createElement('canvas'); atlas.width = cols * FW; atlas.height = rows * FH * DIRS.length; const ag = atlas.getContext('2d');
+// ground anchor = the model origin (feet), so every direction pivots around the same point
+const meta = { fw: FW, fh: FH, ground: proj(new THREE.Vector3(0, 0, 0)), unit: FW / (2 * HW), len: C.len ?? size.z, dirs: DIRS, anims: {} };
+DIRS.forEach((d, di) => C.anims.forEach((A, ri) => {
+  const row = di * rows + ri, fr = [];
   for (let i = 0; i < A.n; i++) {
-    pose(A, i / A.n); renderer.render(scene, cam); ag.drawImage(renderer.domElement, i * FW, row * FH);
+    pose(A, i / A.n, d); renderer.render(scene, cam); ag.drawImage(renderer.domElement, i * FW, row * FH);
     const pts = {}; for (const [k, bn] of Object.entries(C.points || {})) { const v = new THREE.Vector3(); if (bones[bn]) { bones[bn].getWorldPosition(v); pts[k] = proj(v); } }
     fr.push(pts);
   }
-  meta.anims[A.name] = { row, n: A.n, fr };
-});
+  (meta.anims[A.name] = meta.anims[A.name] || { row: ri, n: A.n, fr: [] }).fr.push(fr);
+}));
 window.RESULT = { meta, png: atlas.toDataURL('image/png'), bones: Object.keys(bones), clips: clips.map(c => c.name + ' ' + c.duration.toFixed(2)) };
 </script></body></html>
