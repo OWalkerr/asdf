@@ -1353,7 +1353,7 @@ function glow(rgb) {
 // Deferred additive glows (drawn above the light map) and light sources (cut into the darkness).
 const EMI = [], LIGHTS = [], PILL = [];
 const emit = (rgb, x, y, r, a = 1) => { if (!NOEMI) EMI.push(rgb, x, y, r, a); };
-const light = (x, y, r, a = 1) => { if (!NOEMI) LIGHTS.push(x, y, r, a); };
+const light = (x, y, r, a = 1, rgb = '255,236,214') => { if (!NOEMI) LIGHTS.push(x, y, r, a, rgb); };
 let EX = 0, EY = 0, ESX = 1, ESY = 1;
 const eye = (lx, ly, rgb, r, a = 1) => emit(rgb, EX + lx * ESX, EY + ly * ESY, r, a);
 
@@ -1632,21 +1632,21 @@ function draw() {
   const ox = W / 2 - cx * Z + sx, oy = H / 2 - cy * Z + sy;
   const world = () => ctx.setTransform(DPR * Z, 0, 0, DPR * Z, DPR * ox, DPR * oy);
   CAM.Z = Z; CAM.ox = ox; CAM.oy = oy;
-  drawVoid(now, cx, cy, Z, TH);
+  const GPU = glReady();
+  if (GPU) ctx.clearRect(0, 0, W, H); else drawVoid(now, cx, cy, Z, TH);
   world();
   EMI.length = 0; LIGHTS.length = 0;
-  drawRealm(now, cx, cy);
-  ctx.drawImage(floorFor(TH), -FH, -FH, FH * 2, FH * 2);
+  if (!GPU) { drawRealm(now, cx, cy); ctx.drawImage(floorFor(TH), -FH, -FH, FH * 2, FH * 2); }
   drawFog(now, TH);
   const pulse = .5 + .5 * Math.sin(now * 1.3);
-  emit(TH.sigilEmit[0], 0, 0, 360, .07 + .04 * pulse); emit(TH.sigilEmit[1], 0, 0, 200, .08 + .05 * pulse); light(0, 0, 300, .3 + .1 * pulse);
+  emit(TH.sigilEmit[0], 0, 0, 360, .07 + .04 * pulse); emit(TH.sigilEmit[1], 0, 0, 200, .08 + .05 * pulse); light(0, 0, 300, .3 + .1 * pulse, TH.sigilEmit[1]);
   for (let i = 0; i < BRAZ.length; i++) {
     const [bx, by] = BRAZ[i], f = .85 + .15 * Math.sin(now * 13 + i * 3.1) * Math.sin(now * 7.3 + i);
     flame(bx, by - 4, 10 * f, now + i, TH.fire);
-    emit(TH.fireRgb[0], bx, by - 12, 58 * f, .8); emit(TH.fireRgb[1], bx, by - 10, 24 * f, .7); emit(TH.fireRgb[2], bx, by - 8, 11 * f, .9); light(bx, by, 250 * f, .85);
+    emit(TH.fireRgb[0], bx, by - 12, 58 * f, .8); emit(TH.fireRgb[1], bx, by - 10, 24 * f, .7); emit(TH.fireRgb[2], bx, by - 8, 11 * f, .9); light(bx, by, 250 * f, .85, TH.fireRgb[0]);
     let n = acc(BSM[i], 'a', 3); while (n--) puff(bx + rand(-4, 4), by - 22, 's', 6, { vy: rand(-50, -30), vx: rand(-8, 8), a: .28, life: rand(2, 2.8), gr: 16 });
   }
-  for (let i = 0; i < CANDLES.length; i++) { const [x, y] = CANDLES[i], f = .8 + .2 * Math.sin(now * 17 + i * 2.3); if (TH.wax) for (let k = 0; k < 3; k++) emit(TH.candle[0], x + (k - 1) * 7, y - 11 - (k === 1 ? 3 : 0) - ((k * 5 + x) % 6), 6 * f, .9); else emit(TH.candle[0], x, y - 24 + Math.sin(now * 2 + i) * 3, 7 * f, .8); emit(TH.candle[1], x, y - 12, 26, .35 * f); light(x, y, 80, .45); }
+  for (let i = 0; i < CANDLES.length; i++) { const [x, y] = CANDLES[i], f = .8 + .2 * Math.sin(now * 17 + i * 2.3); if (TH.wax) for (let k = 0; k < 3; k++) emit(TH.candle[0], x + (k - 1) * 7, y - 11 - (k === 1 ? 3 : 0) - ((k * 5 + x) % 6), 6 * f, .9); else emit(TH.candle[0], x, y - 24 + Math.sin(now * 2 + i) * 3, 7 * f, .8); emit(TH.candle[1], x, y - 12, 26, .35 * f); light(x, y, 80, .45, TH.candle[0]); }
   if (G) drawWorld(G.time, now);
   updSmoke(FDT); drawSmoke(false);
   for (const m of MOTES) {
@@ -1654,7 +1654,7 @@ function draw() {
     if (m.y < -ARENA - 60) { m.y = ARENA + 40; m.x = rand(-ARENA, ARENA); }
     emit(m.s > 2.5 ? TH.motes[0] : TH.motes[1], m.x, m.y, m.s * 3.2, .3 + .2 * Math.sin(now * 2 + m.ph));
   }
-  renderLights(Z, ox, oy, G ? .52 : .4, TH.amb);
+  renderLights(Z, ox, oy, G ? .52 : .4, TH.amb, GPU);
   world(); ctx.globalCompositeOperation = 'lighter';
   ctx.save(); ctx.globalAlpha = .16 + .08 * pulse; ctx.rotate(now * .04); ctx.drawImage(runeFor(TH), -360, -360, 720, 720);
   ctx.rotate(-now * .1); ctx.globalAlpha = .12 + .06 * pulse; ctx.drawImage(runeFor(TH), -180, -180, 360, 360); ctx.restore(); ctx.globalAlpha = 1;
@@ -1666,10 +1666,10 @@ function draw() {
   ctx.globalCompositeOperation = 'source-over';
   if (G) drawTexts();
   if (G) drawSky(now);
-  post(now);
-  glPost(TH);
+  post(now, GPU);
+  glPost(TH, now, cx, cy);
 }
-function renderLights(Z, ox, oy, amb, tint = '5,3,12') {
+function renderLights(Z, ox, oy, amb, tint = '5,3,12', gpu = false) {
   const w = Math.max(1, Math.ceil(W * LS)), h = Math.max(1, Math.ceil(H * LS));
   if (LC.width !== w || LC.height !== h) { LC.width = w; LC.height = h; }
   lctx.setTransform(1, 0, 0, 1, 0, 0); lctx.globalCompositeOperation = 'source-over'; lctx.globalAlpha = 1; lctx.clearRect(0, 0, w, h);
@@ -1677,8 +1677,10 @@ function renderLights(Z, ox, oy, amb, tint = '5,3,12') {
   lctx.globalCompositeOperation = 'destination-out'; lctx.setTransform(LS * Z, 0, 0, LS * Z, LS * ox, LS * oy);
   lctx.globalAlpha = .85; lctx.beginPath(); lctx.rect(-1e5, -1e5, 2e5, 2e5); lctx.arc(0, 0, ARENA + 60, 0, TAU); lctx.fill('evenodd'); lctx.globalAlpha = 1;
   const spr = glow('255,255,255');
-  for (let i = 0; i < LIGHTS.length; i += 4) { const r = LIGHTS[i + 2]; lctx.globalAlpha = Math.min(1, LIGHTS[i + 3]); lctx.drawImage(spr, LIGHTS[i] - r, LIGHTS[i + 1] - r, r * 2, r * 2); }
-  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.drawImage(LC, 0, 0, cv.width, cv.height);
+  for (let i = 0; i < LIGHTS.length; i += 5) { const r = LIGHTS[i + 2]; lctx.globalAlpha = Math.min(1, LIGHTS[i + 3]); lctx.drawImage(spr, LIGHTS[i] - r, LIGHTS[i + 1] - r, r * 2, r * 2); }
+  // On the GPU path the floor is lit in a shader; the light map only darkens what is already on the canvas (entities, fog).
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; if (gpu) ctx.globalCompositeOperation = 'source-atop';
+  ctx.drawImage(LC, 0, 0, cv.width, cv.height); ctx.globalCompositeOperation = 'source-over';
 }
 function flame(x, y, s, t, F = THEMES.witch.fire) {
   const w = Math.sin(t * 9) * s * .2;
@@ -1702,11 +1704,11 @@ function drawWorld(T, now) {
     ctx.fillStyle = d.c + a + ')'; ctx.beginPath(); ctx.ellipse(d.x, d.y, d.r, d.r * .7, 0, 0, TAU); ctx.fill();
     ctx.fillStyle = d.c + a * .7 + ')'; ctx.beginPath(); ctx.ellipse(d.x + d.r * .7, d.y + d.r * .25, d.r * .32, d.r * .22, 0, 0, TAU); ctx.fill();
   }
-  for (const t of G.trails) { emit('120,240,215', t.x, t.y, 24, .4 * t.life); light(t.x, t.y, 50, .3 * t.life); }
+  for (const t of G.trails) { emit('120,240,215', t.x, t.y, 24, .4 * t.life); light(t.x, t.y, 50, .3 * t.life, '120,240,215'); }
   for (const z of G.hazards) {
     const arm = z.life < z.max - .25, a = Math.min(1, z.life / .5);
     ctx.fillStyle = `rgba(50,24,80,${.55 * a})`; ctx.beginPath(); ctx.ellipse(z.x, z.y, z.r, z.r * .7, 0, 0, TAU); ctx.fill();
-    if (arm) { emit('170,120,255', z.x, z.y - 8, 30 + Math.sin(now * 20 + z.x) * 5, .6 * a); light(z.x, z.y, 60, .4 * a); }
+    if (arm) { emit('170,120,255', z.x, z.y - 8, 30 + Math.sin(now * 20 + z.x) * 5, .6 * a); light(z.x, z.y, 60, .4 * a, '170,120,255'); }
   }
   for (const u of G.erupts) {
     const k = clamp(1 - u.t / u.max, 0, 1); ctx.save(); ctx.translate(u.x, u.y); ctx.scale(1, .55);
@@ -1759,15 +1761,15 @@ function drawWorld(T, now) {
     (sp.tr = sp.tr || []).unshift([x, y]); if (sp.tr.length > 10) sp.tr.pop();
     ctx.save(); ctx.translate(x, y); ctx.rotate(sp.ang); ctx.translate(-(q ? 40 : sp.kind === 'spirit' ? 24 : 32) * .66, 0); spiritSpear(q ? 60 : sp.kind === 'spirit' ? 36 : 48, sp._rgb); ctx.restore();
     let n = acc(sp, '_sm', q ? 40 : 22); while (n--) puff(x - Math.cos(sp.ang) * 18, y - Math.sin(sp.ang) * 18, sp.kind === 'spear' ? G.trail.smoke : 's', q ? 5 : 3.5, { vx: -sp.vx * .04, vy: -sp.vy * .04 - 8, a: .32, life: .55, gr: 20 });
-    emit(sp._rgb, x, y, q ? 44 : 24, .8); light(sp.x, sp.y, q ? 150 : 80, .55);
+    emit(sp._rgb, x, y, q ? 44 : 24, .8); light(sp.x, sp.y, q ? 150 : 80, .55, sp._rgb);
   }
   for (const b of G.eshots) {
     ctx.fillStyle = b.soul ? '#e6d8ff' : b.ice ? '#e0f6ff' : b.blood ? '#ff8a90' : '#ffb08a'; ctx.beginPath(); ctx.arc(b.x, b.y - 12, b.r, 0, TAU); ctx.fill();
-    emit(b.soul ? '170,120,255' : b.ice ? '120,200,255' : b.blood ? '230,20,40' : '255,110,60', b.x, b.y - 12, b.r * 4.2, .8); emit('255,245,225', b.x, b.y - 12, b.r * 1.3, 1); light(b.x, b.y, 70, .45);
+    emit(b.soul ? '170,120,255' : b.ice ? '120,200,255' : b.blood ? '230,20,40' : '255,110,60', b.x, b.y - 12, b.r * 4.2, .8); emit('255,245,225', b.x, b.y - 12, b.r * 1.3, 1); light(b.x, b.y, 70, .45, b.soul ? '170,120,255' : b.ice ? '120,200,255' : b.blood ? '230,20,40' : '255,110,60');
   }
-  for (const b of G.booms) light(b.x, b.y, b.R * 3, Math.min(1, b.life / b.max * 1.6));
-  if (G.phase !== 'over') light(p.x, p.y - 10, 330, .95);
-  for (const e of G.enemies) light(e.x, e.y - e.r, e.r * 3.4, .38);
+  for (const b of G.booms) light(b.x, b.y, b.R * 3, Math.min(1, b.life / b.max * 1.6), '255,224,180');
+  if (G.phase !== 'over') light(p.x, p.y - 10, 330, .95, '215,255,245');
+  for (const e of G.enemies) light(e.x, e.y - e.r, e.r * 3.4, .38, 'skip');
 }
 function drawSpawn(sp, now) {
   const tot = sp.type === 'boss' ? 1.4 : 1, k = clamp(1 - sp.t / tot, 0, 1), R = sp.type === 'boss' ? 70 : 28;
@@ -1776,7 +1778,7 @@ function drawSpawn(sp, now) {
   ctx.rotate(now * 2); ctx.lineWidth = 2; ctx.beginPath();
   for (let i = 0; i < 6; i++) { const a = i * TAU / 6; ctx.moveTo(Math.cos(a) * R * .8, Math.sin(a) * R * .8); ctx.lineTo(Math.cos(a + 2.1) * R * .8, Math.sin(a + 2.1) * R * .8); }
   ctx.stroke(); ctx.restore();
-  emit('255,120,70', sp.x, sp.y, R * (1 + k), .3 + .5 * k); light(sp.x, sp.y, R * 3, .5 * k);
+  emit('255,120,70', sp.x, sp.y, R * (1 + k), .3 + .5 * k); light(sp.x, sp.y, R * 3, .5 * k, '255,120,70');
   PILL.push(sp.x, sp.y, R, k);
 }
 function drawTelegraph(e, now) {
@@ -1906,7 +1908,7 @@ function drawWisp(e, r, bob, C, now) {
   ctx.fillStyle = C('#ffc85a'); flamePath(0, cy + r * .25, r * .72, f, lean * .6); ctx.fill();
   ctx.fillStyle = '#fff6e0'; ctx.beginPath(); ctx.arc(0, cy + r * .35, r * .32, 0, TAU); ctx.fill();
   ctx.fillStyle = '#3a0d05'; ctx.beginPath(); ctx.arc(r * .28, cy - r * .02, r * .12, 0, TAU); ctx.arc(-r * .08, cy - r * .02, r * .12, 0, TAU); ctx.fill();
-  eye(0, cy, '255,120,50', r * 4.4, .85); light(EX, EY + cy, 110, .55);
+  eye(0, cy, '255,120,50', r * 4.4, .85); light(EX, EY + cy, 110, .55, '255,120,50');
 }
 function drawArcher(e, r, bob, C, now) {
   const cy = -r * 1.6 + Math.sin(now * 3 + e.wob) * 3, sw = Math.sin(now * 5 + e.wob);
@@ -2016,7 +2018,7 @@ function drawBomb(e, r, bob, C, now) {
   eye(r * .3, cy - r * .1, '255,140,60', r * (1 + 2.5 * k), .45 + .5 * k);
   ctx.strokeStyle = '#3a2a18'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(-r * .1, cy - r * .9 * sw); ctx.quadraticCurveTo(-r * .4, cy - r * 1.4, -r * .1, cy - r * 1.6); ctx.stroke();
   eye(-r * .1, cy - r * 1.6, '255,200,120', r * (.5 + .4 * Math.sin(now * 30)), .9);
-  if (fuse) light(EX, EY, 90 + 60 * k, .4 + .4 * k);
+  if (fuse) light(EX, EY, 90 + 60 * k, .4 + .4 * k, '255,140,60');
 }
 function drawSpitter(e, r, bob, C, now) {
   const k = 1 - clamp(e.cd / 3.2, 0, 1), cy = -r * .95, sw = 1 + .07 * k * Math.sin(now * 30);
@@ -2147,7 +2149,7 @@ function drawPlayer(p, s, T, now) {
   ctx.globalAlpha = 1;
   for (let i = 0; i < s.spirits; i++) {
     const a = p.spA + i * TAU / s.spirits, x = p.x + Math.cos(a) * 46, y = p.y + Math.sin(a) * 28 - 26;
-    shadow(x, y + 26, 5, .3); ctx.fillStyle = '#e8fff8'; ctx.beginPath(); ctx.arc(x, y, 4, 0, TAU); ctx.fill(); emit('120,240,215', x, y, 22, .85); light(x, y, 60, .4);
+    shadow(x, y + 26, 5, .3); ctx.fillStyle = '#e8fff8'; ctx.beginPath(); ctx.arc(x, y, 4, 0, TAU); ctx.fill(); emit('120,240,215', x, y, 22, .85); light(x, y, 60, .4, '120,240,215');
     let n = acc(p, '_sp' + i, 10); while (n--) puff(x, y, 's', 3, { vy: rand(-18, -4), a: .35, life: .7 });
   }
   const z = pz(p), fx = Math.cos(p.face) >= 0 ? 1 : -1, hov = 5 + Math.sin(now * 3) * 2;
@@ -2157,7 +2159,7 @@ function drawPlayer(p, s, T, now) {
   if ((p.land || 0) > 0) { const k = p.land / .12; sxs = 1 + .24 * k; sys = 1 - .2 * k; }
   const PS = 1.3; sxs *= PS; sys *= PS;
   if (p.state === 'rise') { const k = 1 - p.t / .4; ctx.strokeStyle = `rgba(216,178,90,${1 - k * .6})`; ctx.lineWidth = 3; ctx.beginPath(); ctx.ellipse(p.x, p.y, 20 + k * 40, (20 + k * 40) * .45, 0, 0, TAU); ctx.stroke(); }
-  if (p.state === 'rise' || p.state === 'fling') { emit('255,210,120', p.x, p.y - z - 18, 70, .65); light(p.x, p.y - z, 200, .6); }
+  if (p.state === 'rise' || p.state === 'fling') { emit('255,210,120', p.x, p.y - z - 18, 70, .65); light(p.x, p.y - z, 200, .6, '255,210,120'); }
   if (p.chillT > 0) { emit('140,210,255', p.x, p.y - 20 - z, 46, .5); if (Math.random() < .3) puff(p.x + rand(-12, 12), p.y - z - rand(10, 40), 's', 4, { vy: rand(-15, -4), a: .5, life: .7 }); }
   const bx = p.x, by = p.y - z - hov, vxn = clamp((p.vx || 0) / 400, -1, 1), vyn = clamp((p.vy || 0) / 400, -1, 1);
   let n = acc(p, '_sm', 34); while (n--) puff(bx + rand(-10, 10), by - rand(-2, 16), 's', 7, { vx: -(p.vx || 0) * .12 + rand(-10, 10), vy: rand(-30, -8), a: .55, life: rand(.8, 1.4) });
@@ -2284,7 +2286,7 @@ function vigCanvas(rgb, inner, outer) {
   const g = c.getContext('2d'), gr = g.createRadialGradient(c.width / 2, c.height / 2, Math.min(c.width, c.height) * inner, c.width / 2, c.height / 2, Math.max(c.width, c.height) * .72);
   gr.addColorStop(0, `rgba(${rgb},0)`); gr.addColorStop(1, `rgba(${rgb},${outer})`); g.fillStyle = gr; g.fillRect(0, 0, c.width, c.height); return c;
 }
-function post(now) {
+function post(now, gpu = false) {
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
   const key = W + 'x' + H; if (VIGK !== key) { VIGK = key; VIG = vigCanvas('0,3,5', .3, .82); RVIG = vigCanvas('170,10,30', .38, .8); }
   ctx.drawImage(VIG, 0, 0, W, H);
@@ -2293,7 +2295,7 @@ function post(now) {
     if (a > 0) { ctx.globalAlpha = Math.min(1, a); ctx.drawImage(RVIG, 0, 0, W, H); ctx.globalAlpha = 1; }
   }
   if (!grainPat) grainPat = ctx.createPattern(GRAIN, 'repeat');
-  if (!LOWQ) {
+  if (!LOWQ && !gpu) {
   ctx.save(); ctx.globalAlpha = .07; ctx.globalCompositeOperation = 'overlay';
   ctx.translate(RM ? 0 : -((Math.random() * 128) | 0), RM ? 0 : -((Math.random() * 128) | 0)); ctx.fillStyle = grainPat; ctx.fillRect(0, 0, W + 128, H + 128); ctx.restore();
   }
@@ -2304,7 +2306,7 @@ function post(now) {
       ctx.beginPath(); ctx.moveTo(cx + Math.cos(ang) * r0, cy + Math.sin(ang) * r0); ctx.lineTo(cx + Math.cos(ang + w) * R0 * 1.1, cy + Math.sin(ang + w) * R0 * 1.1); ctx.lineTo(cx + Math.cos(ang - w) * R0 * 1.1, cy + Math.sin(ang - w) * R0 * 1.1); ctx.fill(); }
   }
   if (G && G.flashA > 0) { ctx.fillStyle = `rgba(255,255,255,${Math.min(.6, G.flashA) * (RM ? .25 : 1)})`; ctx.fillRect(0, 0, W, H); }
-  if (G && G.impactT > 0 && !RM) { ctx.globalCompositeOperation = 'difference'; ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, W, H); ctx.globalCompositeOperation = 'source-over'; }
+  if (G && G.impactT > 0 && !RM && !gpu) { ctx.globalCompositeOperation = 'difference'; ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, W, H); ctx.globalCompositeOperation = 'source-over'; }
   if (G && !joy.active && OPTS.joy === 'fixed' && G.phase === 'fight') {
     const [bx, by] = joyBase(); ctx.fillStyle = 'rgba(4,10,12,.25)'; ctx.strokeStyle = 'rgba(143,227,207,.25)'; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.arc(bx, by, 56, 0, TAU); ctx.fill(); ctx.stroke(); ctx.fillStyle = 'rgba(143,227,207,.25)'; ctx.beginPath(); ctx.arc(bx, by, 20, 0, TAU); ctx.fill();
@@ -2412,7 +2414,9 @@ function drawTwinkle(t) {
 }
 
 // ---------- GPU post-processing (WebGL1): bloom, shockwave refraction, chromatic aberration, biome grading ----------
-// The 2D canvas stays the scene renderer; each frame it is uploaded as a texture and finished here. Without WebGL or on low quality it is shown as is.
+// The GPU draws the realm behind the action: nebula and procedural stars, moon, floating isles, cliff, and the floor lit by up to
+// 32 colored point lights (normals from albedo, specular per biome). The 2D canvas then carries only the foreground and is composited on top.
+// Without WebGL or on low quality the 2D canvas draws everything and is shown as is.
 const glc = $('glc'), GLX = {};
 let GL = null, GLOK = false, GLSZ = '', GLSLOW = false;
 function glInit() {
@@ -2421,8 +2425,11 @@ function glInit() {
   const gl = GL;
   const sh = (type, src) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s)); return s; };
   const VS = 'attribute vec2 p;varying vec2 uv;void main(){uv=p*.5+.5;gl_Position=vec4(p,0.,1.);}';
-  const prog = fs => {
-    const pr = gl.createProgram(); gl.attachShader(pr, sh(gl.VERTEX_SHADER, VS)); gl.attachShader(pr, sh(gl.FRAGMENT_SHADER, 'precision mediump float;varying vec2 uv;' + fs));
+  // Sprites: a unit quad mapped to a world rect, then to the screen via (zoom, offset).
+  const SVS = 'attribute vec2 p;uniform vec4 rect;uniform vec3 cam;uniform vec2 scr;varying vec2 uv;varying vec2 wp;void main(){wp=rect.xy+p*rect.zw;vec2 s=wp*cam.x+cam.yz;uv=vec2(p.x,1.-p.y);gl_Position=vec4(s.x/scr.x*2.-1.,1.-s.y/scr.y*2.,0.,1.);}';
+  const HP = '#ifdef GL_FRAGMENT_PRECISION_HIGH\nprecision highp float;\n#else\nprecision mediump float;\n#endif\n';
+  const prog = (fs, vs, hp) => {
+    const pr = gl.createProgram(); gl.attachShader(pr, sh(gl.VERTEX_SHADER, vs || VS)); gl.attachShader(pr, sh(gl.FRAGMENT_SHADER, (hp ? HP : 'precision mediump float;') + 'varying vec2 uv;' + (vs ? 'varying vec2 wp;' : '') + '\n' + fs));
     gl.bindAttribLocation(pr, 0, 'p'); gl.linkProgram(pr); if (!gl.getProgramParameter(pr, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(pr));
     const U = {}, n = gl.getProgramParameter(pr, gl.ACTIVE_UNIFORMS); for (let i = 0; i < n; i++) { const a = gl.getActiveUniform(pr, i); U[a.name.replace('[0]', '')] = gl.getUniformLocation(pr, a.name); }
     return { pr, U };
@@ -2430,18 +2437,39 @@ function glInit() {
   try {
     GLX.bright = prog('uniform sampler2D t;uniform float th;void main(){vec3 c=texture2D(t,uv).rgb;float l=max(c.r,max(c.g,c.b));gl_FragColor=vec4(c*smoothstep(th,th+.3,l),1.);}');
     GLX.blur = prog('uniform sampler2D t;uniform vec2 d;void main(){vec3 c=texture2D(t,uv).rgb*.227027;c+=(texture2D(t,uv+d*1.3846154).rgb+texture2D(t,uv-d*1.3846154).rgb)*.3162162;c+=(texture2D(t,uv+d*3.2307692).rgb+texture2D(t,uv-d*3.2307692).rgb)*.0702703;gl_FragColor=vec4(c,1.);}');
-    GLX.comp = prog('uniform sampler2D s,b1,b2;uniform vec4 w[8];uniform float ca,bloom,sat,con,aspect;uniform vec3 tint;' +
+    GLX.comp = prog('uniform sampler2D s,b1,b2;uniform vec4 w[8];uniform float ca,bloom,sat,con,aspect,time,inv;uniform vec2 scr;uniform vec3 tint;' +
       'void main(){vec2 u=uv;' +
       'for(int i=0;i<8;i++){vec4 W=w[i];if(W.w<=0.)continue;vec2 dv=(u-W.xy)*vec2(aspect,1.);float dl=length(dv);float x=(dl-W.z)/.07;' +
       'if(abs(x)<1.){float f=W.w*x*(1.-abs(x));u-=dv/(dl+1e-4)/vec2(aspect,1.)*f*.04;}}' +
       'vec2 cd=(u-.5)*ca;vec3 c=vec3(texture2D(s,u+cd).r,texture2D(s,u).g,texture2D(s,u-cd).b);' +
       'c+=(texture2D(b1,u).rgb*.7+texture2D(b2,u).rgb*1.1)*bloom;' +
       'float l=dot(c,vec3(.299,.587,.114));c=mix(vec3(l),c,sat);c=(c-.5)*con+.5;c*=tint;' +
-      'c=max(c,0.);c=c*(1.+c*.1)/(1.+c*.55)*1.25;gl_FragColor=vec4(c,1.);}');
+      'c=max(c,0.);c=c*(1.+c*.1)/(1.+c*.55)*1.25;' +
+      'c+=(fract(sin(dot(floor(uv*scr)+time,vec2(12.9898,78.233)))*43758.5453)-.5)*.045;c=clamp(c,0.,1.);c=mix(c,1.-c,inv);gl_FragColor=vec4(c,1.);}', 0, 1);
+    GLX.copy = prog('uniform sampler2D t;void main(){gl_FragColor=texture2D(t,uv);}');
+    GLX.spr = prog('uniform sampler2D t;uniform vec3 mul;uniform float a;void main(){vec4 c=texture2D(t,uv);gl_FragColor=vec4(c.rgb*mul,c.a)*a;}', SVS);
+    GLX.sky = prog('uniform sampler2D t;uniform vec4 nr;uniform vec2 scr,cam;uniform float time;uniform vec4 tint;' +
+      'float hs(vec2 q){return fract(sin(dot(q,vec2(127.1,311.7)))*43758.5453);}' +
+      'void main(){vec2 sp=vec2(uv.x,1.-uv.y)*scr;vec2 n=(sp-nr.xy)/nr.z;vec3 c=texture2D(t,vec2(n.x,1.-n.y)).rgb;c=mix(c,tint.rgb,tint.a);' +
+      'for(int i=0;i<3;i++){float fi=float(i),cs=46.+fi*30.;vec2 q=(sp+cam*(.015+fi*.035))/cs+fi*7.31;vec2 g=floor(q);float h=hs(g);if(h<.8)continue;' +
+      'vec2 o=vec2(hs(g+.37),hs(g+1.91))*.8+.1;float d=length(fract(q)-o)*cs;float tw=.55+.45*sin(time*(1.+h*3.)+h*40.);float b=smoothstep(1.2+fi*.5,0.,d)*tw*(h-.8)*5.;' +
+      'float k=hs(g+5.3);c+=b*(k<.3?vec3(.8,.72,1.):k<.6?vec3(.72,1.,.94):vec3(1.));c+=smoothstep(10.,0.,d)*tw*(h-.8)*.25*vec3(.6,.5,1.);}' +
+      'gl_FragColor=vec4(c,1.);}', 0, 1);
+    const NL = Math.max(4, Math.min(32, ((gl.getParameter(gl.MAX_FRAGMENT_UNIFORM_VECTORS) - 16) / 2) | 0)); GLX.NL = NL;
+    GLX.lit = prog('#define NL ' + NL + '\nuniform sampler2D t;uniform vec2 ts;uniform vec4 L[NL];uniform vec3 LCo[NL];uniform int nl;uniform vec3 amb;uniform float gloss,kd;' +
+      'float lu(vec2 o){vec4 s=texture2D(t,uv+o*ts);return dot(s.rgb,vec3(.3,.59,.11));}' +
+      'void main(){vec4 al=texture2D(t,uv);if(al.a<.01)discard;' +
+      'float hl=lu(vec2(-1.,0.)),hr=lu(vec2(1.,0.)),hu=lu(vec2(0.,1.)),hd=lu(vec2(0.,-1.));vec3 N=normalize(vec3((hl-hr)*7.,(hu-hd)*7.,1.));' +
+      'vec3 acc=amb,sp=vec3(0.);for(int i=0;i<NL;i++){if(i>=nl)break;vec4 l=L[i];vec2 dv=(l.xy-wp)/l.z;float dd=length(dv);if(dd>=1.)continue;' +
+      'float at=(1.-dd)*(1.-dd)*l.w;vec3 Ld=normalize(vec3(dv,55./l.z));acc+=LCo[i]*max(dot(N,Ld),0.)*at*kd;' +
+      'sp+=LCo[i]*pow(max(dot(N,normalize(Ld+vec3(0.,0.,1.))),0.),28.)*at*gloss;}' +
+      'gl_FragColor=vec4(al.rgb*min(acc,vec3(1.7))+min(sp,vec3(.6))*al.a,al.a);}', SVS, 1);
   } catch (e) { console.warn('GL post disabled:', e.message); GL = null; return; }
   GLX.buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, GLX.buf); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
-  gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
-  GLX.src = glTex(); gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+  GLX.quad = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, GLX.quad); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([0, 0, 1, 0, 0, 1, 1, 1]), gl.STATIC_DRAW);
+  gl.enableVertexAttribArray(0);
+  GLX.src = glTex(); gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true); gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
+  GLX.LU = new Float32Array(GLX.NL * 4); GLX.LCU = new Float32Array(GLX.NL * 3);
   glc.addEventListener('webglcontextlost', e => { e.preventDefault(); GLOK = false; });
   GLOK = true;
 }
@@ -2449,23 +2477,84 @@ function glTex() { const gl = GL, t = gl.createTexture(); gl.bindTexture(gl.TEXT
 function glFbo(w, h) { const gl = GL, t = glTex(); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, null); const f = gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER, f); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, t, 0); return { t, f, w, h }; }
 function glSize() {
   const w = Math.max(1, cv.width), h = Math.max(1, cv.height), key = w + 'x' + h; if (key === GLSZ) return; GLSZ = key;
-  for (const k of ['h1', 'h2', 'q1', 'q2']) if (GLX[k]) { GL.deleteTexture(GLX[k].t); GL.deleteFramebuffer(GLX[k].f); }
-  glc.width = w; glc.height = h;
+  for (const k of ['h1', 'h2', 'q1', 'q2', 'scene']) if (GLX[k]) { GL.deleteTexture(GLX[k].t); GL.deleteFramebuffer(GLX[k].f); }
+  glc.width = w; glc.height = h; GLX.scene = glFbo(w, h);
   GLX.h1 = glFbo(Math.max(1, w >> 1), Math.max(1, h >> 1)); GLX.h2 = glFbo(GLX.h1.w, GLX.h1.h);
   GLX.q1 = glFbo(Math.max(1, w >> 2), Math.max(1, h >> 2)); GLX.q2 = glFbo(GLX.q1.w, GLX.q1.h);
 }
 const WAVES = [], WU = new Float32Array(32);
 function shock(x, y, R, str = 1, dur = .5) { if (WAVES.length < 8) WAVES.push({ x, y, R, str, dur, t: 0 }); }
 const GRADE = { witch: { tint: [1, .97, 1.05], sat: 1.12, con: 1.05, bloom: .8 }, ice: { tint: [.92, 1, 1.1], sat: .86, con: 1.07, bloom: .75 }, blood: { tint: [1.1, .94, .9], sat: 1.15, con: 1.07, bloom: .9 } };
-function glPost(TH) {
-  const use = GLOK && !LOWQ && !(GLSLOW && OPTS.gfx === 'auto');
+const glReady = () => GLOK && !LOWQ && !(GLSLOW && OPTS.gfx === 'auto');
+const GLTEX = new Map();
+function texOf(c) { let t = GLTEX.get(c); if (!t) { t = glTex(); GL.texImage2D(GL.TEXTURE_2D, 0, GL.RGBA, GL.RGBA, GL.UNSIGNED_BYTE, c); GLTEX.set(c, t); } return t; }
+// Floor material per biome: ambient color, specular strength, diffuse gain.
+const GLT = { witch: { amb: [.42, .38, .52], gloss: .35, kd: 1.45 }, ice: { amb: [.38, .45, .55], gloss: .6, kd: 1 }, blood: { amb: [.5, .32, .34], gloss: .75, kd: 1.45 } };
+const RGBC = {}, rgbOf = s => RGBC[s] || (RGBC[s] = s.split(',').map(v => +v / 255));
+const VTINT = { ice: [40 / 255, 110 / 255, 200 / 255, .14], blood: [160 / 255, 20 / 255, 30 / 255, .12] };
+const LSORT = [];
+function packLights() {
+  const Z = CAM.Z, n5 = LIGHTS.length; LSORT.length = 0;
+  for (let i = 0; i < n5; i += 5) {
+    if (LIGHTS[i + 4] === 'skip' || LIGHTS[i + 3] <= .01) continue;
+    const r = LIGHTS[i + 2], sx = LIGHTS[i] * Z + CAM.ox, sy = LIGHTS[i + 1] * Z + CAM.oy, rr = r * Z;
+    if (sx < -rr || sy < -rr || sx > W + rr || sy > H + rr) continue;
+    LSORT.push(i);
+  }
+  LSORT.sort((a, b) => LIGHTS[b + 2] * LIGHTS[b + 3] - LIGHTS[a + 2] * LIGHTS[a + 3]);
+  const n = Math.min(GLX.NL, LSORT.length), LU = GLX.LU, LCU = GLX.LCU;
+  for (let k = 0; k < n; k++) { const i = LSORT[k], c = rgbOf(LIGHTS[i + 4]); LU[k * 4] = LIGHTS[i]; LU[k * 4 + 1] = LIGHTS[i + 1]; LU[k * 4 + 2] = LIGHTS[i + 2]; LU[k * 4 + 3] = Math.min(1.2, LIGHTS[i + 3]); LCU[k * 3] = c[0]; LCU[k * 3 + 1] = c[1]; LCU[k * 3 + 2] = c[2]; }
+  return n;
+}
+function glScene(TH, now, cx, cy) {
+  const gl = GL, S = GLX.scene, Z = CAM.Z;
+  gl.bindFramebuffer(gl.FRAMEBUFFER, S.f); gl.viewport(0, 0, S.w, S.h); gl.disable(gl.BLEND);
+  const bind = (unit, tex, loc) => { gl.activeTexture(gl.TEXTURE0 + unit); gl.bindTexture(gl.TEXTURE_2D, tex); gl.uniform1i(loc, unit); };
+  // void: nebula with parallax, biome tint, three layers of twinkling stars
+  gl.bindBuffer(gl.ARRAY_BUFFER, GLX.buf); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+  const NS = Math.max(W, H) * 2.6, px = -cx * Z * .05, py = -cy * Z * .05, vt = VTINT[TH.id] || [0, 0, 0, 0];
+  let U = GLX.sky.U; gl.useProgram(GLX.sky.pr); bind(0, texOf(NEB), U.t);
+  gl.uniform4f(U.nr, W / 2 - NS / 2 + px, H / 2 - NS / 2 + py, NS, 0); gl.uniform2f(U.scr, W, H); gl.uniform2f(U.cam, cx * Z, cy * Z); gl.uniform1f(U.time, now); gl.uniform4fv(U.tint, vt);
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
+  // sprites (premultiplied)
+  gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+  gl.bindBuffer(gl.ARRAY_BUFFER, GLX.quad); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+  U = GLX.spr.U; gl.useProgram(GLX.spr.pr); gl.uniform2f(U.scr, W, H); gl.uniform3f(U.mul, 1, 1, 1);
+  const spr = (c, x, y, w, h, a = 1) => { bind(0, texOf(c), U.t); gl.uniform4f(U.rect, x, y, w, h); gl.uniform1f(U.a, a); gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4); };
+  const ms = Math.min(W, H) * .22; gl.uniform3f(U.cam, 1, 0, 0); spr(MOON, W * .8 - ms + px * 2, H * .14 - ms + py * 2, ms * 2, ms * 2);
+  gl.uniform3f(U.cam, Z, CAM.ox, CAM.oy);
+  for (const is of ISLES) {
+    const f = is.f, x = cx + (is.x - cx) * f, y = cy + (is.y - cy) * f + Math.sin(now * .4 + is.ph) * 10, w = 300 * f * 1.5, hh = 280 * f * 1.5;
+    spr(ISLE_SPR[is.v], x - w / 2, y - hh * .33, w, hh, Math.min(1, .45 + f * .6));
+  }
+  for (let pass = 0; pass < 2; pass++) {
+    for (const d of DEBRIS) { const a = d.a + now * d.sp, x = Math.cos(a) * d.r, y = Math.sin(a) * d.r * .9 + Math.sin(now * .8 + d.ph) * 8; if ((y > 0 && Math.abs(x) < CLIFF_R) !== !!pass) continue; spr(ROCKS[d.v], x - d.s / 2, y - d.s / 2, d.s, d.s); }
+    if (!pass) spr(CLIFF, -CLIFF_R - 40, 0, (CLIFF_R + 40) * 2, CLIFF_R + 700);
+  }
+  // floor with colored point lights
+  const FL = floorFor(TH), mt = GLT[TH.id] || GLT.witch; U = GLX.lit.U; gl.useProgram(GLX.lit.pr);
+  gl.uniform2f(U.scr, W, H); gl.uniform3f(U.cam, Z, CAM.ox, CAM.oy); gl.uniform4f(U.rect, -FH, -FH, FH * 2, FH * 2);
+  bind(0, texOf(FL), U.t); gl.uniform2f(U.ts, 1 / FL.width, 1 / FL.height);
+  gl.uniform1i(U.nl, packLights()); gl.uniform4fv(U.L, GLX.LU); gl.uniform3fv(U.LCo, GLX.LCU);
+  const ak = G ? 1 : .85; gl.uniform3f(U.amb, mt.amb[0] * ak, mt.amb[1] * ak, mt.amb[2] * ak); gl.uniform1f(U.gloss, mt.gloss); gl.uniform1f(U.kd, mt.kd);
+  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+  // foreground: the 2D canvas (entities, effects, HUD overlays) over the realm
+  gl.bindBuffer(gl.ARRAY_BUFFER, GLX.buf); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+  gl.bindTexture(gl.TEXTURE_2D, GLX.src); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, cv);
+  gl.useProgram(GLX.copy.pr); bind(0, GLX.src, GLX.copy.U.t); gl.drawArrays(gl.TRIANGLES, 0, 3);
+  gl.disable(gl.BLEND);
+}
+function glPost(TH, now = 0, cx = 0, cy = 0) {
+  const use = glReady();
   if (glc.style.display !== (use ? 'block' : 'none')) glc.style.display = use ? 'block' : 'none';
   if (!use) { WAVES.length = 0; return; }
   const gl = GL; glSize();
-  gl.bindTexture(gl.TEXTURE_2D, GLX.src); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, cv);
+  glScene(TH, now, cx, cy);
+  const SRC = GLX.scene.t;
+  gl.bindBuffer(gl.ARRAY_BUFFER, GLX.buf); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
   const pass = (P, fbo, set) => { gl.bindFramebuffer(gl.FRAMEBUFFER, fbo ? fbo.f : null); gl.viewport(0, 0, fbo ? fbo.w : glc.width, fbo ? fbo.h : glc.height); gl.useProgram(P.pr); set(P.U); gl.drawArrays(gl.TRIANGLES, 0, 3); };
   const bind = (unit, tex, loc) => { gl.activeTexture(gl.TEXTURE0 + unit); gl.bindTexture(gl.TEXTURE_2D, tex); gl.uniform1i(loc, unit); };
-  pass(GLX.bright, GLX.h1, U => { bind(0, GLX.src, U.t); gl.uniform1f(U.th, .55); });
+  pass(GLX.bright, GLX.h1, U => { bind(0, SRC, U.t); gl.uniform1f(U.th, .55); });
   pass(GLX.blur, GLX.h2, U => { bind(0, GLX.h1.t, U.t); gl.uniform2f(U.d, 1 / GLX.h1.w, 0); });
   pass(GLX.blur, GLX.h1, U => { bind(0, GLX.h2.t, U.t); gl.uniform2f(U.d, 0, 1 / GLX.h1.h); });
   pass(GLX.blur, GLX.q1, U => { bind(0, GLX.h1.t, U.t); gl.uniform2f(U.d, 1 / GLX.h1.w, 1 / GLX.h1.h); });
@@ -2475,7 +2564,7 @@ function glPost(TH) {
   for (let i = WAVES.length - 1; i >= 0; i--) { const w = WAVES[i]; w.t += FDT; if (w.t >= w.dur) WAVES.splice(i, 1); }
   WAVES.forEach((w, i) => { const k = w.t / w.dur; WU[i * 4] = (w.x * CAM.Z + CAM.ox) / W; WU[i * 4 + 1] = 1 - (w.y * CAM.Z + CAM.oy) / H; WU[i * 4 + 2] = w.R * CAM.Z * (.12 + .88 * Math.sqrt(k)) / H; WU[i * 4 + 3] = RM ? 0 : w.str * (1 - k) * (1 - k); });
   const gr = GRADE[TH.id] || GRADE.witch, ca = G && !RM ? Math.min(.03, .002 + (G.hurtA || 0) * .012 + (G.impactT > 0 ? .02 : 0) + G.shake * .0005) : .0015;
-  pass(GLX.comp, null, U => { bind(0, GLX.src, U.s); bind(1, GLX.h1.t, U.b1); bind(2, GLX.q1.t, U.b2); gl.uniform4fv(U.w, WU); gl.uniform1f(U.ca, ca); gl.uniform1f(U.bloom, gr.bloom); gl.uniform1f(U.sat, gr.sat); gl.uniform1f(U.con, gr.con); gl.uniform1f(U.aspect, W / H); gl.uniform3fv(U.tint, gr.tint); });
+  pass(GLX.comp, null, U => { gl.uniform1f(U.time, RM ? 0 : now % 97); gl.uniform1f(U.inv, G && G.impactT > 0 && !RM ? 1 : 0); gl.uniform2f(U.scr, glc.width, glc.height); bind(0, SRC, U.s); bind(1, GLX.h1.t, U.b1); bind(2, GLX.q1.t, U.b2); gl.uniform4fv(U.w, WU); gl.uniform1f(U.ca, ca); gl.uniform1f(U.bloom, gr.bloom); gl.uniform1f(U.sat, gr.sat); gl.uniform1f(U.con, gr.con); gl.uniform1f(U.aspect, W / H); gl.uniform3fv(U.tint, gr.tint); });
 }
 glInit();
 

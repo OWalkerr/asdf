@@ -211,7 +211,7 @@ Mevcut 2D tuval her kare bir WebGL dokusuna aktarılır ve tek bir shader zincir
 
 **Durum (Aşama 3 yolu seçildi):**
 - [x] Adım 1: WebGL altyapısı ve son işlem. 2D tuval her kare dokuya aktarılır; parlak geçiş + yarım ve çeyrek çözünürlükte ayrılabilir Gauss bulanıklığı (bloom), 8 eşzamanlı şok dalgası kırılması (yıldız patlamaları, Kader inişi, Söküm, dev parlamalar), hasar ve darbe karelerinde renk ayrışması, biyom başına doygunluk/kontrast/renk tonu ve yumuşak film eğrisi. WebGL yoksa, bağlam kaybolursa ya da düşük kalitede eski çizim gösterilir; otomatik kalite yavaşlıkta önce bu katmanı kapatır ("orta"), sonra düşük kaliteye iner.
-- [ ] Adım 2: zemin, ada, uçurum ve arka planın GPU'ya taşınması, yönlü ışık.
+- [x] Adım 2: diyar GPU'da çizilir. Bulutsu paralaksla, biyom tonu ve üç katman titreşen prosedürel yıldız tek gölgelendiricide; ay, yüzen adalar, kaya parçaları ve uçurum doku olarak. Zemin, ekranda görünen en güçlü 32 renkli nokta ışıkla (mangallar biyom ateşi rengi, mumlar, mızraklar iz rengi, düşman mermileri türüne göre, oyuncu, patlamalar) piksel başına aydınlatılır; normal haritası zemin dokusunun parlaklık eğiminden çıkarılır, biyom başına ortam rengi, yayınık kazanç ve speküler parlaklık (buzda daha parlak) vardır. Taneli film dokusu ve darbe karesindeki renk tersine çevirme de gölgelendiriciye taşındı. 2D tuval artık yalnızca ön planı (karakterler, efektler, yazılar) taşır ve sahnenin üstüne bindirilir; ışık haritası sadece tuvalde çizili olanları karartır. Işık sayısı cihazın uniform sınırına göre ayarlanır. GPU yoksa ya da otomatik kalite "orta"ya inerse eski 2D çizim aynen kullanılır.
 - [ ] Adım 3: karakterlerin animasyonlu sprite atlaslarına çevrilmesi.
 - [ ] Adım 4: parçacık ve duman sisteminin GPU'ya taşınması.
 
