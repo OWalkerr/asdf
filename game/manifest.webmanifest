@@ -1,7 +1,7 @@
 {
-  "name": "Yeminli Mızrak",
-  "short_name": "Yeminli Mızrak",
-  "description": "Sekmeli mızrakçı zindan avı",
+  "name": "Ruh Tilkisi",
+  "short_name": "Ruh Tilkisi",
+  "description": "Sekmeli ruh tilkisi zindan avı",
   "lang": "tr",
   "start_url": "./",
   "scope": "./",

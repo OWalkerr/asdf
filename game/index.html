@@ -1,4 +1,4 @@
-<title>Yeminli Mızrak</title>
+<title>Ruh Tilkisi</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#060d10">
@@ -258,7 +258,7 @@ p{margin:0;line-height:1.45;color:var(--ink)}
   <div id="praise"></div>
   <div id="hint"><strong>Sürükle</strong> ile yön ver. Mızrak fırlarken yönü tutarsan o yöne <strong>sekersin</strong>. Düşmanlara mızrak biriktir, sonra <strong>SÖK</strong>.</div>
   <div class="abil">
-    <button class="ab" id="btnR" aria-label="Kader Çağrısı (R)"><svg width="34" height="34" viewBox="0 0 48 48" fill="none" stroke="#f3d68f" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="24" cy="30" r="6" fill="#f3d68f" fill-opacity=".25"/><path d="M8 26C10 14 18 12 22 22M40 26C38 14 30 12 26 22"/><path d="M24 22V6M18 12l6-6 6 6"/></svg><b id="rcd"></b><em>R</em></button>
+    <button class="ab" id="btnR" aria-label="Ay Sıçrayışı (R)"><svg width="34" height="34" viewBox="0 0 48 48" fill="none" stroke="#f3d68f" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="24" cy="30" r="6" fill="#f3d68f" fill-opacity=".25"/><path d="M8 26C10 14 18 12 22 22M40 26C38 14 30 12 26 22"/><path d="M24 22V6M18 12l6-6 6 6"/></svg><b id="rcd"></b><em>R</em></button>
     <button class="ab" id="btnQ" aria-label="Delici Mızrak (Q)"><svg width="38" height="38" viewBox="0 0 48 48" fill="none" stroke="#d6e0ff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="22" cy="26" r="8" stroke-opacity=".6"/><path d="M5 43L40 8"/><path d="M42 6l-11 3 8 8z" fill="#d6e0ff"/><path d="M5 43l-1 1M9 39l-4-1M9 39l1 4"/></svg><b id="qcd"></b><em>Q</em></button>
     <button class="ab" id="btnE" aria-label="Söküm (E)"><svg width="52" height="52" viewBox="0 0 48 48" fill="none" stroke="#e9fff8" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="24" cy="26" r="5" fill="#8fe3cf" fill-opacity=".35"/><path d="M24 26L9 11M24 26L39 11M24 26v17"/><path d="M9 11h7M9 11v7M39 11h-7M39 11v7M24 43l-5-5M24 43l5-5"/></svg><b id="ecd"></b><em>E</em></button>
   </div>
@@ -266,17 +266,17 @@ p{margin:0;line-height:1.45;color:var(--ink)}
 
 <section class="screen" id="scrTitle">
   <div class="panel hero">
-    <svg class="emblem" viewBox="0 0 96 96" fill="none" aria-hidden="true">
-      <circle cx="48" cy="48" r="40" stroke="#d8b25a" stroke-width="1.5" stroke-dasharray="3 5"/>
-      <circle cx="48" cy="48" r="30" stroke="#8fe3cf" stroke-opacity=".5" stroke-width="1.5"/>
-      <path d="M48 6v84M20 76L76 20" stroke="#ecfff8" stroke-width="3" stroke-linecap="round"/>
-      <path d="M48 2l-6 14h12z" fill="#ecfff8"/><path d="M80 16l-15 3 12 12z" fill="#ecfff8"/>
-      <path d="M48 34l14 14-14 14-14-14z" fill="#0d2b28" stroke="#8fe3cf" stroke-width="2"/>
-      <circle cx="48" cy="48" r="4" fill="#b6fff0"/>
+    <svg class="emblem" width="96" height="96" viewBox="0 0 96 96" fill="none" aria-hidden="true">
+      <circle cx="48" cy="48" r="44" stroke="#8fe3cf" stroke-opacity=".35" stroke-width="1.5" stroke-dasharray="2 6"/>
+      <path d="M14 84L84 12" stroke="#eafcff" stroke-width="2.5" stroke-linecap="round" opacity=".85"/><path d="M84 12l-11 4 7 7z" fill="#eafcff"/>
+      <path d="M22 18L37 41L48 37L59 41L74 18L72 50Q67 69 48 80Q29 69 24 50Z" fill="#f2fbff"/>
+      <path d="M25 24L35 40L30 43ZM71 24L61 40L66 43Z" fill="#9fdcf0" opacity=".8"/>
+      <path d="M33 53Q38 49 43 54Q38 56 33 53ZM63 53Q58 49 53 54Q58 56 63 53Z" fill="#5fe0ff"/>
+      <path d="M45 68L48 72L51 68Z" fill="#2a3a55"/>
     </svg>
-    <div class="eyebrow">Sekmeli mızrakçı zindan avı</div>
-    <h1>Yeminli Mızrak</h1>
-    <p class="lead">Her mızrak atışından sonra sek. Düşmanlara mızrak sapla, sonra hepsini birden söküp al.</p>
+    <div class="eyebrow">Sekmeli ruh tilkisi zindan avı</div>
+    <h1>Ruh Tilkisi</h1>
+    <p class="lead">Her ışık mızrağından sonra sek. Düşmanlara ışık sapla, sonra hepsini birden söküp al.</p>
     <div class="statrow"><div>En iyi oda<b id="tBest">0</b></div><div>Ruh parçası<b id="tShards">0</b></div></div>
     <div class="btns">
       <button class="btn primary" id="btnStart">Ava başla <small>Oda 1</small></button>
@@ -286,14 +286,14 @@ p{margin:0;line-height:1.45;color:var(--ink)}
       <button class="btn" id="btnAch">Başarımlar <small id="achLbl"></small></button>
     </div>
     <div class="ups history" id="history" hidden></div>
-    <p class="fine">LoL'deki Kalista'nın "Martial Poise" sekme mekaniğinden esinlenmiş bir hayran projesi.</p>
+    <p class="fine">Cadı zindanlarına düşmüş beyaz bir ruh tilkisinin ışık avı.</p>
   </div>
 </section>
 
 <section class="screen" id="scrHero" hidden>
   <div class="panel">
     <div class="eyebrow">Ava başla</div>
-    <h2>Mızrakçını seç</h2>
+    <h2>Tilkini seç</h2>
     <div class="cards" id="heroes"></div>
     <div class="btns"><button class="btn" data-back>Geri</button></div>
   </div>
@@ -304,11 +304,11 @@ p{margin:0;line-height:1.45;color:var(--ink)}
     <div class="eyebrow">Nasıl oynanır</div>
     <h2>Saldır, sek, sök</h2>
     <ul class="list">
-      <li><span class="k"><span>↔</span></span><div><h3>Yön ver</h3><p>Ekranın herhangi bir yerinde parmağını sürükle (klavyede WASD). Menzilde düşman varsa mızrakçı kendiliğinden saldırır.</p></div></li>
+      <li><span class="k"><span>↔</span></span><div><h3>Yön ver</h3><p>Ekranın herhangi bir yerinde parmağını sürükle (klavyede WASD). Menzilde düşman varsa tilki kendiliğinden ışık mızrağı fırlatır.</p></div></li>
       <li><span class="k"><span>⤳</span></span><div><h3>Sekme</h3><p>Saldırı hazırlanırken ya da mızrak çıktıktan hemen sonra yön tutuyorsan, o yöne kısa bir sıçrama yaparsın. Saldırı iptal edilemez; yürümek yavaş, asıl hareketin sekme. Hedeften uzağa ve yana sekmek daha uzun, hedefe doğru sekmek daha kısadır.</p></div></li>
       <li><span class="k"><span>E</span></span><div><h3>Söküm</h3><p>Her mızrak düşmanda saplı kalır. SÖK tüm saplı mızrakları söker; mızrak sayısı arttıkça hasar artar. Söküm biri öldürürse bekleme süresi neredeyse sıfırlanır. Altın halkalı düşmanlar sökümle ölür.</p></div></li>
       <li><span class="k"><span>Q</span></span><div><h3>Delici Mızrak</h3><p>Uzun menzilli güçlü atış. Öldürdüğü düşmanın içinden geçip mızraklarını sonraki hedefe aktarır. Atıştan sonra da sekebilirsin.</p></div></li>
-      <li><span class="k"><span>R</span></span><div><h3>Kader Çağrısı</h3><p>Ruhun seni havaya kaldırır, sonra tuttuğun yöne (ya da en yakın düşmana) fırlatır. İndiğin yerde düşmanları sersemletir, iter ve 2 mızrak saplar. Havadayken hasar almazsın.</p></div></li>
+      <li><span class="k"><span>R</span></span><div><h3>Ay Sıçrayışı</h3><p>Ay ışığı seni havaya kaldırır, sonra tuttuğun yöne (ya da en yakın düşmana) fırlatır. İndiğin yerde düşmanları sersemletir, iter ve 2 mızrak saplar. Havadayken hasar almazsın.</p></div></li>
     </ul>
     <p class="fine">Her odadan sonra 3 güçten birini seç. Odalar arasında kapı seçersin: Savaş, Elit, Lanetli, Ruh Pınarı ya da Ruh Tüccarı. Her 5. odada bir muhafız var: Kemik Lordu, Gölge Atlı, Yas Kraliçesi ve Kan Kardinali; 20. odadan sonra Yükselmiş halleri birbirlerinin saldırılarını da kullanır. Kraliçe'nin çığlık dalgalarının üstünden sekerek atla. Kalkanlı Şövalye'yi yandan ya da arkadan vur (Delici Mızrak kalkanı deler). Kemik Bombası'nı fitili bitmeden öldürürsen patlaması yalnızca düşmanlara zarar verir. 10. odadan sonra muhafızlar ölünce bir kez ikinci formlarıyla dirilir. Ölünce topladığın ruh parçalarıyla Ruh Sunağı'ndan kalıcı güç al.</p>
     <div class="btns"><button class="btn" data-back>Geri</button></div>
@@ -356,11 +356,11 @@ p{margin:0;line-height:1.45;color:var(--ink)}
   <div class="panel">
     <div class="eyebrow">Başarımlar</div>
     <h2>Ruh Dolabı</h2>
-    <p class="fine">Başarımlar pelerin renklerini ve mızrak izlerini açar. Seçimin her mızrakçıda geçerlidir.</p>
+    <p class="fine">Başarımlar kürk renklerini ve mızrak izlerini açar. Seçimin her tilkide geçerlidir.</p>
     <div class="eyebrow">Mızrak izi</div>
     <p class="fine" id="trailHint"></p>
     <div class="ups trails" id="trailList"></div>
-    <div class="eyebrow">Pelerinler</div>
+    <div class="eyebrow">Kürkler</div>
     <div class="shop" id="achList"></div>
     <div class="btns"><button class="btn" data-back>Geri</button></div>
   </div>
@@ -593,23 +593,23 @@ const UPS = [
   { id:'rend', n:'Yırtıcı', r:'common', max:5, tag:'Söküm', d:'Söküm hasarı +%25.', a:s => s.rendMul *= 1.25 },
   { id:'rendcd', n:'Acımasız', r:'common', max:4, tag:'Söküm', d:'Söküm bekleme süresi -%15.', a:s => s.rendCd *= .85 },
   { id:'exec', n:'İnfaz', r:'rare', max:3, tag:'Söküm', d:'Söküm, canını %8 altına düşürdüğü düşmanı anında öldürür (seviye başına +%5).', a:s => s.exec = s.exec ? s.exec + .05 : .08 },
-  { id:'spread', n:'Bulaşıcı Yemin', r:'epic', max:1, tag:'Söküm', d:'Sökümle ölen düşmanın mızraklarının yarısı yakındaki düşmanlara saplanır.', a:s => s.spread = true },
+  { id:'spread', n:'Bulaşıcı Işık', r:'epic', max:1, tag:'Söküm', d:'Sökümle ölen düşmanın mızraklarının yarısı yakındaki düşmanlara saplanır.', a:s => s.spread = true },
   { id:'harvest', n:'Ruh Hasadı', r:'common', max:3, tag:'Söküm', d:'Sökümle her öldürme 3 can verir.', a:s => s.harvest += 3 },
-  { id:'qup', n:'Delici Yemin', r:'common', max:3, tag:'Delici', d:'Delici Mızrak hasarı +%40, bekleme -0.8 sn.', a:s => { s.qDmg *= 1.4; s.qCd -= .8; } },
-  { id:'rcd', n:'Kader Yemini', r:'common', max:3, tag:'Kader', d:'Kader Çağrısı bekleme -%20, sersemletme +0.3 sn.', a:s => { s.rCd *= .8; s.rStun += .3; } },
+  { id:'qup', n:'Delici Işık', r:'common', max:3, tag:'Delici', d:'Delici Mızrak hasarı +%40, bekleme -0.8 sn.', a:s => { s.qDmg *= 1.4; s.qCd -= .8; } },
+  { id:'rcd', n:'Ay Işığı', r:'common', max:3, tag:'Ay', d:'Ay Sıçrayışı bekleme -%20, sersemletme +0.3 sn.', a:s => { s.rCd *= .8; s.rStun += .3; } },
   { id:'phantom', n:'Hayalet Ordusu', r:'leg', max:1, tag:'Sinerji', req:u => (u.ghost || G.s.ghostHop) && u.shadow, d:'Hayalet Adım + Gölge Mızrak: her sekmede +2 gölge mızrak, inişten sonra 0.4 sn hasarsızlık.', a:s => { s.shadow += 2; s.postIframe = .4; } },
   { id:'bonebreak', n:'Kemik Kıran', r:'leg', max:1, tag:'Sinerji', req:u => u.heavy && u.rend, d:'Ağır Mızrak + Yırtıcı: Söküm\'de her ek mızrağın hasarı %60 yerine %95.', a:s => s.rendPer = .95 },
   { id:'wildfire', n:'Ruh Yangını', r:'leg', max:1, tag:'Sinerji', req:u => u.trail && u.shock, d:'Ruh İzi + İniş Şoku: iz hasarı iki katına çıkar, şok yarıçapı +40.', a:s => { s.trailMul = 2; s.shockR += 40; } },
-  { id:'legion', n:'Lejyon', r:'leg', max:1, tag:'Sinerji', req:u => (u.spirit || 0) >= 2 && u.as, d:'2+ Yeminli Ruh + Hızlı El: ruhlar iki kat sık mızrak atar.', a:s => s.spiritRate = .5 },
-  { id:'fated', n:'Kadere Bağlı', r:'leg', max:1, tag:'Sinerji', req:u => u.rcd && u.rendcd, d:'Kader Yemini + Acımasız: Kader Çağrısı inişi bedava bir Söküm tetikler.', a:s => s.rRend = true },
-  { id:'loyal', n:'Sadakat', r:'leg', max:1, tag:'Sinerji', req:u => G.hero.id === 'oath' && (u.rend || u.rendcd), d:'Yeminli\'ye özel: Söküm hasarı +%20 ve Söküm ile her öldürme Kader Çağrısı bekleme süresini 3 sn kısaltır.', a:s => { s.rendMul *= 1.2; s.loyal = true; } },
+  { id:'legion', n:'Lejyon', r:'leg', max:1, tag:'Sinerji', req:u => (u.spirit || 0) >= 2 && u.as, d:'2+ Ruh Yavrusu + Hızlı El: ruhlar iki kat sık mızrak atar.', a:s => s.spiritRate = .5 },
+  { id:'fated', n:'Ay Tutulması', r:'leg', max:1, tag:'Sinerji', req:u => u.rcd && u.rendcd, d:'Ay Işığı + Acımasız: Ay Sıçrayışı inişi bedava bir Söküm tetikler.', a:s => s.rRend = true },
+  { id:'loyal', n:'Sadakat', r:'leg', max:1, tag:'Sinerji', req:u => G.hero.id === 'oath' && (u.rend || u.rendcd), d:'Ak Tilki\'ye özel: Söküm hasarı +%20 ve Söküm ile her öldürme Ay Sıçrayışı bekleme süresini 3 sn kısaltır.', a:s => { s.rendMul *= 1.2; s.loyal = true; } },
   { id:'dance', n:'Gölge Dansı', r:'leg', max:1, tag:'Sinerji', req:u => G.hero.id === 'shade' && (u.hop || u.as), d:'Gölge Koşucu\'ya özel: her sekmeden sonra 0.8 sn boyunca saldırı hızı +%45.', a:s => s.dance = true },
   { id:'boneburst', n:'Kemik Patlaması', r:'leg', max:1, tag:'Sinerji', req:u => G.hero.id === 'heavy' && (u.heavy || u.dmg), d:'Kemik Kıran\'a özel: üzerinde 5+ mızrak olan düşman ölünce çevresine 6 mızrak saçar.', a:s => s.boneBurst = true },
   { id:'chorus', n:'Ruh Korosu', r:'leg', max:1, tag:'Sinerji', req:u => G.hero.id === 'caller' && (u.spirit || u.rcd), d:'Ruh Çağıran\'a özel: ruhlar iki mızrak birden atar ve ruh mızrakları %80 hasar verir.', a:s => s.chorus = true },
   { id:'hp', n:'Sağlam Ruh', r:'common', max:5, tag:'Ruh', d:'Azami can +25 ve 25 can yenile.', a:(s, p) => { s.maxHp += 25; p.hp += 25; } },
   { id:'regen', n:'Yenilenme', r:'common', max:3, tag:'Ruh', d:'Saniyede 1 can yenilenir.', a:s => s.regen += 1 },
-  { id:'leech', n:'Kan Yemini', r:'rare', max:3, tag:'Ruh', d:'Mızrak hasarının %4\'ü kadar can çalarsın.', a:s => s.leech += .04 },
-  { id:'spirit', n:'Yeminli Ruh', r:'epic', max:3, tag:'Ruh', d:'Etrafında dönen ve kendi mızraklarını atan bir ruh müttefik kazanırsın.', a:s => s.spirits++ },
+  { id:'leech', n:'Kan Bağı', r:'rare', max:3, tag:'Ruh', d:'Mızrak hasarının %4\'ü kadar can çalarsın.', a:s => s.leech += .04 },
+  { id:'spirit', n:'Ruh Yavrusu', r:'epic', max:3, tag:'Ruh', d:'Etrafında dönen ve kendi ışık mızraklarını atan bir ruh yavrusu kazanırsın.', a:s => s.spirits++ },
 ];
 const RW = { common: 10, rare: 5, epic: 2, leg: 6 };
 const RN = { common: 'Sıradan', rare: 'Nadir', epic: 'Destansı', leg: 'Efsanevi' };
@@ -633,10 +633,10 @@ const SHOP = [
 // ---------- run state ----------
 let G = null, paused = false;
 const HEROES = [
-  { id: 'oath', n: 'Yeminli', d: 'Dengeli mızrakçı. Ek bir özelliği yok, her yola uyar.', cloak: ['#348478', '#17463f', '#0a2420'], rim: '170,255,235', a: s => {} },
-  { id: 'shade', n: 'Gölge Koşucu', d: 'Sekme mesafesi +%35 ve sekerken hasar almaz. Mızrak hasarı -%15, can -20.', cloak: ['#5a58a0', '#29275a', '#0e0d22'], rim: '200,190,255', a: s => { s.hopDist *= 1.35; s.ghostHop = true; s.dmg *= .85; s.maxHp -= 20; } },
-  { id: 'heavy', n: 'Kemik Kıran', d: 'Mızrak hasarı +%30, mızraklar %25 şansla 2 saplanır. Saldırı hızı -%10, sekme -%5.', cloak: ['#9a6838', '#4e2e18', '#1e1008'], rim: '255,205,140', a: s => { s.dmg *= 1.3; s.heavy += .25; s.as *= .9; s.hopDist *= .95; } },
-  { id: 'caller', n: 'Ruh Çağıran', d: 'Bir Yeminli Ruh ile başlar, Kader Çağrısı bekleme süresi -%30. Mızrak hasarı -%10.', cloak: ['#3c84a8', '#1a3a56', '#081624'], rim: '165,225,255', a: s => { s.spirits += 1; s.rCd *= .7; s.dmg *= .9; } },
+  { id: 'oath', n: 'Ak Tilki', d: 'Dengeli ruh tilkisi. Ek bir özelliği yok, her yola uyar.', cloak: ['#9fdcf0', '#5f9ec0', '#1e3c58'], rim: '185,240,255', a: s => {} },
+  { id: 'shade', n: 'Gölge Tilki', d: 'Sekme mesafesi +%35 ve sekerken hasar almaz. Mızrak hasarı -%15, can -20.', cloak: ['#5a58a0', '#29275a', '#0e0d22'], rim: '200,190,255', a: s => { s.hopDist *= 1.35; s.ghostHop = true; s.dmg *= .85; s.maxHp -= 20; } },
+  { id: 'heavy', n: 'Kor Tilki', d: 'Mızrak hasarı +%30, mızraklar %25 şansla 2 saplanır. Saldırı hızı -%10, sekme -%5.', cloak: ['#9a6838', '#4e2e18', '#1e1008'], rim: '255,205,140', a: s => { s.dmg *= 1.3; s.heavy += .25; s.as *= .9; s.hopDist *= .95; } },
+  { id: 'caller', n: 'Ruh Çağıran', d: 'Bir Ruh Yavrusu ile başlar, Ay Sıçrayışı bekleme süresi -%30. Mızrak hasarı -%10.', cloak: ['#3c84a8', '#1a3a56', '#081624'], rim: '165,225,255', a: s => { s.spirits += 1; s.rCd *= .7; s.dmg *= .9; } },
 ];
 function mulberry32(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
 const crand = () => (G && G.rng ? G.rng() : Math.random());
@@ -657,7 +657,7 @@ const ACH = [
   { id: 'rider', n: 'Atlıyı Düşüren', d: 'Gölge Atlı\'yı yen.', skin: { n: 'Gece Moru', cloak: ['#7a5cc8', '#33246a', '#120a2a'], rim: '200,170,255' } },
   { id: 'cardinal', n: 'Kanı Durduran', d: 'Kan Kardinali\'ni yen.', skin: { n: 'Kardinal Kızılı', cloak: ['#b3192c', '#5a0814', '#1e0206'], rim: '255,200,140' } },
   { id: 'queen', n: 'Yası Bitiren', d: 'Yas Kraliçesi\'ni yen.', skin: { n: 'Yas Gümüşü', cloak: ['#c8cede', '#5e6478', '#1c1f2a'], rim: '235,240,255' } },
-  { id: 'combo50', n: 'Durdurulamaz', d: '50 seri yap.', skin: { n: 'Altın Yemin', cloak: ['#e0b858', '#7a5a1e', '#2a1e08'], rim: '255,220,140' } },
+  { id: 'combo50', n: 'Durdurulamaz', d: '50 seri yap.', skin: { n: 'Altın Kürk', cloak: ['#e0b858', '#7a5a1e', '#2a1e08'], rim: '255,220,140' } },
   { id: 'rend5', n: 'Toplu Söküm', d: 'Tek Sökümle 5 düşman öldür.', skin: { n: 'Kan Kırmızısı', cloak: ['#c8404e', '#5e1420', '#22060c'], rim: '255,150,160' } },
   { id: 'hop500', n: 'Rüzgâr Adım', d: 'Tek avda 500 kez sek.', skin: { n: 'Rüzgâr', cloak: ['#9ee6f0', '#3a7f8e', '#0e2a32'], rim: '200,250,255' } },
   { id: 'room20', n: 'Derinlere', d: '20. odaya ulaş.', skin: { n: 'Yıldız Tozu', cloak: ['#4a4a9e', '#1c1c4e', '#06061c'], rim: '255,255,220' } },
@@ -665,13 +665,13 @@ const ACH = [
   { id: 'nohit', n: 'Dokunulmaz', d: '5. odadan sonra bir odayı hasar almadan bitir.', skin: { n: 'Kristal', cloak: ['#bff7ff', '#5aa6c0', '#123848'], rim: '230,255,255' } },
   { id: 'daily10', n: 'Günün Avcısı', d: 'Günün Avı\'nda 10. odaya ulaş.', skin: { n: 'Şafak', cloak: ['#f0a070', '#8a4a5a', '#2a1428'], rim: '255,210,170' } },
   { id: 'altar', n: 'Kurban', d: 'Kan Sunağı\'nda Ruh Bağışı yap.', skin: { n: 'Kurban', cloak: ['#5a1a2a', '#2a0a12', '#0a0206'], rim: '255,90,120' } },
-  { id: 'allheroes', n: 'Dört Yemin', d: 'Dört mızrakçının her biriyle Kemik Lordu\'nu yen.', skin: { n: 'Ruh Lordu', cloak: ['#8fe3cf', '#6a4ac8', '#140a2a'], rim: '255,255,255' } },
+  { id: 'allheroes', n: 'Dört Tilki', d: 'Dört tilkinin her biriyle Kemik Lordu\'nu yen.', skin: { n: 'Ruh Lordu', cloak: ['#8fe3cf', '#6a4ac8', '#140a2a'], rim: '255,255,255' } },
 ];
 function unlock(id) {
   meta.ach = meta.ach || {}; if (meta.ach[id]) return;
   const a = ACH.find(x => x.id === id); if (!a) return;
   meta.ach[id] = Date.now(); store.set('ym_meta', meta);
-  toast(`Başarım: ${a.n}` + (a.skin ? ` · Pelerin açıldı: ${a.skin.n}` : '')); sfx('pick');
+  toast(`Başarım: ${a.n}` + (a.skin ? ` · Kürk açıldı: ${a.skin.n}` : '')); sfx('pick');
 }
 let toastT = 0;
 function toast(s) { const t = $('toast'); t.textContent = s; restartAnim(t, 'on'); }
@@ -833,7 +833,7 @@ function attackThrow() {
 }
 function startHop(dx, dy) {
   const p = G.p, s = G.s; const l = hyp(dx, dy) || 1; dx /= l; dy /= l;
-  // Martial Poise: dashing toward the target is shorter, sideways is the baseline, backwards is ~25% longer.
+  // Hop after each throw: dashing toward the target is shorter, sideways is the baseline, backwards is ~25% longer.
   const tx = Math.cos(p.face), ty = Math.sin(p.face), dot = dx * tx + dy * ty;
   const f = dot >= 0 ? 1 - .4 * dot : 1 + .25 * -dot;
   const dist = s.hopDist * f * (p.chillT > 0 ? .8 : 1);
@@ -1015,7 +1015,7 @@ function update(dt) {
   } else if (G.phase === 'clear') { G.clearT -= dt; if (G.clearT <= 0) showDraft(); }
   for (let i = G.spawns.length - 1; i >= 0; i--) { const sp = G.spawns[i]; sp.t -= dt; if (sp.t <= 0) { { const ne = makeEnemyFull(sp.type, sp.x, sp.y, sp.elite); ne.mimic = sp.mimic; G.enemies.push(ne); } burst(sp.x, sp.y, COL.ember, 10, 160, .4); G.spawns.splice(i, 1); } }
 
-  // player state machine (Martial Poise)
+  // player state machine (throw, then hop)
   const wantHop = inp.m > .3;
   switch (p.state) {
     case 'idle': {
@@ -1369,6 +1369,7 @@ const curTheme = () => themeFor(G ? G.room : 1);
 const CANDLES = Array.from({ length: 20 }, (_, i) => { const a = i * TAU / 20; return [Math.cos(a) * (ARENA + 26), Math.sin(a) * (ARENA + 26)]; });
 const BRAZ = Array.from({ length: 10 }, (_, i) => { const a = i * TAU / 10 + TAU / 20; return [Math.cos(a) * (ARENA + 22), Math.sin(a) * (ARENA + 22)]; });
 let FLOOR = null;
+const PLANTS = (() => { let s0 = 4711; const R = () => ((s0 = s0 * 16807 % 2147483647) / 2147483647); return Array.from({ length: 34 }, (_, i) => { const a = i * TAU / 34 + R() * .12, d = ARENA - 8 - R() * 34; return [Math.cos(a) * d, Math.sin(a) * d, .8 + R() * .6, R() < .5 ? 1 : 0, R() * TAU]; }); })();
 function buildFloor(T) {
   const size = Math.round(FH * 2 * FS), c = document.createElement('canvas'); c.width = c.height = size;
   const g = c.getContext('2d'); g.scale(FS, FS); g.translate(FH, FH);
@@ -1452,6 +1453,13 @@ function buildFloor(T) {
     g.fillStyle = '#5c6e80'; g.beginPath(); g.moveTo(x - 8, y + 2); g.lineTo(x - 8, y - 12); g.arc(x, y - 12, 8, Math.PI, 0); g.lineTo(x + 8, y + 2); g.closePath(); g.fill();
     g.strokeStyle = '#1a2430'; g.lineWidth = 1.5; g.stroke(); g.fillStyle = 'rgba(235,250,255,.7)'; g.beginPath(); g.ellipse(x, y - 19, 7, 2.5, 0, Math.PI, TAU); g.fill();
     g.strokeStyle = 'rgba(200,235,255,.6)'; g.beginPath(); g.moveTo(x, y - 14); g.lineTo(x, y - 4); g.moveTo(x - 3.5, y - 10); g.lineTo(x + 3.5, y - 10); g.stroke();
+  }
+  // bioluminescent plants: mushroom clusters and curled sprouts between the candles
+  for (const [x, y, s, kind] of PLANTS) {
+    const c = T.id === 'ice' ? ['#9fe8ff', '#2a5a78'] : T.id === 'blood' ? ['#ff9a6a', '#5a1420'] : ['#7ff5dc', '#3a2a6a'];
+    g.strokeStyle = c[1]; g.lineWidth = 1.6 * s; g.lineCap = 'round';
+    if (kind) for (let k = -1; k <= 1; k++) { g.beginPath(); g.moveTo(x + k * 3 * s, y); g.quadraticCurveTo(x + k * 7 * s, y - 9 * s, x + k * 4 * s, y - 14 * s); g.stroke(); g.fillStyle = c[0]; g.beginPath(); g.arc(x + k * 4 * s, y - 14 * s, 1.8 * s, 0, TAU); g.fill(); }
+    else for (let k = 0; k < 3; k++) { const ox = (k - 1) * 5 * s, hh = (9 - Math.abs(k - 1) * 3) * s; g.beginPath(); g.moveTo(x + ox, y); g.lineTo(x + ox * 1.2, y - hh); g.stroke(); g.fillStyle = c[0]; g.beginPath(); g.ellipse(x + ox * 1.2, y - hh, 3.6 * s, 2 * s, 0, Math.PI, TAU); g.fill(); }
   }
   if (T.id === 'ice') for (let i = 0; i < 2500; i++) { const a = R() * TAU, d = Math.sqrt(R()) * ARENA; g.fillStyle = 'rgba(240,250,255,.12)'; g.fillRect(Math.cos(a) * d, Math.sin(a) * d, 2, 2); }
   if (T.id === 'blood') for (let i = 0; i < 18; i++) { const a = R() * TAU, d = 120 + R() * (ARENA - 200), x = Math.cos(a) * d, y = Math.sin(a) * d, rr = 18 + R() * 30; g.fillStyle = 'rgba(110,6,18,.5)'; g.beginPath(); g.ellipse(x, y, rr, rr * .6, R(), 0, TAU); g.fill(); g.fillStyle = 'rgba(255,90,90,.12)'; g.beginPath(); g.ellipse(x - rr * .3, y - rr * .2, rr * .3, rr * .12, 0, 0, TAU); g.fill(); }
@@ -1648,6 +1656,8 @@ function draw() {
     emit(TH.fireRgb[0], bx, by - 12, 58 * f, .8); emit(TH.fireRgb[1], bx, by - 10, 24 * f, .7); emit(TH.fireRgb[2], bx, by - 8, 11 * f, .9); light(bx, by, 250 * f, .85, TH.fireRgb[0]);
     let n = acc(BSM[i], 'a', 3); while (n--) puff(bx + rand(-4, 4), by - 22, 's', 6, { vy: rand(-50, -30), vx: rand(-8, 8), a: .28, life: rand(2, 2.8), gr: 16 });
   }
+  { const pc = TH.id === 'ice' ? '150,230,255' : TH.id === 'blood' ? '255,140,90' : '120,245,215';
+    for (const [x, y, s, , ph] of PLANTS) { const f = .6 + .4 * Math.sin(now * 1.3 + ph); emit(pc, x, y - 10 * s, 16 * s * f, .55 * f); } }
   for (let i = 0; i < CANDLES.length; i++) { const [x, y] = CANDLES[i], f = .8 + .2 * Math.sin(now * 17 + i * 2.3); if (TH.wax) for (let k = 0; k < 3; k++) emit(TH.candle[0], x + (k - 1) * 7, y - 11 - (k === 1 ? 3 : 0) - ((k * 5 + x) % 6), 6 * f, .9); else emit(TH.candle[0], x, y - 24 + Math.sin(now * 2 + i) * 3, 7 * f, .8); emit(TH.candle[1], x, y - 12, 26, .35 * f); light(x, y, 80, .45, TH.candle[0]); }
   if (G) drawWorld(G.time, now);
   updSmoke(FDT); if (!GPUP) drawSmoke(false);
@@ -1900,7 +1910,7 @@ function bakeFrame(S, e, r, v, fi) {
   try { g.setTransform(BS, 0, 0, BS, -x0 * BS, -y0 * BS); g.lineCap = 'round'; g.lineJoin = 'round'; S.body(fake, r, Math.sin(nb * 9), c => c, nb); }
   finally { ctx = real; NOEMI = ne; BAKING = false; }
   const sil = tintOf(raw, '#ffffff'), dark = tintOf(raw, '#05020a'), out = mkc(w, h), o = out.getContext('2d'), t = BS * 1.1;
-  for (let k = 0; k < 8; k++) { const a = k * TAU / 8; o.drawImage(dark, Math.cos(a) * t, Math.sin(a) * t); }
+  o.globalAlpha = .3; for (let k = 0; k < 8; k++) { const a = k * TAU / 8; o.drawImage(dark, Math.cos(a) * t * .8, Math.sin(a) * t * .8); } o.globalAlpha = 1;
   o.drawImage(raw, 0, 0);
   // cool key light from the upper left: silhouette minus itself shifted toward the light
   const rim = mkc(w, h), rg = rim.getContext('2d'); rg.drawImage(sil, 0, 0); rg.globalCompositeOperation = 'destination-out'; rg.drawImage(sil, BS * 1.6, BS * 1.8);
@@ -2237,7 +2247,7 @@ function cloakPath(x, y, s, sway, now) {
 }
 function drawPlayer(p, s, T, now) {
   const HC = (G.skin || G.hero).cloak, RIM = (G.skin || G.hero).rim;
-  for (const g of p.ghosts) { ctx.globalAlpha = Math.min(1, g.life * 1.4); cloakPath(g.x, g.y - 12, 1, 0, now); ctx.fillStyle = `rgba(${RIM},.28)`; ctx.fill(); }
+  for (const g of p.ghosts) { ctx.globalAlpha = Math.min(1, g.life * 1.4); ctx.save(); ctx.translate(g.x, g.y - 6); ctx.scale((Math.cos(p.face) >= 0 ? 1 : -1) * 1.3, 1.3); foxPath(); ctx.restore(); ctx.fillStyle = `rgba(${RIM},.28)`; ctx.fill(); }
   ctx.globalAlpha = 1;
   for (let i = 0; i < s.spirits; i++) {
     const a = p.spA + i * TAU / s.spirits, x = p.x + Math.cos(a) * 46, y = p.y + Math.sin(a) * 28 - 26;
@@ -2249,57 +2259,96 @@ function drawPlayer(p, s, T, now) {
   let sxs = 1, sys = 1;
   if (p.state === 'hop') { sxs = .88; sys = 1.14; }
   if ((p.land || 0) > 0) { const k = p.land / .12; sxs = 1 + .24 * k; sys = 1 - .2 * k; }
-  const PS = 1.3; sxs *= PS; sys *= PS;
+  const PS = 1.5; sxs *= PS; sys *= PS;
   if (p.state === 'rise') { const k = 1 - p.t / .4; ctx.strokeStyle = `rgba(216,178,90,${1 - k * .6})`; ctx.lineWidth = 3; ctx.beginPath(); ctx.ellipse(p.x, p.y, 20 + k * 40, (20 + k * 40) * .45, 0, 0, TAU); ctx.stroke(); }
   if (p.state === 'rise' || p.state === 'fling') { emit('255,210,120', p.x, p.y - z - 18, 70, .65); light(p.x, p.y - z, 200, .6, '255,210,120'); }
   if (p.chillT > 0) { emit('140,210,255', p.x, p.y - 20 - z, 46, .5); if (Math.random() < .3) puff(p.x + rand(-12, 12), p.y - z - rand(10, 40), 's', 4, { vy: rand(-15, -4), a: .5, life: .7 }); }
   const bx = p.x, by = p.y - z - hov, vxn = clamp((p.vx || 0) / 400, -1, 1), vyn = clamp((p.vy || 0) / 400, -1, 1);
-  let n = acc(p, '_sm', 34); while (n--) puff(bx + rand(-10, 10), by - rand(-2, 16), 's', 7, { vx: -(p.vx || 0) * .12 + rand(-10, 10), vy: rand(-30, -8), a: .55, life: rand(.8, 1.4) });
-  const A = blink ? .45 : 1;
-  ctx.save(); ctx.translate(bx, by); ctx.scale(sxs, sys); ctx.lineJoin = 'round'; ctx.lineCap = 'round';
-  // cape streaming behind
-  const fl = Math.sin(now * 8) * 2.5, tx = -vxn * 18 - fx * 7, ty = -4 - vyn * 6;
-  ctx.globalAlpha = A * .92; ctx.fillStyle = HC[2];
-  ctx.beginPath(); ctx.moveTo(-8, -31); ctx.quadraticCurveTo(-14 + tx * .4, -16, -10 + tx, ty + fl); ctx.lineTo(-4 + tx * .8, ty - 5 - fl); ctx.lineTo(1 + tx, ty + 2 + fl * .6); ctx.lineTo(6 + tx * .8, ty - 4); ctx.lineTo(10 + tx, ty + fl); ctx.quadraticCurveTo(14 + tx * .4, -16, 8, -31); ctx.closePath(); ctx.fill();
-  ctx.strokeStyle = `rgba(${RIM},.4)`; ctx.lineWidth = 1; ctx.stroke();
-  // ghostly lower body dissolving into smoke
-  ctx.globalAlpha = A;
-  const lg = ctx.createLinearGradient(0, -21, 0, 5); lg.addColorStop(0, HC[0]); lg.addColorStop(.5, HC[1]); lg.addColorStop(1, `rgba(${RIM},0)`);
-  ctx.fillStyle = lg; ctx.beginPath(); ctx.moveTo(-8, -21); ctx.bezierCurveTo(-11, -10, -6 - vxn * 6, -2, -vxn * 10 + Math.sin(now * 6) * 2, 5); ctx.bezierCurveTo(6 - vxn * 6, -2, 11, -10, 8, -21); ctx.closePath(); ctx.fill();
-  // armored torso
-  const tg = ctx.createLinearGradient(0, -35, 0, -17); tg.addColorStop(0, '#eef8f6'); tg.addColorStop(.5, '#93b7b1'); tg.addColorStop(1, '#3a5955');
-  ctx.fillStyle = tg; ctx.beginPath(); ctx.moveTo(-8, -33); ctx.quadraticCurveTo(0, -36.5, 8, -33); ctx.quadraticCurveTo(9.5, -24, 6, -18); ctx.quadraticCurveTo(0, -15, -6, -18); ctx.quadraticCurveTo(-9.5, -24, -8, -33); ctx.fill();
-  ctx.strokeStyle = '#0b1716'; ctx.lineWidth = 1.4; ctx.stroke();
-  ctx.strokeStyle = '#d8b25a'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(-6.5, -19.5); ctx.quadraticCurveTo(0, -16.5, 6.5, -19.5); ctx.stroke();
-  ctx.strokeStyle = 'rgba(216,178,90,.75)'; ctx.beginPath(); ctx.moveTo(0, -34.5); ctx.lineTo(0, -21); ctx.stroke();
-  // hood / helm
-  ctx.fillStyle = HC[1]; ctx.beginPath(); ctx.moveTo(-fx, -49); ctx.bezierCurveTo(fx * 9.5, -48, fx * 10, -40, fx * 8, -34); ctx.lineTo(-fx * 7, -34); ctx.bezierCurveTo(-fx * 9.5, -40, -fx * 7.5, -47, -fx, -49); ctx.fill();
-  ctx.strokeStyle = '#04100e'; ctx.lineWidth = 1.5; ctx.stroke();
-  ctx.fillStyle = '#dcefeb'; ctx.beginPath(); ctx.ellipse(fx * 3, -39.5, 3.7, 4.5, 0, 0, TAU); ctx.fill();
-  ctx.fillStyle = '#021010'; ctx.beginPath(); ctx.ellipse(fx * 3, -40.2, 3, .9, 0, 0, TAU); ctx.fill();
-  // front pauldron + arm
-  const pg = ctx.createRadialGradient(fx * 8, -33, 1, fx * 8, -32, 6.5); pg.addColorStop(0, '#f4fcfa'); pg.addColorStop(1, '#6a8c86');
-  ctx.fillStyle = pg; ctx.beginPath(); ctx.ellipse(fx * 8, -32, 5.8, 4.3, fx * .4, 0, TAU); ctx.fill(); ctx.strokeStyle = '#d8b25a'; ctx.lineWidth = 1; ctx.stroke();
-  ctx.strokeStyle = HC[0]; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(fx * 8, -30); ctx.lineTo(fx * 7 + Math.cos(p.face) * 6, -24 + Math.sin(p.face) * 4); ctx.stroke();
-  ctx.restore(); ctx.globalAlpha = 1;
-  // flame ponytail
-  const hx0 = bx - fx * 5 * sxs, hy0 = by - 45 * sys, PT = 1.25;
-  ctx.lineCap = 'round';
-  for (let k = 0; k < 3; k++) {
-    const ph = now * 7 + k; ctx.strokeStyle = `rgba(${RIM},${(.8 - k * .22) * A})`; ctx.lineWidth = 3.4 - k;
-    ctx.beginPath(); ctx.moveTo(hx0, hy0);
-    ctx.bezierCurveTo(hx0 - (fx * 8 + vxn * 6) * PT, hy0 + (-7 + Math.sin(ph) * 2) * PT, hx0 - (fx * 14 + vxn * 12) * PT, hy0 + (2 + Math.sin(ph + 1) * 3) * PT, hx0 - (fx * (21 + k * 3) + vxn * 18) * PT, hy0 + (8 + Math.sin(ph + 2) * 4 + k * 2) * PT); ctx.stroke();
-  }
-  ctx.lineCap = 'butt';
-  emit(RIM, hx0 - fx * 12, hy0 + 2, 16, .55);
-  n = acc(p, '_sm2', 9); while (n--) puff(hx0 - fx * 20 - vxn * 18, hy0 + 8, 's', 3.5, { vy: rand(-22, -6), a: .35, life: .9 });
-  emit(RIM, bx + fx * 3 * sxs, by - 40 * sys, 10, .95); emit(RIM, bx, by - 26 * sys, 18, .35);
-  // spirit spear
+  const spd = Math.hypot(p.vx || 0, p.vy || 0), run = clamp(spd / 200, 0, 1), hop = p.state === 'hop';
+  p.gait = ((p.gait || 0) + FDT * (6 + 14 * run)) % TAU;
   const charging = p.state === 'windup' || p.state === 'qcast', tot = p.state === 'qcast' ? .22 : Math.max(.07, .3 / s.as), k = charging ? 1 - clamp(p.t / tot, 0, 1) : 0;
-  const pull = charging ? -12 * k : p.state === 'post' ? 8 : 0, hx = bx + fx * 7 * sxs, hy = by - 24 * sys, srgb = p.state === 'qcast' ? '150,170,255' : charging ? '255,210,120' : RIM;
-  ctx.save(); ctx.translate(hx, hy); ctx.rotate(p.face); ctx.globalAlpha = A; ctx.translate(pull - 8, 0); spiritSpear(76, srgb); ctx.restore(); ctx.globalAlpha = 1;
-  const tipx = hx + Math.cos(p.face) * (76 * .6 + pull - 8), tipy = hy + Math.sin(p.face) * (76 * .6 + pull - 8);
-  emit(srgb, tipx, tipy, charging ? 14 + 30 * k : 12, charging ? .6 + .4 * k : .55);
+  if (hop) { sxs = 1.14 * PS; sys = .9 * PS; } else if (charging) { sys *= 1 - .07 * k; sxs *= 1 + .04 * k; }
+  const tilt = hop ? -.28 * Math.cos(Math.PI * (1 - p.t / s.hopTime)) : 0, sw = Math.sin(now * 3.2) * 3 + vyn * 4;
+  let n = acc(p, '_sm', 9); while (n--) puff(bx - fx * rand(8, 18), by - rand(2, 10), 's', 5, { vx: -(p.vx || 0) * .12 - fx * rand(4, 14), vy: rand(-20, -6), a: .22, life: rand(.7, 1.1) });
+  const A = blink ? .45 : 1;
+  ctx.save(); ctx.translate(bx, by); ctx.scale(fx * sxs, sys); ctx.rotate(tilt); ctx.globalAlpha = A; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+  drawFox(p, now, HC, RIM, run, hop, sw, k);
+  ctx.restore(); ctx.globalAlpha = 1;
+  // world positions of the tail tip and eye for glows and spirit smoke
+  const W2 = (lx, ly) => [bx + fx * sxs * (lx * Math.cos(tilt) - ly * Math.sin(tilt)), by + sys * (lx * Math.sin(tilt) + ly * Math.cos(tilt))];
+  const [tx, ty] = W2(-37, -52 + sw * 1.4), [ex, ey] = W2(21, -32.5);
+  emit(RIM, tx, ty, 18, .45); emit(RIM, ex, ey, 7, .9);
+  n = acc(p, '_sm2', 8); while (n--) puff(tx + rand(-4, 4), ty + rand(-4, 4), 's', 4, { vx: -fx * rand(10, 30) - (p.vx || 0) * .1, vy: rand(-26, -8), a: .4, life: rand(.7, 1.1) });
+  // light spear: forms above the fox, pulls back while charging, then flies (the projectile takes over)
+  const hx = bx - fx * 2, hy = by - 50 * sys + Math.sin(now * 2.4) * 2;
+  if (charging) {
+    const srgb = p.state === 'qcast' ? '150,170,255' : '215,250,255', L = 40 + 40 * k, pull = -10 * k;
+    ctx.save(); ctx.translate(hx, hy); ctx.rotate(p.face); ctx.globalAlpha = A * (.35 + .65 * k); ctx.translate(pull - L * .1, 0); spiritSpear(L, srgb); ctx.restore(); ctx.globalAlpha = 1;
+    emit(srgb, hx, hy, 18 + 34 * k, .5 + .5 * k); emit('255,255,255', hx + Math.cos(p.face) * L * .55, hy + Math.sin(p.face) * L * .55, 10 + 14 * k, .9);
+  } else {
+    const f = .8 + .2 * Math.sin(now * 5); emit(RIM, hx, hy, 16 * f, .7); emit('255,255,255', hx, hy, 6, .95);
+    ctx.fillStyle = '#ffffff'; ctx.globalAlpha = A; ctx.beginPath(); ctx.arc(hx, hy, 2.2, 0, TAU); ctx.fill(); ctx.globalAlpha = 1;
+  }
+}
+// Fox silhouette in local space (facing +x, feet at y≈6), used for after-images.
+function foxPath() {
+  ctx.beginPath(); ctx.moveTo(-12, -24); ctx.bezierCurveTo(-30, -28, -42, -38, -37, -55); ctx.bezierCurveTo(-30, -36, -26, -15, -13, -14);
+  ctx.lineTo(-10, 4); ctx.lineTo(-6, 4); ctx.lineTo(-4, -10); ctx.lineTo(7, -11); ctx.lineTo(9, 4); ctx.lineTo(13, 4); ctx.lineTo(13, -16);
+  ctx.lineTo(17, -23); ctx.lineTo(28, -29); ctx.lineTo(20, -37); ctx.lineTo(19, -47); ctx.lineTo(15, -37); ctx.lineTo(12, -44); ctx.lineTo(10, -32); ctx.lineTo(6, -28); ctx.closePath();
+}
+// White spirit fox, drawn facing +x around the body center; no hard outlines, light comes from within.
+function drawFox(p, now, HC, RIM, run, hop, sw, k) {
+  const g = p.gait || 0;
+  const leg = (front, ph, near) => {
+    const sx = front ? 10 : -9, c = g + ph;
+    let fx2, fy, kx, ky;
+    if (hop) { fx2 = front ? 21 : -21; fy = front ? -2 : 0; kx = front ? 16 : -15; ky = front ? -8 : -3; }
+    else { const s = Math.sin(c) * 7 * run, lift = Math.max(0, Math.cos(c)) * 5 * run; fx2 = sx + s + (front ? 1 : 0); fy = 6 - lift; kx = front ? sx + s * .5 + .5 : sx - 3 + s * .4; ky = front ? -4 - lift * .4 : -3 - lift * .5; }
+    ctx.strokeStyle = near ? '#eaf6ff' : `rgba(${RIM},.5)`;
+    ctx.lineWidth = near ? (front ? 2.9 : 3.4) : 2.6; ctx.beginPath(); ctx.moveTo(sx, front ? -14 : -12); ctx.lineTo(kx, ky); ctx.stroke();
+    ctx.lineWidth = near ? 2.1 : 1.8; ctx.beginPath(); ctx.moveTo(kx, ky); ctx.lineTo(fx2, fy); ctx.stroke();
+    ctx.fillStyle = near ? HC[0] : `rgba(${RIM},.45)`; ctx.beginPath(); ctx.ellipse(fx2 + 1.2, fy, 2.3, 1.3, 0, 0, TAU); ctx.fill();
+  };
+  leg(false, Math.PI, false); leg(true, 0, false);
+  // tail: overlapping soft lobes along a rising curve, bushy in the middle, dissolving at the tip
+  const P = t => { const u = 1 - t, a = u * u * u, b = 3 * u * u * t, c = 3 * u * t * t, d = t * t * t;
+    return [a * -13 + b * -29 + c * -40 + d * -37, a * -20 + b * -20 + c * (-33 + sw) + d * (-52 + sw * 1.4)]; };
+  for (let i = 28; i >= 0; i--) {
+    const t = i / 28, [x, y] = P(t), r = 3.5 + 6.5 * Math.sin(Math.PI * Math.min(1, .15 + t)) * (1 - t * .3) + .8 * Math.sin(now * 4 + i * .7);
+    const gr = ctx.createRadialGradient(x - r * .25, y - r * .3, 0, x, y, r);
+    const a = (1 - t * .8) * .8; gr.addColorStop(0, `rgba(236,246,255,${a})`); gr.addColorStop(.55, `rgba(200,224,240,${a * .8})`); gr.addColorStop(.85, `rgba(${RIM},${a * .35})`); gr.addColorStop(1, `rgba(${RIM},0)`);
+    ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill();
+  }
+  // torso and neck in one silhouette, with a waist tuck, haunch and deep chest
+  const bg = ctx.createLinearGradient(0, -30, 0, -10); bg.addColorStop(0, '#e2edf6'); bg.addColorStop(.55, '#b4cadc'); bg.addColorStop(1, '#5f84a6');
+  ctx.fillStyle = bg; ctx.beginPath(); ctx.moveTo(-15.5, -17);
+  ctx.bezierCurveTo(-15.5, -23.5, -9, -25, -2, -24); ctx.bezierCurveTo(4, -24, 8, -27, 11, -31.5); ctx.lineTo(16.5, -30);
+  ctx.bezierCurveTo(16.5, -24, 15.5, -17, 12, -13); ctx.bezierCurveTo(8, -10, 3, -11.5, -1, -13.5);
+  ctx.bezierCurveTo(-5, -12, -9, -9.5, -13, -11.5); ctx.bezierCurveTo(-15.5, -13, -16, -15, -15.5, -17); ctx.fill();
+  // haunch and shoulder volumes
+  let vg = ctx.createRadialGradient(-10, -18, 1, -9, -15, 7); vg.addColorStop(0, 'rgba(255,255,255,.9)'); vg.addColorStop(1, `rgba(${RIM},0)`); ctx.fillStyle = vg; ctx.beginPath(); ctx.ellipse(-9, -15.5, 6.5, 6, -.3, 0, TAU); ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,.95)'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(-12, -23.5); ctx.bezierCurveTo(-6, -25.5, 3, -24.5, 9, -29); ctx.stroke();
+  ctx.fillStyle = `rgba(${RIM},.25)`; ctx.beginPath(); ctx.ellipse(1, -12.5, 8, 1.8, 0, 0, TAU); ctx.fill();
+  // chest ruff
+  ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.moveTo(10, -28); ctx.quadraticCurveTo(19, -24, 15, -14.5); ctx.lineTo(13.5, -17.5); ctx.lineTo(12, -13.5); ctx.quadraticCurveTo(9.5, -19, 8, -22); ctx.fill();
+  leg(false, 0, true); leg(true, Math.PI, true);
+  // head
+  const hb = hop ? -1 : Math.sin(g * 2) * .6 * run - k * 1.5;
+  ctx.save(); ctx.translate(0, hb);
+  ctx.fillStyle = `rgba(${RIM},.7)`; ctx.beginPath(); ctx.moveTo(12.5, -35); ctx.quadraticCurveTo(11, -42, 12, -47.5); ctx.quadraticCurveTo(15.5, -42, 17, -37); ctx.fill();
+  const hg = ctx.createLinearGradient(13, -39, 22, -25); hg.addColorStop(0, '#eef5fb'); hg.addColorStop(1, '#a9c3d8');
+  ctx.fillStyle = hg; ctx.beginPath(); ctx.moveTo(15, -37.5); ctx.quadraticCurveTo(22, -36.5, 28.2, -30.4);
+  ctx.quadraticCurveTo(26.5, -27.3, 21, -27.4); ctx.quadraticCurveTo(16, -25, 12, -28.5); ctx.quadraticCurveTo(10.8, -35, 15, -37.5); ctx.fill();
+  // cheek ruff
+  ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.moveTo(11.5, -30); ctx.lineTo(12.5, -24); ctx.lineTo(14.5, -26.5); ctx.lineTo(16.5, -23.5); ctx.lineTo(18, -27.5); ctx.closePath(); ctx.fill();
+  // front ear with tinted inside
+  ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.moveTo(15.5, -37); ctx.quadraticCurveTo(17, -44, 20, -49.5); ctx.quadraticCurveTo(22, -42, 21.8, -35.8); ctx.fill();
+  ctx.fillStyle = HC[0]; ctx.globalAlpha *= .7; ctx.beginPath(); ctx.moveTo(17.4, -37.2); ctx.quadraticCurveTo(18.6, -42.5, 20, -46.5); ctx.quadraticCurveTo(20.8, -41.5, 20.4, -36.6); ctx.fill(); ctx.globalAlpha /= .7;
+  // eye: glowing almond; nose
+  ctx.fillStyle = `rgb(${RIM})`; ctx.beginPath(); ctx.moveTo(18.8, -32.4); ctx.quadraticCurveTo(21.2, -34.6, 23.6, -32.4); ctx.quadraticCurveTo(21.2, -31.2, 18.8, -32.4); ctx.fill();
+  ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(21.8, -32.9, .7, 0, TAU); ctx.fill();
+  ctx.fillStyle = '#2a3a55'; ctx.beginPath(); ctx.arc(27.9, -30.3, 1.15, 0, TAU); ctx.fill();
+  ctx.restore();
 }
 
 // ---------- render: additive fx, text, post ----------
@@ -2422,7 +2471,7 @@ function post(now, gpu = false) {
 let NOEMI = false;
 const CAM = { Z: 1, ox: 0, oy: 0 };
 const toScreen = (x, y) => [x * CAM.Z + CAM.ox, y * CAM.Z + CAM.oy];
-const PRAISE = { 10: 'Harika', 20: 'Müthiş', 35: 'Efsane', 50: 'Durdurulamaz', 75: 'Tanrısal', 100: 'Yemin tutuldu' };
+const PRAISE = { 10: 'Harika', 20: 'Müthiş', 35: 'Efsane', 50: 'Durdurulamaz', 75: 'Tanrısal', 100: 'Ruh uyandı' };
 function praise(n) { const el = $('praise'); el.textContent = PRAISE[n]; restartAnim(el, 'on'); twinkle(W * .5, H * .37, Math.min(W, H) * .45, .05); buzz(30); }
 function twinkle(sx, sy, S, delay = 0, wx, wy) { const n = G.twinkles.length; if (n < 10) G.twinkles.push({ x: sx, y: sy, wx, wy, S: n > 3 ? S * .55 : S, t: -delay - n * .06, rot: rand(0, TAU) }); }
 function twinkleWorld(x, y, S, delay = 0) { const [sx, sy] = toScreen(x, y - 20); twinkle(sx, sy, S, delay, x, y - 20); }
@@ -2529,16 +2578,26 @@ function glInit() {
   try {
     GLX.bright = prog('uniform sampler2D t;uniform float th;void main(){vec3 c=texture2D(t,uv).rgb;float l=max(c.r,max(c.g,c.b));gl_FragColor=vec4(c*smoothstep(th,th+.3,l),1.);}');
     GLX.blur = prog('uniform sampler2D t;uniform vec2 d;void main(){vec3 c=texture2D(t,uv).rgb*.227027;c+=(texture2D(t,uv+d*1.3846154).rgb+texture2D(t,uv-d*1.3846154).rgb)*.3162162;c+=(texture2D(t,uv+d*3.2307692).rgb+texture2D(t,uv-d*3.2307692).rgb)*.0702703;gl_FragColor=vec4(c,1.);}');
-    GLX.comp = prog('uniform sampler2D s,b1,b2;uniform vec4 w[8];uniform float ca,bloom,sat,con,aspect,time,inv;uniform vec2 scr;uniform vec3 tint;' +
+    GLX.comp = prog('uniform sampler2D s,b1,b2,pt,nz;uniform vec4 w[8];uniform float ca,bloom,sat,con,aspect,time,inv,paint;uniform vec2 scr;uniform vec3 tint;' +
+      'vec3 S(vec2 u){return mix(texture2D(s,u).rgb,texture2D(pt,u).rgb,paint);}' +
       'void main(){vec2 u=uv;' +
       'for(int i=0;i<8;i++){vec4 W=w[i];if(W.w<=0.)continue;vec2 dv=(u-W.xy)*vec2(aspect,1.);float dl=length(dv);float x=(dl-W.z)/.07;' +
       'if(abs(x)<1.){float f=W.w*x*(1.-abs(x));u-=dv/(dl+1e-4)/vec2(aspect,1.)*f*.04;}}' +
-      'vec2 cd=(u-.5)*ca;vec3 c=vec3(texture2D(s,u+cd).r,texture2D(s,u).g,texture2D(s,u-cd).b);' +
+      'vec2 cd=(u-.5)*ca;vec3 c=vec3(S(u+cd).r,S(u).g,S(u-cd).b);' +
+      'vec2 q=uv*scr/260.;float cn=texture2D(nz,q).g*.6+texture2D(nz,q*vec2(3.1,.7)+.3).r*.4;c*=1.+(cn-.5)*.16*paint;' +
       'c+=(texture2D(b1,u).rgb*.7+texture2D(b2,u).rgb*1.1)*bloom;' +
       'float l=dot(c,vec3(.299,.587,.114));c=mix(vec3(l),c,sat);c=(c-.5)*con+.5;c*=tint;' +
       'c=max(c,0.);c=c*(1.+c*.1)/(1.+c*.55)*1.25;' +
       'c+=(fract(sin(dot(floor(uv*scr)+time,vec2(12.9898,78.233)))*43758.5453)-.5)*.045;c=clamp(c,0.,1.);c=mix(c,1.-c,inv);gl_FragColor=vec4(c,1.);}', 0, 1);
     GLX.copy = prog('uniform sampler2D t;void main(){gl_FragColor=texture2D(t,uv);}');
+    // Kuwahara filter: each pixel takes the mean of the calmest of four 3x3 quadrants, turning shapes into flat paint strokes with kept edges
+    GLX.kuwa = prog('uniform sampler2D t;uniform vec2 px;' +
+      'void main(){vec3 m0=vec3(0.),m1=vec3(0.),m2=vec3(0.),m3=vec3(0.),s0=vec3(0.),s1=vec3(0.),s2=vec3(0.),s3=vec3(0.);' +
+      'for(int j=0;j<=2;j++)for(int i=0;i<=2;i++){vec2 o=vec2(float(i),float(j))*px;vec3 c;' +
+      'c=texture2D(t,uv+vec2(-o.x,-o.y)).rgb;m0+=c;s0+=c*c;c=texture2D(t,uv+vec2(o.x,-o.y)).rgb;m1+=c;s1+=c*c;' +
+      'c=texture2D(t,uv+vec2(o.x,o.y)).rgb;m2+=c;s2+=c*c;c=texture2D(t,uv+vec2(-o.x,o.y)).rgb;m3+=c;s3+=c*c;}' +
+      'm0/=9.;m1/=9.;m2/=9.;m3/=9.;float v0=dot(abs(s0/9.-m0*m0),vec3(1.)),v1=dot(abs(s1/9.-m1*m1),vec3(1.)),v2=dot(abs(s2/9.-m2*m2),vec3(1.)),v3=dot(abs(s3/9.-m3*m3),vec3(1.));' +
+      'vec3 r=m0;float v=v0;if(v1<v){v=v1;r=m1;}if(v2<v){v=v2;r=m2;}if(v3<v){r=m3;}gl_FragColor=vec4(r,1.);}');
     GLX.spr = prog('uniform sampler2D t;uniform vec3 mul;uniform float a;void main(){vec4 c=texture2D(t,uv);gl_FragColor=vec4(c.rgb*mul,c.a)*a;}', SVS);
     GLX.sky = prog('uniform sampler2D t;uniform vec4 nr;uniform vec2 scr,cam;uniform float time;uniform vec4 tint;' +
       'float hs(vec2 q){return fract(sin(dot(q,vec2(127.1,311.7)))*43758.5453);}' +
@@ -2567,11 +2626,11 @@ function glInit() {
       GLX.smokeP = prog('#define NL ' + NL + '\nvarying vec4 col,dd;uniform sampler2D nz;uniform vec4 L[NL];uniform vec3 LCo[NL];uniform int nl;uniform vec3 amb;uniform float bright;' +
         'void main(){float l=length(uv);if(l>=1.)discard;vec2 u=uv*.42+vec2(dd.y*.137,dd.y*.311)+vec2(0.,dd.x*.22);' +
         'float n=texture2D(nz,u).r*.62+texture2D(nz,u*2.1+.37).g*.38;float m=1.-smoothstep(.15,1.,l);' +
-        'float d=clamp((n-.08-dd.x*.3)*3.,0.,1.)*m;float a=min(1.,d*col.a*(2.3+bright*1.3));vec3 c=col.rgb;' +
+        'float d=clamp((n-.08-dd.x*.3)*3.,0.,1.)*m;float a=min(1.,d*col.a*(2.3-bright*.5));vec3 c=col.rgb;' +
         'if(bright<.5){vec3 li=amb;for(int i=0;i<8;i++){if(i>=nl)break;vec4 q=L[i];vec2 dv=(q.xy-wp)/q.z;float dl=length(dv);if(dl<1.)li+=LCo[i]*(1.-dl)*(1.-dl)*q.w*1.4;}c*=li;}' +
         'gl_FragColor=vec4(c*a,a);}', PVS, 1);
       // ambient particle field per biome, procedural on a grid in world space: snow falls, embers and spirit motes rise
-      GLX.fieldP = prog('uniform vec2 scr;uniform vec3 cam;uniform float time,mode,dens;uniform vec3 c1,c2;' +
+      GLX.fieldP = prog('uniform vec2 scr;uniform vec3 cam;uniform float time,mode,dens,rays;uniform vec3 c1,c2;' +
         'float hs(vec2 q){return fract(sin(dot(q,vec2(127.1,311.7)))*43758.5453);}' +
         'void main(){vec2 sp=vec2(uv.x,1.-uv.y)*scr;vec3 acc=vec3(0.);' +
         'for(int i=0;i<3;i++){float fi=float(i),par=1.+fi*.22,cs=40.+fi*16.;vec2 wq=(sp-cam.yz*par)/(cam.x*par);' +
@@ -2581,8 +2640,12 @@ function glInit() {
         'float d=length(fract(q)-o)*cs;float s=(mode<.5?1.3:mode<1.5?1.1:1.6)*(1.+fi*.45)*(.6+h*.8);' +
         'float tw=mode<.5?1.:mode<1.5?.55+.45*sin(time*(6.+h*9.)+h*50.):.5+.5*sin(time*(1.5+h*2.)+h*40.);' +
         'float b=(1.-smoothstep(s*.15,s,d))*tw+(1.-smoothstep(0.,s*4.,d))*tw*.18;acc+=b*mix(c1,c2,hs(g+5.1))*(.55+fi*.25);}' +
+        'float xr=(sp.x+sp.y*.42)/scr.y;float sh=pow(.5+.5*sin(xr*7.+time*.12+sin(xr*2.3-time*.07)*1.6),7.)+pow(.5+.5*sin(xr*13.-time*.09),12.)*.6;' +
+        'acc+=sh*(1.-smoothstep(0.,.85,sp.y/scr.y))*rays*mix(c1,vec3(1.),.5);' +
         'gl_FragColor=vec4(acc,0.);}', 0, 1);
       GLX.ib = gl.createBuffer(); GLX.idata = new Float32Array(12 * 4096);
+    }
+    {
       GLX.nz = glTex(); gl.bindTexture(gl.TEXTURE_2D, GLX.nz); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
       gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, noiseCanvas());
     }
@@ -2599,14 +2662,15 @@ function glTex() { const gl = GL, t = gl.createTexture(); gl.bindTexture(gl.TEXT
 function glFbo(w, h) { const gl = GL, t = glTex(); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, null); const f = gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER, f); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, t, 0); return { t, f, w, h }; }
 function glSize() {
   const w = Math.max(1, cv.width), h = Math.max(1, cv.height), key = w + 'x' + h; if (key === GLSZ) return; GLSZ = key;
-  for (const k of ['h1', 'h2', 'q1', 'q2', 'scene']) if (GLX[k]) { GL.deleteTexture(GLX[k].t); GL.deleteFramebuffer(GLX[k].f); }
+  for (const k of ['h1', 'h2', 'q1', 'q2', 'scene', 'p1']) if (GLX[k]) { GL.deleteTexture(GLX[k].t); GL.deleteFramebuffer(GLX[k].f); }
   glc.width = w; glc.height = h; GLX.scene = glFbo(w, h);
   GLX.h1 = glFbo(Math.max(1, w >> 1), Math.max(1, h >> 1)); GLX.h2 = glFbo(GLX.h1.w, GLX.h1.h);
   GLX.q1 = glFbo(Math.max(1, w >> 2), Math.max(1, h >> 2)); GLX.q2 = glFbo(GLX.q1.w, GLX.q1.h);
+  GLX.p1 = glFbo(GLX.h1.w, GLX.h1.h);
 }
 const WAVES = [], WU = new Float32Array(32);
 function shock(x, y, R, str = 1, dur = .5) { if (WAVES.length < 8) WAVES.push({ x, y, R, str, dur, t: 0 }); }
-const GRADE = { witch: { tint: [1, .97, 1.05], sat: 1.12, con: 1.05, bloom: .8 }, ice: { tint: [.92, 1, 1.1], sat: .86, con: 1.07, bloom: .75 }, blood: { tint: [1.1, .94, .9], sat: 1.15, con: 1.07, bloom: .9 } };
+const GRADE = { witch: { tint: [.96, 1, 1.07], sat: 1.1, con: 1.04, bloom: 1.25 }, ice: { tint: [.92, 1, 1.1], sat: .86, con: 1.07, bloom: 1.05 }, blood: { tint: [1.1, .94, .9], sat: 1.15, con: 1.07, bloom: 1.2 } };
 const glReady = () => GLOK && !LOWQ && !(GLSLOW && OPTS.gfx === 'auto');
 const glParts = () => glReady() && !!GLX.IA;
 // Tiling value noise, two octaves in R and G, for the GPU smoke.
@@ -2620,7 +2684,42 @@ function noiseCanvas() {
   for (let i = 0; i < S * S; i++) { im.data[i * 4] = (o1[i] * .7 + o2[i] * .3) * 255; im.data[i * 4 + 1] = (o2[i] * .6 + o3[i] * .4) * 255; im.data[i * 4 + 2] = 0; im.data[i * 4 + 3] = 255; }
   g.putImageData(im, 0, 0); return c;
 }
-const FIELD = { witch: { mode: 2, dens: .34, c1: [.45, 1, .88], c2: [.75, .55, 1] }, ice: { mode: 0, dens: .5, c1: [.85, .93, 1], c2: [1, 1, 1] }, blood: { mode: 1, dens: .4, c1: [1, .45, .15], c2: [1, .75, .35] } };
+const FIELD = { witch: { mode: 2, dens: .34, rays: .17, c1: [.45, 1, .88], c2: [.75, .55, 1] }, ice: { mode: 0, dens: .5, rays: .15, c1: [.85, .93, 1], c2: [1, 1, 1] }, blood: { mode: 1, dens: .4, rays: .13, c1: [1, .45, .15], c2: [1, .75, .35] } };
+// Dark, out-of-focus foreground silhouettes framing the screen corners (roots, leaves, hanging vines) with a few glowing buds.
+const FRAMES = {};
+function frameSpr(T, v) {
+  const key = T.id + v; if (FRAMES[key]) return FRAMES[key];
+  const S = 512, c = document.createElement('canvas'); c.width = c.height = S; const g = c.getContext('2d'), R = seeded(900 + v * 77 + T.id.length * 13);
+  const dark = T.id === 'ice' ? '16,34,52' : T.id === 'blood' ? '40,10,18' : '20,22,44', rim = T.id === 'ice' ? '120,190,230' : T.id === 'blood' ? '200,80,60' : '110,200,190', bud = T.id === 'ice' ? '160,235,255' : T.id === 'blood' ? '255,150,90' : '130,255,220';
+  g.filter = 'blur(5px)'; g.fillStyle = `rgb(${dark})`; g.strokeStyle = `rgb(${dark})`; g.lineCap = 'round';
+  const buds = [];
+  for (let b = 0; b < 5; b++) {
+    let x = R() * 60, y = R() * 60, a = (v ? .35 : .25) + R() * .9, w = 22 - b * 2;
+    for (let s = 0; s < 14; s++) {
+      const nx = x + Math.cos(a) * 26, ny = y + Math.sin(a) * 26; g.lineWidth = Math.max(2, w); g.beginPath(); g.moveTo(x, y); g.lineTo(nx, ny); g.stroke();
+      if (s > 3 && R() < .6) { const la = a + (R() < .5 ? -1 : 1) * (.8 + R() * .6), L = 26 + R() * 30; g.save(); g.translate(nx, ny); g.rotate(la); g.beginPath(); g.ellipse(L / 2, 0, L / 2, L / 6 + 3, 0, 0, TAU); g.fill(); g.restore(); }
+      if (s > 5 && R() < .18) buds.push([nx, ny]);
+      x = nx; y = ny; a += (R() - .5) * .5; w *= .86; if (x > S * .8 || y > S * .8) break;
+    }
+  }
+  for (let i = 0; i < 4; i++) { const x = 40 + R() * 300; g.lineWidth = 3; g.beginPath(); g.moveTo(x, 0); g.quadraticCurveTo(x + 20, 120, x - 6, 140 + R() * 160); g.stroke(); }
+  g.filter = 'none'; g.globalCompositeOperation = 'source-atop';
+  const rg = g.createRadialGradient(S * .9, S * .9, 0, S * .9, S * .9, S * .9); rg.addColorStop(0, `rgba(${rim},.55)`); rg.addColorStop(.6, `rgba(${rim},.12)`); rg.addColorStop(1, `rgba(${rim},0)`); g.fillStyle = rg; g.fillRect(0, 0, S, S);
+  g.globalCompositeOperation = 'source-over';
+  for (const [x, y] of buds) { const gr = g.createRadialGradient(x, y, 0, x, y, 14); gr.addColorStop(0, `rgba(${bud},.95)`); gr.addColorStop(.3, `rgba(${bud},.35)`); gr.addColorStop(1, `rgba(${bud},0)`); g.fillStyle = gr; g.fillRect(x - 14, y - 14, 28, 28); }
+  return (FRAMES[key] = c);
+}
+function glFrame(TH, now) {
+  if (!G) return;
+  const gl = GL, U = GLX.spr.U, s = Math.min(W, H) * .5, px = -CAM.ox * .02 % 30, sw = Math.sin(now * .6) * 4;
+  gl.useProgram(GLX.spr.pr); gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA); gl.bindBuffer(gl.ARRAY_BUFFER, GLX.quad); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+  gl.uniform2f(U.scr, W, H); gl.uniform3f(U.cam, 1, 0, 0); gl.uniform3f(U.mul, 1, 1, 1); gl.uniform1f(U.a, .92);
+  gl.activeTexture(gl.TEXTURE0); gl.uniform1i(U.t, 0);
+  const put = (c, x, y, w, h) => { gl.bindTexture(gl.TEXTURE_2D, texOf(c)); gl.uniform4f(U.rect, x, y, w, h); gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4); };
+  put(frameSpr(TH, 0), -s * .12 + px, -s * .1 + sw, s, s);
+  put(frameSpr(TH, 1), W + s * .12 + px, -s * .14 - sw, -s * .9, s * .9);
+  put(frameSpr(TH, 1), -s * .1 + px, H + s * .1 + sw * .5, s * .8, -s * .8);
+}
 // Particles drawn after the 2D foreground: lit dark smoke, screened bright smoke, additive glows, then the biome's particle field.
 function glParticles(TH, now) {
   const gl = GL, IA = GLX.IA, D = GLX.idata, CAP = D.length / 12; let n = 0;
@@ -2649,8 +2748,9 @@ function glParticles(TH, now) {
     const F = FIELD[TH.id] || FIELD.witch, U = GLX.fieldP.U; gl.useProgram(GLX.fieldP.pr); gl.blendFunc(gl.ONE, gl.ONE);
     gl.bindBuffer(gl.ARRAY_BUFFER, GLX.buf); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
     gl.uniform2f(U.scr, W, H); gl.uniform3f(U.cam, CAM.Z, CAM.ox, CAM.oy); gl.uniform1f(U.time, now % 1000); gl.uniform1f(U.mode, F.mode); gl.uniform1f(U.dens, F.dens);
-    gl.uniform3fv(U.c1, F.c1); gl.uniform3fv(U.c2, F.c2); gl.drawArrays(gl.TRIANGLES, 0, 3);
+    gl.uniform3fv(U.c1, F.c1); gl.uniform3fv(U.c2, F.c2); gl.uniform1f(U.rays, F.rays); gl.drawArrays(gl.TRIANGLES, 0, 3);
   }
+  glFrame(TH, now);
   gl.disable(gl.BLEND);
 }
 const GLTEX = new Map();
@@ -2722,7 +2822,9 @@ function glPost(TH, now = 0, cx = 0, cy = 0) {
   gl.bindBuffer(gl.ARRAY_BUFFER, GLX.buf); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
   const pass = (P, fbo, set) => { gl.bindFramebuffer(gl.FRAMEBUFFER, fbo ? fbo.f : null); gl.viewport(0, 0, fbo ? fbo.w : glc.width, fbo ? fbo.h : glc.height); gl.useProgram(P.pr); set(P.U); gl.drawArrays(gl.TRIANGLES, 0, 3); };
   const bind = (unit, tex, loc) => { gl.activeTexture(gl.TEXTURE0 + unit); gl.bindTexture(gl.TEXTURE_2D, tex); gl.uniform1i(loc, unit); };
-  pass(GLX.bright, GLX.h1, U => { bind(0, SRC, U.t); gl.uniform1f(U.th, .55); });
+  const PAINT = OPTS.paint === false ? 0 : .82;
+  if (PAINT) pass(GLX.kuwa, GLX.p1, U => { bind(0, SRC, U.t); gl.uniform2f(U.px, 1 / GLX.scene.w * 2.2, 1 / GLX.scene.h * 2.2); });
+  pass(GLX.bright, GLX.h1, U => { bind(0, SRC, U.t); gl.uniform1f(U.th, .8); });
   pass(GLX.blur, GLX.h2, U => { bind(0, GLX.h1.t, U.t); gl.uniform2f(U.d, 1 / GLX.h1.w, 0); });
   pass(GLX.blur, GLX.h1, U => { bind(0, GLX.h2.t, U.t); gl.uniform2f(U.d, 0, 1 / GLX.h1.h); });
   pass(GLX.blur, GLX.q1, U => { bind(0, GLX.h1.t, U.t); gl.uniform2f(U.d, 1 / GLX.h1.w, 1 / GLX.h1.h); });
@@ -2732,7 +2834,7 @@ function glPost(TH, now = 0, cx = 0, cy = 0) {
   for (let i = WAVES.length - 1; i >= 0; i--) { const w = WAVES[i]; w.t += FDT; if (w.t >= w.dur) WAVES.splice(i, 1); }
   WAVES.forEach((w, i) => { const k = w.t / w.dur; WU[i * 4] = (w.x * CAM.Z + CAM.ox) / W; WU[i * 4 + 1] = 1 - (w.y * CAM.Z + CAM.oy) / H; WU[i * 4 + 2] = w.R * CAM.Z * (.12 + .88 * Math.sqrt(k)) / H; WU[i * 4 + 3] = RM ? 0 : w.str * (1 - k) * (1 - k); });
   const gr = GRADE[TH.id] || GRADE.witch, ca = G && !RM ? Math.min(.03, .002 + (G.hurtA || 0) * .012 + (G.impactT > 0 ? .02 : 0) + G.shake * .0005) : .0015;
-  pass(GLX.comp, null, U => { gl.uniform1f(U.time, RM ? 0 : now % 97); gl.uniform1f(U.inv, G && G.impactT > 0 && !RM ? 1 : 0); gl.uniform2f(U.scr, glc.width, glc.height); bind(0, SRC, U.s); bind(1, GLX.h1.t, U.b1); bind(2, GLX.q1.t, U.b2); gl.uniform4fv(U.w, WU); gl.uniform1f(U.ca, ca); gl.uniform1f(U.bloom, gr.bloom); gl.uniform1f(U.sat, gr.sat); gl.uniform1f(U.con, gr.con); gl.uniform1f(U.aspect, W / H); gl.uniform3fv(U.tint, gr.tint); });
+  pass(GLX.comp, null, U => { gl.uniform1f(U.time, RM ? 0 : now % 97); gl.uniform1f(U.inv, G && G.impactT > 0 && !RM ? 1 : 0); gl.uniform2f(U.scr, glc.width, glc.height); bind(0, SRC, U.s); bind(1, GLX.h1.t, U.b1); bind(2, GLX.q1.t, U.b2); bind(3, GLX.p1.t, U.pt); bind(4, GLX.nz || GLX.p1.t, U.nz); gl.uniform1f(U.paint, PAINT); gl.uniform4fv(U.w, WU); gl.uniform1f(U.ca, ca); gl.uniform1f(U.bloom, gr.bloom); gl.uniform1f(U.sat, gr.sat); gl.uniform1f(U.con, gr.con); gl.uniform1f(U.aspect, W / H); gl.uniform3fv(U.tint, gr.tint); });
 }
 glInit();
 
@@ -2771,7 +2873,7 @@ const ICON = {
   'Sekme': '<path d="M3 19c3-11 12-13 16-6"/><path d="M19 13h-5M19 13l1-5"/><circle cx="4" cy="20" r="1.5" fill="currentColor"/>',
   'Söküm': '<circle cx="12" cy="13" r="2.5" fill="currentColor"/><path d="M12 13L5 6M12 13l7-7M12 13v8M5 6h4M5 6v4M19 6h-4M19 6v4M12 21l-3-3M12 21l3-3"/>',
   'Delici': '<circle cx="11" cy="13" r="4"/><path d="M3 21L19 5"/><path d="M21 3l-6 1.5 4.5 4.5z" fill="currentColor"/>',
-  'Kader': '<circle cx="12" cy="15" r="3" fill="currentColor"/><path d="M4 13c1-6 5-7 7-2M20 13c-1-6-5-7-7-2M12 10V3M9 6l3-3 3 3"/>',
+  'Ay': '<circle cx="12" cy="15" r="3" fill="currentColor"/><path d="M4 13c1-6 5-7 7-2M20 13c-1-6-5-7-7-2M12 10V3M9 6l3-3 3 3"/>',
   'Ruh': '<path d="M12 3c4 5 6 8 6 12a6 6 0 0 1-12 0c0-3 2-5 3-7 1 2 2 3 3 3 0-3-1-5 0-8z"/>',
   'Sinerji': '<path d="M12 2l2.5 7.5L22 12l-7.5 2.5L12 22l-2.5-7.5L2 12l7.5-2.5z" fill="currentColor" fill-opacity=".3"/>',
   fight: '<path d="M4 20L20 4M4 4l16 16"/><path d="M20 4l-4 .5M20 4l-.5 4M4 4l4 .5M4 4l.5 4"/>',
@@ -2798,7 +2900,7 @@ function renderHistory() {
 }
 document.querySelectorAll('[data-back]').forEach(b => b.addEventListener('click', () => titleScreen()));
 $('btnStart').addEventListener('click', () => { initAudio(); renderHeroes(); show('scrHero'); });
-const heroSvg = h => `<svg width="30" height="30" viewBox="0 0 48 48"><path d="M24 4C13 4 8 16 8 27v15h32V27C40 16 35 4 24 4Z" fill="${h.cloak[1]}" stroke="rgb(${h.rim})" stroke-width="2"/><path d="M24 14c-6 0-9 6-9 12v4h18v-4c0-6-3-12-9-12Z" fill="#030808"/><circle cx="20" cy="25" r="2.2" fill="rgb(${h.rim})"/><circle cx="28" cy="25" r="2.2" fill="rgb(${h.rim})"/></svg>`;
+const heroSvg = h => `<svg width="30" height="30" viewBox="0 0 48 48"><path d="M8 7L17 20L24 18L31 20L40 7L39 26Q36 37 24 43Q12 37 9 26Z" fill="#f2fbff" stroke="rgb(${h.rim})" stroke-width="1.5"/><path d="M11 11L16 20L14 22ZM37 11L32 20L34 22Z" fill="${h.cloak[0]}"/><path d="M15 28Q18 26 21 29Q18 30 15 28ZM33 28Q30 26 27 29Q30 30 33 28Z" fill="rgb(${h.rim})"/><path d="M22.5 35L24 37L25.5 35Z" fill="#2a3a55"/></svg>`;
 function renderHeroes() {
   const c = $('heroes'); c.innerHTML = '';
   for (const hr of HEROES) {
@@ -2822,7 +2924,7 @@ function renderAch() {
   }
   const L = $('achList'), got = meta.ach || {}; L.innerHTML = '';
   const def = document.createElement('div'); def.className = 'achitem';
-  def.innerHTML = `<span>${heroSvg(HEROES[0])}</span><div><h3>Varsayılan</h3><p>Mızrakçının kendi rengi</p></div>`;
+  def.innerHTML = `<span>${heroSvg(HEROES[0])}</span><div><h3>Varsayılan</h3><p>Tilkinin kendi rengi</p></div>`;
   const db = document.createElement('button'); db.textContent = meta.skin ? 'Giy' : 'Giyildi'; db.className = meta.skin ? '' : 'on';
   db.addEventListener('click', () => { meta.skin = null; store.set('ym_meta', meta); renderAch(); }); def.appendChild(db); L.appendChild(def);
   for (const a of ACH) {
@@ -3001,7 +3103,7 @@ function gameOver() {
   const m = Math.floor(G.time / 60), sec = Math.floor(G.time % 60);
   $('oStats').innerHTML = `<div>Oda<b>${reached}</b></div><div>Öldürme<b>${G.kills}</b></div><div>Sekme<b>${G.hops}</b></div><div>Süre<b>${m}:${String(sec).padStart(2, '0')}</b></div><div>Ruh parçası<b>+${G.shards}</b></div>`;
   upChips($('oUps'));
-  const DL = { spear: 'Mızrak', q: 'Delici Mızrak', rend: 'Söküm', kader: 'Kader Çağrısı', sok: 'İniş Şoku', bomba: 'Kemik Bombası', iz: 'Ruh İzi', spirit: 'Yeminli Ruh', launch: 'Patlama' };
+  const DL = { spear: 'Mızrak', q: 'Delici Mızrak', rend: 'Söküm', kader: 'Ay Sıçrayışı', sok: 'İniş Şoku', bomba: 'Kemik Bombası', iz: 'Ruh İzi', spirit: 'Ruh Yavrusu', launch: 'Patlama' };
   const rows = Object.entries(G.dmgBy || {}).filter(([, v]) => v >= 1).sort((a, b) => b[1] - a[1]).slice(0, 6), tot = rows.reduce((a, [, v]) => a + v, 0) || 1, mx = rows.length ? rows[0][1] : 1;
   $('oDmg').innerHTML = rows.length ? '<span class="hl">Hasar kaynakları</span>' + rows.map(([k, v]) => `<div class="dmgrow"><span>${DL[k] || k}</span><i style="width:${Math.max(3, 100 * v / mx)}%"></i><b>${Math.round(100 * v / tot)}%</b></div>`).join('') : '';
   const cause = $('oCause'); cause.textContent = '';
@@ -3010,7 +3112,7 @@ function gameOver() {
   $('shareTxt').hidden = true; $('btnShare').hidden = !G.daily;
   if (G.daily) {
     const bar = Array.from({ length: 6 }, (_, i) => reached > (i + 1) * 5 ? '◆' : '◇').join('');
-    G.shareText = `Yeminli Mızrak · Günün Avı ${G.daily.key}\n${G.hero.n} · ${G.daily.mod.n}\nOda ${reached} · ${m}:${String(sec).padStart(2, '0')} · ${G.kills} öldürme ${bar}`;
+    G.shareText = `Ruh Tilkisi · Günün Avı ${G.daily.key}\n${G.hero.n} · ${G.daily.mod.n}\nOda ${reached} · ${m}:${String(sec).padStart(2, '0')} · ${G.kills} öldürme ${bar}`;
     $('btnShare').firstChild.nodeValue = 'Sonucu kopyala ';
   }
   setTimeout(() => { if (G && G.phase === 'over') show('scrOver'); }, 1400);

@@ -1,5 +1,5 @@
 // Offline cache for the standalone build (GitHub Pages or any static host).
-const CACHE = 'yeminli-mizrak-v1';
+const CACHE = 'ruh-tilkisi-v1';
 const CORE = ['./', './index.html', './manifest.webmanifest', './icon.svg'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(CORE)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => {

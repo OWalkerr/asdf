@@ -1,51 +1,49 @@
-# Yeminli Mızrak — Oyun Tasarım Dokümanı
+# Ruh Tilkisi — Oyun Tasarım Dokümanı
 
-Telefonda oynanan, sekerek hareket eden bir mızrakçıyla oynanan roguelike arena oyunu.
-Ana hareket mekaniği League of Legends'taki Kalista'nın **Martial Poise** pasifinden esinlenmiştir.
+Telefonda oynanan, sekerek hareket eden beyaz bir ruh tilkisiyle oynanan roguelike arena oyunu.
 
 Oynamak için: `game/index.html` dosyasını tarayıcıda aç (tek dosya, kurulum gerekmez).
 
-## 1. Esin kaynağı: Kalista'nın sekmesi (Martial Poise)
+## 1. Ana mekanik: fırlat ve sek
 
-Araştırmada doğrulanan kurallar:
+Tilki silah taşımaz: her saldırıda sırtının üstünde bir ışık mızrağı belirir, gerilir ve menzildeki en yakın düşmana uçar. Mızrak çıkarken yön tutarsan tilki o yöne seker.
 
-| Kalista (LoL) | Yeminli Mızrak'taki karşılığı |
+| Kural | Ayrıntı |
 |---|---|
-| Saldırı hazırlanırken (windup) ya da hemen sonrasında verilen hareket komutu, o yöne kısa bir atılma yaptırır. | Mızrak hazırlanırken ya da çıktıktan sonraki 0.13 sn içinde yön tutarsan o yöne **sekersin**. |
-| Saldırılar iptal edilemez. | Hazırlık sırasında yürüyemezsin; yön girdisi sadece sekmeyi tamponlar. |
-| Sekme mesafesi açıya bağlıdır: hedefe doğru en kısa, yana daha uzun; geriye ~%25 daha uzun. | Hedefe doğru ×0.6, yana ×1.0, geriye ×1.25 mesafe. |
-| Pierce (Q) atışı sırasında da sekebilir. | Delici Mızrak'tan sonra da sekebilirsin. |
-| Rend (E): saplı mızrakları söker, mızrak başına hasar artar, öldürürse bekleme yenilenir. | **Söküm**: aynı mantık; öldürürse bekleme 0.5 sn'ye düşer. |
-| Pierce öldürdüğü hedefin içinden geçer, mızraklarını sonrakine aktarır. | Aynısı. |
-| Fate's Call (R): yeminli müttefiki çeker, sonra hedef bölgeye fırlatır; indiği yerde düşmanları havaya kaldırır. | **Kader Çağrısı**: ruhun seni 0.4 sn kaldırır (hasarsız), sonra tuttuğun yöne ya da en yakın düşmana fırlatır. İnişte sersemletme, itme, 2 mızrak saplama. Bekleme 20 sn. |
+| Sekme tamponu | Mızrak hazırlanırken ya da çıktıktan sonraki 0.13 sn içinde yön tutarsan o yöne **sekersin**. |
+| Saldırı kesilmez | Hazırlık sırasında yürüyemezsin; yön girdisi sadece sekmeyi tamponlar. |
+| Açıya bağlı mesafe | Hedefe doğru ×0.6, yana ×1.0, geriye ×1.25 mesafe. |
+| Delici Işık (Q) | Hattaki her düşmanı deler, ölenin içinden geçip saplı ışıkları sonrakine taşır; sonrasında da sekebilirsin. |
+| Söküm (E) | Saplı ışık mızraklarını söker, mızrak başına hasar artar; öldürürse bekleme 0.5 sn'ye düşer. |
+| Ay Sıçrayışı (R) | Ay ışığı tilkiyi 0.4 sn kaldırır (hasarsız), sonra tuttuğun yöne ya da en yakın düşmana fırlatır. İnişte sersemletme, itme, 2 mızrak saplama. Bekleme 20 sn. |
 
-Sonuç olarak ritim şu: **saldır → sek → saldır → sek**. Yürümek yavaş (140 birim/sn), sekme ise 0.15 sn'de ~160 birim. Ustalık, sekmeyi doğru yöne zamanlamakta.
+Sonuç olarak ritim şu: **fırlat → sek → fırlat → sek**. Yürümek yavaş (140 birim/sn), sekme ise 0.15 sn'de ~160 birim. Ustalık, sekmeyi doğru yöne zamanlamakta.
 
 ## 2. Kontroller
 
-- **Telefon:** Ekranda herhangi bir yerde parmağını sürükle → sanal joystick (yön). Sağ altta **SÖK (E)**, **DEL (Q)** ve **KADER (R)** düğmeleri.
-- **Klavye:** WASD/oklar yön, `E` veya boşluk Söküm, `Q` Delici Mızrak, `R` Kader Çağrısı, `Esc`/`P` duraklat.
+- **Telefon:** Ekranda herhangi bir yerde parmağını sürükle → sanal joystick (yön). Sağ altta Söküm (E), Delici Işık (Q) ve Ay Sıçrayışı (R) düğmeleri.
+- **Klavye:** WASD/oklar yön, `E` veya boşluk Söküm, `Q` Delici Işık, `R` Ay Sıçrayışı, `Esc`/`P` duraklat.
 - Saldırı otomatik: menzildeki en yakın düşmana atar. Bu, telefonda tek başparmakla kite yapmayı mümkün kılıyor.
 
-## 3. Mızrakçılar
+## 3. Tilkiler
 
 "Ava başla" sonrası karakter seçilir (son seçim hatırlanır). Her birinin pelerin rengi farklıdır.
 
 | Mızrakçı | Artı | Eksi |
 |---|---|---|
-| Yeminli | Dengeli | — |
-| Gölge Koşucu | Sekme +%35, sekerken hasar almaz | Mızrak hasarı -%15, can -20 |
-| Kemik Kıran | Mızrak hasarı +%30, %25 şansla çift saplanma | Saldırı hızı -%15, sekme -%10 |
-| Ruh Çağıran | 1 Yeminli Ruh ile başlar, Kader bekleme -%30 | Mızrak hasarı -%10 |
+| Ak Tilki | Dengeli | — |
+| Gölge Tilki | Sekme +%35, sekerken hasar almaz | Mızrak hasarı -%15, can -20 |
+| Kor Tilki | Mızrak hasarı +%30, %25 şansla çift saplanma | Saldırı hızı -%15, sekme -%10 |
+| Ruh Çağıran | 1 Ruh Yavrusu ile başlar, Ay Sıçrayışı bekleme -%30 | Mızrak hasarı -%10 |
 
 ### Mızrakçıya özel efsanevi kartlar
 
 | Kart | Mızrakçı | Ön koşul | Etki |
 |---|---|---|---|
-| Sadakat | Yeminli | Yırtıcı veya Acımasız | Söküm hasarı +%20; Söküm öldürmesi başına Kader bekleme -3 sn |
-| Gölge Dansı | Gölge Koşucu | Uzun Sekme veya Hızlı El | Her sekmeden sonra 0.8 sn saldırı hızı +%45 |
-| Kemik Patlaması | Kemik Kıran | Ağır Mızrak veya Keskin Uç | 5+ mızraklı düşman ölünce çevresine 6 mızrak saçar |
-| Ruh Korosu | Ruh Çağıran | Yeminli Ruh veya Kader Yemini | Ruhlar iki mızrak atar, ruh mızrakları %80 hasar |
+| Sadakat | Ak Tilki | Yırtıcı veya Acımasız | Söküm hasarı +%20; Söküm öldürmesi başına Ay Sıçrayışı bekleme -3 sn |
+| Gölge Dansı | Gölge Tilki | Uzun Sekme veya Hızlı El | Her sekmeden sonra 0.8 sn saldırı hızı +%45 |
+| Kemik Patlaması | Kor Tilki | Ağır Mızrak veya Keskin Uç | 5+ mızraklı düşman ölünce çevresine 6 mızrak saçar |
+| Ruh Korosu | Ruh Çağıran | Ruh Yavrusu veya Ay Işığı | Ruhlar iki mızrak atar, ruh mızrakları %80 hasar |
 
 ### Günün Avı
 
@@ -88,43 +86,43 @@ Her gün için tarihten üretilen sabit bir tohum: herkes aynı mızrakçıyla, 
 | Dev | Yavaş; kırmızı çizgiyle işaret verip hücum eder | Çizginin dışına sek |
 | Tükürgen | Durur, çevresine halka halinde mermi saçar (çekirdek dolunca) | Halkalar arasındaki boşluğa sek |
 | **Kemik Lordu** (5., 20. oda) | Hücum, mermi novası, çağırma; %50 canın altında öfke (çift hücum, yoğun nova) | Mızrak biriktir, Söküm ile büyük hasar |
-| **Yas Kraliçesi** (15., 30. oda) | Süzülen hayalet kraliçe. Çığlık dalgası (genişleyen mor halka: yerdeyken vurur, **üstünden sekerek atlanır**), oyuncuyu takip eden ruh mermileri, mor halkayla işaretlenen ışınlanma, ateş ruhu çağırma; %50 altında 3'lü çığlık | Dalga yaklaşınca sek, Kader Çağrısı ile havada kal |
+| **Yas Kraliçesi** (15., 30. oda) | Süzülen hayalet kraliçe. Çığlık dalgası (genişleyen mor halka: yerdeyken vurur, **üstünden sekerek atlanır**), oyuncuyu takip eden ruh mermileri, mor halkayla işaretlenen ışınlanma, ateş ruhu çağırma; %50 altında 3'lü çığlık | Dalga yaklaşınca sek, Ay Sıçrayışı ile havada kal |
 | **Yükselmiş muhafızlar** (20. oda ve sonrası) | Can +%20, altın aura; saldırılarının %40'ında diğer muhafızlardan ödünç bir saldırı kullanır: Lord → çığlık dalgası / mızrak hatları, Atlı → çığlık / ruh mermileri, Kraliçe → mızrak hatları / mermi halkası | Altın parlama = ödünç saldırı geliyor |
-| **Gölge Atlı** (10., 25. oda) | Arka arkaya 3–4 dörtnala hücum ve arkasında yakan mor iz; çift kollu spiral mermi; yelpaze şeklinde mızrak hatları (önce çizgiyle uyarır) | Hatların arasına sek, Kader Çağrısı ile sersemlet |
+| **Gölge Atlı** (10., 25. oda) | Arka arkaya 3–4 dörtnala hücum ve arkasında yakan mor iz; çift kollu spiral mermi; yelpaze şeklinde mızrak hatları (önce çizgiyle uyarır) | Hatların arasına sek, Ay Sıçrayışı ile sersemlet |
 
-| **Buz Hortlağı** (Buz Mezarlığı, 10–19) | Hortlak gibi kovalar; dokununca ve 3'lü buz nefesiyle seni 1.6 sn **yavaşlatır** (yürüme %60, sekme mesafesi %80) | Yakın mesafeye girmeden mızrakla; yavaşlamışken Kader Çağrısı ile kaç |
+| **Buz Hortlağı** (Buz Mezarlığı, 10–19) | Hortlak gibi kovalar; dokununca ve 3'lü buz nefesiyle seni 1.6 sn **yavaşlatır** (yürüme %60, sekme mesafesi %80) | Yakın mesafeye girmeden mızrakla; yavaşlamışken Ay Sıçrayışı ile kaç |
 | **Kan Yarasası** (Kan Katedrali, 20+, üçlü gelir) | Etrafında daire çizip uçar, kısa uyarıyla dalış yapar; vurursa hasarın 3 katı **can emer** | Dalış anında yana sek; Söküm ile toplu temizle |
 | **Kan Kardinali** (20. oda, sonra her 20 odada) | Mitralı kızıl rahip, sallanan buhurdan. Etrafında dönerek açılan kan bıçakları; ayağının altında uyarılı kan fışkırmaları (4, öfkede 6); haç biçimli mermi yağmuru (iki dalga, 45° dönük); kan yarasası çağırma | Bıçak halkası açılırken dışarı sek, kırmızı dairelerden çık |
-| **Kalkanlı Şövalye** (7. oda+) | Kalkanını yavaşça oyuncuya çevirir; önden gelen mızrakları engeller (BLOK). Yakındayken kısa kalkan hamlesi yapar (kırmızı şeritle uyarır) | Sekerek yanına/arkasına geç; Delici Mızrak kalkanı deler; Kader ile sersemletilmişken engelleyemez |
+| **Kalkanlı Şövalye** (7. oda+) | Kalkanını yavaşça oyuncuya çevirir; önden gelen mızrakları engeller (BLOK). Yakındayken kısa kalkan hamlesi yapar (kırmızı şeritle uyarır) | Sekerek yanına/arkasına geç; Delici Mızrak kalkanı deler; Ay Sıçrayışı ile sersemletilmişken engelleyemez |
 | **Kemik Bombası** (6. oda+, ikili gelir) | Hızla koşar, yaklaşınca fitili yanar (turuncu daire dolar), 0.8 sn sonra 95 birim alanda patlar | Fitil bitmeden öldür: erken patlama sadece düşmanlara hasar verir; ya da dairenin dışına sek |
 
 **İkinci form (10. oda ve sonrası):** Muhafızın canı ilk bittiğinde ölmek yerine 1.4 sn hasar almayan bir dirilişe girer (mor duman, ekran parlaması, "İkinci form" yazısı), canının yarısıyla "Öfke" adıyla döner: %20 hızlı, %10 daha sert, Yükselmiş muhafızlar gibi diğer muhafızların saldırılarını da kullanır.
 
 **Elit düşmanlar** (altın kesikli halka): can ×1.8, hasar ×1.2 ve bir özellik: *Kalkanlı* (canın %40'ı kadar mavi kalkan), *Hızlı* (+%35 hız), *Patlayan* (ölünce 8 mermi saçar). Elit başına 3 ruh parçası.
 
-Zorluk: oda başına düşman canı +%20, hasar +%8, hız +%1.5. Altın halka = düşman sökümle ölür (Kalista'daki öldürme göstergesi gibi).
+Zorluk: oda başına düşman canı +%20, hasar +%8, hız +%1.5. Altın halka = düşman sökümle ölür.
 
 ## 6. Güçler (26 adet, 3 nadirlik)
 
 - **Mızrak:** Keskin Uç, Hızlı El, Uzak Hedef, Ölümcül Göz, Çatallı Mızrak, Delip Geçen, Ağır Mızrak, Buz Uç, Mızrak Fırtınası
 - **Sekme:** Uzun Sekme, Hayalet Adım (sekmede hasarsızlık), Ruh İzi (yakan iz), İniş Şoku, Ritim (art arda sekme hasar çarpanı), Gölge Mızrak (sekmede bedava mızrak), Hafif Ayak
-- **Söküm:** Yırtıcı, Acımasız, İnfaz, Bulaşıcı Yemin (ölenin mızrakları yayılır), Ruh Hasadı
-- **Delici / Kader:** Delici Yemin, Kader Yemini
-- **Ruh:** Sağlam Ruh, Yenilenme, Kan Yemini, Yeminli Ruh (dönen müttefik ruh — Kalista'nın Oathsworn'una gönderme)
+- **Söküm:** Yırtıcı, Acımasız, İnfaz, Bulaşıcı Işık (ölenin mızrakları yayılır), Ruh Hasadı
+- **Delici / Ay:** Delici Işık, Ay Işığı
+- **Ruh:** Sağlam Ruh, Yenilenme, Kan Bağı, Ruh Yavrusu (etrafında dönüp ışık mızrağı atan küçük ruh)
 
 - **Efsanevi sinerjiler** (iki ön koşul güç alınınca havuza girer):
   - Hayalet Ordusu = Hayalet Adım + Gölge Mızrak → +2 gölge mızrak, inişte 0.4 sn hasarsızlık
   - Kemik Kıran = Ağır Mızrak + Yırtıcı → Söküm'de ek mızrak başına %95 hasar
   - Ruh Yangını = Ruh İzi + İniş Şoku → iz hasarı ×2, şok yarıçapı +40
-  - Lejyon = 2+ Yeminli Ruh + Hızlı El → ruhlar iki kat sık atar
-  - Kadere Bağlı = Kader Yemini + Acımasız → Kader Çağrısı inişi bedava Söküm
+  - Lejyon = 2+ Ruh Yavrusu + Hızlı El → ruhlar iki kat sık atar
+  - Ay Tutulması = Ay Işığı + Acımasız → Ay Sıçrayışı inişi bedava Söküm
 
 Nadirlik ağırlıkları: Sıradan 10, Nadir 5, Destansı 2, Efsanevi 6 (yalnızca ön koşullar tamamsa). Elit/Lanetli/Muhafız ödüllerinde sıradan kartların ağırlığı 2'ye düşer.
 
 Örnek build'ler:
 - **Sekme ustası:** Hayalet Adım + Gölge Mızrak + Ruh İzi + İniş Şoku + Hızlı El → her saldırı bir hasar patlaması.
-- **Söküm infazcısı:** Ağır Mızrak + Çatallı Mızrak + Yırtıcı + İnfaz + Bulaşıcı Yemin → zincirleme Söküm sıfırlamaları.
-- **Ruh ordusu:** Yeminli Ruh ×3 + Hızlı El + Kan Yemini.
+- **Söküm infazcısı:** Ağır Mızrak + Çatallı Mızrak + Yırtıcı + İnfaz + Bulaşıcı Işık → zincirleme Söküm sıfırlamaları.
+- **Ruh ordusu:** Ruh Yavrusu ×3 + Hızlı El + Kan Bağı.
 
 ## 7. Başarımlar, pelerinler ve mızrak izleri
 
@@ -135,7 +133,7 @@ Her düşman türünün kendi ölüm sesi vardır: Hortlak hırlar, Ateş Ruhu s
 ## 8. Başarım listesi
 
 12 başarım, her biri bir pelerin rengi açar (Başarımlar ekranından giyilir, tüm mızrakçılarda geçerli; açılınca üstte bildirim çıkar):
-Kemik Yıkan (Kemik Lordu), Atlıyı Düşüren, Yası Bitiren, Durdurulamaz (50 seri), Toplu Söküm (tek Sökümle 5 öldürme), Rüzgâr Adım (bir avda 500 sekme), Derinlere (20. oda), Sandık Avcısı (Mimik), Dokunulmaz (5. odadan sonra hasarsız oda), Günün Avcısı (Günün Avı'nda 10. oda), Kurban (Ruh Bağışı), Dört Yemin (dört mızrakçıyla Kemik Lordu).
+Kemik Yıkan (Kemik Lordu), Atlıyı Düşüren, Yası Bitiren, Durdurulamaz (50 seri), Toplu Söküm (tek Sökümle 5 öldürme), Rüzgâr Adım (bir avda 500 sekme), Derinlere (20. oda), Sandık Avcısı (Mimik), Dokunulmaz (5. odadan sonra hasarsız oda), Günün Avcısı (Günün Avı'nda 10. oda), Kurban (Ruh Bağışı), Dört Tilki (dört tilkiyle Kemik Lordu).
 
 ## 9. Kalıcı ilerleme (Ruh Sunağı)
 
@@ -150,7 +148,7 @@ Kayıt tarayıcının yerel depolamasında tutulur.
 
 ## 10. Denge ölçümü
 
-`tools/balance-sim.js` oyunu tarayıcıda kendi kendine oynatır: bot tehditlerden kaçar, mermilere dik kaçar, duvardan uzak durur, uygun anda Söküm / Delici / Kader kullanır, her zaman ilk kartı ve Savaş kapısını seçer. Her mızrakçıyla N av yapıp ulaşılan odayı, oda başına süreyi ve alınan hasarı raporlar.
+`tools/balance-sim.js` oyunu tarayıcıda kendi kendine oynatır: bot tehditlerden kaçar, mermilere dik kaçar, duvardan uzak durur, uygun anda Söküm / Delici / Ay Sıçrayışı kullanır, her zaman ilk kartı ve Savaş kapısını seçer. Her tilkiyle N av yapıp ulaşılan odayı, oda başına süreyi ve alınan hasarı raporlar.
 
 İlk ölçümde bot 1–4. odalarda neredeyse hiç hasar almıyor, 16 avın 12'sinde 5. odadaki Kemik Lordu'nda ölüyordu (temas başına ~29 hasar, 55 sn'ye varan dövüş). Yapılan ayarlar:
 
@@ -197,7 +195,7 @@ Mevcut durum: Canvas 2D, her kare vektör çizim + yarı çözünürlüklü ış
 **Aşama 2 — Hibrit WebGL son işleme (1–2 oturum, en yüksek getiri)**
 Mevcut 2D tuval her kare bir WebGL dokusuna aktarılır ve tek bir shader zinciri uygulanır; oyun ve çizim kodu değişmez.
 - Gerçek bloom (parlak geçiş + çok kademeli Gauss bulanıklığı).
-- Şok dalgası kırılması: patlama, Kader inişi ve Söküm halkalarında ekranın dalgalanması.
+- Şok dalgası kırılması: patlama, Ay Sıçrayışı inişi ve Söküm halkalarında ekranın dalgalanması.
 - Renk sapması (chromatic aberration) vuruşlarda, ısı dalgalanması mangallarda.
 - Biyom başına renk derecelendirme (LUT) ve ACES ton eşleme.
 - Ay ve mangallardan ekran uzayı ışık hüzmeleri (god rays).
@@ -210,16 +208,26 @@ Mevcut 2D tuval her kare bir WebGL dokusuna aktarılır ve tek bir shader zincir
 - Akış dokulu kurdele izleri, flipbook patlamalar, gürültü dokulu hacimsel sis.
 
 **Durum (Aşama 3 yolu seçildi):**
-- [x] Adım 1: WebGL altyapısı ve son işlem. 2D tuval her kare dokuya aktarılır; parlak geçiş + yarım ve çeyrek çözünürlükte ayrılabilir Gauss bulanıklığı (bloom), 8 eşzamanlı şok dalgası kırılması (yıldız patlamaları, Kader inişi, Söküm, dev parlamalar), hasar ve darbe karelerinde renk ayrışması, biyom başına doygunluk/kontrast/renk tonu ve yumuşak film eğrisi. WebGL yoksa, bağlam kaybolursa ya da düşük kalitede eski çizim gösterilir; otomatik kalite yavaşlıkta önce bu katmanı kapatır ("orta"), sonra düşük kaliteye iner.
+- [x] Adım 1: WebGL altyapısı ve son işlem. 2D tuval her kare dokuya aktarılır; parlak geçiş + yarım ve çeyrek çözünürlükte ayrılabilir Gauss bulanıklığı (bloom), 8 eşzamanlı şok dalgası kırılması (yıldız patlamaları, Ay Sıçrayışı inişi, Söküm, dev parlamalar), hasar ve darbe karelerinde renk ayrışması, biyom başına doygunluk/kontrast/renk tonu ve yumuşak film eğrisi. WebGL yoksa, bağlam kaybolursa ya da düşük kalitede eski çizim gösterilir; otomatik kalite yavaşlıkta önce bu katmanı kapatır ("orta"), sonra düşük kaliteye iner.
 - [x] Adım 2: diyar GPU'da çizilir. Bulutsu paralaksla, biyom tonu ve üç katman titreşen prosedürel yıldız tek gölgelendiricide; ay, yüzen adalar, kaya parçaları ve uçurum doku olarak. Zemin, ekranda görünen en güçlü 32 renkli nokta ışıkla (mangallar biyom ateşi rengi, mumlar, mızraklar iz rengi, düşman mermileri türüne göre, oyuncu, patlamalar) piksel başına aydınlatılır; normal haritası zemin dokusunun parlaklık eğiminden çıkarılır, biyom başına ortam rengi, yayınık kazanç ve speküler parlaklık (buzda daha parlak) vardır. Taneli film dokusu ve darbe karesindeki renk tersine çevirme de gölgelendiriciye taşındı. 2D tuval artık yalnızca ön planı (karakterler, efektler, yazılar) taşır ve sahnenin üstüne bindirilir; ışık haritası sadece tuvalde çizili olanları karartır. Işık sayısı cihazın uniform sınırına göre ayarlanır. GPU yoksa ya da otomatik kalite "orta"ya inerse eski 2D çizim aynen kullanılır.
 - [x] Adım 3: sıradan düşmanlar (gulyabani, buz gulyabanisi, dev, şövalye, okçu, tükürgen, yarasa, bomba, sandık) ilk göründükleri anda ekran çözünürlüğünde animasyon karelerine pişirilir (türüne göre 16–36 kare; durum çeşitleri: devin hücum hazırlığı, tükürgenin dört dolum seviyesi, yarasanın dalış ve nişan hali). Her kare bir kez koyu kontur, sol üstten soğuk anahtar ışık kenarı ve ayaklara doğru form gölgesiyle bitirilir; vuruş parlaması karenin beyaz silüetidir. Oyunda her düşmanın en güçlü yakın ışığa (oyuncunun ruh ışığı, mangallar, mızraklar, patlamalar) bakan kenarı o ışığın renginde parlar. Döngülerin dikişsiz olması için ikincil hareketler ana döngünün harmoniklerine ayarlandı. Oyuncuya nişan alan parçalar (okçunun yayı, şövalyenin kalkanı) ve hareketli kısımlar (alev ruhu, açılan taklitçi sandık, fitili yanan bomba, muhafızlar) prosedürel kalır. Parıltı, ışık ve duman çağrıları sahte bir bağlam üzerinden aynen sürer. Kare başına pişirme bütçesi 6, önbellek sınırı yaklaşık 7 milyon piksel; masaüstü testinde düşman çizimi yaklaşık 4–5 kat hızlandı.
 - [x] Adım 4: duman ve parıltılar GPU'da örneklemeli dörtgenlerle (ANGLE_instanced_arrays) çizilir. Duman iki oktav döşenebilir gürültü dokusuyla kabarık görünür, yaşlandıkça kenarlarından aşınarak dağılır, kendi etrafında yavaşça döner; koyu katman sahnenin en güçlü 8 renkli ışığıyla aydınlanır (mangal yanındaki duman ateş rengini alır), parlak katman ekran karışımıyla çizilir. Duman sınırı GPU'da 460'tan 1400'e çıktı. Tüm parıltılar artık gerçekten toplamalı ekleniyor (saydam ön plan tuvalindeki yarı karışma sorunu bitti). Her biyomun prosedürel parçacık alanı tek tam ekran geçişte binlerce zerre üretir: buzda üç derinlik katmanında rüzgârla savrulan kar (eski 90 tanelik CPU karının yerini alır), kan katedralinde titreşerek yükselen korlar, cadı zindanında yavaşça süzülen turkuaz ve mor ruh zerreleri; zerreler dünyaya bağlıdır ve kamerayla paralaks yapar. Eklenti yoksa ya da GPU yolu kapalıysa eski 2D duman, parıltı ve kar aynen kullanılır.
+
+**Resimsi görünüm (Ori'den esinli, kodla):**
+- [x] Tilki kahraman: beyaz ruh tilkisi; dört bacaklı koşu döngüsü, sekmede gerilip uzanan gövde ve burun açısı, gür ve yükselen ruh kuyruğu (üst üste binen yumuşak loblar), parlayan göz, sırtının üstünde süzülen ışık küresi. Saldırıda küre gerilip bir ışık mızrağına dönüşür ve düşmana uçar. Kahraman çeşitleri kulak içi, pati ve kuyruk ışığı rengini değiştirir.
+- [x] Kuwahara yağlı boya filtresi: sahne yarım çözünürlükte 4 çeyrekli Kuwahara'dan geçer (36 örnek), son görüntüye %82 oranında karışır; kenarlar korunur, yüzeyler fırça lekelerine döner. Üstüne iki oktav gürültüden tuval dokusu.
+- [x] Düşman sprite'larındaki sert koyu kontur kaldırıldı, yerine yumuşak hafif gölge.
+- [x] Parlama yalnızca gerçek ışık kaynaklarından gelir (eşik 0.8), ama daha güçlü; beyaz tilki ışıkta erimez.
+- [x] Ekran köşelerinde odak dışı koyu ön plan dalları, yaprakları ve sarkan sarmaşıklar (biyom renginde, ışık alan kenarlı, parlayan tomurcuklu), kamerayla hafif kayar ve rüzgârda salınır.
+- [x] Yukarıdan inen eğik ışık hüzmeleri, biyom renginde, yavaşça kayar.
+- [x] Zemin kenarında biyolüminesan mantar ve filizler (34 adet), nefes alır gibi parlar.
+- [ ] Gerçek boyanmış görseller (arka plan katmanları, düşman kareleri) eklenirse kodla çizilenlerin yerini alacak.
 
 **Önerilen sıra:** Aşama 2 (en çok "vay" etkisi, en az risk) → Aşama 1'in kamera ve fizik maddeleri → Aşama 3. Her aşamada grafik kalitesi ayarına bağlı kademeler ve telefonda 60 fps hedefi korunur.
 
 ## 12. Sıradaki adımlar (yol haritası)
 
-Tamamlananlar: düşman başına ölüm sesleri, 6 kozmetik mızrak izi, Buz Hortlağı, Kan Yarasası, dördüncü muhafız Kan Kardinali (kendi müzik teması ve 'Kanı Durduran' başarımı), üç biyom (Cadı Zindanı, Buz Mezarlığı, Kan Katedrali), av sonu istatistikleri ve ölüm nedeni, sabit joystick ve sol el modu, muhafız müzik temaları (Lord: ağır yürüyüş, Atlı: dörtnala, Kraliçe: tam-ton ağıt; öfkede hızlanır), 12 başarım ve pelerin renkleri, 15+ oda dengesi, Ruh Sandığı ve Mimik, Kan Sunağı, muhafız ikinci formu, Kalkanlı Şövalye ve Kemik Bombası, grafik kalitesi ayarı (otomatik / yüksek / düşük), Günün Avı sonuç paylaşımı, akıllı bot ile denge ayarı, mızrakçıya özel efsanevi kartlar, Günün Avı (tohumlu), son avlar listesi, bot ile denge ölçümü ve ayarı, 4 mızrakçı, Unutuş Ritüeli (güç silme), Yükselmiş muhafızlar, PWA (ana ekrana ekleme + çevrimdışı önbellek), Ruh Tüccarı kapısı, üçüncü muhafız Yas Kraliçesi, üretken müzik (dron + minör pentatonik arpej; savaşta davul, muhafızda hızlanır), Kader Çağrısı (R), kapı seçimi (Savaş/Elit/Lanetli/Ruh Pınarı), elit düşmanlar, ikinci muhafız Gölge Atlı, 5 efsanevi sinerji, vuruş durması (hit-stop) ve titreşim.
+Tamamlananlar: düşman başına ölüm sesleri, 6 kozmetik mızrak izi, Buz Hortlağı, Kan Yarasası, dördüncü muhafız Kan Kardinali (kendi müzik teması ve 'Kanı Durduran' başarımı), üç biyom (Cadı Zindanı, Buz Mezarlığı, Kan Katedrali), av sonu istatistikleri ve ölüm nedeni, sabit joystick ve sol el modu, muhafız müzik temaları (Lord: ağır yürüyüş, Atlı: dörtnala, Kraliçe: tam-ton ağıt; öfkede hızlanır), 12 başarım ve pelerin renkleri, 15+ oda dengesi, Ruh Sandığı ve Mimik, Kan Sunağı, muhafız ikinci formu, Kalkanlı Şövalye ve Kemik Bombası, grafik kalitesi ayarı (otomatik / yüksek / düşük), Günün Avı sonuç paylaşımı, akıllı bot ile denge ayarı, mızrakçıya özel efsanevi kartlar, Günün Avı (tohumlu), son avlar listesi, bot ile denge ölçümü ve ayarı, 4 mızrakçı, Unutuş Ritüeli (güç silme), Yükselmiş muhafızlar, PWA (ana ekrana ekleme + çevrimdışı önbellek), Ruh Tüccarı kapısı, üçüncü muhafız Yas Kraliçesi, üretken müzik (dron + minör pentatonik arpej; savaşta davul, muhafızda hızlanır), Ay Sıçrayışı (R), kapı seçimi (Savaş/Elit/Lanetli/Ruh Pınarı), elit düşmanlar, ikinci muhafız Gölge Atlı, 5 efsanevi sinerji, vuruş durması (hit-stop) ve titreşim.
 
 Sıradakiler:
 1. Görsel yol haritası Aşama 2: WebGL son işleme (bloom, şok dalgası kırılması, renk sapması, LUT).
@@ -241,14 +249,14 @@ Hedef: eski arcade oyunlarındaki gibi her öldürmenin "tatmin edici" hissettir
 
 | Efekt | Ne zaman | Nasıl görünür |
 |---|---|---|
-| **Yıldız parlaması** (çizgi film "ding") | Delici Mızrak, Kader inişi, İniş Şoku, 5+ mızraklı Söküm ile ölüm; kritik öldürmelerin %35'i; elitlerin %50'si | Düşman öldüğü yerde parçalanır; aynı noktada "ding" sesiyle minik bir yıldız belirir, ardından ekranı boydan boya kesen dev bir parlama: yatay ışık şeridi, dönen 8 ışın, beyaz ve renkli halkalar, ekranın ortasına doğru mercek yansımaları. |
+| **Yıldız parlaması** (çizgi film "ding") | Delici Mızrak, Ay Sıçrayışı inişi, İniş Şoku, 5+ mızraklı Söküm ile ölüm; kritik öldürmelerin %35'i; elitlerin %50'si | Düşman öldüğü yerde parçalanır; aynı noktada "ding" sesiyle minik bir yıldız belirir, ardından ekranı boydan boya kesen dev bir parlama: yatay ışık şeridi, dönen 8 ışın, beyaz ve renkli halkalar, ekranın ortasına doğru mercek yansımaları. |
 | Vuruş yıldızı | Her mızrak isabetinde | Çarpma noktasında anlık beyaz 4 köşeli yıldız (kritikte altın, daha büyük). |
 | Söküm ruhları | Söküm kullanılınca | Sökülen mızraklar parlayan ruh izleri olarak oyuncuya akar; oyuncudan büyük bir şok halkası yayılır. 3+ öldürmede siyah-beyaz darbe karesi, hız çizgileri ve parlama. |
 | Ruh parçası mıknatısı | Her öldürmede | Altın elmaslar sekerek düşer, sonra oyuncuya çekilir; toplanınca tını sesi (seri arttıkça incelir) ve sayaç zıplar. |
-| Seri övgüsü | 10, 20, 35, 50, 75, 100 seri | Ekranın ortasında eğik altın yazı (Harika, Müthiş, Efsane, Durdurulamaz, Tanrısal, Yemin tutuldu) ve parlama. |
+| Seri övgüsü | 10, 20, 35, 50, 75, 100 seri | Ekranın ortasında eğik altın yazı (Harika, Müthiş, Efsane, Durdurulamaz, Tanrısal, Ruh uyandı) ve parlama. |
 | Son vuruş | Odanın son düşmanı | Ağır çekim, zoom ve son düşmanın yerinde dev parlama. |
 | Darbe karesi | Muhafız ölümü, çoklu Söküm | Bir anlığına renkler tersine döner (anime "impact frame"). |
-| Hız çizgileri | Kader uçuşu, muhafız ölümü | Ekran kenarlarından merkeze doğru beyaz çizgiler. |
+| Hız çizgileri | Ay Sıçrayışı uçuşu, muhafız ölümü | Ekran kenarlarından merkeze doğru beyaz çizgiler. |
 | Güç ışını | Güç seçildikten sonra odaya girişte | Oyuncunun üstüne inen ruh ışığı sütunu. |
 
 Erişilebilirlik: cihazda "hareketi azalt" açıksa titreme %30'a, ekran parlaması %25'e düşer.
@@ -284,13 +292,13 @@ Tema: **ruhani mezar arenası**. Karanlık taş zemin, turkuaz ruh ışığı, y
 - **Zemin:** Oyun başında bir kez çizilip önbelleğe alınır: halkalar halinde döşenmiş taşlar, çatlaklar, yosun, ortada üç mızraklı rün mührü, kenarda blok duvar ve 10 turkuaz meşale.
 - **Karakterler:** 3/4 bakış; her varlığın yerde gölgesi var ve derinlik sırasına göre çizilir. Mızrakçı pelerinli, başlıklı; sekerken havaya kalkar, inişte ezilir, pelerini harekete göre savrulur. Düşmanlar vuruşta esner ve beyaz yanar, yerden yükselerek doğar.
 - **Okunabilirlik:** Tehlike bölgeleri dolan kırmızı/mor şeritlerle; sökümle ölecek düşmanlar altın dönen halkayla; elitler taç ve altın ışıltıyla; kalkanlar mavi baloncukla gösterilir.
-- **Kamera:** Bakış yönüne hafif önden bakar; büyük öldürmelerde ve Kader inişinde kısa bir zoom vuruşu yapar.
+- **Kamera:** Bakış yönüne hafif önden bakar; büyük öldürmelerde ve Ay Sıçrayışı inişinde kısa bir zoom vuruşu yapar.
 - **Ekran sonrası:** Vinyet, film greni, hasar alınca ve can %30'un altındayken kırmızı kenar.
 - **Arayüz:** İkonlu yetenek düğmeleri (dairesel bekleme süresi), gecikmeli (beyaz iz bırakan) can barı, muhafız barı ve sinematik siyah şeritli giriş, seri sayacı, ikonlu ve nadirliğe göre renklenen kartlar.
 
 ## 15. Av sonu istatistikleri
 
-Ölüm ekranında: seni deviren düşman ya da saldırı ("Seni deviren: Kemik Dev (elit)", "Çığlık dalgası", "Ruh Okçusu mermisi"...) ve en çok hasar veren 6 kaynağın yüzdelik çubukları (Mızrak, Söküm, Delici Mızrak, Kader Çağrısı, İniş Şoku, Ruh İzi, Yeminli Ruh, Kemik Bombası).
+Ölüm ekranında: seni deviren düşman ya da saldırı ("Seni deviren: Kemik Dev (elit)", "Çığlık dalgası", "Ruh Okçusu mermisi"...) ve en çok hasar veren 6 kaynağın yüzdelik çubukları (Mızrak, Söküm, Delici Mızrak, Ay Sıçrayışı, İniş Şoku, Ruh İzi, Ruh Yavrusu, Kemik Bombası).
 
 ## 16. Dokunmatik seçenekler
 
@@ -309,4 +317,4 @@ Duraklat menüsünde **Grafik: otomatik / yüksek / düşük**. Otomatikte sava�
 - Tek dosya HTML5 Canvas + saf JavaScript, kütüphane yok.
 - Dünya: 820 birim yarıçaplı dairesel arena, kamera oyuncuyu takip eder, zoom ekran boyutuna göre ölçeklenir.
 - Oyuncu durum makinesi: `idle → windup → (hop | post → idle)`, `qcast` aynı akışı kullanır; R için `rise → fling → idle`.
-- Vuruş hissi: Söküm öldürmesi, Kader inişi ve muhafız ölümünde kısa zaman yavaşlaması (hit-stop) ve `navigator.vibrate` (destekleyen cihazlarda).
+- Vuruş hissi: Söküm öldürmesi, Ay Sıçrayışı inişi ve muhafız ölümünde kısa zaman yavaşlaması (hit-stop) ve `navigator.vibrate` (destekleyen cihazlarda).
