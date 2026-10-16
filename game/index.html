@@ -28,7 +28,7 @@
 [hidden]{display:none!important}
 html,body{height:100%;margin:0;overflow:hidden;background:var(--abyss);color:var(--ink);font-family:var(--f-ui);font-size:16px;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;overscroll-behavior:none}
 canvas#game{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
-#glc{position:fixed;inset:0;width:100%;height:100%;display:none;pointer-events:none}
+#glc,#uic{position:fixed;inset:0;width:100%;height:100%;display:none;pointer-events:none}
 button{font-family:var(--f-ui);cursor:pointer}
 button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
 svg{display:block}
@@ -237,6 +237,7 @@ p{margin:0;line-height:1.45;color:var(--ink)}
 
 <canvas id="game" aria-label="Oyun alanı"></canvas>
 <canvas id="glc" aria-hidden="true"></canvas>
+<canvas id="uic" aria-hidden="true"></canvas>
 
 <div id="toast" role="status"></div>
 <div id="hud" hidden>
@@ -527,8 +528,10 @@ function sfx(n) {
 
 // ---------- canvas ----------
 const cv = $('game'); let ctx = cv.getContext('2d');
+// Text and touch controls skip the painterly GPU pass: on the GPU path they are drawn on this overlay instead.
+const uic = $('uic'), uctx = uic.getContext('2d'); let UIL = false;
 let W = 0, H = 0, DPR = 1;
-function resize() { DPR = Math.min(LOWQ ? 1.25 : 2, window.devicePixelRatio || 1); W = cv.clientWidth || innerWidth; H = cv.clientHeight || innerHeight; cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR); }
+function resize() { DPR = Math.min(LOWQ ? 1.25 : 2, window.devicePixelRatio || 1); W = cv.clientWidth || innerWidth; H = cv.clientHeight || innerHeight; cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR); uic.width = cv.width; uic.height = cv.height; }
 addEventListener('resize', resize); resize();
 const zoom = () => clamp(Math.min(W, H) / 700, .5, 1.25);
 
@@ -1642,7 +1645,9 @@ function draw() {
   const world = () => ctx.setTransform(DPR * Z, 0, 0, DPR * Z, DPR * ox, DPR * oy);
   CAM.Z = Z; CAM.ox = ox; CAM.oy = oy;
   const GPU = glReady();
-  const GPUP = GPU && glParts();
+  const GPUP = GPU && glParts(); UIL = GPU; STKL.length = 0;
+  if (uic.style.display !== (GPU ? 'block' : 'none')) uic.style.display = GPU ? 'block' : 'none';
+  if (GPU) { uctx.setTransform(1, 0, 0, 1, 0, 0); uctx.clearRect(0, 0, uic.width, uic.height); }
   if (GPU) ctx.clearRect(0, 0, W, H); else drawVoid(now, cx, cy, Z, TH);
   world();
   PREVL = LIGHTS.slice(); EMI.length = 0; LIGHTS.length = 0; BAKEB = 6; sprScale();
@@ -1675,7 +1680,7 @@ function draw() {
   if (G) drawFxLit(now);
   if (!GPUP) { ctx.globalCompositeOperation = 'screen'; drawSmoke(true); ctx.globalCompositeOperation = 'source-over'; if (TH.id === 'ice') drawSnow(now); }
   ctx.globalCompositeOperation = 'source-over';
-  if (G) drawTexts();
+  if (G) { if (UIL) { const c0 = ctx; ctx = uctx; world(); drawStacks(); drawTexts(); ctx = c0; world(); } else drawTexts(); }
   if (G) drawSky(now);
   post(now, GPU);
   glPost(TH, now, cx, cy);
@@ -1867,7 +1872,7 @@ function drawEnemy(e, T, now) {
     ctx.fillStyle = e.elite ? '#e9a640' : '#e8505e'; ctx.fillRect(x, y, w * Math.max(0, e.hp) / e.maxHp, 4);
   }
   if (e.stacks > 3) {
-    const x = e.x + r + 12, y = bcy + r * .6; ctx.fillStyle = 'rgba(4,10,12,.85)'; ctx.beginPath(); ctx.arc(x, y, 9, 0, TAU); ctx.fill();
+    const x = e.x + r + 12, y = bcy + r * .6; if (UIL) { STKL.push(x, y, e.stacks); return; } ctx.fillStyle = 'rgba(4,10,12,.85)'; ctx.beginPath(); ctx.arc(x, y, 9, 0, TAU); ctx.fill();
     ctx.strokeStyle = 'rgba(143,227,207,.7)'; ctx.lineWidth = 1.2; ctx.stroke();
     ctx.font = '800 11px "Barlow Semi Condensed", sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = COL.spear; ctx.fillText(e.stacks, x, y + .5);
   }
@@ -2247,7 +2252,7 @@ function cloakPath(x, y, s, sway, now) {
 }
 function drawPlayer(p, s, T, now) {
   const HC = (G.skin || G.hero).cloak, RIM = (G.skin || G.hero).rim;
-  for (const g of p.ghosts) { ctx.globalAlpha = Math.min(1, g.life * 1.4); ctx.save(); ctx.translate(g.x, g.y - 6); ctx.scale((Math.cos(p.face) >= 0 ? 1 : -1) * 1.3, 1.3); foxPath(); ctx.restore(); ctx.fillStyle = `rgba(${RIM},.28)`; ctx.fill(); }
+  for (const g of p.ghosts) { ctx.globalAlpha = Math.min(1, g.life * 1.4); ctx.save(); ctx.translate(g.x, g.y - 6); ctx.scale((Math.cos(p.face) >= 0 ? 1 : -1) * 1.05, 1.05); foxPath(); ctx.restore(); ctx.fillStyle = `rgba(${RIM},.28)`; ctx.fill(); }
   ctx.globalAlpha = 1;
   for (let i = 0; i < s.spirits; i++) {
     const a = p.spA + i * TAU / s.spirits, x = p.x + Math.cos(a) * 46, y = p.y + Math.sin(a) * 28 - 26;
@@ -2259,7 +2264,7 @@ function drawPlayer(p, s, T, now) {
   let sxs = 1, sys = 1;
   if (p.state === 'hop') { sxs = .88; sys = 1.14; }
   if ((p.land || 0) > 0) { const k = p.land / .12; sxs = 1 + .24 * k; sys = 1 - .2 * k; }
-  const PS = 1.5; sxs *= PS; sys *= PS;
+  const PS = 1.05; sxs *= PS; sys *= PS;
   if (p.state === 'rise') { const k = 1 - p.t / .4; ctx.strokeStyle = `rgba(216,178,90,${1 - k * .6})`; ctx.lineWidth = 3; ctx.beginPath(); ctx.ellipse(p.x, p.y, 20 + k * 40, (20 + k * 40) * .45, 0, 0, TAU); ctx.stroke(); }
   if (p.state === 'rise' || p.state === 'fling') { emit('255,210,120', p.x, p.y - z - 18, 70, .65); light(p.x, p.y - z, 200, .6, '255,210,120'); }
   if (p.chillT > 0) { emit('140,210,255', p.x, p.y - 20 - z, 46, .5); if (Math.random() < .3) puff(p.x + rand(-12, 12), p.y - z - rand(10, 40), 's', 4, { vy: rand(-15, -4), a: .5, life: .7 }); }
@@ -2412,6 +2417,13 @@ function drawFxLit(now) {
     ctx.strokeStyle = `rgba(255,255,255,${(1 - k) * .6})`; ctx.lineWidth = 1 + 4 * (1 - k); ctx.beginPath(); ctx.ellipse(b.x, b.y, b.R * (.5 + k * .9), b.R * (.5 + k * .9) * .55, 0, 0, TAU); ctx.stroke();
   }
 }
+const STKL = [];
+function drawStacks() {
+  for (let i = 0; i < STKL.length; i += 3) { const x = STKL[i], y = STKL[i + 1];
+    ctx.fillStyle = 'rgba(4,10,12,.85)'; ctx.beginPath(); ctx.arc(x, y, 9, 0, TAU); ctx.fill(); ctx.strokeStyle = 'rgba(143,227,207,.7)'; ctx.lineWidth = 1.2; ctx.stroke();
+    ctx.font = '800 11px "Barlow Semi Condensed", sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = COL.spear; ctx.fillText(STKL[i + 2], x, y + .5); }
+  STKL.length = 0;
+}
 function drawTexts() {
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
   for (const t of G.texts) {
@@ -2448,6 +2460,7 @@ function post(now, gpu = false) {
   }
   if (G && G.flashA > 0) { ctx.fillStyle = `rgba(255,255,255,${Math.min(.6, G.flashA) * (RM ? .25 : 1)})`; ctx.fillRect(0, 0, W, H); }
   if (G && G.impactT > 0 && !RM && !gpu) { ctx.globalCompositeOperation = 'difference'; ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, W, H); ctx.globalCompositeOperation = 'source-over'; }
+  const c0 = ctx; if (gpu) { ctx = uctx; ctx.setTransform(DPR, 0, 0, DPR, 0, 0); }
   if (G && !joy.active && OPTS.joy === 'fixed' && G.phase === 'fight') {
     const [bx, by] = joyBase(); ctx.fillStyle = 'rgba(4,10,12,.25)'; ctx.strokeStyle = 'rgba(143,227,207,.25)'; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.arc(bx, by, 56, 0, TAU); ctx.fill(); ctx.stroke(); ctx.fillStyle = 'rgba(143,227,207,.25)'; ctx.beginPath(); ctx.arc(bx, by, 20, 0, TAU); ctx.fill();
@@ -2465,6 +2478,7 @@ function post(now, gpu = false) {
     const kg = ctx.createRadialGradient(joy.x, joy.y - 5, 2, joy.x, joy.y, 24); kg.addColorStop(0, 'rgba(225,255,247,.9)'); kg.addColorStop(1, 'rgba(50,150,130,.55)');
     ctx.fillStyle = kg; ctx.beginPath(); ctx.arc(joy.x, joy.y, 22, 0, TAU); ctx.fill();
   }
+  ctx = c0;
 }
 
 // ---------- cartoon flares: launch to the sky, tiny star "ding", giant flare ----------
