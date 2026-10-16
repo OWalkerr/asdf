@@ -1,0 +1,59 @@
+<!doctype html><html><body style="margin:0;background:#202030">
+<script type="importmap">{"imports":{"three":"./node_modules/three/build/three.module.js","three/addons/":"./node_modules/three/examples/jsm/"}}</script>
+<script type="module">
+import * as THREE from 'three'; import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+const P = new URLSearchParams(location.search), FW = +(P.get('fw') || 192), FH = +(P.get('fh') || 144), ONLY = P.get('only');
+const g = await new GLTFLoader().loadAsync('frostlight_fox_walk.glb');
+const scene = new THREE.Scene(), root = g.scene; scene.add(root);
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true, premultipliedAlpha: false });
+renderer.setPixelRatio(1); renderer.setSize(FW, FH); renderer.setClearColor(0x000000, 0);
+renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = .92;
+document.body.appendChild(renderer.domElement);
+let mesh; root.traverse(o => { if (o.isSkinnedMesh) mesh = o; });
+const mat = mesh.material; mat.emissive = new THREE.Color(0xdff4ff); mat.emissiveMap = mat.map; mat.emissiveIntensity = .12; mat.roughness = .85; mat.metalness = 0;
+mesh.frustumCulled = false;
+scene.add(new THREE.HemisphereLight(0xcfe8ff, 0x2a2450, 1.3));
+const key = new THREE.DirectionalLight(0xffffff, 2.4); key.position.set(-2, 4, 1.5); scene.add(key);
+const rim = new THREE.DirectionalLight(0x9fe8ff, 3.2); rim.position.set(2, 1.5, -2.5); scene.add(rim);
+const fill = new THREE.DirectionalLight(0xb9a8ff, .8); fill.position.set(-1, -1, 2); scene.add(fill);
+const ZC = .00045, CY = .0019, EL = 22 * Math.PI / 180, HH = .00295, HW = HH * FW / FH;
+const cam = new THREE.OrthographicCamera(-HW, HW, HH, -HH, -1, 1); const D = .05;
+cam.position.set(-Math.cos(EL) * D, CY + Math.sin(EL) * D, ZC); cam.lookAt(0, CY, ZC); cam.updateMatrixWorld(); cam.updateProjectionMatrix();
+const bones = {}; root.traverse(o => { if (o.isBone) bones[o.name] = o; });
+const rest = {}; for (const n in bones) rest[n] = { q: bones[n].quaternion.clone(), p: bones[n].position.clone() };
+const mixer = new THREE.AnimationMixer(root), act = mixer.clipAction(g.animations[0]); act.play();
+const X = new THREE.Vector3(1, 0, 0), Y = new THREE.Vector3(0, 1, 0);
+const tmpQ = new THREE.Quaternion(), tmpR = new THREE.Quaternion();
+function rotW(name, axis, ang) { const b = bones[name]; if (!b || !ang) return; root.updateMatrixWorld(true); b.parent.getWorldQuaternion(tmpQ); tmpR.setFromAxisAngle(axis, ang); const inv = tmpQ.clone().invert(); b.quaternion.premultiply(inv.multiply(tmpR).multiply(tmpQ)); }
+function resetRest() { for (const n in bones) { bones[n].quaternion.copy(rest[n].q); bones[n].position.copy(rest[n].p); } }
+function walkAt(t) { mixer.setTime(t % 1); }
+function exaggerate(names, k) { for (const n of names) { const b = bones[n], d = b.quaternion.clone().multiply(rest[n].q.clone().invert()); let ang = 2 * Math.acos(Math.min(1, Math.abs(d.w))); if (ang < 1e-5) continue; const s = Math.sin(ang / 2), ax = new THREE.Vector3(d.x, d.y, d.z).divideScalar(s); if (d.w < 0) ax.negate(); b.quaternion.copy(new THREE.Quaternion().setFromAxisAngle(ax, ang * k).multiply(rest[n].q)); } }
+const LEGS = ['frontleg', 'R_frontleg', 'backleg', 'R_backleg', 'frontleg0', 'R_frontleg0', 'backleg0', 'R_backleg0', 'frontleg1', 'R_frontleg1', 'backleg1', 'R_backleg1'];
+const TAIL = ['tailstart', 'tail1', 'tail2', 'tail3'];
+// pose builders: u in [0,1)
+const ANIMS = {
+  idle: { n: 12, f: u => { resetRest(); walkAt(0); mixer.setTime(0); resetRest(); TAIL.forEach((t, i) => { rotW(t, Y, .16 * Math.sin(u * 2 * Math.PI - i * .7)); rotW(t, X, .05 * Math.sin(u * 2 * Math.PI * 2 - i)); }); rotW('head', X, -.05 * Math.sin(u * 2 * Math.PI)); return 0; } },
+  walk: { n: 12, f: u => { walkAt(u); TAIL.forEach((t, i) => rotW(t, Y, .1 * Math.sin(u * 4 * Math.PI - i * .7))); return 0; } },
+  run: { n: 10, f: u => { walkAt(u); exaggerate(LEGS, 1.75); const c = Math.sin(u * 4 * Math.PI); rotW('Hips', X, .07 * c); TAIL.forEach((t, i) => rotW(t, X, .12 + .08 * Math.sin(u * 4 * Math.PI - i * .8))); rotW('head', X, -.06 * c); return Math.abs(Math.cos(u * 2 * Math.PI)) * .00012; } },
+  hop: { n: 8, f: u => { resetRest(); const s = Math.sin(Math.PI * u), early = Math.max(0, 1 - u * 5), land = Math.max(0, u * 5 - 4);
+    rotW('Hips', X, -.32 * (1 - 2 * u) * s); ['frontleg', 'R_frontleg'].forEach(n => rotW(n, X, -1.15 * s + .35 * early - .2 * land)); ['backleg', 'R_backleg'].forEach(n => rotW(n, X, 1.05 * s - .3 * early));
+    ['frontleg1', 'R_frontleg1'].forEach(n => rotW(n, X, -.3 * s)); ['backleg1', 'R_backleg1'].forEach(n => rotW(n, X, .35 * s)); TAIL.forEach((t, i) => rotW(t, X, .15 * s + .05 * i * s)); rotW('head', X, .12 * (1 - 2 * u) * s); return 0; } },
+  cast: { n: 6, f: u => { resetRest(); const e = u * u * (3 - 2 * u); rotW('Hips', X, -.12 * e); rotW('chest', X, -.14 * e); rotW('head', X, -.38 * e); TAIL.forEach((t, i) => rotW(t, X, .22 * e)); ['frontleg', 'R_frontleg'].forEach(n => rotW(n, X, .12 * e)); return 0; } },
+};
+const order = ONLY ? [ONLY] : ['idle', 'walk', 'run', 'hop', 'cast'];
+const cols = Math.max(...order.map(k => ANIMS[k].n));
+const atlas = document.createElement('canvas'); atlas.width = cols * FW; atlas.height = order.length * FH; const ag = atlas.getContext('2d');
+const proj = v => { const p = v.clone().project(cam); return [+(((p.x + 1) / 2) * FW).toFixed(1), +(((1 - p.y) / 2) * FH).toFixed(1)]; };
+const meta = { fw: FW, fh: FH, anims: {}, ground: proj(new THREE.Vector3(0, 0, ZC)), unit: FW / (2 * HW) };
+order.forEach((k, row) => {
+  const A = ANIMS[k], fr = [];
+  for (let i = 0; i < A.n; i++) {
+    const lift = A.f(i / A.n); root.position.y = lift; root.updateMatrixWorld(true);
+    renderer.render(scene, cam); ag.drawImage(renderer.domElement, i * FW, row * FH);
+    const W = n => { const v = new THREE.Vector3(); bones[n].getWorldPosition(v); return proj(v); };
+    fr.push({ eye: W('head'), tail: W('tail3'), back: W('chest') });
+  }
+  meta.anims[k] = { row, n: A.n, fr };
+});
+window.RESULT = { meta, png: atlas.toDataURL('image/png') };
+</script></body></html>
