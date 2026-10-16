@@ -1,0 +1,17 @@
+<!doctype html><html><body>
+<script type="importmap">{"imports":{"three":"./node_modules/three/build/three.module.js","three/addons/":"./node_modules/three/examples/jsm/"}}</script>
+<script type="module">
+// Debug: side (from -x) and front (from +z) views of a model with a 0.1 grid, after the config's fix/anchor.
+import * as THREE from 'three'; import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+const q = new URLSearchParams(location.search), g = await new GLTFLoader().loadAsync('models/' + q.get('f') + '.glb'), root = g.scene;
+root.rotation.y = (+q.get('fix') || 0) * Math.PI / 180; root.updateMatrixWorld(true);
+if (q.get('anchor')) { const bb = new THREE.Box3().setFromObject(root, true), c = bb.getCenter(new THREE.Vector3()); root.position.x -= c.x; root.position.z -= c.z; root.updateMatrixWorld(true); }
+const scene = new THREE.Scene(); scene.add(root, new THREE.HemisphereLight(0xffffff, 0x445, 2.5));
+const r = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true }); const S = 500; r.setSize(S, S); r.setClearColor(0x2a2a38);
+const out = document.createElement('canvas'); out.width = S * 2; out.height = S; const og = out.getContext('2d'), R = 1.0;
+[[-1, 0, 0], [0, 0, 1]].forEach((d, i) => { const cam = new THREE.OrthographicCamera(-R, R, R * 2 - .1, -.1, -10, 10); cam.position.set(d[0], 0, d[2]); cam.lookAt(0, 0, 0); r.render(scene, cam); og.drawImage(r.domElement, i * S, 0);
+  og.strokeStyle = 'rgba(255,255,0,.35)'; og.fillStyle = '#ff0'; og.font = '11px sans-serif';
+  for (let k = -10; k <= 10; k++) { const x = i * S + (k / 10 + R) / (2 * R) * S; og.beginPath(); og.moveTo(x, 0); og.lineTo(x, S); og.stroke(); if (k % 2 === 0) og.fillText((i ? k / 10 : k / 10).toFixed(1), x + 2, S - 4); }
+  for (let k = 0; k <= 19; k++) { const y = S - (k / 10 + .1) / (2 * R) * S; og.beginPath(); og.moveTo(i * S, y); og.lineTo(i * S + S, y); og.stroke(); if (k % 2 === 0) og.fillText((k / 10).toFixed(1), i * S + 2, y - 2); } });
+window.RESULT = out.toDataURL();
+</script></body></html>

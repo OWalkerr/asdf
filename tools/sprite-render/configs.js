@@ -2,7 +2,9 @@
 // anims: { name, n, clip, from, to } plays a GLB clip between fractions from..to; { name, n, pose(H, u) } builds a pose by hand.
 const TAIL = ['tailstart', 'tail1', 'tail2', 'tail3'];
 const LEGS = ['frontleg', 'R_frontleg', 'backleg', 'R_backleg', 'frontleg0', 'R_frontleg0', 'backleg0', 'R_backleg0', 'frontleg1', 'R_frontleg1', 'backleg1', 'R_backleg1'];
-const T2 = 2 * Math.PI;
+const T2 = 2 * Math.PI, DIRS5 = [0, 45, 90, -45, -90];
+// Meshy humanoids (Mixamo skeleton): clips play in place, size is measured by height
+const HUM = { fw: 200, fh: 224, elev: 51, dirs: DIRS5, byHeight: true, inPlace: 'mixamorigHips', points: { eye: 'mixamorigHead' }, emissive: .18, emissiveColor: 0xffffff, exposure: 1.05 };
 export const CFG = {
   fox: {
     glb: 'models/frostlight_fox_walk.glb', fw: 224, fh: 200, emissive: .12, emissiveColor: 0xdff4ff, margin: 1.02, elev: 51, dirs: [0, 45, 90, -45, -90], len: .0062,
@@ -17,6 +19,60 @@ export const CFG = {
       { name: 'cast', n: 4, pose: (H, u) => { H.reset(); const e = u * u * (3 - 2 * u); H.rotW('Hips', H.X, -.12 * e); H.rotW('chest', H.X, -.14 * e); H.rotW('head', H.X, -.38 * e); TAIL.forEach(t => H.rotW(t, H.X, .22 * e)); ['frontleg', 'R_frontleg'].forEach(n => H.rotW(n, H.X, .12 * e)); } },
     ],
   },
+  // ---------- enemies (assets/enemies); humanoids come with Meshy clips, the rest are posed by hand ----------
+  archer: { ...HUM, len: 1.7, glb: 'models/archer.glb', weapons: [{ bone: 'mixamorigLeftHand', type: 'bow', off: [.04, 0, 0], r: .5, rot: [90, 0, 0] }],
+    anims: [{ name: 'walk', n: 10, pose: (H, u) => H.clip('Walking', u) }, { name: 'attack', n: 8, pose: (H, u) => H.clip('Archery', u) }] },
+  knight: { ...HUM, len: 1.7, glb: 'models/knight.glb', weapons: [{ bone: 'mixamorigRightHand', type: 'sword', off: [-.05, -.02, 0], len: .85, rot: [35, 0, 0] }, { bone: 'mixamorigLeftHand', type: 'shield', off: [-.12, 0, .07] }],
+    anims: [{ name: 'walk', n: 10, pose: (H, u) => H.clip('Walking', u) }, { name: 'attack', n: 8, pose: (H, u) => H.clip('Double_Combo', u, 0, .5) }] },
+  brute: { ...HUM, len: 1.91, glb: 'models/brute.glb', anims: [{ name: 'walk', n: 10, pose: (H, u) => H.clip('Walking', u) }, { name: 'attack', n: 8, pose: (H, u) => H.clip('Charged_Slash', u) }] },
+  cardinal: { ...HUM, fw: 320, fh: 340, len: 1.7, glb: 'models/cardinal.glb', weapons: [{ bone: 'mixamorigRightHand', type: 'staff', off: [-.05, 0, 0], len: 1.45, rot: [90, 0, 0] }],
+    anims: [{ name: 'walk', n: 10, pose: (H, u) => { H.clip('Walking', u); H.rotW('mixamorigRightForeArm', H.X, -1.35); } }, { name: 'attack', n: 8, pose: (H, u) => H.clip('Attack', u) }, { name: 'die', n: 8, pose: (H, u) => H.clip('Dead', u) }] },
+  lord: { ...HUM, fw: 320, fh: 340, len: 1.7, glb: 'models/lord.glb', weapons: [{ bone: 'mixamorigRightHand', type: 'sword', off: [-.05, -.02, 0], len: 1.05, width: .09, color: 0x8a94b0, glow: 0x3fa0ff, rot: [35, 0, 0] }],
+    anims: [{ name: 'walk', n: 10, pose: (H, u) => H.clip('Walking', u) }, { name: 'attack', n: 8, pose: (H, u) => H.clip('Attack', u) }, { name: 'die', n: 8, pose: (H, u) => H.clip('Dead', u) }] },
+  ghoul: { glb: 'models/ghoul_rig.glb', fw: 208, fh: 176, len: 2.45, elev: 51, dirs: DIRS5, points: { eye: 'Bone_016' },
+    anims: [
+      { name: 'walk', n: 10, pose: (H, u) => { H.reset(); const a = u * T2, s = Math.sin(a), c = Math.cos(a);
+        // diagonal gait: front-left with hind-right, then the other pair; forward swing is a negative turn about the side axis
+        H.rotW('Bone_023', H.X, -.45 * s); H.rotW('Bone_014', H.X, -.4 * s); H.rotW('Bone_027', H.X, .45 * s); H.rotW('Bone_009', H.X, .4 * s);
+        H.rotW('Bone_022', H.X, -.35 * Math.max(0, c)); H.rotW('Bone_026', H.X, -.35 * Math.max(0, -c)); H.rotW('Bone_013', H.X, .3 * Math.max(0, -c)); H.rotW('Bone_008', H.X, .3 * Math.max(0, c));
+        H.rotW('Bone_003', H.Y, .08 * s); H.rotW('Bone_002', H.Y, -.08 * s); H.rotW('Bone_018', H.X, .06 * Math.sin(2 * a)); return .02 * Math.abs(Math.sin(2 * a)); } },
+      { name: 'attack', n: 8, pose: (H, u) => { H.reset(); const back = Math.sin(Math.PI * Math.min(1, u / .55)), lunge = Math.max(0, Math.sin(Math.PI * (u - .45) / .55));
+        H.rotW('Bone_004', H.X, .25 * back - .2 * lunge); H.rotW('Bone_023', H.X, .3 * back - .9 * lunge); H.rotW('Bone_027', H.X, .3 * back - .9 * lunge);
+        H.rotW('Bone_018', H.X, -.25 * back + .2 * lunge); H.rotW('Bone_017', H.X, -.3 * lunge); return .05 * lunge; } },
+    ] },
+  spitter: { glb: 'models/spitter_rig.glb', fw: 208, fh: 176, elev: 51, dirs: DIRS5, len: 1.6,
+    anims: [
+      { name: 'walk', n: 10, pose: (H, u) => { H.reset(); const a = u * T2, s = Math.sin(a), c = Math.cos(a);
+        // spider gait: legs swing about the vertical axis at the hip and lift outward; pairs FR+BL / FL+BR
+        H.rotW('Bone_008', H.Y, .3 * s); H.rotW('Bone_027', H.Y, -.3 * s); H.rotW('Bone_015', H.Y, .3 * s); H.rotW('Bone_021', H.Y, -.3 * s);
+        H.rotW('Bone_008', H.Z, .25 * Math.max(0, c)); H.rotW('Bone_027', H.Z, -.25 * Math.max(0, c)); H.rotW('Bone_015', H.Z, -.25 * Math.max(0, -c)); H.rotW('Bone_021', H.Z, .25 * Math.max(0, -c));
+        H.rotW('Bone_001', H.Z, .04 * s); return .03 * Math.abs(Math.sin(2 * a)); } },
+      { name: 'attack', n: 8, pose: (H, u) => { H.reset(); const k = Math.sin(Math.PI * u), b = H.bones.Bone_001; b.scale.setScalar(1 + .14 * k); H.rotW('Bone_001', H.X, -.25 * k); return .04 * k; } },
+    ] },
+  queen: { glb: 'models/queen_rig.glb', fw: 320, fh: 340, len: 1.7, elev: 51, dirs: DIRS5, byHeight: true, tiltX: -24, emissive: .25, emissiveColor: 0xb8d8ff,
+    anims: [
+      { name: 'walk', n: 10, pose: (H, u) => { H.reset(); const a = u * T2, s = Math.sin(a);
+        ['Bone_010', 'Bone_015'].forEach((b, i) => H.rotW(b, H.X, .2 + .12 * Math.sin(a + i * 2))); ['Bone_009', 'Bone_014'].forEach((b, i) => H.rotW(b, H.X, .15 * Math.sin(a + 1 + i * 2)));
+        H.rotW('Bone_023', H.Z, -.15 * s); H.rotW('Bone_028', H.Z, .15 * s); H.rotW('Bone_018', H.Z, .05 * s); return .08 + .04 * s; } },
+      { name: 'attack', n: 8, pose: (H, u) => { H.reset(); const k = Math.sin(Math.PI * Math.min(1, u * 1.3));
+        H.rotW('Bone_023', H.X, -1.4 * k); H.rotW('Bone_028', H.X, -1.4 * k); H.rotW('Bone_023', H.Z, -.5 * k); H.rotW('Bone_028', H.Z, .5 * k); H.rotW('Bone_018', H.X, -.4 * k); H.rotW('Bone_004', H.X, -.2 * k); return .1 + .06 * k; } },
+      { name: 'die', n: 8, pose: (H, u) => { H.reset(); const e = u * u; H.rotW('Bone_005', H.X, .9 * e); H.rotW('Bone_018', H.X, .5 * e); H.rotW('Bone_023', H.X, .6 * e); H.rotW('Bone_028', H.X, .6 * e); return .08 - .5 * e; } },
+    ] },
+  rider: { glb: 'models/rider_rig.glb', fw: 340, fh: 320, elev: 51, dirs: DIRS5, len: 1.55, emissive: .22, emissiveColor: 0xffffff, exposure: 1.1, fix: -25, anchor: 'bbox',
+    // the horse's front legs had no bones: add a chain per leg and move their vertices onto it
+    addLegs: [{ name: 'FL', parent: 'Bone_000', side: 1, cx: .22, zMin: .15, xMax: .62, yTop: .62 }, { name: 'FR', parent: 'Bone_000', side: -1, cx: .22, zMin: .15, xMin: -.2, yTop: .62 }],
+    anims: [
+      { name: 'walk', n: 10, pose: (H, u) => { H.reset(); const a = u * T2, s = Math.sin(a), c = Math.cos(a);
+        H.rotW('FL', H.X, -.3 * s); H.rotW('Bone_014', H.X, -.4 * s); H.rotW('FR', H.X, .3 * s); H.rotW('Bone_009', H.X, .4 * s);
+        H.rotW('FL_lo', H.X, .45 * Math.max(0, c)); H.rotW('FR_lo', H.X, .45 * Math.max(0, -c)); H.rotW('Bone_008', H.X, -.4 * Math.max(0, -c)); H.rotW('Bone_013', H.X, -.4 * Math.max(0, c));
+        H.rotW('Bone_019', H.X, .15 + .1 * Math.sin(2 * a)); H.rotW('Bone_026', H.X, .06 * Math.sin(2 * a)); return .03 * Math.abs(Math.sin(2 * a)); } },
+      { name: 'attack', n: 8, pose: (H, u) => { H.reset(); const rear = Math.sin(Math.PI * Math.min(1, u / .6)), slash = Math.max(0, Math.sin(Math.PI * (u - .3) / .7));
+        H.rotW('Bone_000', H.X, -.45 * rear); H.rotW('FL', H.X, -.9 * rear); H.rotW('FR', H.X, -.7 * rear); H.rotW('FL_lo', H.X, 1.1 * rear); H.rotW('FR_lo', H.X, 1.2 * rear);
+        H.rotW('Bone_023', H.X, -1.6 * slash + .6 * rear); H.rotW('Bone_022', H.X, -.5 * slash); return 0; } },
+      { name: 'die', n: 8, pose: (H, u) => { H.reset(); const e = u * u * (3 - 2 * u);
+        ['FL', 'FR', 'Bone_009', 'Bone_014'].forEach((b, i) => H.rotW(b, H.X, (i < 2 ? -.6 : .6) * e)); ['FL_lo', 'FR_lo'].forEach(b => H.rotW(b, H.X, 1.4 * e)); ['Bone_008', 'Bone_013'].forEach(b => H.rotW(b, H.X, -1.2 * e));
+        H.rotW('Bone_000', H.Z, .5 * e); return -.38 * e; } },
+    ] },
   // Enemy template: Meshy exports one GLB per animation; list the walk clip as glb and the others in extraClips.
   // Every enemy needs 'walk'; 'attack' (wind-up / shot) and 'die' are optional and used when present.
   // ghoul: { glb: 'models/ghoul_walk.glb', extraClips: ['models/ghoul_attack.glb'], fw: 192, fh: 160, points: { eye: 'Head' },

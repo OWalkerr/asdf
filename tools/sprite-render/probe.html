@@ -1,0 +1,15 @@
+<!doctype html><html><body style="margin:0">
+<script type="importmap">{"imports":{"three":"./node_modules/three/build/three.module.js","three/addons/":"./node_modules/three/examples/jsm/"}}</script>
+<script type="module">
+// Debug helper: bone tree with world positions + a front/side/top preview of a GLB in its bind pose.
+import * as THREE from 'three'; import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+const f = new URLSearchParams(location.search).get('f'), g = await new GLTFLoader().loadAsync(f), root = g.scene; root.updateMatrixWorld(true);
+const tree = []; const walk = (o, d) => { if (o.isBone) { const v = new THREE.Vector3(); o.getWorldPosition(v); tree.push('  '.repeat(d) + o.name + ' ' + v.toArray().map(x => x.toFixed(2)).join(',')); } o.children.forEach(c => walk(c, d + (o.isBone ? 1 : 0))); };
+walk(root, 0);
+const scene = new THREE.Scene(); scene.add(root); scene.add(new THREE.HemisphereLight(0xffffff, 0x444466, 2)); const dl = new THREE.DirectionalLight(0xffffff, 2); dl.position.set(1, 2, 3); scene.add(dl);
+const box = new THREE.Box3().setFromObject(root), c = box.getCenter(new THREE.Vector3()), s = box.getSize(new THREE.Vector3()), R = Math.max(s.x, s.y, s.z) * .6;
+const r = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true }); r.setSize(256, 256); r.setClearColor(0x303040); r.outputColorSpace = THREE.SRGBColorSpace;
+const out = document.createElement('canvas'); out.width = 768; out.height = 256; const og = out.getContext('2d');
+[[0, 0, 1], [-1, 0, 0], [0, 1, 0.001]].forEach((d, i) => { const cam = new THREE.OrthographicCamera(-R, R, R, -R, -10, 10); cam.position.set(c.x + d[0], c.y + d[1], c.z + d[2]); cam.lookAt(c); r.render(scene, cam); og.drawImage(r.domElement, i * 256, 0); });
+window.RESULT = { tree: tree.join('\n'), png: out.toDataURL(), size: s.toArray() };
+</script></body></html>

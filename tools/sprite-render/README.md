@@ -25,3 +25,13 @@ python3 pack.py ghoul:3.2     # game/index.html içine gömer; 3.2 = gövde uzun
 `fox` girişi kahramanın atlasını üretir (`python3 pack.py fox:1`). Modelde yalnızca yürüme olduğu için bekleme, koşu, sekme ve fırlatma hazırlığı kemik dönüşleriyle kurulur.
 
 Rigli ama animasyonsuz modeller için de `pose(H, u)` ile hareket yazılabilir: `H.rotW(kemik, eksen, açı)` dünya ekseninde döndürür, `H.clip(i, u)` klip oynatır, `H.exaggerate(kemikler, k)` hareketi büyütür.
+
+## Ayarlar (configs.js)
+
+- `fix` / `tiltX`: model çapraz ya da eğik dışa aktarıldıysa düzeltme açıları (derece). `anchor: 'bbox'`: yer noktası gövdenin altına alınır.
+- `addLegs`: kemiği olmayan bacaklara iki kemiklik zincir ekler ve bölgedeki köşeleri onlara bağlar (`side`/`cx`, `xMin`…`zMax`, `yTop`).
+- `weapons`: `sword`, `shield`, `bow`, `staff`; el kemiğine bağlanır. `off` (bağlama pozunda dünya ekseninde kaydırma), `rot` (derece), boyut ve renk ayarları.
+- `inPlace`: kliplerdeki ileri yürüme hareketini sıfırlar (Mixamo'da `mixamorigHips`; three.js kemik adlarındaki `:` işaretini siler).
+- `byHeight` / `len`: ölçek için kullanılan model boyu.
+
+Hata ayıklama: `probe.html?f=models/x.glb` kemik ağacı ve üç yönden önizleme, `grid.html?f=x&fix=..&anchor=1` ızgaralı yan ve ön görünüm. `QUICK=1 node render.js x` iki yön ve dört kareyle hızlı önizleme yapar.
