@@ -126,12 +126,18 @@ Nadirlik ağırlıkları: Sıradan 10, Nadir 5, Destansı 2, Efsanevi 6 (yalnız
 - **Söküm infazcısı:** Ağır Mızrak + Çatallı Mızrak + Yırtıcı + İnfaz + Bulaşıcı Yemin → zincirleme Söküm sıfırlamaları.
 - **Ruh ordusu:** Yeminli Ruh ×3 + Hızlı El + Kan Yemini.
 
-## 7. Başarımlar ve pelerinler
+## 7. Başarımlar, pelerinler ve mızrak izleri
+
+Mızrak izleri başarım sayısıyla açılır: Ruh (0), Alev (2, turuncu kurdele + kıvılcım + turuncu duman), Buz (4, beyaz kıvılcım), Kan (6, koyu kızıl duman), Gölge (8, mor duman), Yıldız (11, iz boyunca renk değiştiren yıldızlar). Seçim Ruh Dolabı ekranından yapılır.
+
+Her düşman türünün kendi ölüm sesi vardır: Hortlak hırlar, Ateş Ruhu söner, Okçu'nun kemikleri takırdar, Dev gümler, Tükürgen patlar, Şövalye çınlar, Buz Hortlağı kırılır, Yarasa çığlık atar, Mimik ısırıp altın saçar.
+
+## 8. Başarım listesi
 
 12 başarım, her biri bir pelerin rengi açar (Başarımlar ekranından giyilir, tüm mızrakçılarda geçerli; açılınca üstte bildirim çıkar):
 Kemik Yıkan (Kemik Lordu), Atlıyı Düşüren, Yası Bitiren, Durdurulamaz (50 seri), Toplu Söküm (tek Sökümle 5 öldürme), Rüzgâr Adım (bir avda 500 sekme), Derinlere (20. oda), Sandık Avcısı (Mimik), Dokunulmaz (5. odadan sonra hasarsız oda), Günün Avcısı (Günün Avı'nda 10. oda), Kurban (Ruh Bağışı), Dört Yemin (dört mızrakçıyla Kemik Lordu).
 
-## 8. Kalıcı ilerleme (Ruh Sunağı)
+## 9. Kalıcı ilerleme (Ruh Sunağı)
 
 | Güç | Etki | Seviye |
 |---|---|---|
@@ -142,7 +148,7 @@ Kemik Yıkan (Kemik Lordu), Atlıyı Düşüren, Yası Bitiren, Durdurulamaz (50
 
 Kayıt tarayıcının yerel depolamasında tutulur.
 
-## 9. Denge ölçümü
+## 10. Denge ölçümü
 
 `tools/balance-sim.js` oyunu tarayıcıda kendi kendine oynatır: bot tehditlerden kaçar, mermilere dik kaçar, duvardan uzak durur, uygun anda Söküm / Delici / Kader kullanır, her zaman ilk kartı ve Savaş kapısını seçer. Her mızrakçıyla N av yapıp ulaşılan odayı, oda başına süreyi ve alınan hasarı raporlar.
 
@@ -177,16 +183,44 @@ Bot artık canı %50'nin altındaysa Ruh Pınarı'nı, değilse Savaş kapısın
 
 Sonuç: yükseltmesiz bot medyan 7–8. oda; yükseltmeli bot medyan 10–11. oda, 10. odadaki ikinci muhafız yaklaşık %40 geçiliyor, 11–21. odalar 55–100 sn sürüyor.
 
-## 10. Sıradaki adımlar (yol haritası)
+## 11. Görsel yol haritası: üst düzeye çıkış
 
-Tamamlananlar: Buz Hortlağı, Kan Yarasası, dördüncü muhafız Kan Kardinali (kendi müzik teması ve 'Kanı Durduran' başarımı), üç biyom (Cadı Zindanı, Buz Mezarlığı, Kan Katedrali), av sonu istatistikleri ve ölüm nedeni, sabit joystick ve sol el modu, muhafız müzik temaları (Lord: ağır yürüyüş, Atlı: dörtnala, Kraliçe: tam-ton ağıt; öfkede hızlanır), 12 başarım ve pelerin renkleri, 15+ oda dengesi, Ruh Sandığı ve Mimik, Kan Sunağı, muhafız ikinci formu, Kalkanlı Şövalye ve Kemik Bombası, grafik kalitesi ayarı (otomatik / yüksek / düşük), Günün Avı sonuç paylaşımı, akıllı bot ile denge ayarı, mızrakçıya özel efsanevi kartlar, Günün Avı (tohumlu), son avlar listesi, bot ile denge ölçümü ve ayarı, 4 mızrakçı, Unutuş Ritüeli (güç silme), Yükselmiş muhafızlar, PWA (ana ekrana ekleme + çevrimdışı önbellek), Ruh Tüccarı kapısı, üçüncü muhafız Yas Kraliçesi, üretken müzik (dron + minör pentatonik arpej; savaşta davul, muhafızda hızlanır), Kader Çağrısı (R), kapı seçimi (Savaş/Elit/Lanetli/Ruh Pınarı), elit düşmanlar, ikinci muhafız Gölge Atlı, 5 efsanevi sinerji, vuruş durması (hit-stop) ve titreşim.
+Mevcut durum: Canvas 2D, her kare vektör çizim + yarı çözünürlüklü ışık haritası + toplamalı parıltılar. Bu yaklaşım sınırına yaklaştı; bundan sonraki büyük sıçrama GPU tarafında.
+
+**Aşama 1 — Canvas içinde hızlı kazanımlar (1 oturum)**
+- Pelerin ve alev saç için Verlet ip fiziği (gerçek dalgalanma, rüzgâr, sekmede savrulma).
+- Perlin gürültülü "travma" sarsıntısı + büyük vuruşlarda hafif kamera dönmesi; muhafız girişinde kameranın muhafıza kayıp yakınlaşması.
+- Müziğe senkron atım: davul vuruşunda rün çemberi ve mangalların parlaması.
+- Muhafız giriş ekranı: siyah şeritler + büyük yazı + muhafız silüeti.
+- Kart seçiminde 3B çevirme animasyonu ve seçilen kartın parçacıklara dağılması.
+
+**Aşama 2 — Hibrit WebGL son işleme (1–2 oturum, en yüksek getiri)**
+Mevcut 2D tuval her kare bir WebGL dokusuna aktarılır ve tek bir shader zinciri uygulanır; oyun ve çizim kodu değişmez.
+- Gerçek bloom (parlak geçiş + çok kademeli Gauss bulanıklığı).
+- Şok dalgası kırılması: patlama, Kader inişi ve Söküm halkalarında ekranın dalgalanması.
+- Renk sapması (chromatic aberration) vuruşlarda, ısı dalgalanması mangallarda.
+- Biyom başına renk derecelendirme (LUT) ve ACES ton eşleme.
+- Ay ve mangallardan ekran uzayı ışık hüzmeleri (god rays).
+- Düşük kalite modunda tamamen kapatılabilir.
+
+**Aşama 3 — Tam GPU oluşturma (2–3 oturum)**
+- Karakterler yükleme anında yüksek çözünürlüklü sprite atlaslarına çizilir (çok kareli yürüme, saldırı hazırlığı, ölüm animasyonları).
+- Normal haritalı 2D ışıklandırma: mangallar ve mızraklar karakterlere yönlü ışık ve yumuşak gölge düşürür.
+- GPU örnekleme ile binlerce parçacık: yoğun duman, kıvılcım, kar.
+- Akış dokulu kurdele izleri, flipbook patlamalar, gürültü dokulu hacimsel sis.
+
+**Önerilen sıra:** Aşama 2 (en çok "vay" etkisi, en az risk) → Aşama 1'in kamera ve fizik maddeleri → Aşama 3. Her aşamada grafik kalitesi ayarına bağlı kademeler ve telefonda 60 fps hedefi korunur.
+
+## 12. Sıradaki adımlar (yol haritası)
+
+Tamamlananlar: düşman başına ölüm sesleri, 6 kozmetik mızrak izi, Buz Hortlağı, Kan Yarasası, dördüncü muhafız Kan Kardinali (kendi müzik teması ve 'Kanı Durduran' başarımı), üç biyom (Cadı Zindanı, Buz Mezarlığı, Kan Katedrali), av sonu istatistikleri ve ölüm nedeni, sabit joystick ve sol el modu, muhafız müzik temaları (Lord: ağır yürüyüş, Atlı: dörtnala, Kraliçe: tam-ton ağıt; öfkede hızlanır), 12 başarım ve pelerin renkleri, 15+ oda dengesi, Ruh Sandığı ve Mimik, Kan Sunağı, muhafız ikinci formu, Kalkanlı Şövalye ve Kemik Bombası, grafik kalitesi ayarı (otomatik / yüksek / düşük), Günün Avı sonuç paylaşımı, akıllı bot ile denge ayarı, mızrakçıya özel efsanevi kartlar, Günün Avı (tohumlu), son avlar listesi, bot ile denge ölçümü ve ayarı, 4 mızrakçı, Unutuş Ritüeli (güç silme), Yükselmiş muhafızlar, PWA (ana ekrana ekleme + çevrimdışı önbellek), Ruh Tüccarı kapısı, üçüncü muhafız Yas Kraliçesi, üretken müzik (dron + minör pentatonik arpej; savaşta davul, muhafızda hızlanır), Kader Çağrısı (R), kapı seçimi (Savaş/Elit/Lanetli/Ruh Pınarı), elit düşmanlar, ikinci muhafız Gölge Atlı, 5 efsanevi sinerji, vuruş durması (hit-stop) ve titreşim.
 
 Sıradakiler:
-1. Gerçek oyun geri bildirimiyle zorluk ince ayarı.
-2. Sesli efekt çeşitliliği (her düşmana kendi ölüm sesi).
-3. Kozmetik mızrak efektleri (başarımlardan açılan mızrak izleri).
+1. Görsel yol haritası Aşama 2: WebGL son işleme (bloom, şok dalgası kırılması, renk sapması, LUT).
+2. Aşama 1: Verlet pelerin/saç, Perlin sarsıntı, muhafız giriş sinematiği, müziğe senkron parlama.
+3. Gerçek oyun geri bildirimiyle zorluk ince ayarı.
 
-## 11. Oyun hissi (Metal Slug esinli)
+## 13. Oyun hissi (Metal Slug esinli)
 
 Hedef: eski arcade oyunlarındaki gibi her öldürmenin "tatmin edici" hissettirmesi.
 
@@ -213,7 +247,7 @@ Hedef: eski arcade oyunlarındaki gibi her öldürmenin "tatmin edici" hissettir
 
 Erişilebilirlik: cihazda "hareketi azalt" açıksa titreme %30'a, ekran parlaması %25'e düşer.
 
-## 12. Görsel yön
+## 14. Görsel yön
 
 ### Biyomlar
 
@@ -248,23 +282,23 @@ Tema: **ruhani mezar arenası**. Karanlık taş zemin, turkuaz ruh ışığı, y
 - **Ekran sonrası:** Vinyet, film greni, hasar alınca ve can %30'un altındayken kırmızı kenar.
 - **Arayüz:** İkonlu yetenek düğmeleri (dairesel bekleme süresi), gecikmeli (beyaz iz bırakan) can barı, muhafız barı ve sinematik siyah şeritli giriş, seri sayacı, ikonlu ve nadirliğe göre renklenen kartlar.
 
-## 13. Av sonu istatistikleri
+## 15. Av sonu istatistikleri
 
 Ölüm ekranında: seni deviren düşman ya da saldırı ("Seni deviren: Kemik Dev (elit)", "Çığlık dalgası", "Ruh Okçusu mermisi"...) ve en çok hasar veren 6 kaynağın yüzdelik çubukları (Mızrak, Söküm, Delici Mızrak, Kader Çağrısı, İniş Şoku, Ruh İzi, Yeminli Ruh, Kemik Bombası).
 
-## 14. Dokunmatik seçenekler
+## 16. Dokunmatik seçenekler
 
 Duraklat menüsünde: **Joystick: serbest / sabit** (sabitte taban ekranın alt köşesinde durur ve hep görünür) ve **Butonlar: sağda / solda** (sol el modu; sabit joystick bu modda sağ alta geçer).
 
-## 15. Telefona kurulum (PWA)
+## 17. Telefona kurulum (PWA)
 
 `game/` klasörü herhangi bir statik sunucuda (ör. GitHub Pages) yayınlanınca tarayıcının "Ana ekrana ekle" seçeneğiyle tam ekran uygulama gibi kurulur; `sw.js` dosyaları önbelleğe alır, oyun çevrimdışı açılır. Claude artifact sürümünde servis çalışanı devre dışıdır.
 
-## 16. Performans
+## 18. Performans
 
 Duraklat menüsünde **Grafik: otomatik / yüksek / düşük**. Otomatikte savaş sırasında 3 sn boyunca ortalama kare süresi 26 ms'yi (≈38 fps) aşarsa düşük kaliteye geçer. Düşük kalite: piksel yoğunluğu en fazla 1.25, uzak adalar, sis ve film greni kapalı, sıradan düşman dumanı kapalı, duman sınırı 130 parçacık.
 
-## 17. Teknik
+## 19. Teknik
 
 - Tek dosya HTML5 Canvas + saf JavaScript, kütüphane yok.
 - Dünya: 820 birim yarıçaplı dairesel arena, kamera oyuncuyu takip eder, zoom ekran boyutuna göre ölçeklenir.

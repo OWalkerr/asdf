@@ -225,6 +225,10 @@ p{margin:0;line-height:1.45;color:var(--ink)}
 .pips{display:flex;gap:4px;margin-top:6px}.pips i{width:16px;height:4px;background:rgba(143,227,207,.18)}.pips i.on{background:var(--mist);box-shadow:0 0 6px rgba(143,227,207,.7)}
 .ups{display:flex;flex-wrap:wrap;gap:6px}
 .ups.history{justify-content:center}
+.ups.trails button{border:1px solid var(--line);border-radius:2px;padding:7px 12px;background:rgba(11,21,23,.85);color:#c3d2ce;font-size:14px;font-weight:700;display:flex;align-items:center;gap:7px}
+.ups.trails button i{width:18px;height:4px;border-radius:2px}
+.ups.trails button.on{border-color:var(--gold);color:#fff1c8;box-shadow:0 0 12px rgba(216,178,90,.35)}
+.ups.trails button:disabled{opacity:.4}
 .ups .hl{border:0;background:none;color:var(--gold);font-weight:800;letter-spacing:.16em;text-transform:uppercase;font-size:11px;width:100%;text-align:center}
 .ups span{font-size:13px;border:1px solid var(--line);border-radius:2px;padding:4px 10px;color:#c3d2ce;background:rgba(11,21,23,.8)}
 @media (prefers-reduced-motion:reduce){#btnE.ready,.emblem,.card.leg::after{animation:none}.card,.panel{animation:none}}
@@ -349,8 +353,12 @@ p{margin:0;line-height:1.45;color:var(--ink)}
 <section class="screen" id="scrAch" hidden>
   <div class="panel">
     <div class="eyebrow">Başarımlar</div>
-    <h2>Pelerin dolabı</h2>
-    <p class="fine">Her başarım bir pelerin rengi açar. Giydiğin renk her mızrakçıda geçerlidir.</p>
+    <h2>Ruh Dolabı</h2>
+    <p class="fine">Başarımlar pelerin renklerini ve mızrak izlerini açar. Seçimin her mızrakçıda geçerlidir.</p>
+    <div class="eyebrow">Mızrak izi</div>
+    <p class="fine" id="trailHint"></p>
+    <div class="ups trails" id="trailList"></div>
+    <div class="eyebrow">Pelerinler</div>
     <div class="shop" id="achList"></div>
     <div class="btns"><button class="btn" data-back>Geri</button></div>
   </div>
@@ -463,7 +471,7 @@ function schedMusic() {
 }
 const SFX = { throw:[620,300,.06,'triangle',.035], hop:[170,430,.1,'sine',.06], hit:[320,140,.05,'square',.018], rend:[80,700,.28,'sawtooth',.06],
   kill:[760,220,.12,'triangle',.04], hurt:[170,55,.22,'sawtooth',.08], q:[240,980,.2,'sawtooth',.045], pick:[440,990,.18,'sine',.06], boom:[120,40,.25,'square',.05], rise:[200,820,.35,'sine',.05], thump:[120,28,.6,'sine',.3] };
-let NB = null, lastCrunch = 0;
+let NB = null, lastCrunch = 0; const DIE_T = {};
 function noise(dur, vol, f0, f1) {
   if (muted || !AC) return; const t = AC.currentTime;
   if (!NB) { NB = AC.createBuffer(1, AC.sampleRate, AC.sampleRate); const d = NB.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; }
@@ -487,6 +495,23 @@ function sfx(n) {
   if (n === 'shimmer') { for (let i = 0; i < 5; i++) tone(2000 + i * 420, .5 + i * .08, .02, i * .03); noise(.6, .05, 9000, 2000); return; }
   if (n === 'pling') { const t = AC.currentTime; if (t - lastPling < .035) return; lastPling = t; tone(1100 + Math.min(G ? G.combo : 0, 30) * 28, .14, .03); return; }
   if (n === 'fuse') { tone(600, .25, .03); tone(900, .25, .03, .25); tone(1300, .25, .03, .5); return; }
+  if (n.startsWith('die_')) {
+    const t = AC.currentTime, k = n.slice(4); DIE_T[k] = DIE_T[k] || 0; if (t - DIE_T[k] < .04) return; DIE_T[k] = t;
+    const o = (f0, f1, dur, type, vol, delay = 0) => { const s = AC.createOscillator(), g = AC.createGain(), tt = t + delay; s.type = type; s.frequency.setValueAtTime(f0, tt); s.frequency.exponentialRampToValueAtTime(f1, tt + dur); g.gain.setValueAtTime(vol, tt); g.gain.exponentialRampToValueAtTime(.0001, tt + dur); s.connect(g); g.connect(AC.destination); s.start(tt); s.stop(tt + dur + .02); };
+    switch (k) {
+      case 'ghoul': o(150, 55, .28, 'sawtooth', .05); noise(.18, .08, 1200, 200); break;
+      case 'wisp': o(900, 1900, .12, 'sine', .04); noise(.15, .06, 7000, 2500); break;
+      case 'archer': for (let i = 0; i < 4; i++) o(1400 - i * 180, 900, .03, 'square', .025, i * .035); break;
+      case 'brute': o(95, 30, .5, 'sine', .14); noise(.35, .12, 700, 60); break;
+      case 'spitter': noise(.3, .12, 900, 150); o(300, 120, .15, 'sine', .05, .05); break;
+      case 'knight': o(620, 600, .45, 'triangle', .05); o(931, 900, .35, 'triangle', .03); noise(.08, .05, 5000, 2000); break;
+      case 'frost': noise(.25, .1, 9000, 3000); o(2093, 2000, .2, 'sine', .03); o(2637, 2500, .25, 'sine', .025, .04); break;
+      case 'bat': o(2000, 3300, .12, 'sawtooth', .03); o(2600, 1800, .1, 'sawtooth', .02, .08); break;
+      case 'mimic': o(160, 60, .2, 'square', .06); for (let i = 0; i < 4; i++) o(1500 + i * 380, 1500 + i * 380, .12, 'sine', .03, .15 + i * .07); break;
+      default: noise(.14, .14, 2600, 250);
+    }
+    return;
+  }
   if (n === 'crunch') { const t = AC.currentTime; if (t - lastCrunch < .03) return; lastCrunch = t; noise(.14, .14, 2600, 250); return; }
   if (n === 'bigboom') { noise(1.1, .4, 2200, 45); n = 'thump'; }
   if (n === 'boom') noise(.4, .22, 1600, 90);
@@ -648,6 +673,17 @@ function unlock(id) {
 }
 let toastT = 0;
 function toast(s) { const t = $('toast'); t.textContent = s; restartAnim(t, 'on'); }
+// Spear trails unlock with the number of achievements earned.
+const TRAILS = [
+  { id: 'ruh', n: 'Ruh', need: 0, rgb: '170,255,235', smoke: 's' },
+  { id: 'alev', n: 'Alev', need: 2, rgb: '255,150,70', smoke: 'f', spark: '#ffc878' },
+  { id: 'buz', n: 'Buz', need: 4, rgb: '190,235,255', smoke: 'i', spark: '#ffffff' },
+  { id: 'kan', n: 'Kan', need: 6, rgb: '255,60,80', smoke: 'k', spark: '#ff6a7a' },
+  { id: 'golge', n: 'Gölge', need: 8, rgb: '190,140,255', smoke: 'v' },
+  { id: 'yildiz', n: 'Yıldız', need: 11, rgb: '255,240,200', smoke: 's', star: true },
+];
+const achCount = () => Object.keys(meta.ach || {}).length;
+const trailById = id => { const t = TRAILS.find(x => x.id === id); return t && achCount() >= t.need ? t : TRAILS[0]; };
 const heroById = id => HEROES.find(x => x.id === id) || HEROES[0];
 function baseStats() {
   return { dmg: 18 * (1 + .06 * meta.dmg), as: 1.1, range: 400, spearSpd: 1250, hopDist: 160 * (1 + .06 * meta.hop), hopTime: .15, walk: 140,
@@ -664,7 +700,7 @@ function newRun(daily) {
   const hero = daily ? daily.hero : heroById(meta.hero), s = baseStats(); hero.a(s); if (daily && daily.mod.s) daily.mod.s(s);
   const skin = meta.skin && meta.ach && meta.ach[meta.skin] ? ACH.find(a => a.id === meta.skin).skin : null;
   document.querySelector('#hud .medal').innerHTML = heroSvg(skin || hero);
-  G = { s, hero, skin, ups: {}, room: 0, kills: 0, time: 0, shards: 0, rerolls: meta.reroll, hops: 0, phase: 'fight',
+  G = { s, hero, skin, trail: trailById(meta.trail), ups: {}, room: 0, kills: 0, time: 0, shards: 0, rerolls: meta.reroll, hops: 0, phase: 'fight',
     p: { x: 0, y: 0, hp: s.maxHp, state: 'idle', t: 0, atkCd: .3, face: -Math.PI / 2, target: null, iT: 0, hvx: 0, hvy: 0, buf: false,
       lastHop: -9, rStacks: 0, ghosts: [], qCd: 0, rendCd: 0, rCd: 0, qQueued: false, shots: 0, spA: 0, spCd: [], trailAcc: 0 },
     enemies: [], spears: [], eshots: [], parts: [], texts: [], trails: [], spawns: [], hazards: [], hitstop: 0, gibs: [], decals: [], booms: [], flashA: 0, combo: 0, comboT: 0, zp: 0, hurtA: 0, twinkles: [], rings: [], erupts: [], orbs: [], hitstars: [], impactT: 0, speedT: 0, beamT: 0, lastKill: null, slowT: 0, slowS: 1, roomType: 'fight', pending: 0, waves: [], waveIdx: 0, waveT: 0, shake: 0, clearT: 0,
@@ -929,8 +965,8 @@ function shatter(e, big) {
   burst(e.x, e.y, e.type === 'wisp' ? COL.ember : '#ffe9d6', big ? 20 : 10, big ? 320 : 220, .45, 3);
   if (e.boss) { twinkleWorld(e.x, e.y - e.r, Math.min(W, H), .3); G.impactT = .09; G.speedT = 1.2; }
   if (big) { starBoom(e.x, e.y, e.boss ? 190 : e.r * 2.6 + 30); flashScreen(e.boss ? 1 : .35); slowmo(e.boss ? .9 : .35, .25);
-    G.shake = Math.max(G.shake, e.boss ? 28 : 14); G.zp = Math.max(G.zp, e.boss ? .12 : .05); buzz(e.boss ? 120 : 45); sfx('bigboom'); }
-  else { G.shake = Math.max(G.shake, 3.5); sfx('crunch'); }
+    G.shake = Math.max(G.shake, e.boss ? 28 : 14); G.zp = Math.max(G.zp, e.boss ? .12 : .05); buzz(e.boss ? 120 : 45); sfx('bigboom'); if (!e.boss && e.type !== 'player') sfx('die_' + e.type); }
+  else { G.shake = Math.max(G.shake, 3.5); sfx('die_' + e.type); }
 }
 function starBoom(x, y, R) { G.booms.push({ x, y, R, life: .45, max: .45, rot: rand(0, TAU), pts: R > 100 ? 8 : Math.random() < .5 ? 4 : 6 }); }
 function flashScreen(a) { G.flashA = Math.max(G.flashA, a); }
@@ -1516,7 +1552,8 @@ function smokeSpr(rgb, v) {
   g.globalCompositeOperation = 'destination-in'; const m = g.createRadialGradient(32, 32, 6, 32, 32, 32); m.addColorStop(0, 'rgba(0,0,0,1)'); m.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = m; g.fillRect(0, 0, 64, 64);
   return (SMK[k] = c);
 }
-const SMC = { s: '218,228,238', d: '22,10,28', v: '150,118,215', g: '245,220,165' };
+const SMC = { s: '218,228,238', d: '22,10,28', v: '150,118,215', g: '245,220,165', f: '255,150,80', i: '205,238,255', k: '120,10,24' };
+const BRIGHT = { s: 1, g: 1, f: 1, i: 1 };
 const SMOKE = [], BSM = BRAZ.map(() => ({}));
 const acc = (o, k, rate) => { o[k] = Math.max(0, (o[k] || 0) + rate * FDT); const n = Math.floor(o[k]); o[k] -= n; return Math.min(n, 8); };
 function puff(x, y, c, r, o = {}) {
@@ -1527,7 +1564,7 @@ function puff(x, y, c, r, o = {}) {
 function updSmoke(dt) { for (let i = SMOKE.length - 1; i >= 0; i--) { const s = SMOKE[i]; s.life -= dt; if (s.life <= 0) { SMOKE.splice(i, 1); continue; } s.x += s.vx * dt; s.y += s.vy * dt; s.vx *= .985; s.r += s.gr * dt; } }
 function drawSmoke(bright) {
   for (const s of SMOKE) {
-    if ((s.c === 's' || s.c === 'g') !== bright) continue;
+    if (!!BRIGHT[s.c] !== bright) continue;
     const k = s.life / s.max, a = s.a * Math.min(1, k * 1.5) * Math.min(1, (1 - k) * 6); if (a < .01) continue;
     ctx.globalAlpha = a; ctx.drawImage(smokeSpr(SMC[s.c], s.v), s.x - s.r, s.y - s.r, s.r * 2, s.r * 2);
   }
@@ -1715,10 +1752,10 @@ function drawWorld(T, now) {
   }
   for (const sp of G.spears) {
     const q = sp.kind === 'q', x = sp.x, y = sp.y - 16;
-    sp._rgb = q ? '150,170,255' : sp.kind === 'spirit' ? '120,240,215' : '170,255,235';
+    sp._rgb = q ? '150,170,255' : sp.kind === 'spirit' ? '120,240,215' : G.trail.rgb;
     (sp.tr = sp.tr || []).unshift([x, y]); if (sp.tr.length > 10) sp.tr.pop();
     ctx.save(); ctx.translate(x, y); ctx.rotate(sp.ang); ctx.translate(-(q ? 40 : sp.kind === 'spirit' ? 24 : 32) * .66, 0); spiritSpear(q ? 60 : sp.kind === 'spirit' ? 36 : 48, sp._rgb); ctx.restore();
-    let n = acc(sp, '_sm', q ? 40 : 22); while (n--) puff(x - Math.cos(sp.ang) * 18, y - Math.sin(sp.ang) * 18, 's', q ? 5 : 3.5, { vx: -sp.vx * .04, vy: -sp.vy * .04 - 8, a: .32, life: .55, gr: 20 });
+    let n = acc(sp, '_sm', q ? 40 : 22); while (n--) puff(x - Math.cos(sp.ang) * 18, y - Math.sin(sp.ang) * 18, sp.kind === 'spear' ? G.trail.smoke : 's', q ? 5 : 3.5, { vx: -sp.vx * .04, vy: -sp.vy * .04 - 8, a: .32, life: .55, gr: 20 });
     emit(sp._rgb, x, y, q ? 44 : 24, .8); light(sp.x, sp.y, q ? 150 : 80, .55);
   }
   for (const b of G.eshots) {
@@ -2203,6 +2240,10 @@ function drawFxLit(now) {
       tr.forEach(([x, y], i) => { const w = Math.sin(now * 22 + i * .9 + side) * (1.5 + i * 1.2) * side * (q ? 1.6 : 1); i ? ctx.lineTo(x + nx * w, y + ny * w) : ctx.moveTo(x, y); });
       ctx.strokeStyle = `rgba(${rgb},.5)`; ctx.lineWidth = q ? 2.4 : 1.5; ctx.stroke();
     }
+    const TR = G.trail;
+    if (sp.kind === 'spear' && TR.spark && Math.random() < .45 && G.parts.length < 650) { const [x, y] = tr[Math.min(2, tr.length - 1)]; G.parts.push({ x, y: y + 12, vx: rand(-60, 60) - sp.vx * .05, vy: rand(-60, 30) - sp.vy * .05, life: .35, max: .35, c: TR.spark, s: 2 }); }
+    if (sp.kind === 'spear' && TR.star) for (let i = 2; i < tr.length; i += 3) { const [x, y] = tr[i], s = 4.5 - i * .3; ctx.globalAlpha = 1 - i / tr.length; star4(x, y, s, `hsl(${(now * 200 + i * 40) % 360},90%,80%)`); }
+    ctx.globalAlpha = 1;
   }
   for (const b of G.eshots) { ctx.strokeStyle = 'rgba(255,120,70,.35)'; ctx.lineWidth = b.r * 1.4; ctx.beginPath(); ctx.moveTo(b.x - b.vx * .06, b.y - 12 - b.vy * .06); ctx.lineTo(b.x, b.y - 12); ctx.stroke(); }
   for (const q of G.parts) {
@@ -2443,6 +2484,13 @@ $('btnDaily').addEventListener('click', () => { initAudio(); const di = dailyInf
 $('btnShop').addEventListener('click', () => { renderShop(); show('scrShop'); });
 $('btnAch').addEventListener('click', () => { renderAch(); show('scrAch'); });
 function renderAch() {
+  const TL = $('trailList'), cnt = achCount(), cur = trailById(meta.trail).id; TL.innerHTML = '';
+  $('trailHint').textContent = 'Başarım sayın arttıkça yeni izler açılır (' + cnt + ' başarım).';
+  for (const t of TRAILS) {
+    const b = document.createElement('button'), ok = cnt >= t.need; b.className = t.id === cur ? 'on' : ''; b.disabled = !ok;
+    b.innerHTML = `<i style="background:${t.star ? 'linear-gradient(90deg,#ff9ad0,#9ad8ff,#fff2a8)' : 'rgb(' + t.rgb + ')'};box-shadow:0 0 8px rgb(${t.rgb})"></i>`; b.append(t.n + (ok ? '' : ' · ' + t.need + ' başarım'));
+    b.addEventListener('click', () => { meta.trail = t.id; store.set('ym_meta', meta); sfx('pick'); renderAch(); }); TL.appendChild(b);
+  }
   const L = $('achList'), got = meta.ach || {}; L.innerHTML = '';
   const def = document.createElement('div'); def.className = 'achitem';
   def.innerHTML = `<span>${heroSvg(HEROES[0])}</span><div><h3>Varsayılan</h3><p>Mızrakçının kendi rengi</p></div>`;
