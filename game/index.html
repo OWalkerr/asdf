@@ -1830,7 +1830,7 @@ function drawEnemy(e, T, now) {
   ESX = (1 + .22 * h) * e.face; ESY = (1 - .18 * h) * sp; EX = e.x; EY = e.y;
   if (e.dying || (e.type === 'brute' && e.st === 'aim')) { EX += rand(-2.5, 2.5); EY += rand(-1.5, 1.5); }
   ctx.save(); ctx.translate(EX, EY); ctx.scale(ESX, ESY); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-  if (!sprEnemy(e, r, bob, C, now, fl)) switch (e.type) {
+  if (!atlasEnemy(e, r, now, fl) && !sprEnemy(e, r, bob, C, now, fl)) switch (e.type) {
     case 'ghoul': drawGhoul(e, r, bob, C, now); break;
     case 'wisp': drawWisp(e, r, bob, C, now); break;
     case 'archer': drawArcher(e, r, bob, C, now); break;
@@ -1929,6 +1929,25 @@ function bakeFrame(S, e, r, v, fi) {
   return { c: out, s: sil, x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
 }
 const RIMC = mkc(8, 8), rimg = RIMC.getContext('2d');
+// Enemy atlases baked from 3D models (tools/sprite-render, packed by pack.py). Key: enemy type, or the boss kind.
+// m: { fw, fh, g: ground point, u: px per model unit, l: model length, a: { walk, attack?, die?: { r: row, n: frames, e: eye per frame } } }
+// k: body length in enemy radii, eye: glow color. Types without an atlas keep their baked procedural sprites.
+const EATLAS = {};
+function regAtlas(key, src, m, k, eye) { const img = new Image(); img.decoding = 'async'; img.src = src; EATLAS[key] = { img, m, k, eye: eye || '255,170,90', white: null }; }
+// @atlas-begin
+// @atlas-end
+function atlasEnemy(e, r, now, fl) {
+  const A = EATLAS[e.boss ? (e.kind || 'lord') : e.type]; if (!A || !A.img.complete || !A.img.naturalWidth) return false;
+  const M = A.m, act = e.st === 'aim' || e.st === 'dash' || e.st === 'fuse' || e.st === 'charge';
+  const an = e.dying && M.a.die ? 'die' : act && M.a.attack ? 'attack' : 'walk', F = M.a[an];
+  let ph = an === 'walk' ? (now * 1.1 + e.wob / TAU) % 1 : an === 'die' ? Math.min(.999, Math.max(0, 1 - e.dying / 1.8)) : (now * 1.6 + e.wob / TAU) % 1; if (ph < 0) ph += 1;
+  const fi = Math.min(F.n - 1, (ph * F.n) | 0), s = r * A.k / (M.l * M.u);
+  const sx = fi * M.fw, sy = F.r * M.fh, dx = -M.g[0] * s, dy = -M.g[1] * s, dw = M.fw * s, dh = M.fh * s;
+  ctx.drawImage(A.img, sx, sy, M.fw, M.fh, dx, dy, dw, dh);
+  if (fl) { if (!A.white) A.white = tintOf(A.img, '#ffffff'); ctx.globalAlpha = .9; ctx.drawImage(A.white, sx, sy, M.fw, M.fh, dx, dy, dw, dh); ctx.globalAlpha = 1; }
+  const p = F.e && F.e[fi]; if (p) eye((p[0] - M.g[0]) * s, (p[1] - M.g[1]) * s, A.eye, r * .7, act ? 1 : .75);
+  return true;
+}
 function sprEnemy(e, r, bob, C, now, fl) {
   const S = SPRS[e.type]; if (!S || !SPRBS) return false;
   const v = S.v ? S.v(e) : ''; if (v === null) return false;

@@ -1,0 +1,59 @@
+<!doctype html><html><body style="margin:0;background:#202030">
+<script type="importmap">{"imports":{"three":"./node_modules/three/build/three.module.js","three/addons/":"./node_modules/three/examples/jsm/"}}</script>
+<script type="module">
+// Bakes a rigged GLB into a side-view animation atlas for the game. Configs live in configs.js.
+import * as THREE from 'three'; import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { CFG } from './configs.js';
+const P = new URLSearchParams(location.search), C = CFG[P.get('cfg')];
+const FW = C.fw, FH = C.fh;
+const loader = new GLTFLoader(), g = await loader.loadAsync(C.glb);
+const clips = [...g.animations];
+for (const extra of C.extraClips || []) { const x = await loader.loadAsync(extra); clips.push(...x.animations); }
+const scene = new THREE.Scene(), root = g.scene; scene.add(root);
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true, premultipliedAlpha: false });
+renderer.setPixelRatio(1); renderer.setSize(FW, FH); renderer.setClearColor(0x000000, 0);
+renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = C.exposure ?? .92;
+document.body.appendChild(renderer.domElement);
+root.traverse(o => { if (o.isMesh) { o.frustumCulled = false; const m = o.material; if (C.emissive) { m.emissive = new THREE.Color(C.emissiveColor ?? 0xffffff); m.emissiveMap = m.map; m.emissiveIntensity = C.emissive; } m.metalness = 0; m.roughness = Math.max(.6, m.roughness ?? 1); } });
+scene.add(new THREE.HemisphereLight(0xcfe8ff, 0x2a2450, C.hemi ?? 1.3));
+const key = new THREE.DirectionalLight(0xffffff, 2.4); key.position.set(-2, 4, 1.5); scene.add(key);
+const rim = new THREE.DirectionalLight(C.rimColor ?? 0x9fe8ff, C.rim ?? 3.2); rim.position.set(2, 1.5, -2.5); scene.add(rim);
+const fill = new THREE.DirectionalLight(0xb9a8ff, .8); fill.position.set(-1, -1, 2); scene.add(fill);
+const bones = {}; root.traverse(o => { if (o.isBone) bones[o.name] = o; });
+const rest = {}; for (const n in bones) rest[n] = { q: bones[n].quaternion.clone(), p: bones[n].position.clone() };
+const mixer = new THREE.AnimationMixer(root);
+const tmpQ = new THREE.Quaternion(), tmpR = new THREE.Quaternion();
+const H = {
+  THREE, bones, X: new THREE.Vector3(1, 0, 0), Y: new THREE.Vector3(0, 1, 0), Z: new THREE.Vector3(0, 0, 1),
+  rotW(name, axis, ang) { const b = bones[name]; if (!b || !ang) return; root.updateMatrixWorld(true); b.parent.getWorldQuaternion(tmpQ); tmpR.setFromAxisAngle(axis, ang); const inv = tmpQ.clone().invert(); b.quaternion.premultiply(inv.multiply(tmpR).multiply(tmpQ)); },
+  reset() { mixer.stopAllAction(); for (const n in bones) { bones[n].quaternion.copy(rest[n].q); bones[n].position.copy(rest[n].p); } },
+  clip(ref, u) { const c = typeof ref === 'number' ? clips[ref] : clips.find(c => c.name.includes(ref)); if (!c) throw new Error('clip ' + ref); H.reset(); const a = mixer.clipAction(c); a.reset().play(); mixer.setTime(u * c.duration); },
+  exaggerate(names, k) { for (const n of names) { const b = bones[n]; if (!b) continue; const d = b.quaternion.clone().multiply(rest[n].q.clone().invert()); const ang = 2 * Math.acos(Math.min(1, Math.abs(d.w))); if (ang < 1e-5) continue; const ax = new THREE.Vector3(d.x, d.y, d.z).normalize(); if (d.w < 0) ax.negate(); b.quaternion.copy(new THREE.Quaternion().setFromAxisAngle(ax, ang * k).multiply(rest[n].q)); } },
+};
+// model faces +z by default; the camera looks from -x so the head is on the right of the frame
+const yaw = C.yaw ?? 0; root.rotation.y = yaw; root.updateMatrixWorld(true);
+const pose = (A, u) => { const lift = A.pose ? A.pose(H, u) : (H.clip(A.clip, A.from + (A.to - A.from) * u), 0); root.position.y = lift || 0; root.updateMatrixWorld(true); };
+// fit the orthographic camera to every frame of every animation
+const box = new THREE.Box3(), tb = new THREE.Box3();
+for (const A of C.anims) for (let i = 0; i < A.n; i++) { pose(A, i / A.n); root.traverse(o => { if (o.isSkinnedMesh) { o.skeleton.update(); tb.setFromObject(o, true); box.union(tb); } }); }
+box.min.y = Math.min(box.min.y, 0);
+const EL = (C.elev ?? 22) * Math.PI / 180, size = box.getSize(new THREE.Vector3()), ctr = box.getCenter(new THREE.Vector3());
+const halfZ = size.z / 2, halfY = (size.y * Math.cos(EL) + size.x * Math.sin(EL)) / 2;
+let HH = Math.max(halfY, halfZ * FH / FW) * (C.margin ?? 1.08), HW = HH * FW / FH;
+const cam = new THREE.OrthographicCamera(-HW, HW, HH, -HH, -100, 100), D = size.length() * 4;
+cam.position.set(ctr.x - Math.cos(EL) * D, ctr.y + Math.sin(EL) * D, ctr.z); cam.lookAt(ctr.x, ctr.y, ctr.z); cam.updateMatrixWorld(); cam.updateProjectionMatrix();
+const proj = v => { const p = v.clone().project(cam); return [+(((p.x + 1) / 2) * FW).toFixed(1), +(((1 - p.y) / 2) * FH).toFixed(1)]; };
+const cols = Math.max(...C.anims.map(a => a.n));
+const atlas = document.createElement('canvas'); atlas.width = cols * FW; atlas.height = C.anims.length * FH; const ag = atlas.getContext('2d');
+const meta = { fw: FW, fh: FH, ground: proj(new THREE.Vector3(ctr.x, 0, ctr.z)), unit: FW / (2 * HW), len: size.z, anims: {} };
+C.anims.forEach((A, row) => {
+  const fr = [];
+  for (let i = 0; i < A.n; i++) {
+    pose(A, i / A.n); renderer.render(scene, cam); ag.drawImage(renderer.domElement, i * FW, row * FH);
+    const pts = {}; for (const [k, bn] of Object.entries(C.points || {})) { const v = new THREE.Vector3(); if (bones[bn]) { bones[bn].getWorldPosition(v); pts[k] = proj(v); } }
+    fr.push(pts);
+  }
+  meta.anims[A.name] = { row, n: A.n, fr };
+});
+window.RESULT = { meta, png: atlas.toDataURL('image/png'), bones: Object.keys(bones), clips: clips.map(c => c.name + ' ' + c.duration.toFixed(2)) };
+</script></body></html>
