@@ -83,7 +83,7 @@ svg{display:block}
 #bannerTxt{font-family:var(--f-display);font-size:clamp(30px,8vw,56px);letter-spacing:.14em;color:var(--spear);text-align:center;
   text-shadow:0 0 28px rgba(143,227,207,.7),0 3px 4px #000}
 #banner.on{animation:bannerIn 1.5s ease-out forwards}
-#toast{position:fixed;left:50%;top:calc(64px + env(safe-area-inset-top,0px));transform:translateX(-50%);z-index:20;max-width:calc(100% - 32px);pointer-events:none;
+#toast{position:fixed;left:50%;top:calc(132px + env(safe-area-inset-top,0px));transform:translateX(-50%);z-index:20;max-width:calc(100% - 32px);pointer-events:none;
   background:var(--glass);border:1px solid var(--gold);padding:10px 16px;font-size:14px;font-weight:700;color:#fff1c8;letter-spacing:.04em;text-align:center;opacity:0;box-shadow:0 0 24px rgba(216,178,90,.35)}
 #toast.on{animation:toast 3.2s ease-out forwards}
 @keyframes toast{0%{opacity:0;transform:translate(-50%,-12px)}8%{opacity:1;transform:translate(-50%,0)}85%{opacity:1}100%{opacity:0}}
@@ -304,7 +304,7 @@ p{margin:0;line-height:1.45;color:var(--ink)}
       <li><span class="k"><span>Q</span></span><div><h3>Delici Mızrak</h3><p>Uzun menzilli güçlü atış. Öldürdüğü düşmanın içinden geçip mızraklarını sonraki hedefe aktarır. Atıştan sonra da sekebilirsin.</p></div></li>
       <li><span class="k"><span>R</span></span><div><h3>Kader Çağrısı</h3><p>Ruhun seni havaya kaldırır, sonra tuttuğun yöne (ya da en yakın düşmana) fırlatır. İndiğin yerde düşmanları sersemletir, iter ve 2 mızrak saplar. Havadayken hasar almazsın.</p></div></li>
     </ul>
-    <p class="fine">Her odadan sonra 3 güçten birini seç. Odalar arasında kapı seçersin: Savaş, Elit, Lanetli, Ruh Pınarı ya da Ruh Tüccarı. Her 5. odada bir muhafız var: Kemik Lordu, Gölge Atlı ve Yas Kraliçesi; 20. odadan sonra Yükselmiş halleri birbirlerinin saldırılarını da kullanır. Kraliçe'nin çığlık dalgalarının üstünden sekerek atla. Kalkanlı Şövalye'yi yandan ya da arkadan vur (Delici Mızrak kalkanı deler). Kemik Bombası'nı fitili bitmeden öldürürsen patlaması yalnızca düşmanlara zarar verir. 10. odadan sonra muhafızlar ölünce bir kez ikinci formlarıyla dirilir. Ölünce topladığın ruh parçalarıyla Ruh Sunağı'ndan kalıcı güç al.</p>
+    <p class="fine">Her odadan sonra 3 güçten birini seç. Odalar arasında kapı seçersin: Savaş, Elit, Lanetli, Ruh Pınarı ya da Ruh Tüccarı. Her 5. odada bir muhafız var: Kemik Lordu, Gölge Atlı, Yas Kraliçesi ve Kan Kardinali; 20. odadan sonra Yükselmiş halleri birbirlerinin saldırılarını da kullanır. Kraliçe'nin çığlık dalgalarının üstünden sekerek atla. Kalkanlı Şövalye'yi yandan ya da arkadan vur (Delici Mızrak kalkanı deler). Kemik Bombası'nı fitili bitmeden öldürürsen patlaması yalnızca düşmanlara zarar verir. 10. odadan sonra muhafızlar ölünce bir kez ikinci formlarıyla dirilir. Ölünce topladığın ruh parçalarıyla Ruh Sunağı'ndan kalıcı güç al.</p>
     <div class="btns"><button class="btn" data-back>Geri</button></div>
   </div>
 </section>
@@ -439,6 +439,7 @@ const MTHEME = {
   room:  { bpm: 100, scale: MSCALE, pat: [0, 4, 2, 4, 1, 4, 2, 5, 0, 4, 2, 4, 3, 5, 4, 2], kick: s => s % 4 === 0, wave: 'triangle', vol: .033, kv: .08 },
   lord:  { bpm: 116, scale: MSCALE.map(f => f / 2), pat: [0, 0, 3, 0, 5, 0, 3, 2, 0, 0, 3, 0, 6, 5, 3, 2], kick: s => s % 2 === 0, wave: 'sawtooth', vol: .03, kv: .17 },
   rider: { bpm: 150, scale: MSCALE, pat: [0, 2, 4, 0, 2, 5, 0, 2, 4, 1, 3, 5, 0, 2, 7, 5], kick: s => s % 3 === 0, wave: 'square', vol: .022, kv: .15 },
+  cardinal: { bpm: 96, scale: [220, 233, 277, 294, 330, 349, 415, 440], pat: [0, 4, 7, 4, 0, 5, 6, 5, 0, 4, 7, 4, 3, 2, 1, 2], kick: s => s % 4 === 0 || s % 16 === 14, wave: 'sawtooth', vol: .028, kv: .14 },
   queen: { bpm: 84, scale: [330, 370, 415, 466, 523, 587, 659, 740], pat: [0, 2, 4, 6, 7, 6, 4, 2, 1, 3, 5, 7, 6, 4, 3, 1], kick: s => s % 8 === 0, wave: 'sine', vol: .045, kv: .1 },
 };
 function schedMusic() {
@@ -627,6 +628,7 @@ function dailyInfo() {
 const ACH = [
   { id: 'lord', n: 'Kemik Yıkan', d: 'Kemik Lordu\'nu yen.', skin: { n: 'Kemik Beyazı', cloak: ['#d9d2c0', '#857d68', '#2a261e'], rim: '255,240,205' } },
   { id: 'rider', n: 'Atlıyı Düşüren', d: 'Gölge Atlı\'yı yen.', skin: { n: 'Gece Moru', cloak: ['#7a5cc8', '#33246a', '#120a2a'], rim: '200,170,255' } },
+  { id: 'cardinal', n: 'Kanı Durduran', d: 'Kan Kardinali\'ni yen.', skin: { n: 'Kardinal Kızılı', cloak: ['#b3192c', '#5a0814', '#1e0206'], rim: '255,200,140' } },
   { id: 'queen', n: 'Yası Bitiren', d: 'Yas Kraliçesi\'ni yen.', skin: { n: 'Yas Gümüşü', cloak: ['#c8cede', '#5e6478', '#1c1f2a'], rim: '235,240,255' } },
   { id: 'combo50', n: 'Durdurulamaz', d: '50 seri yap.', skin: { n: 'Altın Yemin', cloak: ['#e0b858', '#7a5a1e', '#2a1e08'], rim: '255,220,140' } },
   { id: 'rend5', n: 'Toplu Söküm', d: 'Tek Sökümle 5 düşman öldür.', skin: { n: 'Kan Kırmızısı', cloak: ['#c8404e', '#5e1420', '#22060c'], rim: '255,150,160' } },
@@ -665,7 +667,7 @@ function newRun(daily) {
   G = { s, hero, skin, ups: {}, room: 0, kills: 0, time: 0, shards: 0, rerolls: meta.reroll, hops: 0, phase: 'fight',
     p: { x: 0, y: 0, hp: s.maxHp, state: 'idle', t: 0, atkCd: .3, face: -Math.PI / 2, target: null, iT: 0, hvx: 0, hvy: 0, buf: false,
       lastHop: -9, rStacks: 0, ghosts: [], qCd: 0, rendCd: 0, rCd: 0, qQueued: false, shots: 0, spA: 0, spCd: [], trailAcc: 0 },
-    enemies: [], spears: [], eshots: [], parts: [], texts: [], trails: [], spawns: [], hazards: [], hitstop: 0, gibs: [], decals: [], booms: [], flashA: 0, combo: 0, comboT: 0, zp: 0, hurtA: 0, twinkles: [], rings: [], orbs: [], hitstars: [], impactT: 0, speedT: 0, beamT: 0, lastKill: null, slowT: 0, slowS: 1, roomType: 'fight', pending: 0, waves: [], waveIdx: 0, waveT: 0, shake: 0, clearT: 0,
+    enemies: [], spears: [], eshots: [], parts: [], texts: [], trails: [], spawns: [], hazards: [], hitstop: 0, gibs: [], decals: [], booms: [], flashA: 0, combo: 0, comboT: 0, zp: 0, hurtA: 0, twinkles: [], rings: [], erupts: [], orbs: [], hitstars: [], impactT: 0, speedT: 0, beamT: 0, lastKill: null, slowT: 0, slowS: 1, roomType: 'fight', pending: 0, waves: [], waveIdx: 0, waveT: 0, shake: 0, clearT: 0,
     cam: { x: 0, y: 0 } };
   G.mod = {}; G.daily = daily || null; G.rng = daily ? mulberry32(daily.seed) : null;
   if (daily && daily.mod.g) daily.mod.g(G.mod);
@@ -680,13 +682,14 @@ function roomWaves(r) {
   const pool = ['ghoul', 'ghoul', 'wisp'];
   if (r >= 2) pool.push('archer'); if (r >= 3) pool.push('brute'); if (r >= 4) pool.push('spitter');
   if (r >= 6) pool.push('bomb'); if (r >= 7) pool.push('knight');
+  if (r >= 10 && r < 20) pool.push('frost', 'frost'); if (r >= 20) pool.push('bat', 'bat');
   if (r >= 7) pool.push('archer', 'brute', 'spitter'); if (r >= 9) pool.push('knight', 'bomb');
-  const cost = { ghoul: 1, wisp: 1.2, archer: 1.5, brute: 3, spitter: 2.5, knight: 2.5, bomb: 1.4 };
+  const cost = { ghoul: 1, wisp: 1.2, archer: 1.5, brute: 3, spitter: 2.5, knight: 2.5, bomb: 1.4, frost: 1.3, bat: 1.1 };
   const n = 2 + (r >= 3) + (r >= 14);
   const waves = [];
   for (let i = 0; i < n; i++) {
     let b = 4.5 + r * 1.5 + i * 1.5; const w = [];
-    while (b > 0) { const t = pool[Math.floor(crand() * pool.length)]; if (t === 'wisp') w.push('wisp', 'wisp', 'wisp'); else if (t === 'bomb') w.push('bomb', 'bomb'); else w.push(t); b -= cost[t]; }
+    while (b > 0) { const t = pool[Math.floor(crand() * pool.length)]; if (t === 'wisp') w.push('wisp', 'wisp', 'wisp'); else if (t === 'bomb') w.push('bomb', 'bomb'); else if (t === 'bat') w.push('bat', 'bat', 'bat'); else w.push(t); b -= cost[t]; }
     waves.push(w);
   }
   return waves;
@@ -694,10 +697,10 @@ function roomWaves(r) {
 function chestWaves(r) { const w = roomWaves(Math.max(1, r - 2)); return [['chest', ...w[0].slice(0, Math.ceil(w[0].length * .6))]]; }
 function bossWaves(r) { const esc = r >= 10 ? ['archer', 'archer', 'spitter'] : ['ghoul', 'ghoul', 'archer']; return [['boss'], esc]; }
 
-const bossKind = r => ['lord', 'rider', 'queen'][(Math.floor(r / 5) - 1) % 3];
-const bossName = r => ({ lord: 'Kemik Lordu', rider: 'Gölge Atlı', queen: 'Yas Kraliçesi' })[bossKind(r)];
+const bossKind = r => ['lord', 'rider', 'queen', 'cardinal'][(Math.floor(r / 5) - 1) % 4];
+const bossName = r => ({ lord: 'Kemik Lordu', rider: 'Gölge Atlı', queen: 'Yas Kraliçesi', cardinal: 'Kan Kardinali' })[bossKind(r)];
 function nextRoom(type = 'fight') {
-  G.room++; const r = G.room, boss = r % 5 === 0; if (themeFor(r) !== themeFor(r - 1)) setTimeout(() => toast('Yeni bölge: ' + themeFor(r).n), 1600); G.roomDmg = 0; if (r >= 20) unlock('room20'); if (G.daily && r >= 10) unlock('daily10'); G.roomType = boss ? 'boss' : type; G.hazards.length = 0; G.gibs.length = 0; G.decals.length = 0; G.booms.length = 0; G.orbs.length = 0; G.twinkles.length = 0; G.rings.length = 0; G.hitstars.length = 0;
+  G.room++; const r = G.room, boss = r % 5 === 0; if (themeFor(r) !== themeFor(r - 1)) setTimeout(() => toast('Yeni bölge: ' + themeFor(r).n), 1600); G.roomDmg = 0; if (r >= 20) unlock('room20'); if (G.daily && r >= 10) unlock('daily10'); G.roomType = boss ? 'boss' : type; G.hazards.length = 0; G.gibs.length = 0; G.decals.length = 0; G.booms.length = 0; G.orbs.length = 0; G.twinkles.length = 0; G.rings.length = 0; G.erupts.length = 0; G.p.chillT = 0; G.hitstars.length = 0;
   G.enemies.length = 0; G.eshots.length = 0; G.spears.length = 0; G.spawns.length = 0; G.trails.length = 0;
   G.p.x = 0; G.p.y = 0; G.p.state = 'idle'; G.p.qQueued = false;
   G.waves = boss ? bossWaves(r) : type === 'chest' ? chestWaves(r) : roomWaves(r); G.waveIdx = 0; G.waveT = 1.1; G.phase = 'fight'; G.clearT = 0; G.isBoss = boss;
@@ -712,6 +715,8 @@ const EDEF = {
   brute:   { hp: 170, r: 25, spd: 58,  dmg: 18 },
   spitter: { hp: 85,  r: 18, spd: 40,  dmg: 8 },
   knight:  { hp: 130, r: 18, spd: 66,  dmg: 14 },
+  frost:   { hp: 70,  r: 16, spd: 80,  dmg: 11 },
+  bat:     { hp: 26,  r: 10, spd: 150, dmg: 7 },
   bomb:    { hp: 22,  r: 11, spd: 150, dmg: 0 },
   chest:   { hp: 70,  r: 18, spd: 0,   dmg: 0 },
   mimic:   { hp: 300, r: 22, spd: 80,  dmg: 16 },
@@ -727,6 +732,7 @@ function makeEnemy(type, x, y, elite) {
 function makeEnemyFull(type, x, y, elite) {
   const e = makeEnemy(type, x, y), r = G.room;
   if (e.boss) { e.kind = bossKind(r); e.name = bossName(r); e.t = 1.2; if (e.kind === 'rider') { e.spd *= 1.3; e.r = 40; e.hp *= .9; e.maxHp = e.hp; } if (e.kind === 'queen') { e.r = 38; e.spd *= 1.1; e.hp *= .95; e.maxHp = e.hp; e.fade = 1; }
+    if (e.kind === 'cardinal') { e.r = 40; e.spd *= .85; }
     if (Math.floor(r / 5) >= 4) { e.asc = true; e.name = 'Yükselmiş ' + e.name; e.hp *= 1.2; e.maxHp = e.hp; } }
   if (elite) {
     e.elite = ['shield', 'swift', 'burst'][Math.floor(crand() * 3)];
@@ -792,7 +798,7 @@ function startHop(dx, dy) {
   // Martial Poise: dashing toward the target is shorter, sideways is the baseline, backwards is ~25% longer.
   const tx = Math.cos(p.face), ty = Math.sin(p.face), dot = dx * tx + dy * ty;
   const f = dot >= 0 ? 1 - .4 * dot : 1 + .25 * -dot;
-  const dist = s.hopDist * f;
+  const dist = s.hopDist * f * (p.chillT > 0 ? .8 : 1);
   p.hvx = dx * dist / s.hopTime; p.hvy = dy * dist / s.hopTime; p.state = 'hop'; p.t = s.hopTime; p.buf = false;
   p.rStacks = G.time - p.lastHop < 1.6 ? Math.min(5, p.rStacks + 1) : 1; p.lastHop = G.time; G.hops++; if (s.dance) p.danceT = .8; if (G.hops >= 500) unlock('hop500');
   if (G.room === 1 && G.hops === 4) $('hint').style.opacity = 0;
@@ -876,7 +882,7 @@ function bombBlast(e, hitsPlayer) {
 }
 function killEnemy(e, src, crit) {
   if (e.boss && !e.dying && !e.form2 && G.room >= 10) {
-    e.form2 = true; e.hp = 1; e.reform = 1.4; e.stacks = 0; G.eshots.length = 0; G.rings.length = 0; G.hazards.length = 0;
+    e.form2 = true; e.hp = 1; e.reform = 1.4; e.stacks = 0; G.eshots.length = 0; G.rings.length = 0; G.erupts.length = 0; G.hazards.length = 0;
     flashScreen(.5); slowmo(.6, .35); G.shake = 16; G.speedT = .8; sfx('bigboom'); banner('İkinci form'); twinkleWorld(e.x, e.y - e.r, Math.min(W, H) * .6);
     return;
   }
@@ -884,7 +890,7 @@ function killEnemy(e, src, crit) {
     // Metal Slug style boss death: freeze in place, chain of explosions, then the final blast
     e.dying = 1.8; e.hp = 0; e.stacks = 0; G.kills++; G.shards += 30;
     G.enemies.forEach(o => { if (!o.dead && o !== e) { o.dead = true; shatter(o, false); } });
-    G.eshots.length = 0; G.spawns.length = 0; G.hazards.length = 0; G.rings.length = 0; G.waveIdx = G.waves.length;
+    G.eshots.length = 0; G.spawns.length = 0; G.hazards.length = 0; G.rings.length = 0; G.erupts.length = 0; G.waveIdx = G.waves.length;
     slowmo(1.4, .3); flashScreen(.6); G.shake = 22; G.speedT = 1.8; buzz([60, 40, 60]); sfx('bigboom');
     return;
   }
@@ -904,7 +910,7 @@ function killEnemy(e, src, crit) {
   shatter(e, !!e.elite || e.type === 'brute');
   if (launch) popFlare(e);
 }
-const GIBC = { ghoul: ['#7d3a3f', '#e0525f', '#ffd9c9'], wisp: ['#e98a5a', '#ffd27a'], archer: ['#5d3348', '#e0525f', '#c98aa8'], brute: ['#4a2a2c', '#d9cba8', '#8a5a4a'],
+const GIBC = { frost: ['#4a7a92', '#bfe6f5', '#e8f8ff'], bat: ['#3a0a12', '#a8202e', '#ff6a7a'], cardinal: ['#7a1020', '#d8b25a', '#f2e6d8'], ghoul: ['#7d3a3f', '#e0525f', '#ffd9c9'], wisp: ['#e98a5a', '#ffd27a'], archer: ['#5d3348', '#e0525f', '#c98aa8'], brute: ['#4a2a2c', '#d9cba8', '#8a5a4a'],
   spitter: ['#3c2e22', '#e98a5a', '#ff9a6a'], boss: ['#3a1f24', '#d9cba8', '#ffd27a'], rider: ['#271d36', '#b59cff', '#d9cba8'], queen: ['#7a68b8', '#e8e0ff', '#3a2a5a'], player: ['#1d4a44', '#8fe3cf', '#e4fbf3'], knight: ['#3a3f52', '#9aa6c8', '#b9c9ff'], chest: ['#7a4a22', '#d8b25a', '#3a2410'], mimic: ['#7a4a22', '#d8b25a', '#c43a4a'], bomb: ['#e2d5b2', '#ff9a50', '#3a2a18'] };
 function shatter(e, big) {
   for (let i = 0; i < (big ? 12 : 6); i++) puff(e.x + rand(-.5, .5) * e.r, e.y - e.r, e.type === 'player' ? 's' : 'd', e.r * .6, { vx: rand(-70, 70), vy: rand(-70, -10), a: .5, life: rand(.9, 1.5) });
@@ -949,14 +955,14 @@ function hurt(d, src) {
   if (p.hp <= 0) { p.hp = 0; gameOver(); }
 }
 let SHOOTER = null;
-const ENAME = e => e.boss ? e.name : ({ ghoul: 'Hortlak', wisp: 'Ateş Ruhu', archer: 'Ruh Okçusu', brute: 'Kemik Dev', spitter: 'Tükürgen', knight: 'Kalkanlı Şövalye', bomb: 'Kemik Bombası', mimic: 'Mimik', chest: 'Sandık' })[e.type] + (e.elite ? ' (elit)' : '');
+const ENAME = e => e.boss ? e.name : ({ ghoul: 'Hortlak', wisp: 'Ateş Ruhu', archer: 'Ruh Okçusu', brute: 'Kemik Dev', spitter: 'Tükürgen', knight: 'Kalkanlı Şövalye', bomb: 'Kemik Bombası', mimic: 'Mimik', chest: 'Sandık', frost: 'Buz Hortlağı', bat: 'Kan Yarasası' })[e.type] + (e.elite ? ' (elit)' : '');
 function eshot(x, y, ang, spd, dmg, r = 7) { G.eshots.push({ x, y, vx: Math.cos(ang) * spd, vy: Math.sin(ang) * spd, dmg, r, life: 4, src: SHOOTER ? ENAME(SHOOTER) + ' mermisi' : undefined }); }
 
 // ---------- update ----------
 function update(dt) {
   const p = G.p, s = G.s; G.time += dt; const ox0 = p.x, oy0 = p.y;
   if (G.comboT > 0) { G.comboT -= dt; if (G.comboT <= 0) G.combo = 0; }
-  p.danceT = (p.danceT || 0) - dt; p.atkCd -= dt; p.iT -= dt; p.qCd -= dt; p.rendCd -= dt; p.rCd -= dt; G.shake = Math.max(0, G.shake - 40 * dt);
+  p.danceT = (p.danceT || 0) - dt; p.chillT = (p.chillT || 0) - dt; p.atkCd -= dt; p.iT -= dt; p.qCd -= dt; p.rendCd -= dt; p.rCd -= dt; G.shake = Math.max(0, G.shake - 40 * dt);
   if (s.regen && G.phase === 'fight') p.hp = Math.min(s.maxHp, p.hp + s.regen * dt);
   const inp = inputDir();
 
@@ -965,7 +971,7 @@ function update(dt) {
     G.waveT -= dt;
     const alive = G.enemies.filter(e => !e.dead).length;
     if (G.waveIdx < G.waves.length && G.spawns.length === 0 && (alive <= 2 || G.waveT <= 0)) spawnWave();
-    if (G.waveIdx >= G.waves.length && alive === 0 && G.spawns.length === 0) { G.phase = 'clear'; G.clearT = 1.6; if (G.room >= 5 && !G.isBoss && !G.roomDmg) unlock('nohit'); G.eshots.length = 0; G.rings.length = 0;
+    if (G.waveIdx >= G.waves.length && alive === 0 && G.spawns.length === 0) { G.phase = 'clear'; G.clearT = 1.6; if (G.room >= 5 && !G.isBoss && !G.roomDmg) unlock('nohit'); G.eshots.length = 0; G.rings.length = 0; G.erupts.length = 0;
       if (!G.isBoss && G.lastKill) { twinkleWorld(G.lastKill.x, G.lastKill.y, Math.min(W, H) * .5, .15); slowmo(.7, .25); G.zp = Math.max(G.zp, .08); }
       G.hazards.length = 0; banner('Temizlendi'); G.shards += 2 + Math.floor(G.room / 3) + (G.roomType === 'elite' ? 5 : G.roomType === 'cursed' ? 8 : 0); }
   } else if (G.phase === 'clear') { G.clearT -= dt; if (G.clearT <= 0) showDraft(); }
@@ -979,7 +985,7 @@ function update(dt) {
         p.face = e ? Math.atan2(e.y - p.y, e.x - p.x) : inp.m > .2 ? Math.atan2(inp.y, inp.x) : p.face; p.buf = false; break; }
       const tgt = p.atkCd <= 0 && G.phase === 'fight' ? nearestEnemy(p.x, p.y, s.range) : null;
       if (tgt) { p.state = 'windup'; p.t = Math.max(.07, .3 / (s.as * (p.danceT > 0 ? 1.45 : 1))); p.target = tgt; p.buf = false; p.face = Math.atan2(tgt.y - p.y, tgt.x - p.x); }
-      else if (inp.m > .12) { const sp = s.walk * inp.m; p.x += inp.x * sp * dt; p.y += inp.y * sp * dt; p.face = Math.atan2(inp.y, inp.x); }
+      else if (inp.m > .12) { const sp = s.walk * inp.m * (p.chillT > 0 ? .6 : 1); p.x += inp.x * sp * dt; p.y += inp.y * sp * dt; p.face = Math.atan2(inp.y, inp.x); }
       break;
     }
     case 'windup': case 'qcast': {
@@ -1030,6 +1036,11 @@ function update(dt) {
     const g = G.rings[i]; g.r += g.spd * dt;
     if (!g.hit && Math.abs(hyp(p.x - g.x, p.y - g.y) - g.r) < g.w + 8 && pz(p) < 6 && !invuln()) { g.hit = true; hurt(g.dmg, 'Çığlık dalgası'); }
     if (g.r > 1900) G.rings.splice(i, 1);
+  }
+  // blood eruptions: telegraphed circles that burst
+  for (let i = G.erupts.length - 1; i >= 0; i--) {
+    const u = G.erupts[i]; u.t -= dt;
+    if (u.t <= 0) { if (hyp(p.x - u.x, p.y - u.y) < u.r + 8) hurt(u.dmg, 'Kan fışkırması'); G.parts.push({ ring: true, x: u.x, y: u.y, r: u.r, life: .3, max: .3, c: '#ff4a5a' }); burst(u.x, u.y, '#ff4a5a', 12, 260, .45, 3); for (let k = 0; k < 4; k++) puff(u.x, u.y - 10, 'd', 12, { vy: rand(-90, -40), vx: rand(-30, 30), a: .5 }); G.shake = Math.max(G.shake, 5); G.erupts.splice(i, 1); }
   }
   // boss hazards
   for (let i = G.hazards.length - 1; i >= 0; i--) { const z = G.hazards[i]; z.life -= dt; if (z.life <= 0) { G.hazards.splice(i, 1); continue; } if (z.life < z.max - .25 && hyp(z.x - p.x, z.y - p.y) < z.r + 9) hurt(z.dmg, 'Gölge Atlı izi'); }
@@ -1083,9 +1094,10 @@ function update(dt) {
   // enemy shots
   for (let i = G.eshots.length - 1; i >= 0; i--) {
     const b = G.eshots[i];
+    if (b.orb) { b.oa += b.ow * dt; b.orad += b.ovr * dt; b.x = b.orb.x + Math.cos(b.oa) * b.orad; b.y = b.orb.y + Math.sin(b.oa) * b.orad; }
     if (b.home) { const cur = Math.atan2(b.vy, b.vx), da = ((Math.atan2(p.y - b.y, p.x - b.x) - cur + Math.PI * 3) % TAU) - Math.PI, tr = clamp(da, -b.home * dt, b.home * dt), v = hyp(b.vx, b.vy); b.vx = Math.cos(cur + tr) * v; b.vy = Math.sin(cur + tr) * v; }
     b.x += b.vx * dt; b.y += b.vy * dt; b.life -= dt;
-    if (hyp(b.x - p.x, b.y - p.y) < b.r + 11 && !invuln()) { hurt(b.dmg, b.src || (b.soul ? 'Ruh mermisi' : 'Muhafız mermisi')); G.eshots.splice(i, 1); continue; }
+    if (hyp(b.x - p.x, b.y - p.y) < b.r + 11 && !invuln()) { hurt(b.dmg, b.src || (b.soul ? 'Ruh mermisi' : b.blood ? 'Kan bıçağı' : 'Muhafız mermisi')); if (b.ice) p.chillT = 1.6; G.eshots.splice(i, 1); continue; }
     if (b.life <= 0 || hyp(b.x, b.y) > ARENA + 30) G.eshots.splice(i, 1);
   }
   updFx(dt); updFlares(dt);
@@ -1141,6 +1153,18 @@ function updEnemy(e, dt) {
       else if (e.st === 'rest') { if (e.t <= 0) { e.st = 'walk'; e.cd = rand(2.8, 3.8); } }
       break;
     }
+    case 'frost': {
+      mx = nx; my = ny;
+      if (e.cd <= 0 && d < 230) { e.cd = rand(2.6, 3.4); const a = Math.atan2(dy, dx); for (let i = -1; i <= 1; i++) { eshot(e.x, e.y, a + i * .25, 230, e.dmg * .6, 6); G.eshots[G.eshots.length - 1].ice = true; } for (let i = 0; i < 4; i++) puff(e.x + nx * 20, e.y + ny * 20 - 10, 's', 6, { vx: nx * 90 + rand(-20, 20), vy: ny * 90 - 10, a: .45, life: .6 }); }
+      break;
+    }
+    case 'bat': {
+      e.wob += dt * 3;
+      if (e.st === 'walk') { const a = Math.atan2(e.y - p.y, e.x - p.x) + dt * 1.8; mx = p.x + Math.cos(a) * 150 - e.x; my = p.y + Math.sin(a) * 150 - e.y; if (e.cd <= 0 && d < 260) { e.st = 'aim'; e.t = .35; } }
+      else if (e.st === 'aim') { if (e.t <= 0) { e.st = 'dive'; e.t = .35; e.ax = nx; e.ay = ny; } }
+      else if (e.st === 'dive') { e.x += e.ax * 520 * dt; e.y += e.ay * 520 * dt; if (e.t <= 0) { e.st = 'walk'; e.cd = rand(1.4, 2.4); } }
+      break;
+    }
     case 'knight': {
       // turns its shield toward the player; only flanks and the back take spears
       const want = Math.atan2(dy, dx), da = ((want - e.ang + Math.PI * 3) % TAU) - Math.PI; e.ang += clamp(da, -2.2 * dt, 2.2 * dt);
@@ -1174,7 +1198,7 @@ function updEnemy(e, dt) {
     case 'boss':
       if (e.xst) bossExtra(e);
       else if (e.asc && e.st === 'walk' && e.t <= 0 && Math.random() < .4) startExtra(e);
-      else (e.kind === 'rider' ? riderAI : e.kind === 'queen' ? queenAI : bossAI)(e, dt, nx, ny, d);
+      else (e.kind === 'rider' ? riderAI : e.kind === 'queen' ? queenAI : e.kind === 'cardinal' ? cardinalAI : bossAI)(e, dt, nx, ny, d);
       return finishEnemy(e, dt, 0, 0, sp, d, e.kind === 'queen' && e.fade < .6);
   }
   finishEnemy(e, dt, mx, my, sp, d);
@@ -1183,10 +1207,30 @@ function finishEnemy(e, dt, mx, my, sp, d, stunned) {
   const p = G.p; const ml = hyp(mx, my); if (ml > 0) { e.x += mx / ml * sp * dt; e.y += my / ml * sp * dt; }
   e.x += e.kx * dt; e.y += e.ky * dt; e.kx *= Math.pow(.02, dt); e.ky *= Math.pow(.02, dt);
   const l = hyp(e.x, e.y); if (l > ARENA - e.r) { e.x *= (ARENA - e.r) / l; e.y *= (ARENA - e.r) / l; }
-  if (d < e.r + 12 && !stunned && e.dmg > 0 && e.st !== 'leap') hurt(e.dmg, ENAME(e));
+  if (d < e.r + 12 && !stunned && e.dmg > 0 && e.st !== 'leap') {
+    const before = p.hp; hurt(e.dmg, ENAME(e));
+    if (p.hp < before && e.type === 'frost') p.chillT = 1.6;
+    if (p.hp < before && e.type === 'bat') { const hl = e.dmg * 3; e.hp += hl; e.maxHp = Math.max(e.maxHp, e.hp); txt(e.x, e.y - 30, '+' + Math.round(hl), '#ff6a7a'); e.st = 'walk'; e.cd = 1.2; }
+  }
 }
 // Ascended bosses (room 20+) borrow one attack from the other guardians.
-const EXTRA = { lord: ['xring', 'xlances'], rider: ['xring', 'xsouls'], queen: ['xlances', 'xnova'] };
+const EXTRA = { lord: ['xring', 'xlances'], rider: ['xring', 'xsouls'], queen: ['xlances', 'xnova'], cardinal: ['xring', 'xsouls'] };
+function cardinalAI(e, dt, nx, ny, d) {
+  const p = G.p, rage = e.hp < e.maxHp * .5, sp = e.spd * (1 - e.slowAmt * .5);
+  if (e.st === 'walk') {
+    const s2 = d > 280 ? 1 : d < 180 ? -1 : 0; e.x += (nx * s2 - ny * .4) * sp * dt; e.y += (ny * s2 + nx * .4) * sp * dt;
+    if (e.t <= 0) {
+      const o = ['blades', 'pools', 'cross', 'pools']; if (G.enemies.length < 7) o.push('bats');
+      e.st = o[Math.floor(Math.random() * o.length)];
+      if (e.st === 'blades') e.t = .6; if (e.st === 'pools') e.t = .45; if (e.st === 'cross') { e.t = .5; e.n = 2; e.ang = rand(0, TAU); }
+      if (e.st === 'bats') { e.t = .8; for (let i = 0; i < 3; i++) { const a = rand(0, TAU); G.spawns.push({ x: e.x + Math.cos(a) * 80, y: e.y + Math.sin(a) * 80, type: 'bat', t: .7 }); } }
+    }
+  }
+  else if (e.st === 'blades') { if (e.t <= 0) { const n = rage ? 8 : 6; for (let i = 0; i < n; i++) G.eshots.push({ x: e.x, y: e.y, vx: 0, vy: 0, dmg: e.dmg * .55, r: 8, life: 3.6, orb: e, oa: i * TAU / n, orad: e.r, ow: rage ? 2.6 : 2.1, ovr: 115, blood: true, src: 'Kan bıçağı' }); sfx('scream'); e.st = 'walk'; e.t = rand(1.8, 2.4); } }
+  else if (e.st === 'pools') { if (e.t <= 0) { const n = rage ? 6 : 4; for (let i = 0; i < n; i++) { const a = rand(0, TAU), rr = i === 0 ? 0 : rand(70, 210); G.erupts.push({ x: p.x + Math.cos(a) * rr, y: p.y + Math.sin(a) * rr, r: 62, t: 1.05, max: 1.05, dmg: e.dmg * .9 }); } e.st = 'walk'; e.t = rand(1.6, 2.2); } }
+  else if (e.st === 'cross') { if (e.t <= 0) { for (let k = 0; k < 4; k++) { const a = e.ang + k * Math.PI / 2; for (let j = 0; j < 4; j++) G.eshots.push({ x: e.x - Math.cos(a) * j * 28, y: e.y - Math.sin(a) * j * 28, vx: Math.cos(a) * 300, vy: Math.sin(a) * 300, dmg: e.dmg * .55, r: 7, life: 3, blood: true, src: 'Kan haçı' }); } e.ang += Math.PI / 4; e.n--; if (e.n > 0) e.t = .55; else { e.st = 'walk'; e.t = rand(1.6, 2.2); } } }
+  else if (e.st === 'bats') { if (e.t <= 0) { e.st = 'walk'; e.t = rand(1.5, 2); } }
+}
 function startExtra(e) {
   const o = EXTRA[e.kind] || EXTRA.lord; e.xst = o[Math.floor(Math.random() * o.length)]; e.t = .8;
   if (e.xst === 'xlances') { const n = 5, base = Math.atan2(G.p.y - e.y, G.p.x - e.x); e.lanes = []; for (let i = 0; i < n; i++) e.lanes.push(base + (i - (n - 1) / 2) * .3); }
@@ -1624,6 +1668,12 @@ function drawWorld(T, now) {
     ctx.fillStyle = `rgba(50,24,80,${.55 * a})`; ctx.beginPath(); ctx.ellipse(z.x, z.y, z.r, z.r * .7, 0, 0, TAU); ctx.fill();
     if (arm) { emit('170,120,255', z.x, z.y - 8, 30 + Math.sin(now * 20 + z.x) * 5, .6 * a); light(z.x, z.y, 60, .4 * a); }
   }
+  for (const u of G.erupts) {
+    const k = clamp(1 - u.t / u.max, 0, 1); ctx.save(); ctx.translate(u.x, u.y); ctx.scale(1, .55);
+    ctx.fillStyle = `rgba(150,10,24,${.25 + .35 * k})`; ctx.beginPath(); ctx.arc(0, 0, u.r, 0, TAU); ctx.fill();
+    ctx.strokeStyle = `rgba(255,80,90,${.5 + .5 * k})`; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(0, 0, u.r * k, 0, TAU); ctx.stroke(); ctx.restore();
+    emit('230,20,40', u.x, u.y, u.r * (1 + k), .2 + .4 * k);
+  }
   for (const sp of G.spawns) drawSpawn(sp, now);
   for (const e of G.enemies) drawTelegraph(e, now);
   for (const e of G.enemies) {
@@ -1672,8 +1722,8 @@ function drawWorld(T, now) {
     emit(sp._rgb, x, y, q ? 44 : 24, .8); light(sp.x, sp.y, q ? 150 : 80, .55);
   }
   for (const b of G.eshots) {
-    ctx.fillStyle = b.soul ? '#e6d8ff' : '#ffb08a'; ctx.beginPath(); ctx.arc(b.x, b.y - 12, b.r, 0, TAU); ctx.fill();
-    emit(b.soul ? '170,120,255' : '255,110,60', b.x, b.y - 12, b.r * 4.2, .8); emit('255,245,225', b.x, b.y - 12, b.r * 1.3, 1); light(b.x, b.y, 70, .45);
+    ctx.fillStyle = b.soul ? '#e6d8ff' : b.ice ? '#e0f6ff' : b.blood ? '#ff8a90' : '#ffb08a'; ctx.beginPath(); ctx.arc(b.x, b.y - 12, b.r, 0, TAU); ctx.fill();
+    emit(b.soul ? '170,120,255' : b.ice ? '120,200,255' : b.blood ? '230,20,40' : '255,110,60', b.x, b.y - 12, b.r * 4.2, .8); emit('255,245,225', b.x, b.y - 12, b.r * 1.3, 1); light(b.x, b.y, 70, .45);
   }
   for (const b of G.booms) light(b.x, b.y, b.R * 3, Math.min(1, b.life / b.max * 1.6));
   if (G.phase !== 'over') light(p.x, p.y - 10, 330, .95);
@@ -1729,9 +1779,11 @@ function drawEnemy(e, T, now) {
     case 'brute': drawBrute(e, r, bob, C, now); break;
     case 'spitter': drawSpitter(e, r, bob, C, now); break;
     case 'knight': drawKnight(e, r, bob, C, now); break;
+    case 'frost': drawGhoul(e, r, bob, c => C(FROSTC[c] || c), now); drawFrostSpikes(e, r, bob, C, now); break;
+    case 'bat': drawBat(e, r, bob, C, now); break;
     case 'bomb': drawBomb(e, r, bob, C, now); break;
     case 'chest': case 'mimic': drawChest(e, r, bob, C, now); break;
-    case 'boss': if (e.kind === 'rider') drawRider(e, r, bob, C, now); else if (e.kind === 'queen') drawQueen(e, r, bob, C, now); else drawLord(e, r, bob, C, now); break;
+    case 'boss': if (e.kind === 'rider') drawRider(e, r, bob, C, now); else if (e.kind === 'queen') drawQueen(e, r, bob, C, now); else if (e.kind === 'cardinal') drawCardinal(e, r, bob, C, now); else drawLord(e, r, bob, C, now); break;
   }
   ctx.restore(); ctx.lineCap = 'butt';
   const bcy = e.y - r * .9 * sp, head = e.y - r * (e.boss ? 2.6 : e.type === 'wisp' ? 3.4 : 2.1) * sp;
@@ -1769,6 +1821,29 @@ function drawEnemy(e, T, now) {
 }
 function roundRect(x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
 function star4(x, y, s, c) { ctx.fillStyle = c; ctx.beginPath(); ctx.moveTo(x, y - s); ctx.lineTo(x + s * .3, y - s * .3); ctx.lineTo(x + s, y); ctx.lineTo(x + s * .3, y + s * .3); ctx.lineTo(x, y + s); ctx.lineTo(x - s * .3, y + s * .3); ctx.lineTo(x - s, y); ctx.lineTo(x - s * .3, y - s * .3); ctx.fill(); }
+const FROSTC = { '#c0646b': '#c8ecfa', '#6e2a32': '#4a7a92', '#2c0d12': '#16303e', '#3a161b': '#1e3a48', '#4a1c22': '#2a5064', '#dcc0a6': '#eef9ff', '#ffe0a8': '#d8f6ff', '#ecdcc4': '#f0fbff' };
+function drawFrostSpikes(e, r, bob, C, now) {
+  const cy = -r * .9 + bob * 1.2; ctx.fillStyle = C('#e8faff');
+  for (let i = 0; i < 4; i++) { const x = -r * .55 + i * r * .28, y = cy - r * .78 + Math.abs(i - 1.5) * r * .08; ctx.beginPath(); ctx.moveTo(x - r * .08, y + r * .1); ctx.lineTo(x, y - r * .38); ctx.lineTo(x + r * .08, y + r * .1); ctx.fill(); }
+  eye(0, cy - r * .5, '170,225,255', r * 1.8, .3);
+  if (Math.random() < .1) puff(EX + rand(-r, r), EY - r, 's', 4, { vy: rand(-20, -6), a: .4, life: .8 });
+}
+function drawBat(e, r, bob, C, now) {
+  const cy = -r * 2.8 + Math.sin(now * 6 + e.wob) * 4, flap = Math.sin(now * (e.st === 'dive' ? 34 : 22) + e.wob), dive = e.st === 'dive' || e.st === 'aim';
+  ctx.fillStyle = C('#2a0610');
+  for (const s2 of [-1, 1]) {
+    ctx.beginPath(); ctx.moveTo(s2 * r * .3, cy);
+    ctx.quadraticCurveTo(s2 * r * 1.4, cy - r * (1.2 * flap + .2), s2 * r * 2.4, cy - r * (.6 * flap));
+    ctx.quadraticCurveTo(s2 * r * 2, cy + r * .2, s2 * r * 1.7, cy + r * .5); ctx.quadraticCurveTo(s2 * r * 1.3, cy + r * .1, s2 * r * 1.1, cy + r * .55);
+    ctx.quadraticCurveTo(s2 * r * .7, cy + r * .2, s2 * r * .3, cy + r * .4); ctx.closePath(); ctx.fill();
+  }
+  ctx.strokeStyle = C('#7a1a28'); ctx.lineWidth = 1; for (const s2 of [-1, 1]) { ctx.beginPath(); ctx.moveTo(s2 * r * .3, cy); ctx.lineTo(s2 * r * 1.7, cy + r * .45); ctx.moveTo(s2 * r * .3, cy); ctx.lineTo(s2 * r * 2.3, cy - r * .55 * flap); ctx.stroke(); }
+  const g = ctx.createRadialGradient(-r * .2, cy - r * .3, 1, 0, cy, r * .8); g.addColorStop(0, C(dive ? '#d8404e' : '#9a2a36')); g.addColorStop(1, C('#2a0610'));
+  ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(0, cy, r * .55, r * .7, 0, 0, TAU); ctx.fill();
+  ctx.fillStyle = C('#4a0c16'); ctx.beginPath(); ctx.moveTo(-r * .4, cy - r * .5); ctx.lineTo(-r * .25, cy - r * 1.05); ctx.lineTo(-r * .05, cy - r * .55); ctx.moveTo(r * .4, cy - r * .5); ctx.lineTo(r * .25, cy - r * 1.05); ctx.lineTo(r * .05, cy - r * .55); ctx.fill();
+  ctx.fillStyle = '#ffe8e8'; ctx.beginPath(); ctx.moveTo(-r * .15, cy + r * .2); ctx.lineTo(-r * .1, cy + r * .45); ctx.lineTo(-r * .05, cy + r * .2); ctx.moveTo(r * .05, cy + r * .2); ctx.lineTo(r * .1, cy + r * .45); ctx.lineTo(r * .15, cy + r * .2); ctx.fill();
+  eye(-r * .2, cy - r * .15, '255,40,60', r * .5, 1); eye(r * .2, cy - r * .15, '255,40,60', r * .5, 1);
+}
 function drawGhoul(e, r, bob, C, now) {
   const cy = -r * .9 + bob * 1.2, sw = Math.sin(now * 9 + e.wob) * 4;
   ctx.strokeStyle = C('#3a161b'); ctx.lineWidth = r * .32; ctx.beginPath(); ctx.moveTo(-r * .5, cy); ctx.lineTo(-r * .95, cy + r * .75 - sw); ctx.stroke();
@@ -1779,7 +1854,7 @@ function drawGhoul(e, r, bob, C, now) {
   ctx.fillStyle = C('#dcc0a6'); for (let i = 0; i < 3; i++) { ctx.beginPath(); ctx.arc(-r * .6 + i * r * .25, cy - r * .72 - i * r * .04, r * .1, 0, TAU); ctx.fill(); }
   ctx.fillStyle = '#16040a'; ctx.beginPath(); ctx.ellipse(r * .62, cy - r * .4, r * .2, r * .1, 0, 0, TAU); ctx.fill();
   ctx.fillStyle = C('#ffe0a8'); ctx.beginPath(); ctx.arc(r * .46, cy - r * .64, r * .1, 0, TAU); ctx.arc(r * .76, cy - r * .64, r * .1, 0, TAU); ctx.fill();
-  eye(r * .61, cy - r * .64, '255,170,90', r * .6, .9);
+  eye(r * .61, cy - r * .64, e.type === 'frost' ? '150,220,255' : '255,170,90', r * .6, .9);
   ctx.strokeStyle = C('#4a1c22'); ctx.lineWidth = r * .34; ctx.beginPath(); ctx.moveTo(r * .4, cy + r * .1); ctx.lineTo(r * 1.05, cy + r * .75 + sw); ctx.stroke();
   ctx.strokeStyle = C('#ecdcc4'); ctx.lineWidth = 1.5;
   for (let i = -1; i <= 1; i++) { ctx.beginPath(); ctx.moveTo(r * 1.05, cy + r * .75 + sw); ctx.lineTo(r * 1.32, cy + r * (.85 + i * .16) + sw); ctx.stroke(); }
@@ -1970,6 +2045,30 @@ function drawQueen(e, r, bob, C, now) {
   eye(0, cy, '170,130,255', r * 2.3, .3 * fa); if (scream) eye(0, cy - r * .7, '230,210,255', r * 1.5, .85);
   if (e.hp < e.maxHp * .5) eye(0, cy, '255,90,160', r * 1.6, .2 * fa);
 }
+function drawCardinal(e, r, bob, C, now) {
+  const cy = -r * 1.3 + Math.sin(now * 2 + e.wob) * 4, rage = e.hp < e.maxHp * .5, cast = e.st !== 'walk';
+  eye(0, cy - r * .2, '200,20,40', r * 3, rage ? .35 : .2);
+  const g = ctx.createLinearGradient(0, cy - r, 0, cy + r * 1.4); g.addColorStop(0, C('#b3192c')); g.addColorStop(.6, C('#5a0814')); g.addColorStop(1, 'rgba(60,4,12,0)');
+  ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(-r * .45, cy - r * .5);
+  ctx.bezierCurveTo(-r * 1.05, cy + r * .2, -r * 1.05, cy + r * .9, -r * .95, cy + r * 1.35);
+  for (let i = 1; i <= 6; i++) ctx.lineTo(-r * .95 + i * r * .317, cy + r * (1.35 - (i % 2) * .22) + Math.sin(now * 4 + i) * 3);
+  ctx.bezierCurveTo(r * 1.05, cy + r * .9, r * 1.05, cy + r * .2, r * .45, cy - r * .5); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = C('#d8b25a'); ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(0, cy - r * .45); ctx.lineTo(0, cy + r * 1.2); ctx.stroke();
+  ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-r * .3, cy + r * .2); ctx.lineTo(r * .3, cy + r * .2); ctx.stroke();
+  ctx.fillStyle = C('#f2e6d8'); ctx.beginPath(); ctx.moveTo(-r * .55, cy - r * .45); ctx.quadraticCurveTo(0, cy - r * .15, r * .55, cy - r * .45); ctx.quadraticCurveTo(0, cy - r * .65, -r * .55, cy - r * .45); ctx.fill();
+  ctx.strokeStyle = C('#d8b25a'); ctx.lineWidth = 1.5; ctx.stroke();
+  ctx.fillStyle = C('#f4ece0'); ctx.beginPath(); ctx.ellipse(0, cy - r * .78, r * .24, r * .28, 0, 0, TAU); ctx.fill();
+  ctx.fillStyle = '#1a0408'; ctx.beginPath(); ctx.ellipse(-r * .09, cy - r * .8, r * .06, r * .08, 0, 0, TAU); ctx.ellipse(r * .09, cy - r * .8, r * .06, r * .08, 0, 0, TAU); ctx.fill();
+  eye(-r * .09, cy - r * .8, '255,30,50', r * .35, 1); eye(r * .09, cy - r * .8, '255,30,50', r * .35, 1);
+  ctx.fillStyle = C('#a3162a'); ctx.beginPath(); ctx.moveTo(-r * .26, cy - r * .95); ctx.quadraticCurveTo(-r * .3, cy - r * 1.6, 0, cy - r * 1.85); ctx.quadraticCurveTo(r * .3, cy - r * 1.6, r * .26, cy - r * .95); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = C('#d8b25a'); ctx.lineWidth = 2; ctx.stroke(); ctx.beginPath(); ctx.moveTo(0, cy - r * 1.75); ctx.lineTo(0, cy - r * 1.05); ctx.moveTo(-r * .12, cy - r * 1.45); ctx.lineTo(r * .12, cy - r * 1.45); ctx.stroke();
+  eye(0, cy - r * 1.45, '255,200,120', r * .4, .6);
+  const sw = Math.sin(now * (cast ? 7 : 2.5)) * .8, hx = r * .7, hy = cy - r * .2, cx2 = hx + Math.sin(sw) * r * .9, cy2 = hy + Math.cos(sw) * r * .9;
+  ctx.strokeStyle = C('#c8a050'); ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(hx, hy); ctx.lineTo(cx2, cy2); ctx.stroke();
+  ctx.fillStyle = C('#d8b25a'); ctx.beginPath(); ctx.ellipse(cx2, cy2, r * .16, r * .2, 0, 0, TAU); ctx.fill();
+  eye(cx2, cy2, '255,60,60', r * .7, .8); if (Math.random() < .35) puff(EX + cx2 * ESX, EY + cy2 * ESY, 'd', 6, { vy: rand(-30, -10), a: .45, life: 1 });
+  if (cast) eye(0, cy, '255,60,80', r * 2.2, .35);
+}
 function drawRider(e, r, bob, C, now) {
   const dash = e.st === 'gallop' && e.sub === 'dash', st = now * (dash ? 22 : 9) + e.wob, cy = -r * .95 + Math.sin(st * 2) * 2;
   ctx.strokeStyle = C('#1a1226'); ctx.lineWidth = r * .16;
@@ -2019,6 +2118,7 @@ function drawPlayer(p, s, T, now) {
   const PS = 1.3; sxs *= PS; sys *= PS;
   if (p.state === 'rise') { const k = 1 - p.t / .4; ctx.strokeStyle = `rgba(216,178,90,${1 - k * .6})`; ctx.lineWidth = 3; ctx.beginPath(); ctx.ellipse(p.x, p.y, 20 + k * 40, (20 + k * 40) * .45, 0, 0, TAU); ctx.stroke(); }
   if (p.state === 'rise' || p.state === 'fling') { emit('255,210,120', p.x, p.y - z - 18, 70, .65); light(p.x, p.y - z, 200, .6); }
+  if (p.chillT > 0) { emit('140,210,255', p.x, p.y - 20 - z, 46, .5); if (Math.random() < .3) puff(p.x + rand(-12, 12), p.y - z - rand(10, 40), 's', 4, { vy: rand(-15, -4), a: .5, life: .7 }); }
   const bx = p.x, by = p.y - z - hov, vxn = clamp((p.vx || 0) / 400, -1, 1), vyn = clamp((p.vy || 0) / 400, -1, 1);
   let n = acc(p, '_sm', 34); while (n--) puff(bx + rand(-10, 10), by - rand(-2, 16), 's', 7, { vx: -(p.vx || 0) * .12 + rand(-10, 10), vy: rand(-30, -8), a: .55, life: rand(.8, 1.4) });
   const A = blink ? .45 : 1;
@@ -2226,9 +2326,11 @@ function drawBody(e, r, bob, C, now) {
     case 'brute': drawBrute(e, r, bob, C, now); break;
     case 'spitter': drawSpitter(e, r, bob, C, now); break;
     case 'knight': drawKnight(e, r, bob, C, now); break;
+    case 'frost': drawGhoul(e, r, bob, c => C(FROSTC[c] || c), now); drawFrostSpikes(e, r, bob, C, now); break;
+    case 'bat': drawBat(e, r, bob, C, now); break;
     case 'bomb': drawBomb(e, r, bob, C, now); break;
     case 'chest': case 'mimic': drawChest(e, r, bob, C, now); break;
-    case 'boss': if (e.kind === 'rider') drawRider(e, r, bob, C, now); else if (e.kind === 'queen') drawQueen(e, r, bob, C, now); else drawLord(e, r, bob, C, now); break;
+    case 'boss': if (e.kind === 'rider') drawRider(e, r, bob, C, now); else if (e.kind === 'queen') drawQueen(e, r, bob, C, now); else if (e.kind === 'cardinal') drawCardinal(e, r, bob, C, now); else drawLord(e, r, bob, C, now); break;
   }
 }
 function drawSky(now) {

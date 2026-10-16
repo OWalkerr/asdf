@@ -74,7 +74,7 @@ Her gün için tarihten üretilen sabit bir tohum: herkes aynı mızrakçıyla, 
    | Kan Sunağı | Bedeli can | Kan Bağışı: canının %30'u → 1 nadir+ güç. Ruh Bağışı: azami can kalıcı -20 → 2 nadir+ güç. İstersen geçebilirsin |
    | Ruh Tüccarı | Savaş yok | Bu avın ruh parçalarıyla alışveriş: 3 güç (Sıradan 15, Nadir 25, Destansı 40, Efsanevi 55), Ruh İksiri (%50 can, 12), Kehanet Kartı (+1 yeniden çekme, 10). Unutuş Ritüeli (15): bir gücün bir seviyesini siler; tüm istatistikler baştan hesaplanır. Harcanan parçalar kalıcı birikime eklenmez. |
 
-4. Her 5. oda **Muhafız** odası; muhafızlar sırayla Kemik Lordu, Gölge Atlı ve Yas Kraliçesi.
+4. Her 5. oda **Muhafız** odası; muhafızlar sırayla Kemik Lordu, Gölge Atlı, Yas Kraliçesi ve Kan Kardinali.
 5. Ölünce topladığın **ruh parçaları** kalıcı olarak saklanır; Ruh Sunağı'ndan kalıcı güç alırsın.
 6. Oyun sonsuz; amaç en iyi oda rekorunu kırmak.
 
@@ -92,6 +92,9 @@ Her gün için tarihten üretilen sabit bir tohum: herkes aynı mızrakçıyla, 
 | **Yükselmiş muhafızlar** (20. oda ve sonrası) | Can +%20, altın aura; saldırılarının %40'ında diğer muhafızlardan ödünç bir saldırı kullanır: Lord → çığlık dalgası / mızrak hatları, Atlı → çığlık / ruh mermileri, Kraliçe → mızrak hatları / mermi halkası | Altın parlama = ödünç saldırı geliyor |
 | **Gölge Atlı** (10., 25. oda) | Arka arkaya 3–4 dörtnala hücum ve arkasında yakan mor iz; çift kollu spiral mermi; yelpaze şeklinde mızrak hatları (önce çizgiyle uyarır) | Hatların arasına sek, Kader Çağrısı ile sersemlet |
 
+| **Buz Hortlağı** (Buz Mezarlığı, 10–19) | Hortlak gibi kovalar; dokununca ve 3'lü buz nefesiyle seni 1.6 sn **yavaşlatır** (yürüme %60, sekme mesafesi %80) | Yakın mesafeye girmeden mızrakla; yavaşlamışken Kader Çağrısı ile kaç |
+| **Kan Yarasası** (Kan Katedrali, 20+, üçlü gelir) | Etrafında daire çizip uçar, kısa uyarıyla dalış yapar; vurursa hasarın 3 katı **can emer** | Dalış anında yana sek; Söküm ile toplu temizle |
+| **Kan Kardinali** (20. oda, sonra her 20 odada) | Mitralı kızıl rahip, sallanan buhurdan. Etrafında dönerek açılan kan bıçakları; ayağının altında uyarılı kan fışkırmaları (4, öfkede 6); haç biçimli mermi yağmuru (iki dalga, 45° dönük); kan yarasası çağırma | Bıçak halkası açılırken dışarı sek, kırmızı dairelerden çık |
 | **Kalkanlı Şövalye** (7. oda+) | Kalkanını yavaşça oyuncuya çevirir; önden gelen mızrakları engeller (BLOK). Yakındayken kısa kalkan hamlesi yapar (kırmızı şeritle uyarır) | Sekerek yanına/arkasına geç; Delici Mızrak kalkanı deler; Kader ile sersemletilmişken engelleyemez |
 | **Kemik Bombası** (6. oda+, ikili gelir) | Hızla koşar, yaklaşınca fitili yanar (turuncu daire dolar), 0.8 sn sonra 95 birim alanda patlar | Fitil bitmeden öldür: erken patlama sadece düşmanlara hasar verir; ya da dairenin dışına sek |
 
@@ -176,12 +179,12 @@ Sonuç: yükseltmesiz bot medyan 7–8. oda; yükseltmeli bot medyan 10–11. od
 
 ## 10. Sıradaki adımlar (yol haritası)
 
-Tamamlananlar: üç biyom (Cadı Zindanı, Buz Mezarlığı, Kan Katedrali), av sonu istatistikleri ve ölüm nedeni, sabit joystick ve sol el modu, muhafız müzik temaları (Lord: ağır yürüyüş, Atlı: dörtnala, Kraliçe: tam-ton ağıt; öfkede hızlanır), 12 başarım ve pelerin renkleri, 15+ oda dengesi, Ruh Sandığı ve Mimik, Kan Sunağı, muhafız ikinci formu, Kalkanlı Şövalye ve Kemik Bombası, grafik kalitesi ayarı (otomatik / yüksek / düşük), Günün Avı sonuç paylaşımı, akıllı bot ile denge ayarı, mızrakçıya özel efsanevi kartlar, Günün Avı (tohumlu), son avlar listesi, bot ile denge ölçümü ve ayarı, 4 mızrakçı, Unutuş Ritüeli (güç silme), Yükselmiş muhafızlar, PWA (ana ekrana ekleme + çevrimdışı önbellek), Ruh Tüccarı kapısı, üçüncü muhafız Yas Kraliçesi, üretken müzik (dron + minör pentatonik arpej; savaşta davul, muhafızda hızlanır), Kader Çağrısı (R), kapı seçimi (Savaş/Elit/Lanetli/Ruh Pınarı), elit düşmanlar, ikinci muhafız Gölge Atlı, 5 efsanevi sinerji, vuruş durması (hit-stop) ve titreşim.
+Tamamlananlar: Buz Hortlağı, Kan Yarasası, dördüncü muhafız Kan Kardinali (kendi müzik teması ve 'Kanı Durduran' başarımı), üç biyom (Cadı Zindanı, Buz Mezarlığı, Kan Katedrali), av sonu istatistikleri ve ölüm nedeni, sabit joystick ve sol el modu, muhafız müzik temaları (Lord: ağır yürüyüş, Atlı: dörtnala, Kraliçe: tam-ton ağıt; öfkede hızlanır), 12 başarım ve pelerin renkleri, 15+ oda dengesi, Ruh Sandığı ve Mimik, Kan Sunağı, muhafız ikinci formu, Kalkanlı Şövalye ve Kemik Bombası, grafik kalitesi ayarı (otomatik / yüksek / düşük), Günün Avı sonuç paylaşımı, akıllı bot ile denge ayarı, mızrakçıya özel efsanevi kartlar, Günün Avı (tohumlu), son avlar listesi, bot ile denge ölçümü ve ayarı, 4 mızrakçı, Unutuş Ritüeli (güç silme), Yükselmiş muhafızlar, PWA (ana ekrana ekleme + çevrimdışı önbellek), Ruh Tüccarı kapısı, üçüncü muhafız Yas Kraliçesi, üretken müzik (dron + minör pentatonik arpej; savaşta davul, muhafızda hızlanır), Kader Çağrısı (R), kapı seçimi (Savaş/Elit/Lanetli/Ruh Pınarı), elit düşmanlar, ikinci muhafız Gölge Atlı, 5 efsanevi sinerji, vuruş durması (hit-stop) ve titreşim.
 
 Sıradakiler:
-1. Biyoma özel düşman varyantları (buz: yavaşlatan Buz Hortlağı; kan: can emen Kan Yarasası).
-2. Kan Katedrali muhafızı: dördüncü muhafız.
-3. Oyuncu verisiyle (gerçek oyun) zorluk ince ayarı.
+1. Gerçek oyun geri bildirimiyle zorluk ince ayarı.
+2. Sesli efekt çeşitliliği (her düşmana kendi ölüm sesi).
+3. Kozmetik mızrak efektleri (başarımlardan açılan mızrak izleri).
 
 ## 11. Oyun hissi (Metal Slug esinli)
 
