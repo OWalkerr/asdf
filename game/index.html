@@ -1560,9 +1560,9 @@ const SMOKE = [], BSM = BRAZ.map(() => ({}));
 const acc = (o, k, rate) => { o[k] = Math.max(0, (o[k] || 0) + rate * FDT); const n = Math.floor(o[k]); o[k] -= n; return Math.min(n, 8); };
 function puff(x, y, c, r, o = {}) {
   if (BAKING) return;
-  if (SMOKE.length >= (RM ? 160 : LOWQ ? 130 : 460)) return;
+  if (SMOKE.length >= (RM ? 160 : LOWQ ? 130 : glParts() ? 1400 : 460)) return;
   const life = o.life || rand(.9, 1.6);
-  SMOKE.push({ x, y, vx: o.vx ?? rand(-12, 12), vy: o.vy ?? rand(-34, -14), r, gr: o.gr ?? r * 1.6, a: o.a ?? .5, life, max: life, c, v: (Math.random() * 3) | 0 });
+  SMOKE.push({ x, y, vx: o.vx ?? rand(-12, 12), vy: o.vy ?? rand(-34, -14), r, gr: o.gr ?? r * 1.6, a: o.a ?? .5, life, max: life, c, v: (Math.random() * 3) | 0, sd: Math.random() * 64, ro: rand(0, TAU), spin: rand(-.8, .8) });
 }
 function updSmoke(dt) { for (let i = SMOKE.length - 1; i >= 0; i--) { const s = SMOKE[i]; s.life -= dt; if (s.life <= 0) { SMOKE.splice(i, 1); continue; } s.x += s.vx * dt; s.y += s.vy * dt; s.vx *= .985; s.r += s.gr * dt; } }
 function drawSmoke(bright) {
@@ -1634,6 +1634,7 @@ function draw() {
   const world = () => ctx.setTransform(DPR * Z, 0, 0, DPR * Z, DPR * ox, DPR * oy);
   CAM.Z = Z; CAM.ox = ox; CAM.oy = oy;
   const GPU = glReady();
+  const GPUP = GPU && glParts();
   if (GPU) ctx.clearRect(0, 0, W, H); else drawVoid(now, cx, cy, Z, TH);
   world();
   PREVL = LIGHTS.slice(); EMI.length = 0; LIGHTS.length = 0; BAKEB = 6; sprScale();
@@ -1649,7 +1650,7 @@ function draw() {
   }
   for (let i = 0; i < CANDLES.length; i++) { const [x, y] = CANDLES[i], f = .8 + .2 * Math.sin(now * 17 + i * 2.3); if (TH.wax) for (let k = 0; k < 3; k++) emit(TH.candle[0], x + (k - 1) * 7, y - 11 - (k === 1 ? 3 : 0) - ((k * 5 + x) % 6), 6 * f, .9); else emit(TH.candle[0], x, y - 24 + Math.sin(now * 2 + i) * 3, 7 * f, .8); emit(TH.candle[1], x, y - 12, 26, .35 * f); light(x, y, 80, .45, TH.candle[0]); }
   if (G) drawWorld(G.time, now);
-  updSmoke(FDT); drawSmoke(false);
+  updSmoke(FDT); if (!GPUP) drawSmoke(false);
   for (const m of MOTES) {
     m.y -= m.v * FDT * (TH.id === 'blood' ? 2.2 : 1); m.x += Math.sin(now * .7 + m.ph) * 6 * FDT;
     if (m.y < -ARENA - 60) { m.y = ARENA + 40; m.x = rand(-ARENA, ARENA); }
@@ -1659,11 +1660,10 @@ function draw() {
   world(); ctx.globalCompositeOperation = 'lighter';
   ctx.save(); ctx.globalAlpha = .16 + .08 * pulse; ctx.rotate(now * .04); ctx.drawImage(runeFor(TH), -360, -360, 720, 720);
   ctx.rotate(-now * .1); ctx.globalAlpha = .12 + .06 * pulse; ctx.drawImage(runeFor(TH), -180, -180, 360, 360); ctx.restore(); ctx.globalAlpha = 1;
-  for (let i = 0; i < EMI.length; i += 5) { const r = EMI[i + 3]; ctx.globalAlpha = Math.min(1, EMI[i + 4]); ctx.drawImage(glow(EMI[i]), EMI[i + 1] - r, EMI[i + 2] - r, r * 2, r * 2); }
+  if (!GPUP) for (let i = 0; i < EMI.length; i += 5) { const r = EMI[i + 3]; ctx.globalAlpha = Math.min(1, EMI[i + 4]); ctx.drawImage(glow(EMI[i]), EMI[i + 1] - r, EMI[i + 2] - r, r * 2, r * 2); }
   ctx.globalAlpha = 1;
   if (G) drawFxLit(now);
-  ctx.globalCompositeOperation = 'screen'; drawSmoke(true);
-  ctx.globalCompositeOperation = 'source-over'; if (TH.id === 'ice') drawSnow(now);
+  if (!GPUP) { ctx.globalCompositeOperation = 'screen'; drawSmoke(true); ctx.globalCompositeOperation = 'source-over'; if (TH.id === 'ice') drawSnow(now); }
   ctx.globalCompositeOperation = 'source-over';
   if (G) drawTexts();
   if (G) drawSky(now);
@@ -2522,7 +2522,7 @@ function glInit() {
   const HP = '#ifdef GL_FRAGMENT_PRECISION_HIGH\nprecision highp float;\n#else\nprecision mediump float;\n#endif\n';
   const prog = (fs, vs, hp) => {
     const pr = gl.createProgram(); gl.attachShader(pr, sh(gl.VERTEX_SHADER, vs || VS)); gl.attachShader(pr, sh(gl.FRAGMENT_SHADER, (hp ? HP : 'precision mediump float;') + 'varying vec2 uv;' + (vs ? 'varying vec2 wp;' : '') + '\n' + fs));
-    gl.bindAttribLocation(pr, 0, 'p'); gl.linkProgram(pr); if (!gl.getProgramParameter(pr, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(pr));
+    gl.bindAttribLocation(pr, 0, 'p'); gl.bindAttribLocation(pr, 1, 'ia'); gl.bindAttribLocation(pr, 2, 'ib'); gl.bindAttribLocation(pr, 3, 'id'); gl.linkProgram(pr); if (!gl.getProgramParameter(pr, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(pr));
     const U = {}, n = gl.getProgramParameter(pr, gl.ACTIVE_UNIFORMS); for (let i = 0; i < n; i++) { const a = gl.getActiveUniform(pr, i); U[a.name.replace('[0]', '')] = gl.getUniformLocation(pr, a.name); }
     return { pr, U };
   };
@@ -2544,8 +2544,8 @@ function glInit() {
       'float hs(vec2 q){return fract(sin(dot(q,vec2(127.1,311.7)))*43758.5453);}' +
       'void main(){vec2 sp=vec2(uv.x,1.-uv.y)*scr;vec2 n=(sp-nr.xy)/nr.z;vec3 c=texture2D(t,vec2(n.x,1.-n.y)).rgb;c=mix(c,tint.rgb,tint.a);' +
       'for(int i=0;i<3;i++){float fi=float(i),cs=46.+fi*30.;vec2 q=(sp+cam*(.015+fi*.035))/cs+fi*7.31;vec2 g=floor(q);float h=hs(g);if(h<.8)continue;' +
-      'vec2 o=vec2(hs(g+.37),hs(g+1.91))*.8+.1;float d=length(fract(q)-o)*cs;float tw=.55+.45*sin(time*(1.+h*3.)+h*40.);float b=smoothstep(1.2+fi*.5,0.,d)*tw*(h-.8)*5.;' +
-      'float k=hs(g+5.3);c+=b*(k<.3?vec3(.8,.72,1.):k<.6?vec3(.72,1.,.94):vec3(1.));c+=smoothstep(10.,0.,d)*tw*(h-.8)*.25*vec3(.6,.5,1.);}' +
+      'vec2 o=vec2(hs(g+.37),hs(g+1.91))*.8+.1;float d=length(fract(q)-o)*cs;float tw=.55+.45*sin(time*(1.+h*3.)+h*40.);float b=(1.-smoothstep(0.,1.2+fi*.5,d))*tw*(h-.8)*5.;' +
+      'float k=hs(g+5.3);c+=b*(k<.3?vec3(.8,.72,1.):k<.6?vec3(.72,1.,.94):vec3(1.));c+=(1.-smoothstep(0.,10.,d))*tw*(h-.8)*.25*vec3(.6,.5,1.);}' +
       'gl_FragColor=vec4(c,1.);}', 0, 1);
     const NL = Math.max(4, Math.min(32, ((gl.getParameter(gl.MAX_FRAGMENT_UNIFORM_VECTORS) - 16) / 2) | 0)); GLX.NL = NL;
     GLX.lit = prog('#define NL ' + NL + '\nuniform sampler2D t;uniform vec2 ts;uniform vec4 L[NL];uniform vec3 LCo[NL];uniform int nl;uniform vec3 amb;uniform float gloss,kd;' +
@@ -2556,6 +2556,36 @@ function glInit() {
       'float at=(1.-dd)*(1.-dd)*l.w;vec3 Ld=normalize(vec3(dv,55./l.z));acc+=LCo[i]*max(dot(N,Ld),0.)*at*kd;' +
       'sp+=LCo[i]*pow(max(dot(N,normalize(Ld+vec3(0.,0.,1.))),0.),28.)*at*gloss;}' +
       'gl_FragColor=vec4(al.rgb*min(acc,vec3(1.7))+min(sp,vec3(.6))*al.a,al.a);}', SVS, 1);
+    // GPU particles: instanced quads. ia = (x, y, radius, seed), ib = (rgb, alpha), id = (age 0..1, rotation, -, -)
+    GLX.IA = gl.getExtension('ANGLE_instanced_arrays');
+    if (GLX.IA) {
+      const PVS = 'attribute vec2 p;attribute vec4 ia,ib,id;uniform vec3 cam;uniform vec2 scr;varying vec2 uv;varying vec2 wp;varying vec4 col,dd;' +
+        'void main(){vec2 o=p*2.-1.;float c=cos(id.y),s=sin(id.y);uv=o;wp=ia.xy+vec2(o.x*c-o.y*s,o.x*s+o.y*c)*ia.z;vec2 q=wp*cam.x+cam.yz;col=ib;dd=vec4(id.x,ia.w,0.,0.);gl_Position=vec4(q.x/scr.x*2.-1.,1.-q.y/scr.y*2.,0.,1.);}';
+      // additive glow with the same falloff as the 2D glow sprite
+      GLX.glowP = prog('varying vec4 col,dd;void main(){float l=length(uv);if(l>=1.)discard;float f=l<.2?mix(1.,.6,l/.2):l<.5?mix(.6,.18,(l-.2)/.3):mix(.18,0.,(l-.5)/.5);gl_FragColor=vec4(col.rgb*f*col.a*.68,0.);}', PVS);
+      // smoke: two octaves of tiling noise, eroded with age, lit by the scene lights (dark layer) or screened (bright layer)
+      GLX.smokeP = prog('#define NL ' + NL + '\nvarying vec4 col,dd;uniform sampler2D nz;uniform vec4 L[NL];uniform vec3 LCo[NL];uniform int nl;uniform vec3 amb;uniform float bright;' +
+        'void main(){float l=length(uv);if(l>=1.)discard;vec2 u=uv*.42+vec2(dd.y*.137,dd.y*.311)+vec2(0.,dd.x*.22);' +
+        'float n=texture2D(nz,u).r*.62+texture2D(nz,u*2.1+.37).g*.38;float m=1.-smoothstep(.15,1.,l);' +
+        'float d=clamp((n-.08-dd.x*.3)*3.,0.,1.)*m;float a=min(1.,d*col.a*(2.3+bright*1.3));vec3 c=col.rgb;' +
+        'if(bright<.5){vec3 li=amb;for(int i=0;i<8;i++){if(i>=nl)break;vec4 q=L[i];vec2 dv=(q.xy-wp)/q.z;float dl=length(dv);if(dl<1.)li+=LCo[i]*(1.-dl)*(1.-dl)*q.w*1.4;}c*=li;}' +
+        'gl_FragColor=vec4(c*a,a);}', PVS, 1);
+      // ambient particle field per biome, procedural on a grid in world space: snow falls, embers and spirit motes rise
+      GLX.fieldP = prog('uniform vec2 scr;uniform vec3 cam;uniform float time,mode,dens;uniform vec3 c1,c2;' +
+        'float hs(vec2 q){return fract(sin(dot(q,vec2(127.1,311.7)))*43758.5453);}' +
+        'void main(){vec2 sp=vec2(uv.x,1.-uv.y)*scr;vec3 acc=vec3(0.);' +
+        'for(int i=0;i<3;i++){float fi=float(i),par=1.+fi*.22,cs=40.+fi*16.;vec2 wq=(sp-cam.yz*par)/(cam.x*par);' +
+        'vec2 v=mode<.5?vec2(14.+sin(time*.4)*10.,-(36.+fi*16.)):mode<1.5?vec2(sin(time*.3+fi)*8.,30.+fi*14.):vec2(sin(time*.2+fi)*5.,12.+fi*6.);' +
+        'vec2 q=(wq+v*time)/cs+fi*9.17;vec2 g=floor(q);float h=hs(g);if(h<1.-dens)continue;' +
+        'vec2 o=vec2(hs(g+.71),hs(g+2.3))*.7+.15+vec2(sin(time*(.7+h)+h*30.),cos(time*(.5+h)+h*20.))*.08;' +
+        'float d=length(fract(q)-o)*cs;float s=(mode<.5?1.3:mode<1.5?1.1:1.6)*(1.+fi*.45)*(.6+h*.8);' +
+        'float tw=mode<.5?1.:mode<1.5?.55+.45*sin(time*(6.+h*9.)+h*50.):.5+.5*sin(time*(1.5+h*2.)+h*40.);' +
+        'float b=(1.-smoothstep(s*.15,s,d))*tw+(1.-smoothstep(0.,s*4.,d))*tw*.18;acc+=b*mix(c1,c2,hs(g+5.1))*(.55+fi*.25);}' +
+        'gl_FragColor=vec4(acc,0.);}', 0, 1);
+      GLX.ib = gl.createBuffer(); GLX.idata = new Float32Array(12 * 4096);
+      GLX.nz = glTex(); gl.bindTexture(gl.TEXTURE_2D, GLX.nz); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, noiseCanvas());
+    }
   } catch (e) { console.warn('GL post disabled:', e.message); GL = null; return; }
   GLX.buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, GLX.buf); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
   GLX.quad = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, GLX.quad); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([0, 0, 1, 0, 0, 1, 1, 1]), gl.STATIC_DRAW);
@@ -2578,6 +2608,51 @@ const WAVES = [], WU = new Float32Array(32);
 function shock(x, y, R, str = 1, dur = .5) { if (WAVES.length < 8) WAVES.push({ x, y, R, str, dur, t: 0 }); }
 const GRADE = { witch: { tint: [1, .97, 1.05], sat: 1.12, con: 1.05, bloom: .8 }, ice: { tint: [.92, 1, 1.1], sat: .86, con: 1.07, bloom: .75 }, blood: { tint: [1.1, .94, .9], sat: 1.15, con: 1.07, bloom: .9 } };
 const glReady = () => GLOK && !LOWQ && !(GLSLOW && OPTS.gfx === 'auto');
+const glParts = () => glReady() && !!GLX.IA;
+// Tiling value noise, two octaves in R and G, for the GPU smoke.
+function noiseCanvas() {
+  const S = 128, c = document.createElement('canvas'); c.width = c.height = S; const g = c.getContext('2d'), im = g.createImageData(S, S), R = seeded(2024);
+  const oct = n => { const v = Array.from({ length: n * n }, R), sm = t => t * t * (3 - 2 * t), out = new Float32Array(S * S);
+    for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) { const fx = x / S * n, fy = y / S * n, x0 = fx | 0, y0 = fy | 0, x1 = (x0 + 1) % n, y1 = (y0 + 1) % n, tx = sm(fx - x0), ty = sm(fy - y0);
+      const a = v[y0 * n + x0] + (v[y0 * n + x1] - v[y0 * n + x0]) * tx, b = v[y1 * n + x0] + (v[y1 * n + x1] - v[y1 * n + x0]) * tx; out[y * S + x] = a + (b - a) * ty; }
+    return out; };
+  const o1 = oct(8), o2 = oct(16), o3 = oct(32);
+  for (let i = 0; i < S * S; i++) { im.data[i * 4] = (o1[i] * .7 + o2[i] * .3) * 255; im.data[i * 4 + 1] = (o2[i] * .6 + o3[i] * .4) * 255; im.data[i * 4 + 2] = 0; im.data[i * 4 + 3] = 255; }
+  g.putImageData(im, 0, 0); return c;
+}
+const FIELD = { witch: { mode: 2, dens: .34, c1: [.45, 1, .88], c2: [.75, .55, 1] }, ice: { mode: 0, dens: .5, c1: [.85, .93, 1], c2: [1, 1, 1] }, blood: { mode: 1, dens: .4, c1: [1, .45, .15], c2: [1, .75, .35] } };
+// Particles drawn after the 2D foreground: lit dark smoke, screened bright smoke, additive glows, then the biome's particle field.
+function glParticles(TH, now) {
+  const gl = GL, IA = GLX.IA, D = GLX.idata, CAP = D.length / 12; let n = 0;
+  const put = (x, y, r, sd, c, a, age, rot) => { if (n >= CAP) return; const o = n++ * 12; D[o] = x; D[o + 1] = y; D[o + 2] = r; D[o + 3] = sd; D[o + 4] = c[0]; D[o + 5] = c[1]; D[o + 6] = c[2]; D[o + 7] = a; D[o + 8] = age; D[o + 9] = rot; D[o + 10] = 0; D[o + 11] = 0; };
+  const smoke = bright => { for (const s of SMOKE) { if (!!BRIGHT[s.c] !== bright) continue; const k = s.life / s.max, a = s.a * Math.min(1, k * 1.5) * Math.min(1, (1 - k) * 6); if (a < .01) continue; put(s.x, s.y, s.r, s.sd || 0, rgbOf(SMC[s.c]), a, 1 - k, (s.ro || 0) + (1 - k) * (s.spin || 0)); } };
+  const r0 = n; smoke(false); const r1 = n; smoke(true); const r2 = n;
+  for (let i = 0; i < EMI.length; i += 5) put(EMI[i + 1], EMI[i + 2], EMI[i + 3], 0, rgbOf(EMI[i]), Math.min(1, EMI[i + 4]), 0, 0);
+  const r3 = n;
+  gl.enable(gl.BLEND);
+  if (n) {
+    gl.bindBuffer(gl.ARRAY_BUFFER, GLX.ib); gl.bufferData(gl.ARRAY_BUFFER, D.subarray(0, n * 12), gl.STREAM_DRAW);
+    for (let k = 1; k <= 3; k++) { gl.enableVertexAttribArray(k); IA.vertexAttribDivisorANGLE(k, 1); }
+    gl.bindBuffer(gl.ARRAY_BUFFER, GLX.quad); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+    const draw = (P, a, b) => { if (b <= a) return; gl.bindBuffer(gl.ARRAY_BUFFER, GLX.ib); for (let k = 1; k <= 3; k++) gl.vertexAttribPointer(k, 4, gl.FLOAT, false, 48, a * 48 + (k - 1) * 16); IA.drawArraysInstancedANGLE(gl.TRIANGLE_STRIP, 0, 4, b - a); };
+    const cam = U => { gl.uniform3f(U.cam, CAM.Z, CAM.ox, CAM.oy); gl.uniform2f(U.scr, W, H); };
+    let U = GLX.smokeP.U; gl.useProgram(GLX.smokeP.pr); cam(U);
+    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, GLX.nz); gl.uniform1i(U.nz, 0);
+    gl.uniform1i(U.nl, Math.min(8, GLX.nl || 0)); gl.uniform4fv(U.L, GLX.LU); gl.uniform3fv(U.LCo, GLX.LCU);
+    const mt = GLT[TH.id] || GLT.witch; gl.uniform3f(U.amb, mt.amb[0] * 1.15, mt.amb[1] * 1.15, mt.amb[2] * 1.15);
+    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA); gl.uniform1f(U.bright, 0); draw(GLX.smokeP, r0, r1);
+    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_COLOR); gl.uniform1f(U.bright, 1); draw(GLX.smokeP, r1, r2);
+    U = GLX.glowP.U; gl.useProgram(GLX.glowP.pr); cam(U); gl.blendFunc(gl.ONE, gl.ONE); draw(GLX.glowP, r2, r3);
+    for (let k = 1; k <= 3; k++) { IA.vertexAttribDivisorANGLE(k, 0); gl.disableVertexAttribArray(k); }
+  }
+  if (!RM) {
+    const F = FIELD[TH.id] || FIELD.witch, U = GLX.fieldP.U; gl.useProgram(GLX.fieldP.pr); gl.blendFunc(gl.ONE, gl.ONE);
+    gl.bindBuffer(gl.ARRAY_BUFFER, GLX.buf); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+    gl.uniform2f(U.scr, W, H); gl.uniform3f(U.cam, CAM.Z, CAM.ox, CAM.oy); gl.uniform1f(U.time, now % 1000); gl.uniform1f(U.mode, F.mode); gl.uniform1f(U.dens, F.dens);
+    gl.uniform3fv(U.c1, F.c1); gl.uniform3fv(U.c2, F.c2); gl.drawArrays(gl.TRIANGLES, 0, 3);
+  }
+  gl.disable(gl.BLEND);
+}
 const GLTEX = new Map();
 function texOf(c) { let t = GLTEX.get(c); if (!t) { t = glTex(); GL.texImage2D(GL.TEXTURE_2D, 0, GL.RGBA, GL.RGBA, GL.UNSIGNED_BYTE, c); GLTEX.set(c, t); } return t; }
 // Floor material per biome: ambient color, specular strength, diffuse gain.
@@ -2627,7 +2702,7 @@ function glScene(TH, now, cx, cy) {
   const FL = floorFor(TH), mt = GLT[TH.id] || GLT.witch; U = GLX.lit.U; gl.useProgram(GLX.lit.pr);
   gl.uniform2f(U.scr, W, H); gl.uniform3f(U.cam, Z, CAM.ox, CAM.oy); gl.uniform4f(U.rect, -FH, -FH, FH * 2, FH * 2);
   bind(0, texOf(FL), U.t); gl.uniform2f(U.ts, 1 / FL.width, 1 / FL.height);
-  gl.uniform1i(U.nl, packLights()); gl.uniform4fv(U.L, GLX.LU); gl.uniform3fv(U.LCo, GLX.LCU);
+  GLX.nl = packLights(); gl.uniform1i(U.nl, GLX.nl); gl.uniform4fv(U.L, GLX.LU); gl.uniform3fv(U.LCo, GLX.LCU);
   const ak = G ? 1 : .85; gl.uniform3f(U.amb, mt.amb[0] * ak, mt.amb[1] * ak, mt.amb[2] * ak); gl.uniform1f(U.gloss, mt.gloss); gl.uniform1f(U.kd, mt.kd);
   gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
   // foreground: the 2D canvas (entities, effects, HUD overlays) over the realm
@@ -2635,6 +2710,7 @@ function glScene(TH, now, cx, cy) {
   gl.bindTexture(gl.TEXTURE_2D, GLX.src); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, cv);
   gl.useProgram(GLX.copy.pr); bind(0, GLX.src, GLX.copy.U.t); gl.drawArrays(gl.TRIANGLES, 0, 3);
   gl.disable(gl.BLEND);
+  if (GLX.IA) glParticles(TH, now);
 }
 function glPost(TH, now = 0, cx = 0, cy = 0) {
   const use = glReady();
