@@ -8,7 +8,8 @@ const P = new URLSearchParams(location.search), C0 = CFG[P.get('cfg')];
 // quick=1: preview with two directions and four frames per animation
 const C = P.get('quick') ? { ...C0, dirs: [0, 90], anims: C0.anims.map(a => ({ ...a, n: Math.min(a.n, 4) })) } : C0;
 const FW = C.fw, FH = C.fh;
-const loader = new GLTFLoader(), g = await loader.loadAsync(C.glb);
+// build(THREE): a model made in code instead of a GLB; its named parts can be posed like bones
+const loader = new GLTFLoader(), g = C.build ? { scene: C.build(THREE), animations: [] } : await loader.loadAsync(C.glb);
 const clips = [...g.animations]; console.log('loaded', clips.map(c => c.name).join('|'));
 for (const extra of C.extraClips || []) { const x = await loader.loadAsync(extra); clips.push(...x.animations); }
 const scene = new THREE.Scene(), root = g.scene; scene.add(root);
@@ -16,12 +17,12 @@ const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserv
 renderer.setPixelRatio(1); renderer.setSize(FW, FH); renderer.setClearColor(0x000000, 0);
 renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = C.exposure ?? .92;
 document.body.appendChild(renderer.domElement);
-root.traverse(o => { if (o.isMesh) { o.frustumCulled = false; const m = o.material; if (C.emissive) { m.emissive = new THREE.Color(C.emissiveColor ?? 0xffffff); m.emissiveMap = m.map; m.emissiveIntensity = C.emissive; } m.metalness = 0; m.roughness = Math.max(.6, m.roughness ?? 1); } });
+root.traverse(o => { if (o.isMesh) { o.frustumCulled = false; const m = o.material; if (C.emissive && !C.build) { m.emissive = new THREE.Color(C.emissiveColor ?? 0xffffff); m.emissiveMap = m.map; m.emissiveIntensity = C.emissive; } m.metalness = 0; m.roughness = Math.max(.6, m.roughness ?? 1); } });
 scene.add(new THREE.HemisphereLight(0xcfe8ff, 0x2a2450, C.hemi ?? 1.3));
 const key = new THREE.DirectionalLight(0xffffff, 2.4); key.position.set(-2, 4, 1.5); scene.add(key);
 const rim = new THREE.DirectionalLight(C.rimColor ?? 0x9fe8ff, C.rim ?? 3.2); rim.position.set(2, 1.5, -2.5); scene.add(rim);
 const fill = new THREE.DirectionalLight(0xb9a8ff, .8); fill.position.set(-1, -1, 2); scene.add(fill);
-const bones = {}; root.traverse(o => { if (o.isBone) bones[o.name] = o; });
+const bones = {}; root.traverse(o => { if (o.isBone || (C.build && o.name)) bones[o.name] = o; });
 // fix: turn a model that was exported at an angle so it faces +z; anchor 'bbox': move its footprint centre onto the origin
 const FIX = (C.fix || 0) * Math.PI / 180; root.rotation.order = 'YXZ'; root.rotation.x = (C.tiltX || 0) * Math.PI / 180; root.rotation.y = FIX; root.updateMatrixWorld(true);
 if (C.anchor === 'bbox') { const bb = new THREE.Box3(); root.traverse(o => { if (o.isSkinnedMesh) bb.union(new THREE.Box3().setFromObject(o, true)); }); const c = bb.getCenter(new THREE.Vector3()); root.position.x -= c.x; root.position.z -= c.z; }
