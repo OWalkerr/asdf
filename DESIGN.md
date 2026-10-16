@@ -243,6 +243,18 @@ Mevcut 2D tuval her kare bir WebGL dokusuna aktarılır ve tek bir shader zincir
 - [x] Kahraman çeşitleri ve kürkler beyaz tilki atlasının renklendirilmiş kopyasıyla çizilir (gölgeler korunur, ton ve doygunluk kürk renginden): Gölge Tilki lavanta, Kor Tilki kehribar, Ruh Çağıran mavi; başarım kürkleri de aynı yolla.
 - [ ] Gerçek boyanmış arka plan katmanları eklenirse kodla çizilenlerin yerini alacak.
 
+## Ses tasarımı
+
+Tamamı Web Audio ile kodda üretilir (dosya yok).
+- **Sinyal yolu:** efekt, müzik ve ortam kanalları → ana kanal → alçak geçiren "boğuklaştırma" filtresi → kompresör → kazanç → sınırlayıcı → yumuşak kırpıcı. Müzik ve ortam ayrı bir "duck" kazancından geçer.
+- **Yankı:** kodla üretilen 2,9 sn'lik zindan yankısı (erken yansımalar + kararan kuyruk); her ses kendi oranında gönderir (vuruş az, Ay Sıçrayışı ve çanlar çok).
+- **Stereo:** vuruş, ölüm, patlama ve çığlık sesleri kaynağın ekrandaki yatay konumundan gelir.
+- **Sinematik tepkiler:** büyük patlama, iniş, Söküm ve hasar müziği kısa süre kısar; büyük patlama ve hasar dünyayı bir an boğuklaştırır, ağır çekimde tüm ses derinden duyulur.
+- **Efektler katmanlıdır:** fırlatma (hava süpürmesi + cam tını + parlak çınlama), vuruş (tık + gövde + metalik çan), sekme (yumuşak hava + ruh çanı), Delici (yükselen testere + ışın + çan), Söküm (art arda yırtılma + derin darbe), Ay Sıçrayışı (yükselen akor ve parıltı), iniş ve patlamalar (alt bas düşüşü + gürültü + kıvılcım + kemik kırılması), hasar (boğuk darbe + iki kalp atışı), ödüller FM çanlarıyla. Her düşmanın kendi ölüm sesi + ortak kemik kırılması.
+- **Ortam (biyom başına):** nefes alan akor pedi (yavaş filtre dalgası) ve rüzgâr; rastgele olaylar. Cadı zindanı: damla, uzak çan, fısıltı. Buz mezarlığı: kristal çınlama, rüzgâr esintisi. Kan katedrali: kalp atışı, hırıltı, damla. Savaşta mangal çıtırtıları. Biyom değişince 4 sn'de çapraz geçiş.
+- **Dinamik müzik:** her ölçüde akor pedi, yankılı (noktalı sekizlik gecikme) pluck arpej, savaşta bas, bas davul, yoğunluk arttıkça trampet ve hi-hat. Yoğunluk düşman sayısına göre yumuşakça değişir. Muhafızlarda tam yoğunluk, Lord / Kardinal / Kraliçe'de "aah" korosu, Lord / Atlı / Kardinal'de tok davullar.
+- **Seviyeler çevrimdışı ölçülerek ayarlandı:** sık sesler (vuruş, ölüm) ~0,3 tepe, büyük vuruşlar 0,75–0,93, müzik ortalaması ~0,06.
+
 **Önerilen sıra:** Aşama 2 (en çok "vay" etkisi, en az risk) → Aşama 1'in kamera ve fizik maddeleri → Aşama 3. Her aşamada grafik kalitesi ayarına bağlı kademeler ve telefonda 60 fps hedefi korunur.
 
 ## 12. Sıradaki adımlar (yol haritası)
