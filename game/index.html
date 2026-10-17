@@ -3,7 +3,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#060d10">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="icon.svg">
+<link rel="apple-touch-icon" href="icon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Marcellus+SC&family=Barlow+Semi+Condensed:wght@400;500;600;700;800&display=swap">
@@ -285,6 +285,7 @@ p{margin:0;line-height:1.45;color:var(--ink)}
       <button class="btn" id="btnHow">Nasıl oynanır</button>
       <button class="btn" id="btnShop">Ruh Sunağı <small>kalıcı güçler</small></button>
       <button class="btn" id="btnAch">Başarımlar <small id="achLbl"></small></button>
+      <button class="btn" id="btnFull" hidden>Tam ekran <small id="fullLbl">uygulama gibi oyna</small></button>
     </div>
     <div class="ups history" id="history" hidden></div>
     <p class="fine">Cadı zindanlarına düşmüş beyaz bir ruh tilkisinin ışık avı.</p>
@@ -439,7 +440,23 @@ let AC = null, lastHitSfx = 0, MG = null;
 const AU = { dipUntil: 0, intensity: .2, amb: null, ambTheme: null };
 const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
 let lastPling = 0, NB = null, lastCrunch = 0; const DIE_T = {}, LAST = {};
-function initAudio() { if (AC) return; try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { AC = null; return; } buildAudio(); startMusic(); }
+function initAudio() { if (AC) { wakeAudio(); return; } try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { AC = null; return; } buildAudio(); startMusic(); wakeAudio(); }
+// Mobile browsers start audio suspended and only allow it inside a touch: every touch resumes it if needed. iOS also
+// silences Web Audio with the ring/silent switch unless the page's audio session is 'playback'; a looping silent
+// <audio> element does the same on older iOS. A one-sample buffer completes the unlock.
+let SILENT = null;
+function wakeAudio() {
+  if (!AC) return;
+  try { if (navigator.audioSession && navigator.audioSession.type !== 'playback') navigator.audioSession.type = 'playback'; } catch (e) {}
+  if (AC.state !== 'running') { try { AC.resume(); } catch (e) {} const b = AC.createBuffer(1, 1, 22050), s = AC.createBufferSource(); s.buffer = b; s.connect(AC.destination); s.start(0); }
+  if (!SILENT) {
+    const sr = 8000, n = sr / 2, buf = new ArrayBuffer(44 + n * 2), v = new DataView(buf), w = (o, s) => [...s].forEach((c, i) => v.setUint8(o + i, c.charCodeAt(0)));
+    w(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); w(8, 'WAVE'); w(12, 'fmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true); v.setUint32(24, sr, true); v.setUint32(28, sr * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true); w(36, 'data'); v.setUint32(40, n * 2, true);
+    SILENT = new Audio(URL.createObjectURL(new Blob([buf], { type: 'audio/wav' }))); SILENT.loop = true; SILENT.setAttribute('playsinline', ''); SILENT.volume = .01;
+  }
+  if (SILENT.paused && !muted) SILENT.play().catch(() => {});
+}
+for (const ev of ['pointerdown', 'touchend', 'keydown']) window.addEventListener(ev, () => initAudio(), { capture: true, passive: true });
 function makeIR(dur, decay) {
   const sr = AC.sampleRate, len = Math.floor(sr * dur), b = AC.createBuffer(2, len, sr);
   for (let ch = 0; ch < 2; ch++) {
@@ -3133,7 +3150,27 @@ function renderHistory() {
   el.innerHTML = '<span class="hl">Son avlar</span>' + H.slice(0, 5).map(r => `<span>${r.d ? '◆ ' : ''}${heroById(r.h).n} · oda ${r.room} · ${Math.floor(r.t / 60)}:${String(r.t % 60).padStart(2, '0')}</span>`).join('');
 }
 document.querySelectorAll('[data-back]').forEach(b => b.addEventListener('click', () => titleScreen()));
-$('btnStart').addEventListener('click', () => { initAudio(); renderHeroes(); show('scrHero'); });
+// Full screen: the Fullscreen API where the browser allows it (Android, desktop); iPhone Safari has none for pages,
+// so there the game is added to the home screen. Inside the claude.ai preview frame the button opens the standalone site.
+const PAGES_URL = 'https://owalkerr.github.io/asdf/';
+const STANDALONE = matchMedia('(display-mode: fullscreen), (display-mode: standalone)').matches || navigator.standalone === true;
+const IN_FRAME = (() => { try { return window.top !== window; } catch (e) { return true; } })();
+const CAN_FS = !!(document.fullscreenEnabled || document.webkitFullscreenEnabled);
+const IS_IOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+function goFull() {
+  const el = document.documentElement, f = el.requestFullscreen || el.webkitRequestFullscreen; if (!f || document.fullscreenElement) return;
+  try { const r = f.call(el, { navigationUI: 'hide' }); if (r && r.then) r.then(() => { try { screen.orientation.lock('portrait').catch(() => {}); } catch (e) {} }).catch(() => {}); } catch (e) {}
+}
+if (!STANDALONE) {
+  $('btnFull').hidden = false;
+  if (!CAN_FS) $('fullLbl').textContent = IN_FRAME ? 'kendi adresinde aç' : IS_IOS ? 'Paylaş → Ana Ekrana Ekle' : 'ana ekrana ekle';
+}
+$('btnFull').addEventListener('click', () => {
+  if (CAN_FS) return goFull();
+  if (IN_FRAME) { window.open(PAGES_URL, '_blank'); return; }
+  toast(IS_IOS ? 'Safari\'de Paylaş düğmesi → "Ana Ekrana Ekle": oyun simgesinden tam ekran açılır.' : 'Tarayıcı menüsünden "Ana ekrana ekle" ile tam ekran oyna.');
+});
+$('btnStart').addEventListener('click', () => { initAudio(); if (CAN_FS && !STANDALONE && matchMedia('(pointer: coarse)').matches) goFull(); renderHeroes(); show('scrHero'); });
 const heroSvg = h => `<svg width="30" height="30" viewBox="0 0 48 48"><path d="M8 7L17 20L24 18L31 20L40 7L39 26Q36 37 24 43Q12 37 9 26Z" fill="#f2fbff" stroke="rgb(${h.rim})" stroke-width="1.5"/><path d="M11 11L16 20L14 22ZM37 11L32 20L34 22Z" fill="${h.cloak[0]}"/><path d="M15 28Q18 26 21 29Q18 30 15 28ZM33 28Q30 26 27 29Q30 30 33 28Z" fill="rgb(${h.rim})"/><path d="M22.5 35L24 37L25.5 35Z" fill="#2a3a55"/></svg>`;
 function renderHeroes() {
   const c = $('heroes'); c.innerHTML = '';

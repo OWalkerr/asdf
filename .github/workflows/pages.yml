@@ -1,0 +1,46 @@
+# Publishes the game as a standalone site (https://owalkerr.github.io/asdf/) so phones can add it to the home
+# screen and play full screen. game/index.html is a page body; the build wraps it in a full document.
+name: Pages
+on:
+  push:
+    branches: [main]
+    paths: ['game/**', '.github/workflows/pages.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: true
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        run: |
+          mkdir -p dist
+          cp -r game/* dist/
+          {
+            printf '<!doctype html>\n<html lang="tr">\n<head>\n<meta charset="utf-8">\n'
+            printf '<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">\n'
+            printf '<meta name="apple-mobile-web-app-capable" content="yes">\n<meta name="mobile-web-app-capable" content="yes">\n'
+            printf '<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">\n<meta name="apple-mobile-web-app-title" content="Ruh Tilkisi">\n'
+            printf '<meta name="theme-color" content="#060d10">\n<link rel="manifest" href="manifest.webmanifest">\n<link rel="apple-touch-icon" href="icon-180.png">\n'
+            printf '<style>html,body{margin:0;height:100%%;background:#060d10;overscroll-behavior:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}</style>\n'
+            printf '</head>\n<body>\n'
+            cat game/index.html
+            printf '\n</body>\n</html>\n'
+          } > dist/index.html
+      - uses: actions/configure-pages@v5
+        with:
+          enablement: true
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+      - id: deploy
+        uses: actions/deploy-pages@v4
