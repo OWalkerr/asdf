@@ -368,6 +368,15 @@ p{margin:0;line-height:1.45;color:var(--ink)}
   </div>
 </section>
 
+<section class="screen" id="scrEvent" hidden>
+  <div class="panel">
+    <div class="eyebrow" id="evEyebrow">Ruh Olayı</div>
+    <h2 id="evTitle"></h2>
+    <p class="lead" id="evText"></p>
+    <div class="cards" id="evChoices"></div>
+  </div>
+</section>
+
 <section class="screen" id="scrPath" hidden>
   <div class="panel">
     <div class="eyebrow" id="pathEyebrow">Sıradaki kapı</div>
@@ -842,6 +851,23 @@ const UPS = [
   { id:'boneburst', n:'Kemik Patlaması', r:'leg', max:1, tag:'Sinerji', req:u => G.hero.id === 'heavy' && (u.heavy || u.dmg), d:'Kemik Kıran\'a özel: üzerinde 5+ mızrak olan düşman ölünce çevresine 6 mızrak saçar.', a:s => s.boneBurst = true },
   { id:'grovelord', n:'Koru Bekçisi', r:'leg', max:1, tag:'Sinerji', req:u => G.hero.id === 'grove' && (u.foxfire || u.flow || u.echo), d:'Orman Tilkisi\'ne özel: tilki ateşlerinin mızrakları %100 hasar verir ve düşmana saplanınca 1 sn yavaşlatır.', a:s => s.groveLord = true },
   { id:'chorus', n:'Ruh Korosu', r:'leg', max:1, tag:'Sinerji', req:u => G.hero.id === 'caller' && (u.spirit || u.rcd), d:'Ruh Çağıran\'a özel: ruhlar iki mızrak birden atar ve ruh mızrakları %80 hasar verir.', a:s => s.chorus = true },
+  // Ruh Ataları: four patrons whose core card changes what a spear does; met through Ata Kapısı doors
+  { id:'p_moon', n:'Ay Mızrağı', r:'epic', max:1, tag:'Ay Atası', pat:'moon', d:'Mızrakların menzilin sonunda sana geri döner ve dönüş yolunda da vurur.', a:s => s.moonSpear = true },
+  { id:'p_crescent', n:'Hilal Kesik', r:'rare', max:2, tag:'Ay Atası', pat:'moon', req:u => u.p_moon, d:'Geri dönen mızraklar %50 fazla hasar verir.', a:s => s.retMul += .5 },
+  { id:'p_night', n:'Gece Adımı', r:'rare', max:2, tag:'Ay Atası', pat:'moon', d:'Her inişte çevrene 3 hilal mızrağı saçılır.', a:s => s.nightStep += 3 },
+  { id:'p_ember', n:'Kor Mızrak', r:'epic', max:1, tag:'Kor Atası', pat:'ember', d:'İsabet eden mızrak düşmanı 3 sn yakar. Yanan düşman ölünce patlar ve ateşi yakındakilere yayar.', a:s => s.ember = true },
+  { id:'p_blaze', n:'Alev Seli', r:'rare', max:2, tag:'Kor Atası', pat:'ember', req:u => u.p_ember, d:'Yanma hasarı +%50, süresi +1 sn.', a:s => { s.burnMul += .5; s.burnT += 1; } },
+  { id:'p_cinder', n:'Kor Adım', r:'rare', max:2, tag:'Kor Atası', pat:'ember', d:'Sekme yolunda 2 sn yanan bir iz kalır; içinden geçen düşmanlar tutuşur.', a:s => s.cinder++ },
+  { id:'p_frost', n:'Ayaz Mızrak', r:'epic', max:1, tag:'Buz Atası', pat:'frost', d:'Her isabet bir ayaz yükü bırakır; 4 yükte düşman 1.2 sn donar ve %30 fazla hasar alır.', a:s => s.frostSpear = true },
+  { id:'p_shatter', n:'Buz Kırığı', r:'rare', max:2, tag:'Buz Atası', pat:'frost', req:u => u.p_frost, d:'Donmuş düşman ölünce çevresine 6 buz kıymığı saçar.', a:s => s.iceShards += 6 },
+  { id:'p_rime', n:'Kırağı Adım', r:'rare', max:2, tag:'Buz Atası', pat:'frost', d:'İnişte çevrendeki düşmanlara 2 ayaz yükü (Ayaz Mızrak yoksa onları yavaşlatır).', a:s => s.rime += 2 },
+  { id:'p_storm', n:'Şimşek Mızrak', r:'epic', max:1, tag:'Fırtına Atası', pat:'storm', d:'İsabetlerin %35\'i yakındaki 2 düşmana zincir şimşek olarak sıçrar (%45 hasar).', a:s => s.chain = true },
+  { id:'p_volt', n:'Yüksek Gerilim', r:'rare', max:2, tag:'Fırtına Atası', pat:'storm', req:u => u.p_storm, d:'Zincir şimşek bir hedefe daha sıçrar, şansı +%15.', a:s => { s.chainN++; s.chainP += .15; } },
+  { id:'p_thunder', n:'Gök Gürültüsü', r:'rare', max:1, tag:'Fırtına Atası', pat:'storm', d:'Coşku sırasında her 0.4 sn rastgele bir düşmana yıldırım düşer.', a:s => s.thunder = true },
+  { id:'d_eclipse', n:'Tutulma Ateşi', r:'leg', max:1, tag:'İkili', req:u => u.p_moon && u.p_ember, d:'Ay + Kor: geri dönen mızraklar alev alır ve sana ulaştığında çevrende patlar.', a:s => s.eclipse = true },
+  { id:'d_thermal', n:'Isıl Şok', r:'leg', max:1, tag:'İkili', req:u => u.p_ember && u.p_frost, d:'Kor + Buz: donmuş düşmana ateş değince buz patlar (%300 hasar, çevreye yayılır).', a:s => s.thermal = true },
+  { id:'d_crystal', n:'Kristal Şimşek', r:'leg', max:1, tag:'İkili', req:u => u.p_frost && u.p_storm, d:'Buz + Fırtına: zincir şimşek ayaz yükü bırakır ve donmuş düşmanlara iki kat vurur.', a:s => s.crystal = true },
+  { id:'d_starstorm', n:'Yıldız Fırtınası', r:'leg', max:1, tag:'İkili', req:u => u.p_storm && u.p_moon, d:'Fırtına + Ay: geri dönen mızrakların her isabeti kesin zincir şimşek yapar.', a:s => s.starstorm = true },
   { id:'hp', n:'Sağlam Ruh', r:'common', max:5, tag:'Ruh', d:'Azami can +25 ve 25 can yenile.', a:(s, p) => { s.maxHp += 25; p.hp += 25; } },
   { id:'regen', n:'Yenilenme', r:'common', max:3, tag:'Ruh', d:'Saniyede 1 can yenilenir.', a:s => s.regen += 1 },
   { id:'leech', n:'Kan Bağı', r:'rare', max:3, tag:'Ruh', d:'Mızrak hasarının %4\'ü kadar can çalarsın.', a:s => s.leech += .04 },
@@ -857,6 +883,8 @@ const DOORS = {
   chest:  { n: 'Ruh Sandığı', r: 'epic', risk: 'Risk: düşük', d: 'Az düşman ve bir sandık. Sandığı kır: nadir veya daha iyi güçler ve 12 parça. Ama her sandık sandık değildir.' },
   altar:  { n: 'Kan Sunağı', r: 'leg', risk: 'Bedeli can', d: 'Savaş yok. Canından ya da azami canından vererek nadir veya daha iyi güçler seç.' },
   shop:   { n: 'Ruh Tüccarı', r: 'rare', risk: 'Savaş yok', d: 'Bu avda topladığın ruh parçalarıyla güç, can ya da yeniden çekme hakkı satın al. Harcadığın parçalar kalıcı birikimine eklenmez.' },
+  patron: { n: 'Ata Kapısı', r: 'epic', risk: 'Risk: düşük', d: 'Savaş odası; ödülü bir Ruh Atası\'nın kartları.' },
+  event:  { n: 'Ruh Olayı', r: 'rare', risk: 'Bilinmez', d: 'Bir yolcu, bir sunak ya da bir fısıltı. Savaş yok; seçimin bir bedeli ve ödülü var.' },
   rest:   { n: 'Ruh Pınarı', r: 'epic', risk: 'Savaş yok', d: 'Canının %40\'ını yenile ve +1 yeniden çekme hakkı kazan. Bu odadan güç çıkmaz.' },
 };
 
@@ -932,6 +960,7 @@ function baseStats() {
     rendMul: 1, rendCd: 6, qDmg: 70, qCd: 5, crit: .05, multi: 0, pierce: 0, heavy: 0, slow: 0, storm: false, ghostHop: false, trail: 0, shock: 0,
     rhythm: 0, shadow: 0, exec: 0, spread: false, harvest: 0, leech: 0, regen: 0, spirits: 0, maxHp: 100 + 12 * meta.hp,
     rCd: 20, rStun: 1, rR: 150, rendPer: .6, trailMul: 1, shockR: 0, spiritRate: 1, postIframe: 0, rRend: false,
+    moonSpear: false, retMul: 1, nightStep: 0, ember: false, burnMul: 1, burnT: 3, cinder: 0, frostSpear: false, iceShards: 0, rime: 0, chain: false, chainN: 2, chainP: .35, thunder: false, eclipse: false, thermal: false, crystal: false, starstorm: false,
     groveFire: false, bounce: 0, bounceGen: 1, mark: 0, flow: 0, echo: 0, echoR: 0, foxfire: 0, nova: 0, starfall: false, ward: 0, aegis: false };
 }
 function recomputeStats() {
@@ -965,7 +994,7 @@ function newRun(daily, testHero) {
   G = { s, hero, skin, trail: trailById(meta.trail), ups: {}, room: 0, kills: 0, time: 0, shards: 0, rerolls: meta.reroll, hops: 0, phase: 'fight',
     p: { x: 0, y: 0, hp: s.maxHp, state: 'idle', t: 0, atkCd: .3, face: -Math.PI / 2, target: null, iT: 0, hvx: 0, hvy: 0, buf: false,
       lastHop: -9, lastPerfect: -9, rStacks: 0, ghosts: [], wardT: 0, qCd: 0, rendCd: 0, rCd: 0, qQueued: false, shots: 0, spA: 0, spCd: [], trailAcc: 0 },
-    forms: {}, fervor: 0, feverT: 0, fervorIdle: 0, enemies: [], spears: [], eshots: [], echoes: [], fires: [], parts: [], texts: [], trails: [], spawns: [], hazards: [], hitstop: 0, gibs: [], decals: [], booms: [], flashA: 0, combo: 0, comboT: 0, zp: 0, hurtA: 0, twinkles: [], rings: [], erupts: [], orbs: [], hitstars: [], impactT: 0, speedT: 0, beamT: 0, lastKill: null, slowT: 0, slowS: 1, roomType: 'fight', pending: 0, waves: [], waveIdx: 0, waveT: 0, shake: 0, clearT: 0,
+    bolts: [], cinders: [], forms: {}, fervor: 0, feverT: 0, fervorIdle: 0, enemies: [], spears: [], eshots: [], echoes: [], fires: [], parts: [], texts: [], trails: [], spawns: [], hazards: [], hitstop: 0, gibs: [], decals: [], booms: [], flashA: 0, combo: 0, comboT: 0, zp: 0, hurtA: 0, twinkles: [], rings: [], erupts: [], orbs: [], hitstars: [], impactT: 0, speedT: 0, beamT: 0, lastKill: null, slowT: 0, slowS: 1, roomType: 'fight', pending: 0, waves: [], waveIdx: 0, waveT: 0, shake: 0, clearT: 0,
     cam: { x: 0, y: 0 } };
   G.mod = {}; G.daily = daily || null; G.rng = daily ? mulberry32(daily.seed) : null;
   if (daily && daily.mod.g) daily.mod.g(G.mod);
@@ -997,9 +1026,15 @@ function bossWaves(r) { const esc = r >= 10 ? ['archer', 'archer', 'spitter'] : 
 
 const bossKind = r => r >= 30 && r % 10 === 0 ? 'treant' : ['lord', 'rider', 'queen', 'cardinal'][(Math.floor(r / 5) - 1) % 4];
 const bossName = r => ({ lord: 'Kemik Lordu', rider: 'Gölge Atlı', queen: 'Yas Kraliçesi', cardinal: 'Kan Kardinali', treant: 'Kadim Ağaç' })[bossKind(r)];
+const LORE = {
+  ice: 'Burada ölenler gömülmez, donar. Taşların altındaki yüzler hâlâ ışığa bakıyor.',
+  blood: 'Katedralin çanları yıllardır kendi kendine çalıyor. Kan, kurumayı unutmuş.',
+  forest: 'Kökler zindanın taşlarını yarmış. Orman, tilkinin ilk geldiği yerin kokusunu taşıyor.',
+};
 function nextRoom(type = 'fight') {
-  G.room++; const r = G.room, boss = r % 5 === 0; if (themeFor(r) !== themeFor(r - 1)) setTimeout(() => toast('Yeni bölge: ' + themeFor(r).n), 1600); G.roomDmg = 0; if (r >= 20) unlock('room20'); if (G.daily && r >= 10) unlock('daily10'); G.roomType = boss ? 'boss' : type; G.hazards.length = 0; G.gibs.length = 0; G.decals.length = 0; G.booms.length = 0; G.orbs.length = 0; G.twinkles.length = 0; G.rings.length = 0; G.erupts.length = 0; G.p.chillT = 0; G.hitstars.length = 0;
-  G.enemies.length = 0; G.eshots.length = 0; G.spears.length = 0; G.spawns.length = 0; G.trails.length = 0; G.intro = null; G.echoes.length = 0; G.fires.length = 0; G.feverT = 0; G.fervor = Math.min(G.fervor, 40);
+  G.room++; const r = G.room, boss = r % 5 === 0;
+  if (r === 1) setTimeout(() => G && G.room === 1 && !G.test && toast('Cadı Zindanı: Ay söndüğünden beri buradaki ruhlar yolunu kaybetti. Işığı geri getir.'), 2200); if (themeFor(r) !== themeFor(r - 1)) setTimeout(() => toast(themeFor(r).n + ': ' + LORE[themeFor(r).id]), 1600); G.roomDmg = 0; if (r >= 20) unlock('room20'); if (G.daily && r >= 10) unlock('daily10'); G.roomType = boss ? 'boss' : type; G.hazards.length = 0; G.gibs.length = 0; G.decals.length = 0; G.booms.length = 0; G.orbs.length = 0; G.twinkles.length = 0; G.rings.length = 0; G.erupts.length = 0; G.p.chillT = 0; G.hitstars.length = 0;
+  G.enemies.length = 0; G.eshots.length = 0; G.spears.length = 0; G.spawns.length = 0; G.trails.length = 0; G.intro = null; G.echoes.length = 0; G.fires.length = 0; G.bolts.length = 0; G.cinders.length = 0; G.feverT = 0; G.fervor = Math.min(G.fervor, 40); if (G.feverNext) { G.feverNext = false; G.fervor = 99; }
   G.p.x = 0; G.p.y = 0; G.p.state = 'idle'; G.p.qQueued = false;
   G.waves = boss ? bossWaves(r) : type === 'chest' ? chestWaves(r) : roomWaves(r); G.waveIdx = 0; G.waveT = 1.1; G.phase = 'fight'; G.clearT = 0; G.isBoss = boss;
   setupRoomMods();
@@ -1064,6 +1099,42 @@ function spawnWave() {
 
 function tickSpawns(dt) {
   for (let i = G.spawns.length - 1; i >= 0; i--) { const sp = G.spawns[i]; sp.t -= dt; if (sp.t <= 0) { { const ne = makeEnemyFull(sp.type, sp.x, sp.y, sp.elite); ne.mimic = sp.mimic; G.enemies.push(ne); if (ne.type === 'wolf') sfx('howl', ne.x); if (G.obj && G.obj.k === 'lantern' && !ne.boss && ['ghoul', 'brute', 'knight', 'frost', 'wolf', 'sporer', 'mimic'].includes(ne.type)) ne.lt = Math.random() < .55; } burst(sp.x, sp.y, COL.ember, 10, 160, .4); G.spawns.splice(i, 1); } }
+}
+// ---------- patron mechanics: returning, burning, freezing and chaining spears ----------
+function ignite(e) { const s = G.s; if (e.dead || e.dying) return; if (s.thermal && e.frozenT > 0) { thermalBlast(e); return; } e.burnT = s.burnT; e.burnDps = s.dmg * .25 * s.burnMul; }
+function thermalBlast(e) { if (e._thermal) return; e._thermal = true; e.frozenT = 0; e.stunT = 0; starBoom(e.x, e.y, 70); sfx('boom', e.x); G.shake = Math.max(G.shake, 7);
+  for (const o of G.enemies) if (!o.dead && o.hp > 0 && hyp(o.x - e.x, o.y - e.y) < 110 + o.r) dmgEnemy(o, G.s.dmg * 3, false, 'launch', 'isil'); e._thermal = false; }
+function chillHit(e, n) {
+  const s = G.s; if (e.dead || e.dying) return;
+  if (!s.frostSpear) { e.slowT = Math.max(e.slowT, 1.5); e.slowAmt = Math.max(e.slowAmt, .5); return; }
+  e.chillN = (e.chillN || 0) + n; if (e.chillN >= 4 && !(e.frozenT > 0)) { e.chillN = 0; e.frozenT = e.boss ? .5 : 1.2; e.stunT = Math.max(e.stunT, e.frozenT); burst(e.x, e.y - e.r, '#e0f6ff', 10, 200, .35, 2.5); sfx('ding', e.x); }
+}
+function chainFrom(e, dmg, n) {
+  const s = G.s, hit = [e]; let from = e;
+  for (let k = 0; k < n; k++) { let best = null, bd = 190; for (const o of G.enemies) { if (o.dead || o.dying || hit.includes(o)) continue; const d = hyp(o.x - from.x, o.y - from.y); if (d < bd) { bd = d; best = o; } }
+    if (!best) break; hit.push(best); G.bolts.push({ x0: from.x, y0: from.y - from.r, x1: best.x, y1: best.y - best.r, life: .16 });
+    if (s.crystal) chillHit(best, 1); dmgEnemy(best, dmg * (s.crystal && best.frozenT > 0 ? 2 : 1), false, 'launch', 'simsek'); from = best; }
+  if (hit.length > 1) sfx('hit', e.x);
+}
+// called on every spear hit
+function patronHit(sp, e) {
+  const s = G.s;
+  if (s.ember) ignite(e);
+  if (s.frostSpear || (s.crystal && sp.ret)) chillHit(e, 1);
+  if (s.chain && (sp.ret && s.starstorm || Math.random() < s.chainP)) chainFrom(e, sp.dmg * .45, s.chainN);
+}
+function updPatron(dt) {
+  const s = G.s, p = G.p;
+  for (const e of G.enemies) {
+    if (e.dead) continue;
+    if (e.frozenT > 0) e.frozenT -= dt;
+    if (e.burnT > 0) { e.burnT -= dt; e.burnAcc = (e.burnAcc || 0) + dt; if (e.burnAcc > .5) { e.burnAcc = 0; dmgEnemy(e, e.burnDps * .5, false, 'burn', 'yanma'); } }
+  }
+  for (let i = G.bolts.length - 1; i >= 0; i--) if ((G.bolts[i].life -= dt) <= 0) G.bolts.splice(i, 1);
+  for (let i = G.cinders.length - 1; i >= 0; i--) { const c = G.cinders[i]; c.life -= dt; if (c.life <= 0) { G.cinders.splice(i, 1); continue; }
+    for (const e of G.enemies) if (!e.dead && !(e.burnT > 0) && hyp(e.x - c.x, e.y - c.y) < e.r + 18) ignite(e); }
+  if (s.thunder && G.feverT > 0) { G.thunderT = (G.thunderT || 0) - dt; if (G.thunderT <= 0) { G.thunderT = .4; const live = G.enemies.filter(e => !e.dead && !e.dying); const e = live[Math.floor(Math.random() * live.length)];
+    if (e) { G.bolts.push({ x0: e.x + rand(-30, 30), y0: e.y - 420, x1: e.x, y1: e.y - e.r, life: .2 }); dmgEnemy(e, s.dmg * 1.2, false, 'launch', 'yildirimDus'); burst(e.x, e.y, '#d8c8ff', 8, 200, .3); sfx('hit', e.x); } } }
 }
 // ---------- room objectives and arena layouts ----------
 // Fight and elite doors can carry an objective (siege, hunt, lantern, gauntlet) and an arena layout (pillars, a ring
@@ -1323,6 +1394,8 @@ function startHop(dx, dy) {
 function endHop() {
   const p = G.p, s = G.s; p.state = 'idle'; p.land = .12;
   p.lastLand = G.time;
+  if (s.nightStep) for (let k = 0; k < s.nightStep; k++) { fireSpear(k * TAU / s.nightStep + rand(0, 1), .5, 'spear', p.x, p.y); G.spears[G.spears.length - 1].gen = 1; }
+  if (s.rime) for (const e of G.enemies) if (!e.dead && hyp(e.x - p.x, e.y - p.y) < 120 + e.r) chillHit(e, s.rime);
   if (p.hookE) { const e = p.hookE; p.hookE = null; if (!e.dead && !e.dying && hyp(e.x - p.x, e.y - p.y) < e.r + 60) { e.stacks += 2; e.stackT = 4; dmgEnemy(e, s.dmg * 1.8, false, 'launch', 'kanca'); starBoom(e.x, e.y, 40); sfx('hit', e.x); G.shake = Math.max(G.shake, 6); if (!e.boss) { e.kx += p.hvx * .25; e.ky += p.hvy * .25; } } }
   if (s.postIframe) p.iT = Math.max(p.iT, s.postIframe);
   if (s.flow) p.atkCd *= Math.pow(.7, s.flow);
@@ -1388,6 +1461,7 @@ function dmgEnemy(e, amt, crit, src, stat) {
   if (e.dead || e.dying || e.reform > 0) return;
   if (e.shield > 0) { const ab = Math.min(e.shield, amt); e.shield -= ab; amt -= ab; if (amt <= 0) { e.flash = .05; txt(e.x, e.y - e.r - 6, Math.round(ab), COL.q); return; } }
   { const k = stat || src || 'spear'; G.dmgBy = G.dmgBy || {}; G.dmgBy[k] = (G.dmgBy[k] || 0) + Math.min(amt, Math.max(0, e.hp)); }
+  if (e.frozenT > 0) amt *= 1.3;
   e.hp -= amt; e.flash = .09; e.hitT = .12;
   txt(e.x, e.y - e.r - 6, Math.round(amt) + (crit ? '!' : ''), src === 'rend' ? COL.gold : crit ? '#ffd27a' : COL.spear, crit || src === 'rend');
   if (e.hp <= 0) killEnemy(e, src, crit);
@@ -1402,6 +1476,8 @@ function bombBlast(e, hitsPlayer) {
 }
 function killEnemy(e, src, crit) {
   if (!e.dying && !e.form2) addFervor(e.boss ? 30 : e.elite ? 14 : 8);
+  if (!e.dying && !e.form2 && G.s.ember && e.burnT > 0 && !e._boom) { e._boom = true; starBoom(e.x, e.y, 34); for (const o of G.enemies) if (!o.dead && !o._boom && o !== e && o.hp > 0 && hyp(o.x - e.x, o.y - e.y) < 120 + o.r) { ignite(o); dmgEnemy(o, G.s.dmg * .8, false, 'launch', 'kor'); } }
+  if (!e.dying && !e.form2 && G.s.iceShards && e.frozenT > 0 && !e._shard && (e._shard = true)) for (let k = 0; k < G.s.iceShards; k++) { fireSpear(k * TAU / G.s.iceShards, .6, 'spear', e.x, e.y); G.spears[G.spears.length - 1].gen = 1; }
   if (e.runner && G.obj && !G.obj.done) { G.obj.done = G.obj.caught = true; G.shards += 12; heal(G.s.maxHp * .15); addFervor(40); banner('Yakalandı!'); twinkleWorld(e.x, e.y, Math.min(W, H) * .4); }
   if (e.type === 'sporer' && !e.dead) spores(e.x, e.y, 100, 3.4, e.dmg * .4);
   if (e.boss && !e.dying && !e.form2 && G.room >= 10) {
@@ -1499,7 +1575,7 @@ function update(dt) {
   for (let i = G.fires.length - 1; i >= 0; i--) { const f = G.fires[i]; f.t -= dt; if (f.t > 0) continue;
     const t = nearestEnemy(f.x, f.y, 520); if (t) { fireSpear(Math.atan2(t.y - f.y, t.x - f.x), s.groveLord ? 1 : .55, 'spear', f.x, f.y); if (s.groveLord) G.spears[G.spears.length - 1].chill = true; sfx('throw'); }
     if (--f.n > 0 && t) f.t = .18; else G.fires.splice(i, 1); }
-  updFervor(dt); updObjective(dt);
+  updFervor(dt); updObjective(dt); updPatron(dt);
   if (G.lay && G.lay.k === 'collapse' && G.phase === 'fight') { G.lay.t += dt; if (G.lay.t > 6) G.lay.R = Math.min(210, G.lay.R + 40 * dt); }
   const inp = inputDir();
 
@@ -1549,6 +1625,7 @@ function update(dt) {
     case 'fling': G.speedT = Math.max(G.speedT, .15); p.t -= dt; p.x += p.hvx * dt; p.y += p.hvy * dt; p.ghosts.push({ x: p.x, y: p.y, life: .35 }); if (p.t <= 0) rImpact(); break;
     case 'hop': {
       p.t -= dt; p.x += p.hvx * dt; p.y += p.hvy * dt;
+      if (s.cinder && (p.cinAcc = (p.cinAcc || 0) + dt) > .035) { p.cinAcc = 0; G.cinders.push({ x: p.x, y: p.y, life: 1 + s.cinder }); }
       if (G.forms.bolt) for (const e of G.enemies) if (!e.dead && !e.dying && !p.boltHit.includes(e) && hyp(e.x - p.x, e.y - p.y) < e.r + 18) { p.boltHit.push(e); e.stacks++; e.stackT = 4; dmgEnemy(e, s.dmg * .9, false, 'launch', 'yildirim'); burst(e.x, e.y, '#bfe8ff', 6, 220, .25, 2); sfx('hit', e.x); }
       if (G.forms.wall && p.wb < 2) { let nx = 0, ny = 0; const pl2 = hyp(p.x, p.y);
         if (pl2 > ARENA - 22) { nx = -p.x / pl2; ny = -p.y / pl2; } else if (G.lay && G.lay.P) for (const c of G.lay.P) { const d2 = hyp(p.x - c.x, p.y - c.y); if (d2 < c.r + 14) { nx = (p.x - c.x) / d2; ny = (p.y - c.y) / d2; } }
@@ -1608,6 +1685,10 @@ function update(dt) {
   // player spears
   for (let i = G.spears.length - 1; i >= 0; i--) {
     const sp = G.spears[i]; sp.px = sp.x; sp.py = sp.y; sp.x += sp.vx * dt; sp.y += sp.vy * dt; sp.life -= dt;
+    if (sp.ret) { // Ay Mızrağı: the spear homes back to the fox
+      const dx = p.x - sp.x, dy = p.y - sp.y, d = hyp(dx, dy) || 1, v = hyp(sp.vx, sp.vy); sp.vx = dx / d * v; sp.vy = dy / d * v; sp.life = 1;
+      if (d < 26) { if (G.s.eclipse) { starBoom(p.x, p.y, 34); for (const e of G.enemies) if (!e.dead && hyp(e.x - p.x, e.y - p.y) < 100 + e.r) { ignite(e); dmgEnemy(e, G.s.dmg * .6, false, 'launch', 'tutulma'); } } G.spears.splice(i, 1); continue; } }
+    else if (G.s.moonSpear && sp.kind === 'spear' && !sp.gen && (sp.life <= 0 || hyp(sp.x, sp.y) > ARENA + 20)) { sp.ret = true; sp.hit = []; sp.dmg *= G.s.retMul; sp.pierce = 99; sp.life = 1; }
     let remove = sp.life <= 0 || hyp(sp.x, sp.y) > ARENA + 40;
     if (!remove) for (const e of G.enemies) {
       if (e.dead || e.dying || sp.hit.includes(e)) continue;
@@ -1631,9 +1712,10 @@ function update(dt) {
         // Seken Işık: a light spear glances off toward the nearest other enemy
         if (G.s.bounce && (sp.gen || 0) < G.s.bounceGen && Math.random() < G.s.bounce) { const o = nearestEnemy(sp.x, sp.y, 320, e); if (o) { fireSpear(Math.atan2(o.y - sp.y, o.x - sp.x), .6, 'spear', sp.x, sp.y); const b = G.spears[G.spears.length - 1]; b.gen = (sp.gen || 0) + 1; b.hit.push(e); G.parts.push({ ring: true, x: sp.x, y: sp.y, r: 14, life: .15, max: .15, c: '#e9fff8' }); } }
         if (G.s.leech) heal(sp.dmg * G.s.leech);
+        if (sp.kind !== 'q') patronHit(sp, e);
         if (!e.boss) { e.kx += sp.vx * .05; e.ky += sp.vy * .05; }
         burst(sp.x, sp.y, COL.spear, 3, 120, .2, 2); sfx('hit', sp.x); G.hitstars.push({ x: sp.x, y: sp.y - 16, life: .1, s: sp.crit ? 24 : 13, crit: sp.crit });
-        if (sp.pierce-- <= 0) { remove = true; break; }
+        if (sp.pierce-- <= 0) { if (G.s.moonSpear && sp.kind === 'spear' && !sp.gen && !sp.ret) { sp.ret = true; sp.hit = [e]; sp.dmg *= G.s.retMul; sp.pierce = 99; break; } remove = true; break; }
       }
     }
     if (!remove && G.lay && G.lay.P && G.lay.P.some(c => hyp(sp.x - c.x, sp.y - c.y) < c.r)) { remove = true; burst(sp.x, sp.y, COL.spear, 4, 140, .2, 2); }
@@ -2471,6 +2553,9 @@ function drawWorld(T, now) {
   }
   for (const b of G.booms) light(b.x, b.y, b.R * 3, Math.min(1, b.life / b.max * 1.6), '255,224,180');
   if (G.phase !== 'over') light(p.x, p.y - 10, 330, .95, G.feverT > 0 ? '255,230,160' : '215,255,245');
+  for (const b of G.bolts) { const k = b.life / .16; for (let j = 0; j <= 6; j++) { const t = j / 6; emit('210,190,255', b.x0 + (b.x1 - b.x0) * t + rand(-8, 8), b.y0 + (b.y1 - b.y0) * t + rand(-8, 8), 12, .9 * k); } light(b.x1, b.y1, 120, .8 * k, '200,180,255'); }
+  for (const c of G.cinders) emit('255,140,60', c.x, c.y - 4, 16, .5 * Math.min(1, c.life));
+  for (const e of G.enemies) { if (e.burnT > 0) { emit('255,130,50', e.x, e.y - e.r, e.r * 1.8 + 3 * Math.sin(G.time * 20 + e.wob), .55); light(e.x, e.y, 70, .4, '255,140,60'); } if (e.frozenT > 0) emit('200,240,255', e.x, e.y - e.r, e.r * 2.2, .5); }
   if (p.state === 'hop' && G.forms.bolt) { emit('170,220,255', p.x, p.y - 16, 40, .7); light(p.x, p.y, 160, .7, '170,220,255'); }
   if (p.state === 'hop' && p.hookE && !p.hookE.dead) { const e = p.hookE; for (let k = 1; k < 6; k++) emit('200,240,255', p.x + (e.x - p.x) * k / 6, p.y - 16 + (e.y - p.y) * k / 6, 10, .8); }
   if (G.feverT > 0) { emit('255,215,120', p.x, p.y - 18, 46 + 6 * Math.sin(G.time * 14), .45); emit('255,250,220', p.x, p.y - 18, 16, .6); }
@@ -2680,7 +2765,7 @@ function atlasEnemy(e, r, now, fl) {
   const fi = Math.min(F.n - 1, (ph * F.n) | 0), s = r * A.k / (M.l * M.u), P = G.p;
   const [di, dfl] = atlasDir(A, Math.atan2((P.y - e.y) * TK, P.x - e.x));
   if (e.hz && e.type === 'mimic') ctx.translate(0, -e.hz); // mimic leap height (the rider uses hz as a timer)
-  atlasDraw(A, an, fi, di, dfl, s, e.face, false, ice);
+  atlasDraw(A, an, fi, di, dfl, s, e.face, false, ice || e.frozenT > 0);
   if (fl) { ctx.globalAlpha = .9; atlasDraw(A, an, fi, di, dfl, s, e.face, true); ctx.globalAlpha = 1; }
   const p = F.e && F.e[di][fi]; if (p) eye((p[0] - M.g[0]) * s * dfl * e.face, (p[1] - M.g[1]) * s, A.eye, r * .7, act ? 1 : .75);
   return true;
@@ -3708,12 +3793,20 @@ const ICON = {
   elite: '<path d="M3 18V8l5 4 4-7 4 7 5-4v10z" fill="currentColor" fill-opacity=".3"/>',
   cursed: '<path d="M2 12c5-8 15-8 20 0-5 8-15 8-20 0z"/><circle cx="12" cy="12" r="3" fill="currentColor"/>',
   rest: '<path d="M12 3c4 6 6 9 6 12a6 6 0 0 1-12 0c0-3 2-6 6-12z"/><path d="M9 15a3 3 0 0 0 3 3"/>',
+  patron: '<circle cx="12" cy="10" r="5"/><path d="M5 21c1-4 4-6 7-6s6 2 7 6"/><path d="M12 2v3M4 6l2 2M20 6l-2 2"/>',
+  event: '<path d="M12 3a7 7 0 0 1 7 7c0 4-3 5-4 8h-6c-1-3-4-4-4-8a7 7 0 0 1 7-7z"/><path d="M9 21h6"/>',
 };
-const icon = k => `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ICON[k] || ICON['Mızrak']}</svg>`;
+const PATRONS = {
+  moon: { n: 'Ay Atası', rgb: '190,200,255', d: 'Ay Atası: geri dönen mızraklar.' },
+  ember: { n: 'Kor Atası', rgb: '255,150,80', d: 'Kor Atası: yakan mızraklar, patlayan ölüler.' },
+  frost: { n: 'Buz Atası', rgb: '160,225,255', d: 'Buz Atası: donduran mızraklar.' },
+  storm: { n: 'Fırtına Atası', rgb: '200,170,255', d: 'Fırtına Atası: zincir şimşekler.' },
+};
+const icon = k => `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ICON[k] || (/Ata|İkili/.test(k) ? ICON.patron : ICON['Mızrak'])}</svg>`;
 
 
 // ---------- screens ----------
-const screens = ['scrTitle', 'scrHero', 'scrHow', 'scrShop', 'scrDraft', 'scrPath', 'scrMerchant', 'scrAltar', 'scrAch', 'scrTest', 'scrForm', 'scrPause', 'scrOver'];
+const screens = ['scrTitle', 'scrHero', 'scrHow', 'scrShop', 'scrDraft', 'scrPath', 'scrMerchant', 'scrAltar', 'scrAch', 'scrTest', 'scrForm', 'scrEvent', 'scrPause', 'scrOver'];
 let backTo = 'scrTitle';
 function show(id) { screens.forEach(s => $(s).hidden = s !== id); $('hud').hidden = !G || id === 'scrTitle' || id === 'scrHow' || id === 'scrShop' || id === 'scrTest'; }
 function titleScreen() {
@@ -3835,6 +3928,10 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) pause
 let draftOpts = [];
 function rollDraft() {
   let avail = UPS.filter(u => (G.ups[u.id] || 0) < u.max && (!u.req || u.req(G.ups)) && !(u.id === 'ghost' && G.s.ghostHop)); const out = [];
+  // patron cards come from Ata Kapısı; elsewhere only once that patron's core card is owned
+  const core = { moon: 'p_moon', ember: 'p_ember', frost: 'p_frost', storm: 'p_storm' };
+  if (G.roomType === 'patron') { const pa = avail.filter(u => u.pat === G.roomPatron); if (!G.ups[core[G.roomPatron]] && pa.some(u => u.id === core[G.roomPatron])) out.push(pa.splice(pa.findIndex(u => u.id === core[G.roomPatron]), 1)[0]); while (out.length < 3 && pa.length) out.push(pa.splice(Math.floor(crand() * pa.length), 1)[0]); avail = avail.filter(u => !u.pat && !out.includes(u)); }
+  else avail = avail.filter(u => !u.pat || G.ups[core[u.pat]]);
   if (G.roomType === 'altar' || G.roomType === 'chest') { const rare = avail.filter(u => u.r !== 'common'); if (rare.length >= 3) avail = rare; }
   const boost = G.roomType !== 'fight', w = u => boost && u.r === 'common' ? 2 : RW[u.r];
   while (out.length < 3 && avail.length) {
@@ -3852,6 +3949,37 @@ const FORMS = [
   { id: 'bolt', n: 'Yıldırım Adım', d: 'Sekerken içinden geçtiğin her düşman hasar alır ve üstüne bir mızrak saplanır. Sekme boyunca hasar almazsın.' },
   { id: 'time', n: 'Zaman Bükümü', d: 'Mükemmel Sekme penceresi genişler; zaman daha uzun ve daha çok yavaşlar, Coşku daha çok dolar.' },
 ];
+// Ruh Olayı: small story rooms with a choice; each has a price and a reward
+const randUp = r => { const pool = UPS.filter(u => u.r === r && !u.pat && (G.ups[u.id] || 0) < u.max && (!u.req || u.req(G.ups)) && !(u.id === 'ghost' && G.s.ghostHop)); return pool[Math.floor(crand() * pool.length)]; };
+const giveUp = u => { if (!u) return ''; G.ups[u.id] = (G.ups[u.id] || 0) + 1; u.a(G.s, G.p); G.p.hp = Math.min(G.p.hp, G.s.maxHp); return u.n; };
+const EVENTS = [
+  { id: 'owl', t: 'Yaşlı Baykuş', x: 'Kırık bir sütunun tepesinde yaşlı bir baykuş seni izliyor. "Genç tilki," diyor, "yolun uzun. Işığından biraz paylaşırsan sana bir sır veririm."',
+    c: [{ n: 'Işığını paylaş', d: '-20 can · rastgele bir nadir güç ve +1 yeniden çekme', go: () => { G.p.hp = Math.max(1, G.p.hp - 20); G.rerolls++; return 'Baykuşun sırrı: ' + giveUp(randUp('rare')); } },
+        { n: 'Selam verip geç', d: 'Canının %15\'ini yenile', go: () => { heal(G.s.maxHp * .15); return 'Baykuş başını eğdi.'; } }] },
+  { id: 'mirror', t: 'Fısıldayan Ayna', x: 'Çatlak bir ayna başka bir tilkiyi gösteriyor: senden daha güçlü, daha yorgun. Ayna fısıldıyor: "Benimle yer değiştir."',
+    c: [{ n: 'Aynaya dokun', d: 'Bir gücünün seviyesi +1 · azami can -15', go: () => { const own = Object.keys(G.ups).map(id => UPS.find(u => u.id === id)).filter(u => G.ups[u.id] < u.max); const u = own[Math.floor(crand() * own.length)]; G.maxHpPenalty = (G.maxHpPenalty || 0) + 15; const n = u ? giveUp(u) : ''; recomputeStats(); G.p.hp = Math.min(G.p.hp, G.s.maxHp); return n ? n + ' güçlendi.' : 'Ayna boş baktı.'; } },
+        { n: 'Aynayı kır', d: '+15 ruh parçası', go: () => { G.shards += 15; return 'Kırıklar parça parça parladı.'; } }] },
+  { id: 'cub', t: 'Kayıp Yavru', x: 'Karanlıkta titreyen küçücük bir ruh yavrusu buluyorsun. Annesinin ışığını arıyor.',
+    c: [{ n: 'Yanına al', d: '+1 Ruh Yavrusu', go: () => { G.ups.spirit = (G.ups.spirit || 0) + 1; G.s.spirits++; return 'Yavru etrafında dönmeye başladı.'; } },
+        { n: 'Yolunu göster', d: 'Canının %20\'si · sonraki odaya dolu Coşku ile girersin', go: () => { heal(G.s.maxHp * .2); G.feverNext = true; return 'Yavru annesine koştu; içini bir coşku kapladı.'; } }] },
+  { id: 'shrine', t: 'Unutulmuş Sunak', x: 'Yosun tutmuş bir sunak, üstünde iki kandil. Biri ay ışığı gibi soğuk, diğeri kor gibi sıcak.',
+    c: [{ n: 'Soğuk kandil', d: 'Rastgele bir Ruh Atası\'nın çekirdek gücü', go: () => { const cores = ['p_moon', 'p_ember', 'p_frost', 'p_storm'].filter(id => !G.ups[id]); const id = cores[Math.floor(crand() * cores.length)]; return id ? 'Bir Ata sana döndü: ' + giveUp(UPS.find(u => u.id === id)) : 'Kandil sessizce söndü.'; } },
+        { n: 'Sıcak kandil', d: '+25 ruh parçası', go: () => { G.shards += 25; return 'Kandil parçalara dönüştü.'; } }] },
+  { id: 'dice', t: 'Ruh Zarı', x: 'Gölgeden bir el uzanıyor, avucunda yedi yüzlü bir zar. "At," diyor, "talih ya da bedel."',
+    c: [{ n: 'Zarı at', d: '%55 destansı güç · %45 -25 can', go: () => { if (crand() < .55) return 'Talih: ' + (giveUp(randUp('epic')) || giveUp(randUp('rare'))); G.p.hp = Math.max(1, G.p.hp - 25); G.hurtA = 1; return 'Bedel ödendi.'; } },
+        { n: 'Reddet', d: 'Hiçbir şey olmaz', go: () => 'El gölgeye geri çekildi.' }] },
+  { id: 'spring', t: 'Ay Pınarı', x: 'Taşların arasında ay ışığıyla titreyen bir pınar. Su, dokunduğun yerde gümüş gibi parlıyor.',
+    c: [{ n: 'İç', d: 'Canın tamamen dolar', go: () => { heal(G.s.maxHp); return 'Ruhun tazelendi.'; } },
+        { n: 'Yüzünü yıka', d: 'Azami can +12', go: () => { G.maxHpPenalty = (G.maxHpPenalty || 0) - 12; recomputeStats(); heal(12); return 'Işığın biraz daha güçlendi.'; } }] },
+];
+function showEvent() {
+  G.phase = 'event'; G.seenEv = G.seenEv || []; const pool = EVENTS.filter(e => !G.seenEv.includes(e.id)); const ev = (pool.length ? pool : EVENTS)[Math.floor(crand() * (pool.length || EVENTS.length))]; G.seenEv.push(ev.id);
+  $('evTitle').textContent = ev.t; $('evText').textContent = ev.x; const c = $('evChoices'); c.innerHTML = '';
+  for (const ch of ev.c) { const b = document.createElement('button'); b.className = 'card epic'; b.innerHTML = `<span class="ic">${icon('event')}</span><span class="nm"></span><span class="ds"></span>`;
+    b.querySelector('.nm').textContent = ch.n; b.querySelector('.ds').textContent = ch.d;
+    b.addEventListener('click', () => { if (!G || G.phase !== 'event') return; const msg = ch.go(); sfx('pick'); updHud(); toast(msg); G.phase = 'path'; showPath(); }); c.appendChild(b); }
+  show('scrEvent');
+}
 function showForms() {
   const left = FORMS.filter(f => !G.forms[f.id]); if (!left.length) return showDraft();
   G.phase = 'form'; $('banner').classList.remove('on'); const c = $('formCards'); c.innerHTML = '';
@@ -3888,16 +4016,18 @@ function pick(u) {
 function showPath() {
   if ((G.room + 1) % 5 === 0) { G.nextMods = null; show(null); nextRoom('fight'); return; }
   G.phase = 'path';
-  const pool = ['elite', 'cursed', 'rest', 'shop', 'chest', 'altar'], opts = ['fight'];
+  const pool = ['elite', 'cursed', 'rest', 'shop', 'chest', 'altar', 'patron', 'patron', 'event', 'event'], opts = ['fight'];
+  const pats = ['moon', 'ember', 'frost', 'storm'].sort(() => crand() - .5);
   while (opts.length < 3) opts.push(pool.splice(Math.floor(crand() * pool.length), 1)[0]);
   $('pathEyebrow').textContent = 'Oda ' + (G.room + 1) + ' · muhafıza ' + (5 - (G.room + 1) % 5) + ' oda';
   const c = $('doors'); c.innerHTML = '';
   for (const t of opts) {
-    const D = DOORS[t], b = document.createElement('button'), mods = ['fight', 'elite', 'cursed'].includes(t) ? rollRoomMods(G.room + 1) : null; b.className = 'card ' + D.r;
+    const D = DOORS[t], b = document.createElement('button'), mods = ['fight', 'elite', 'cursed', 'patron'].includes(t) ? rollRoomMods(G.room + 1) : null, pat = t === 'patron' ? pats.pop() : null; b.className = 'card ' + D.r;
+    if (pat) b.style.setProperty('--rc', `rgb(${PATRONS[pat].rgb})`);
     b.innerHTML = `<span class="ic">${icon(t)}</span><span class="nm"></span><span class="rr"></span><span class="ds"></span>`;
-    b.querySelector('.nm').textContent = D.n + (mods && mods.obj ? ' · ' + OBJN[mods.obj] : ''); b.querySelector('.rr').textContent = D.risk;
-    b.querySelector('.ds').textContent = (mods && mods.obj ? OBJD[mods.obj] + ' ' : D.d + ' ') + (mods && mods.lay ? 'Arena: ' + LAYN[mods.lay].toLowerCase() + '.' : '');
-    b.addEventListener('click', () => { G.nextMods = mods; chooseDoor(t); }); c.appendChild(b);
+    b.querySelector('.nm').textContent = (pat ? PATRONS[pat].n + ' Kapısı' : D.n) + (mods && mods.obj ? ' · ' + OBJN[mods.obj] : ''); b.querySelector('.rr').textContent = D.risk;
+    b.querySelector('.ds').textContent = (pat ? PATRONS[pat].d + ' ' : '') + (mods && mods.obj ? OBJD[mods.obj] + ' ' : pat ? '' : D.d + ' ') + (mods && mods.lay ? 'Arena: ' + LAYN[mods.lay].toLowerCase() + '.' : '');
+    b.addEventListener('click', () => { G.nextMods = mods; G.roomPatron = pat; chooseDoor(t); }); c.appendChild(b);
   }
   show('scrPath');
 }
@@ -3972,6 +4102,7 @@ function chooseDoor(t) {
   if (!G || G.phase !== 'path') return; sfx('pick');
   if (t === 'altar') { G.room++; G.roomType = 'altar'; G.phase = 'altar'; banner('Kan Sunağı'); updHud(); renderAltar(); show('scrAltar'); return; }
   if (t === 'shop') { G.room++; banner('Ruh Tüccarı'); updHud(); showMerchant(); return; }
+  if (t === 'event') { G.room++; banner('Ruh Olayı'); updHud(); showEvent(); return; }
   if (t === 'rest') { G.room++; heal(G.s.maxHp * .4); G.rerolls++; sfx('rest'); banner('Ruh Pınarı'); updHud(); showPath(); return; }
   show(null); nextRoom(t);
 }
@@ -3986,7 +4117,7 @@ function gameOver() {
   const m = Math.floor(G.time / 60), sec = Math.floor(G.time % 60);
   $('oStats').innerHTML = `<div>Oda<b>${reached}</b></div><div>Öldürme<b>${G.kills}</b></div><div>Sekme<b>${G.hops}</b></div><div>Süre<b>${m}:${String(sec).padStart(2, '0')}</b></div><div>Ruh parçası<b>+${G.shards}</b></div>`;
   upChips($('oUps'));
-  const DL = { kanca: 'Işık Kancası', yildirim: 'Yıldırım Adım', duvar: 'Duvar Sekmesi', yanki: 'Yankı Sekmesi', nova: 'Söküm Novası', spear: 'Mızrak', q: 'Delici Mızrak', rend: 'Söküm', kader: 'Ay Sıçrayışı', sok: 'İniş Şoku', bomba: 'Kemik Bombası', iz: 'Ruh İzi', spirit: 'Ruh Yavrusu', launch: 'Patlama' };
+  const DL = { yanma: 'Yanma', kor: 'Kor patlaması', isil: 'Isıl Şok', simsek: 'Zincir şimşek', yildirimDus: 'Gök Gürültüsü', tutulma: 'Tutulma Ateşi', kanca: 'Işık Kancası', yildirim: 'Yıldırım Adım', duvar: 'Duvar Sekmesi', yanki: 'Yankı Sekmesi', nova: 'Söküm Novası', spear: 'Mızrak', q: 'Delici Mızrak', rend: 'Söküm', kader: 'Ay Sıçrayışı', sok: 'İniş Şoku', bomba: 'Kemik Bombası', iz: 'Ruh İzi', spirit: 'Ruh Yavrusu', launch: 'Patlama' };
   const rows = Object.entries(G.dmgBy || {}).filter(([, v]) => v >= 1).sort((a, b) => b[1] - a[1]).slice(0, 6), tot = rows.reduce((a, [, v]) => a + v, 0) || 1, mx = rows.length ? rows[0][1] : 1;
   $('oDmg').innerHTML = rows.length ? '<span class="hl">Hasar kaynakları</span>' + rows.map(([k, v]) => `<div class="dmgrow"><span>${DL[k] || k}</span><i style="width:${Math.max(3, 100 * v / mx)}%"></i><b>${Math.round(100 * v / tot)}%</b></div>`).join('') : '';
   const cause = $('oCause'); cause.textContent = '';

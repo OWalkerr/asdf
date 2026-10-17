@@ -283,6 +283,23 @@ Her muhafız yenilince güç seçiminden önce henüz alınmamış 5 biçimden 3
 
 Duraklat ve av sonu ekranlarında alınan biçimler ◆ ile güçlerin önünde listelenir; hasar dökümünde Kanca, Yıldırım Adım ve Duvar Sekmesi ayrı görünür.
 
+## Ruh Ataları, olaylar ve anlatım (Aşama 3)
+
+**Ata Kapısı** (kapı havuzunda iki kez, her biri farklı ata): bir savaş odası; ödül seçimi yalnızca o atanın kartlarından gelir ve atanın çekirdek kartı henüz alınmadıysa ilk seçenek odur. Ata kartları normal seçimlerde ancak o atanın çekirdeği alındıktan sonra çıkar.
+
+| Ata | Çekirdek (Destansı) | Nadir | Nadir |
+|---|---|---|---|
+| Ay | Ay Mızrağı: mızrak menzil sonunda ya da son düşmanına çarpınca sana geri döner, dönüşte her şeyi deler | Hilal Kesik: dönüş %50 hasar | Gece Adımı: inişte 3 hilal mızrağı |
+| Kor | Kor Mızrak: 3 sn yanma; yanan düşman ölünce patlar, ateşi yayar | Alev Seli: yanma +%50, +1 sn | Kor Adım: sekme yolunda 2 sn yanan iz |
+| Buz | Ayaz Mızrak: 4 ayaz yükünde 1.2 sn donma, donmuşlar %30 fazla hasar alır | Buz Kırığı: donmuş ölünce 6 buz kıymığı | Kırağı Adım: inişte çevreye 2 ayaz yükü |
+| Fırtına | Şimşek Mızrak: isabetlerin %35'i 2 düşmana zincir şimşek (%45) | Yüksek Gerilim: +1 hedef, +%15 şans | Gök Gürültüsü: Coşkuda her 0.4 sn yıldırım |
+
+**İkili güçler** (iki atanın çekirdeği alınınca, efsanevi): Tutulma Ateşi (Ay + Kor: dönen mızrak alev alır, sana ulaşınca patlar), Isıl Şok (Kor + Buz: donmuşa ateş değince %300 buz patlaması), Kristal Şimşek (Buz + Fırtına: şimşek ayaz yükü bırakır, donmuşlara iki kat), Yıldız Fırtınası (Fırtına + Ay: dönen mızrağın her isabeti kesin şimşek).
+
+**Ruh Olayı** kapısı (savaş yok, aynı avda aynı olay tekrar etmez): Yaşlı Baykuş (can karşılığı nadir güç + yeniden çekme / küçük iyileşme), Fısıldayan Ayna (bir gücün seviyesi +1 ama azami can -15 / +15 parça), Kayıp Yavru (+1 Ruh Yavrusu / can ve sonraki odaya dolu Coşku), Unutulmuş Sunak (rastgele bir atanın çekirdek kartı / +25 parça), Ruh Zarı (%55 destansı güç, %45 -25 can / reddet), Ay Pınarı (tam can / azami can +12).
+
+**Anlatım:** avın başında ve her yeni biyoma girişte kısa bir anlatım satırı (Cadı Zindanı'nda ayın sönüşü, Buz Mezarlığı'nda donmuş yüzler, Kan Katedrali'nde kendi kendine çalan çanlar, Ruh Ormanı'nda tilkinin geldiği yerin kokusu).
+
 ## Ruh Ormanı (30. oda ve sonrası)
 
 Dördüncü biyom. Yosunlu taş zemin, kenardan sürünen kökler, çimen öbekleri ve düşmüş yapraklar; mum yerine üstünde parlayan mantarlar olan kütükler; altın-yeşil ruh ateşi; ateş böcekleri ve güçlü ışık hüzmeleri. Ortamda kuş cıvıltısı, baykuş, yaprak hışırtısı ve uzak çanlar.
