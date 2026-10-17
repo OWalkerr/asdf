@@ -283,6 +283,16 @@ Her muhafız yenilince güç seçiminden önce henüz alınmamış 5 biçimden 3
 
 Duraklat ve av sonu ekranlarında alınan biçimler ◆ ile güçlerin önünde listelenir; hasar dökümünde Kanca, Yıldırım Adım ve Duvar Sekmesi ayrı görünür.
 
+## Son muhafız: Sönmüş Ay (40. oda) ve oyunun sonu
+
+Avın hedefi 40. oda (oda göstergesinde "/40"). Sönmüş Ay çatlaklarından ışık sızan, ortasında yarık bir gözü ve etrafında dönen kristal halkası olan yüzen bir ay (kodla kurulan 3B model; süzülme, halkayı açıp gözü büyütme, sönüp çökme). Giriş unvanı "Tutulmanın Kalbi", kendi müziği (76 bpm, koro, tok davullar). İkinci form yerine üç evre (can %66 ve %33'te geçiş: ağır çekim, flaş, şok dalgası, mermiler silinir):
+
+1. **Ay Işığı:** dönen ışık kolları (ön uyarı, sonra 3.4 sn; üstünden sekilir, değince itilirsin), 3 yaylım 7'li hilal mermisi, oyuncunun çevresine 7 ışık yağmuru.
+2. **Tutulma:** buna eski muhafızların yankıları eklenir: Yas Kraliçesi'nin çığlık halkaları, Kan Kardinali'nin kan havuzları, Kadim Ağaç'ın kök hatları, Kemik Lordu'nun mermi halkası. Kollar 3 tane.
+3. **Düşen Ay:** arena kenardan içe doğru uçuruma döner (yarıçap 470'e kadar daralır), arenaya 12 yıldız düşer, Ay hızlanır, 4 kol.
+
+Yenince: ağır çekim, beyaz ekran, art arda yıldız parlamaları; ardından **"Ay yeniden doğdu"** bitiş anlatımı, istatistikler ve av boyunca alınan güçler. "Sonsuz Ava devam et" (Ruh Biçimi ve güç seçimiyle 41. odadan sürer) ya da "Avı bitir" (zafer olarak kaydedilir; son avlarda ☾ ile görünür). Başarım "Ay Doğdu" (Ay Işığı kürkü). Deneme Odası'nda muhafız listesinde.
+
 ## Ruh Ataları, olaylar ve anlatım (Aşama 3)
 
 **Ata Kapısı** (kapı havuzunda iki kez, her biri farklı ata): bir savaş odası; ödül seçimi yalnızca o atanın kartlarından gelir ve atanın çekirdek kartı henüz alınmadıysa ilk seçenek odur. Ata kartları normal seçimlerde ancak o atanın çekirdeği alındıktan sonra çıkar.

@@ -2,7 +2,7 @@
 // anims: { name, n, clip, from, to } plays a GLB clip between fractions from..to; { name, n, pose(H, u) } builds a pose by hand.
 const TAIL = ['tailstart', 'tail1', 'tail2', 'tail3'];
 const LEGS = ['frontleg', 'R_frontleg', 'backleg', 'R_backleg', 'frontleg0', 'R_frontleg0', 'backleg0', 'R_backleg0', 'frontleg1', 'R_frontleg1', 'backleg1', 'R_backleg1'];
-import { buildBomb, buildBat, buildChest, buildMimic, buildThorn, buildSporer, buildTreant } from './models.js';
+import { buildBomb, buildBat, buildChest, buildMimic, buildThorn, buildSporer, buildTreant, buildMoon } from './models.js';
 const T2 = 2 * Math.PI, DIRS5 = [0, 45, 90, -45, -90];
 // Meshy humanoids (Mixamo skeleton): clips play in place, size is measured by height
 const HUM = { fw: 200, fh: 224, elev: 51, dirs: DIRS5, byHeight: true, inPlace: 'mixamorigHips', points: { eye: 'mixamorigHead' }, emissive: .18, emissiveColor: 0xffffff, exposure: 1.05 };
@@ -123,6 +123,12 @@ export const CFG = {
       { name: 'attack', n: 8, pose: (H, u) => { H.reset(); const up = Math.sin(Math.PI * Math.min(1, u / .55)), slam = Math.max(0, Math.sin(Math.PI * (u - .45) / .55));
         for (const n of ['armL', 'armR']) H.rotW(n, H.X, -2.2 * up + 1.2 * slam); H.rotW('body', H.X, -.15 * up + .3 * slam); H.rotW('crown', H.X, .1 * up); } },
       { name: 'die', n: 8, pose: (H, u) => { H.reset(); const e = u * u * (3 - 2 * u); H.rotW('body', H.X, 1.2 * e); H.rotW('legL', H.X, -.5 * e); H.rotW('legR', H.X, -.3 * e); H.rotW('armL', H.Z, .6 * e); H.rotW('armR', H.Z, -.6 * e); return -.35 * e; } },
+    ] },
+  moon: { build: buildMoon, fw: 340, fh: 360, elev: 51, dirs: [90], len: 2.4, byHeight: true, exposure: 1.15, rimColor: 0xc8b8ff, rim: 4, points: { eye: 'eye' },
+    anims: [
+      { name: 'walk', n: 12, pose: (H, u) => { H.reset(); const a = u * T2; H.bones.body.position.y = 1.35 + .08 * Math.sin(a); H.bones.ring.rotation.y = a / 3; H.rotW('body', H.Z, .05 * Math.sin(a)); H.bones.shell.rotation.y = a * .1; H.bones.shell.material.emissiveIntensity = .7; } },
+      { name: 'attack', n: 8, pose: (H, u) => { H.reset(); const k = Math.sin(Math.PI * u); H.bones.body.position.y = 1.45; H.bones.ring.rotation.y = u * 2; H.bones.ring.scale.setScalar(1 + .25 * k); H.bones.eye.scale.set(1 + .6 * k, 1 + 1.2 * k, 1); H.bones.shell.material.emissiveIntensity = .5 + 1.5 * k; } },
+      { name: 'die', n: 8, pose: (H, u) => { H.reset(); const e = u * u; H.bones.body.position.y = 1.35 - .9 * e; H.bones.ring.scale.setScalar(1 + .5 * e); H.bones.shell.scale.setScalar(1 - .25 * e); H.bones.eye.scale.setScalar(1 - e * .9); H.bones.shell.material.emissiveIntensity = .5 + 4 * e; } },
     ] },
   // Enemy template: Meshy exports one GLB per animation; list the walk clip as glb and the others in extraClips.
   // Every enemy needs 'walk'; 'attack' (wind-up / shot) and 'die' are optional and used when present.

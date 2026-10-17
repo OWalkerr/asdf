@@ -126,3 +126,30 @@ export function buildTreant(T) {
   }
   return root;
 }
+// Sönmüş Ay (final guardian): a cracked, dimmed moon floating over the ground, light leaking from its cracks, a
+// slit eye in the middle and a ring of shards orbiting it. Parts: body, ring, eye, shell, shard0..shard9.
+export function buildMoon(T) {
+  const root = new T.Group(), body = grp(T, 'body');
+  const geo = new T.IcosahedronGeometry(.62, 4), pos = geo.attributes.position, v = new T.Vector3();
+  for (let i = 0; i < pos.count; i++) { v.fromBufferAttribute(pos, i); const n = Math.sin(v.x * 9) * Math.sin(v.y * 7 + 1) * Math.sin(v.z * 8 + 2); v.multiplyScalar(1 + .035 * n); pos.setXYZ(i, v.x, v.y, v.z); }
+  geo.computeVertexNormals();
+  const shell = new T.Mesh(geo, mat(T, 0x8a86b0, 0x2a2350, .7, .85)); shell.name = 'shell'; body.add(shell);
+  const crack = mat(T, 0xe8e0ff, 0xb8a8ff, 2.6);
+  for (let i = 0; i < 9; i++) { const a = i * 1.7, b = (i % 3 - 1) * .5, c = new T.Mesh(new T.BoxGeometry(.03, .5 + (i % 3) * .15, .03), crack);
+    c.position.set(Math.cos(a) * .6 * Math.cos(b), Math.sin(b) * .6, Math.sin(a) * .6 * Math.cos(b)); c.lookAt(0, 0, 0); c.rotateX(Math.PI / 2); c.rotateZ(i); body.add(c); }
+  for (let i = 0; i < 6; i++) { const a = i * 2.3 + .5, cr = new T.Mesh(new T.SphereGeometry(.09 + (i % 2) * .05, 10, 8), mat(T, 0x3a3652, 0, 0, .95)); cr.scale.set(1, 1, .3); cr.position.set(Math.cos(a) * .58, (i % 3 - 1) * .3, Math.sin(a) * .58); cr.lookAt(0, 0, 0); body.add(cr); }
+  const eye = grp(T, 'eye'); eye.position.set(0, .05, .6); body.add(eye);
+  const iris = new T.Mesh(new T.SphereGeometry(.17, 16, 12), mat(T, 0xf4f0ff, 0xd0c4ff, 3.2)); iris.scale.set(1.5, .55, .5); eye.add(iris);
+  const pupil = new T.Mesh(new T.SphereGeometry(.06, 10, 8), mat(T, 0x140a28, 0x000000, 0)); pupil.scale.set(.5, 1.3, .5); pupil.position.z = .05; eye.add(pupil);
+  const ring = grp(T, 'ring'); body.add(ring);
+  for (let i = 0; i < 10; i++) { const sh = grp(T, 'shard' + i), m = new T.Mesh(new T.OctahedronGeometry(.07 + (i % 3) * .025, 0), mat(T, 0xc8c0ff, 0x8a7aff, 1.6, .3)); m.scale.set(.6, 1.6, .6); sh.add(m); const a = i * TAU10;
+    sh.position.set(Math.cos(a) * 1.0, Math.sin(i * 1.3) * .12, Math.sin(a) * 1.0); sh.rotation.z = a; ring.add(sh); }
+  ring.rotation.x = .35;
+  // trailing tendrils of shadow under the moon
+  const tm = mat(T, 0x2a2048, 0x1a0a3a, .6, .9);
+  for (let i = 0; i < 5; i++) { const a = i * 1.26, c = new T.CatmullRomCurve3([new T.Vector3(Math.cos(a) * .3, -.45, Math.sin(a) * .3), new T.Vector3(Math.cos(a) * .45, -.8, Math.sin(a) * .45), new T.Vector3(Math.cos(a + .4) * .35, -1.05, Math.sin(a + .4) * .35)]);
+    const t = new T.Mesh(new T.TubeGeometry(c, 10, .05, 6), tm); t.name = 'tendril' + i; body.add(t); }
+  body.position.y = 1.35; root.add(body);
+  return root;
+}
+const TAU10 = Math.PI * 2 / 10;
