@@ -362,6 +362,10 @@ Duraklat menüsünde: **Joystick: serbest / sabit** (sabitte taban ekranın alt 
 
 Ayrıca: **Hassasiyet: normal / yüksek / düşük** (tam eğim için gereken parmak çekişi 56 / 40 / 72 piksel), **Buton boyu: normal / büyük** (yetenek düğmeleri %22 büyür, köşeye yaslı kalır), **Titreşim: açık / kapalı**. Seçenekler iki sütunlu düzende telefona sığar.
 
+## 16b. Deneme Odası
+
+Başlangıç ekranındaki **Deneme Odası** ile ava doğrudan bir biyomdan (Cadı Zindanı 1, Buz Mezarlığı 11, Kan Katedrali 21, Ruh Ormanı 31) ya da bir muhafızın karşısından (Kemik Lordu 5, Gölge Atlı 10, Yas Kraliçesi 15, Kan Kardinali 20, Kadim Ağaç 30) başlanır. **Güçler: odaya göre / bol / yok** (odaya göre ≈ o odaya kadar seçilecek kadar rastgele güç; bolda efsanevi sinerjiler de eklenir) ve **Ölümsüz: açık / kapalı**. Deneme avları en iyi odayı, ruh parçalarını, son avlar listesini ve başarımları etkilemez.
+
 ## 17. Telefona kurulum (PWA)
 
 `game/` klasörü herhangi bir statik sunucuda (ör. GitHub Pages) yayınlanınca tarayıcının "Ana ekrana ekle" seçeneğiyle tam ekran uygulama gibi kurulur; `sw.js` dosyaları önbelleğe alır, oyun çevrimdışı açılır. Claude artifact sürümünde servis çalışanı devre dışıdır.

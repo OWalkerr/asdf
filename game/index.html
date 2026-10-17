@@ -299,6 +299,7 @@ p{margin:0;line-height:1.45;color:var(--ink)}
       <button class="btn" id="btnHow">Nasıl oynanır</button>
       <button class="btn" id="btnShop">Ruh Sunağı <small>kalıcı güçler</small></button>
       <button class="btn" id="btnAch">Başarımlar <small id="achLbl"></small></button>
+      <button class="btn" id="btnTest">Deneme Odası <small>biyom ve muhafız seç</small></button>
       <button class="btn" id="btnFull" hidden>Tam ekran <small id="fullLbl">uygulama gibi oyna</small></button>
     </div>
     <div class="ups history" id="history" hidden></div>
@@ -365,6 +366,24 @@ p{margin:0;line-height:1.45;color:var(--ink)}
     <p class="fine">Sunak yalnızca nadir veya daha iyi güçler sunar.</p>
     <div class="cards" id="altarOpts"></div>
     <div class="btns"><button class="btn" id="btnAltarLeave">Sunağı geç</button></div>
+  </div>
+</section>
+
+<section class="screen" id="scrTest" hidden>
+  <div class="panel">
+    <div class="eyebrow">Deneme Odası</div>
+    <h2>Nereden başlayalım?</h2>
+    <p class="fine">Seçtiğin biyomda ya da muhafızın karşısında hemen başlarsın. Deneme avları en iyi odayı, ruh parçalarını ve başarımları etkilemez.</p>
+    <div class="eyebrow">Biyomlar</div>
+    <div class="opts" id="testBiomes"></div>
+    <div class="eyebrow">Muhafızlar</div>
+    <div class="opts" id="testBosses"></div>
+    <div class="eyebrow">Seçenekler</div>
+    <div class="opts">
+      <button class="btn" id="btnTestUps">Güçler: odaya göre</button>
+      <button class="btn" id="btnTestGod">Ölümsüz: kapalı</button>
+    </div>
+    <div class="btns"><button class="btn" data-back>Geri</button></div>
   </div>
 </section>
 
@@ -866,7 +885,7 @@ const ACH = [
   { id: 'allheroes', n: 'Dört Tilki', d: 'Dört tilkinin her biriyle Kemik Lordu\'nu yen.', skin: { n: 'Ruh Lordu', cloak: ['#8fe3cf', '#6a4ac8', '#140a2a'], rim: '255,255,255' } },
 ];
 function unlock(id) {
-  meta.ach = meta.ach || {}; if (meta.ach[id]) return;
+  if (G && G.test) return; meta.ach = meta.ach || {}; if (meta.ach[id]) return;
   const a = ACH.find(x => x.id === id); if (!a) return;
   meta.ach[id] = Date.now(); store.set('ym_meta', meta);
   toast(`Başarım: ${a.n}` + (a.skin ? ` · Kürk açıldı: ${a.skin.n}` : '')); sfx('pick');
@@ -897,6 +916,23 @@ function recomputeStats() {
   for (const [id, n] of Object.entries(G.ups)) { const u = UPS.find(x => x.id === id); for (let i = 0; i < n; i++) u.a(s, dummy); }
   const ratio = G.p.hp / G.s.maxHp; G.s = s; G.p.hp = Math.max(1, Math.min(s.maxHp, s.maxHp * ratio));
 }
+// Deneme Odası: start straight in a biome or at a guardian. Powers roughly match what a run would have by then;
+// test runs never touch saved progress (best room, shards, history, achievements).
+const TEST_BIOMES = [['Cadı Zindanı', 1], ['Buz Mezarlığı', 11], ['Kan Katedrali', 21], ['Ruh Ormanı', 31]];
+const TEST_BOSSES = [['Kemik Lordu', 5], ['Gölge Atlı', 10], ['Yas Kraliçesi', 15], ['Kan Kardinali', 20], ['Kadim Ağaç', 30]];
+const TESTO = { ups: 'room', god: false }, TESTUPN = { room: 'odaya göre', none: 'yok', many: 'bol' };
+function startTest(room) {
+  initAudio(); newRun(); G.test = true; G.god = TESTO.god;
+  const n = TESTO.ups === 'none' ? 0 : Math.round((room - 1) * (TESTO.ups === 'many' ? 1.6 : .9));
+  for (let k = 0; k < n; k++) { const pool = UPS.filter(u => u.r !== 'leg' && (G.ups[u.id] || 0) < u.max && !(u.id === 'ghost' && G.s.ghostHop)); const u = pool[Math.floor(Math.random() * pool.length)]; if (u) G.ups[u.id] = (G.ups[u.id] || 0) + 1; }
+  for (const u of UPS) if (u.r === 'leg' && TESTO.ups === 'many' && u.req && u.req(G.ups)) G.ups[u.id] = 1;
+  recomputeStats(); G.p.hp = G.s.maxHp; G.room = room - 1; nextRoom(); show(null); setTimeout(() => G && G.test && toast('Deneme: ' + themeFor(G.room).n + (G.god ? ' · ölümsüz' : '')), 300);
+}
+function renderTest() {
+  const mk = (box, list) => { box.innerHTML = ''; for (const [n, r] of list) { const b = document.createElement('button'); b.className = 'btn'; b.innerHTML = `${n} <small>oda ${r}</small>`; b.addEventListener('click', () => startTest(r)); box.appendChild(b); } };
+  mk($('testBiomes'), TEST_BIOMES); mk($('testBosses'), TEST_BOSSES);
+  $('btnTestUps').textContent = 'Güçler: ' + TESTUPN[TESTO.ups]; $('btnTestGod').textContent = 'Ölümsüz: ' + (TESTO.god ? 'açık' : 'kapalı');
+}
 function newRun(daily) {
   const hero = daily ? daily.hero : heroById(meta.hero), s = baseStats(); hero.a(s); if (daily && daily.mod.s) daily.mod.s(s);
   const skin = meta.skin && meta.ach && meta.ach[meta.skin] ? ACH.find(a => a.id === meta.skin).skin : null;
@@ -919,7 +955,7 @@ function roomWaves(r) {
   const pool = ['ghoul', 'ghoul', 'wisp'];
   if (r >= 2) pool.push('archer'); if (r >= 3) pool.push('brute'); if (r >= 4) pool.push('spitter');
   if (r >= 6) pool.push('bomb'); if (r >= 7) pool.push('knight');
-  if (r >= 10 && r < 20) pool.push('frost', 'frost'); if (r >= 20 && r < 30) pool.push('bat', 'bat'); if (r >= 30) pool.push('thorn', 'thorn', 'sporer', 'wolf', 'wolf', 'bat');
+  if (r >= 10 && r < 20) pool.push('frost', 'frost'); if (r >= 20 && r < 30) pool.push('bat', 'bat'); if (r >= 30) pool.push('thorn', 'thorn', 'thorn', 'thorn', 'sporer', 'sporer', 'sporer', 'wolf', 'wolf', 'wolf', 'bat');
   if (r >= 7) pool.push('archer', 'brute', 'spitter'); if (r >= 9) pool.push('knight', 'bomb');
   const cost = { ghoul: 1, wisp: 1.2, archer: 1.5, brute: 3, spitter: 2.5, knight: 2.5, bomb: 1.4, frost: 1.3, bat: 1.1, thorn: 1.8, sporer: 2.4, wolf: 1.4 };
   const n = 2 + (r >= 3) + (r >= 14);
@@ -1225,6 +1261,7 @@ function updFx(dt) {
 function invuln() { const p = G.p; return p.iT > 0 || (p.state === 'hop' && G.s.ghostHop) || p.state === 'rise' || p.state === 'fling'; }
 function hurt(d, src) {
   const p = G.p; if (G.phase !== 'fight' || invuln()) return;
+  if (G.god) { txt(p.x, p.y - 30, '-' + Math.round(d), '#88a29c'); return; }
   if (G.s.ward && p.wardT <= 0) { p.wardT = G.s.ward; p.iT = .5; txt(p.x, p.y - 30, 'KALKAN', '#bfe8ff', true); G.parts.push({ ring: true, x: p.x, y: p.y, r: 46, life: .3, max: .3, c: '#bfe8ff' }); sfx('ding'); buzz(15); return; }
   buzz(40);
   G.lastHit = src || 'Bilinmeyen'; G.takenBy = G.takenBy || {}; G.takenBy[G.lastHit] = (G.takenBy[G.lastHit] || 0) + d;
@@ -1416,7 +1453,7 @@ function updEnemy(e, dt) {
     if (e.boomT <= 0) { e.boomT = .13; starBoom(e.x + rand(-1, 1) * e.r, e.y + rand(-1, 1) * e.r, rand(34, 64)); burst(e.x, e.y, '#ffe9d6', 6, 260, .4); G.shake = Math.max(G.shake, 10); sfx('boom'); }
     if (e.dying <= 0) {
       e.dead = true; shatter(e, true); unlock(e.kind);
-      if (e.kind === 'lord') { meta.heroBoss = meta.heroBoss || {}; meta.heroBoss[G.hero.id] = 1; store.set('ym_meta', meta); if (HEROES.every(x => meta.heroBoss[x.id])) unlock('allheroes'); }
+      if (e.kind === 'lord' && !G.test) { meta.heroBoss = meta.heroBoss || {}; meta.heroBoss[G.hero.id] = 1; store.set('ym_meta', meta); if (HEROES.every(x => meta.heroBoss[x.id])) unlock('allheroes'); }
     }
     return;
   }
@@ -3429,9 +3466,9 @@ const icon = k => `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" s
 
 
 // ---------- screens ----------
-const screens = ['scrTitle', 'scrHero', 'scrHow', 'scrShop', 'scrDraft', 'scrPath', 'scrMerchant', 'scrAltar', 'scrAch', 'scrPause', 'scrOver'];
+const screens = ['scrTitle', 'scrHero', 'scrHow', 'scrShop', 'scrDraft', 'scrPath', 'scrMerchant', 'scrAltar', 'scrAch', 'scrTest', 'scrPause', 'scrOver'];
 let backTo = 'scrTitle';
-function show(id) { screens.forEach(s => $(s).hidden = s !== id); $('hud').hidden = !G || id === 'scrTitle' || id === 'scrHow' || id === 'scrShop'; }
+function show(id) { screens.forEach(s => $(s).hidden = s !== id); $('hud').hidden = !G || id === 'scrTitle' || id === 'scrHow' || id === 'scrShop' || id === 'scrTest'; }
 function titleScreen() {
   G = null; paused = false; $('tBest').textContent = meta.best; $('tShards').textContent = meta.shards;
   const di = dailyInfo(), best = meta.daily && meta.daily.key === di.key ? meta.daily.best : 0;
@@ -3473,6 +3510,9 @@ function renderHeroes() {
   }
 }
 $('btnHow').addEventListener('click', () => show('scrHow'));
+$('btnTest').addEventListener('click', () => { renderTest(); show('scrTest'); });
+$('btnTestUps').addEventListener('click', () => { TESTO.ups = { room: 'many', many: 'none', none: 'room' }[TESTO.ups]; renderTest(); });
+$('btnTestGod').addEventListener('click', () => { TESTO.god = !TESTO.god; renderTest(); });
 $('btnDaily').addEventListener('click', () => { initAudio(); const di = dailyInfo(); newRun(di); show(null); banner('Günün Avı'); setTimeout(() => G && G.daily && banner(di.mod.n), 1500); });
 $('btnShop').addEventListener('click', () => { renderShop(); show('scrShop'); });
 $('btnAch').addEventListener('click', () => { renderAch(); show('scrAch'); });
@@ -3666,9 +3706,9 @@ function chooseDoor(t) {
 function gameOver() {
   if (!G || G.phase === 'over') return; G.phase = 'over';
   shatter({ x: G.p.x, y: G.p.y, r: 16, type: 'player', stacks: 0 }, true);
-  const reached = G.room; meta.shards += G.shards; meta.best = Math.max(meta.best, reached);
+  const reached = G.room; if (!G.test) { meta.shards += G.shards; meta.best = Math.max(meta.best, reached); }
   if (G.daily) { const prev = meta.daily && meta.daily.key === G.daily.key ? meta.daily.best : 0; meta.daily = { key: G.daily.key, best: Math.max(prev, reached) }; }
-  meta.history = [{ h: G.hero.id, room: reached, t: Math.floor(G.time), d: !!G.daily }, ...(meta.history || [])].slice(0, 10);
+  if (!G.test) meta.history = [{ h: G.hero.id, room: reached, t: Math.floor(G.time), d: !!G.daily }, ...(meta.history || [])].slice(0, 10);
   store.set('ym_meta', meta);
   const m = Math.floor(G.time / 60), sec = Math.floor(G.time % 60);
   $('oStats').innerHTML = `<div>Oda<b>${reached}</b></div><div>Öldürme<b>${G.kills}</b></div><div>Sekme<b>${G.hops}</b></div><div>Süre<b>${m}:${String(sec).padStart(2, '0')}</b></div><div>Ruh parçası<b>+${G.shards}</b></div>`;
