@@ -187,6 +187,10 @@ p{margin:0;line-height:1.45;color:var(--ink)}
 .lead{font-size:17px;color:#cfdcd8;max-width:34ch;text-shadow:0 1px 3px #000}
 .btns{display:flex;flex-direction:column;gap:10px;width:100%}
 .card.locked{opacity:.45;filter:grayscale(.7);cursor:default}
+.den-talk{border:1px solid var(--line);background:rgba(8,14,16,.85);padding:12px 14px;min-height:84px}
+.den-talk b{display:block;font-family:var(--f-display);font-weight:400;letter-spacing:.12em;color:var(--gold);font-size:14px;text-transform:uppercase;margin-bottom:6px}
+.den-talk p{margin:0;line-height:1.5;color:var(--ink)}
+.btn .newdot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#ffd27a;box-shadow:0 0 8px #ffd27a;margin-left:6px;vertical-align:middle}
 .ups span.form{border-color:var(--gold);color:#ffe9b0}
 .opts{display:grid;grid-template-columns:1fr 1fr;gap:8px}.opts .btn{padding-inline:8px;font-size:13px;min-height:44px}
 #hud.bigbtn .abil{transform:scale(1.22);transform-origin:100% 100%}#hud.bigbtn.lefty .abil{transform-origin:0 100%}
@@ -304,6 +308,7 @@ p{margin:0;line-height:1.45;color:var(--ink)}
     <div class="btns">
       <button class="btn primary" id="btnStart">Ava başla <small>Oda 1</small></button>
       <button class="btn" id="btnDaily"><span class="nw">Günün Avı</span> <small id="dailyLbl"></small></button>
+      <button class="btn" id="btnDen">Tilki İni <small id="denLbl">hikâye ve sohbet</small></button>
       <button class="btn" id="btnHow">Nasıl oynanır</button>
       <button class="btn" id="btnShop">Ruh Sunağı <small>kalıcı güçler</small></button>
       <button class="btn" id="btnAch">Başarımlar <small id="achLbl"></small></button>
@@ -376,6 +381,20 @@ p{margin:0;line-height:1.45;color:var(--ink)}
     <div class="statrow"><div>Yemin<b id="vowScore">0</b></div><div>Parça çarpanı<b id="vowMul">×1.0</b></div></div>
     <div class="shop" id="vowList"></div>
     <div class="btns"><button class="btn primary" id="btnVowBack">Tamam</button></div>
+  </div>
+</section>
+
+<section class="screen" id="scrDen" hidden>
+  <div class="panel">
+    <div class="eyebrow" id="denEyebrow">Tilki İni</div>
+    <canvas id="denCv" width="640" height="300" style="width:100%;aspect-ratio:64/30;border:1px solid var(--line);background:#05070a"></canvas>
+    <div class="den-talk"><b id="denWho">Yaşlı Baykuş</b><p id="denLine"></p></div>
+    <div class="btns">
+      <button class="btn" id="btnDenNext" hidden>Devam <small id="denLeft"></small></button>
+      <button class="btn primary" id="btnDenHunt">Ava çık</button>
+      <button class="btn" id="btnDenShop">Ruh Sunağı <small>kalıcı güçler</small></button>
+      <button class="btn" id="btnDenMenu">Ana menü</button>
+    </div>
   </div>
 </section>
 
@@ -500,6 +519,7 @@ p{margin:0;line-height:1.45;color:var(--ink)}
     <div class="btns">
       <button class="btn" id="btnShare" hidden>Sonucu kopyala <small>Günün Avı</small></button>
       <button class="btn primary" id="btnAgain">Yeniden dene</button>
+      <button class="btn" id="btnOverDen">İne dön <small id="overDenLbl"></small></button>
       <button class="btn" id="btnMenu">Ana menü</button>
     </div>
   </div>
@@ -3896,14 +3916,99 @@ const PATRONS = {
 const icon = k => `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ICON[k] || (/Ata|İkili/.test(k) ? ICON.patron : ICON['Mızrak'])}</svg>`;
 
 
+// ---------- Tilki İni: the den between hunts, where the story moves on ----------
+// Story beats unlock with progress (bosses beaten, biomes reached, wins) and are told once each, in order; after a
+// hunt the owl also comments on what ended it.
+const STORY = [
+  { id: 'intro', who: 'Yaşlı Baykuş', when: () => true, t: ['Hoş geldin, küçük ışık. Ben bu inin bekçisiyim; Ay sönmeden önce de buradaydım.', 'Ay söndüğünden beri zindandaki ruhlar yolunu kaybetti. Sen onların arasında parlayan tek şeysin.', 'Aşağı in, sek, mızrağını at. Düştüğünde buraya dönersin; ışık burada asla sönmez.'] },
+  { id: 'firstfall', who: 'Yaşlı Baykuş', when: () => (meta.runs || 0) >= 1, t: ['Düştün. Herkes düşer. Önemli olan, her inişte biraz daha derine inebilmen.', 'Ruh parçalarını Ruh Sunağı\'na ver; ışığın her avda biraz daha güçlü başlar.'] },
+  { id: 'lord', who: 'Yaşlı Baykuş', when: () => meta.ach && meta.ach.lord, t: ['Kemik Lordu... Bir zamanlar bu zindanın bekçisiydi, tıpkı benim gibi. Ay sönünce karanlık onu kemiğine kadar kemirdi.', 'Onu yenmen bir kurtuluş sayılır. Belki bir gün teşekkür eder.'] },
+  { id: 'ice', who: 'Yaşlı Baykuş', when: () => meta.best >= 10, t: ['Buz Mezarlığı\'na ulaştın. Oradaki yüzleri gördün mü? Ay\'a son kez bakmak için başlarını kaldırmışlar.', 'Buz onları korumak için değil, unutmamak için tutuyor.'] },
+  { id: 'rider', who: 'Yaşlı Baykuş', when: () => meta.ach && meta.ach.rider, t: ['Gölge Atlı geceleri Ay\'ın ışığını taşırdı köyden köye. Işık bitince durmadan koşmaya devam etti, taşıyacak bir şey kalmadan.'] },
+  { id: 'blood', who: 'Ay\'ın Sesi', when: () => meta.best >= 20, t: ['...tilki... beni duyuyor musun...', 'Katedralin altında... çatlaklarımın arasından sızan kan benim değil... ama acısı benim...', '(Baykuş kanatlarını kabartıyor.) Bu sesi yıllardır duymamıştım. Ay seni çağırıyor.'] },
+  { id: 'queen', who: 'Yaşlı Baykuş', when: () => meta.ach && meta.ach.queen, t: ['Yas Kraliçesi her gece Ay için ağıt yakardı. Çığlıkları ağıttan başka bir şey değil.', 'Onu susturmak zordu, değil mi? Bazı yaslar bitmek istemez.'] },
+  { id: 'cardinal', who: 'Yaşlı Baykuş', when: () => meta.ach && meta.ach.cardinal, t: ['Kan Kardinali, Ay\'ı geri getirmek için kan döktü. Ne kadar çok döktüyse Ay o kadar karardı.', 'Bazen ışığı geri getirmenin yolu bir şey almak değil, bir şey vermektir.'] },
+  { id: 'forest', who: 'Yaşlı Baykuş', when: () => meta.best >= 30, t: ['Kökler... Ruh Ormanı\'na ulaştın demek. Orası senin doğduğun yer, küçük tilki.', 'Ay\'ın son ışığı oraya düştü ve senin şeklini aldı. Bilmiyor muydun?'] },
+  { id: 'treant', who: 'Ay\'ın Sesi', when: () => meta.ach && meta.ach.treant, t: ['Kadim Ağaç benim son düşen ışığımı yüzyıllarca korudu... seni.', 'Artık hazırsın. Kırkıncı kapının ardında... beni bekleyen gölge, benim kendi gölgem.'] },
+  { id: 'won', who: 'Yaşlı Baykuş', when: () => (meta.wins || 0) >= 1, t: ['Ay yeniden doğdu. Gökyüzüne bak; ruhlar eve dönüyor.', 'Ama zindanın en dibinde bir şey hâlâ kıpırdıyor. Ay\'ın gölgesi tamamen ölmedi.', 'Daha zoru istersen, Ruh Yemini artık seni dinler. Ve Sonsuz Av hep orada.'] },
+  { id: 'cub', who: 'Kayıp Yavru', when: () => meta.cubMet, t: ['(Küçük ruh yavrusu inin köşesinde, ateşin yanında kıvrılmış.) ...anne?', '(Baykuş:) Onu sen getirdin. Artık burada kalabilir. Işık ışığı çağırır.'] },
+];
+const ADVICE = {
+  'Tükürgen mermisi': 'Tükürgenin mermileri halka halinde dağılır; aralarındaki boşluktan sek.',
+  'Çığlık dalgası': 'Kraliçe\'nin çığlık halkaları yerden ilerler; tam üstüne gelince sek, havadayken geçer.',
+  'Kemik Dev': 'Kemik Dev atılmadan önce titrer. O an yana sek, arkasında boş kalır.',
+  'Işık kolu': 'Tuzaklı geçitte ışık kollarının üstünden sekebilirsin. Yürüyerek geçmeye çalışma.',
+  'Uçurum': 'Yarıkları yürüyerek geçemezsin; kenara gelince sek.',
+  'Spor bulutu': 'Spor Mantarı ölünce büyük bir bulut bırakır. Onu uzaktan öldür.',
+  'Kök': 'Kadim Ağaç\'ın kökleri sırayla fırlar; hattın dışına sek.',
+  'Ay ışını': 'Ay\'ın kolları yavaş döner. Kolla birlikte koşma; üstünden sek.',
+};
+function denLines() {
+  meta.story = meta.story || {}; const beat = STORY.find(b => !meta.story[b.id] && b.when());
+  if (beat) return { beat, who: beat.who, lines: beat.t };
+  const adv = meta.lastCause && ADVICE[meta.lastCause.replace(' (elit)', '')];
+  const idle = ['Ateşin yanında biraz dinlen. Işık sabırlıdır.', 'Her av başka bir yoldan iner. Kapıları dikkatle seç.', 'Mükemmel Sekme\'yi unutma: saldırı çarpmadan hemen önce sek, zaman sana uyar.', 'Ata Kapıları\'ndaki ruhlar yalnız kendi armağanlarını verir. Bir ataya bağlanmak güç demektir.'];
+  return { who: 'Yaşlı Baykuş', lines: [adv ? (meta.lastCause + ' seni devirdi. ' + adv) : idle[(meta.runs || 0) % idle.length]] };
+}
+let denState = null;
+function denHasNew() { meta.story = meta.story || {}; return STORY.some(b => !meta.story[b.id] && b.when()); }
+function showDen() {
+  G = null; paused = false; denState = Object.assign(denLines(), { i: 0 }); denShow(); show('scrDen'); requestAnimationFrame(drawDen);
+}
+function denShow() {
+  const d = denState; $('denWho').textContent = d.who; $('denLine').textContent = d.lines[d.i];
+  const more = d.i < d.lines.length - 1; $('btnDenNext').hidden = !more; $('denLeft').textContent = more ? (d.i + 1) + '/' + d.lines.length : '';
+  if (!more && d.beat) { meta.story[d.beat.id] = 1; store.set('ym_meta', meta); }
+}
+$('btnDenNext').addEventListener('click', () => { denState.i++; sfx('pick'); denShow(); });
+$('btnDenHunt').addEventListener('click', () => { initAudio(); renderHeroes(); show('scrHero'); });
+$('btnDenShop').addEventListener('click', () => { backTo = 'scrDen'; renderShop(); show('scrShop'); });
+$('btnDenMenu').addEventListener('click', () => titleScreen());
+$('btnDen').addEventListener('click', () => { initAudio(); showDen(); });
+$('btnOverDen').addEventListener('click', () => showDen());
+// the den, drawn live: a cave mouth at night, an ember fire, the owl on a root and the white fox curled by the fire
+function drawDen(now) {
+  if ($('scrDen').hidden) return;
+  const c = $('denCv'), g = c.getContext('2d'), W2 = c.width, H2 = c.height, t = now / 1000, fl = .85 + .15 * Math.sin(t * 9) * Math.sin(t * 5.3);
+  let gr = g.createLinearGradient(0, 0, 0, H2); gr.addColorStop(0, '#0b1020'); gr.addColorStop(1, '#05070a'); g.fillStyle = gr; g.fillRect(0, 0, W2, H2);
+  // night sky through the mouth, with the moon (bright once the hunt was won)
+  g.save(); g.beginPath(); g.ellipse(W2 * .68, H2 * .42, 150, 110, 0, 0, TAU); g.clip();
+  gr = g.createLinearGradient(0, 0, 0, H2); gr.addColorStop(0, '#1a1f45'); gr.addColorStop(1, '#0a0c1c'); g.fillStyle = gr; g.fillRect(0, 0, W2, H2);
+  for (let i = 0; i < 40; i++) { const x = (i * 97 % 300) + W2 * .68 - 150, y = (i * 53 % 200) + H2 * .42 - 110; g.fillStyle = `rgba(255,255,255,${.3 + .3 * Math.sin(t * 2 + i)})`; g.fillRect(x, y, 1.5, 1.5); }
+  const won = (meta.wins || 0) > 0; gr = g.createRadialGradient(W2 * .74, H2 * .28, 4, W2 * .74, H2 * .28, won ? 80 : 40); gr.addColorStop(0, won ? '#fffbe8' : '#4a4660'); gr.addColorStop(.3, won ? 'rgba(230,225,255,.6)' : 'rgba(60,56,80,.6)'); gr.addColorStop(1, 'rgba(0,0,0,0)');
+  g.fillStyle = gr; g.fillRect(0, 0, W2, H2); g.restore();
+  // cave walls
+  g.fillStyle = '#0d0b10'; g.beginPath(); g.moveTo(0, 0); g.lineTo(W2, 0); g.lineTo(W2, H2 * .1); g.bezierCurveTo(W2 * .85, H2 * .05, W2 * .55, H2 * .02, W2 * .5, H2 * .3); g.bezierCurveTo(W2 * .48, H2 * .5, W2 * .5, H2 * .8, W2 * .45, H2); g.lineTo(0, H2); g.closePath(); g.fill();
+  g.fillStyle = '#100d14'; g.fillRect(0, H2 * .82, W2, H2 * .18);
+  // fire light
+  gr = g.createRadialGradient(W2 * .3, H2 * .78, 5, W2 * .3, H2 * .78, 260 * fl); gr.addColorStop(0, 'rgba(255,170,90,.55)'); gr.addColorStop(.4, 'rgba(255,120,60,.15)'); gr.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = gr; g.fillRect(0, 0, W2, H2);
+  for (let k = 0; k < 3; k++) { const fx = W2 * .3 + (k - 1) * 10, fh = (34 - Math.abs(k - 1) * 10) * fl; g.fillStyle = k === 1 ? '#ffe2a0' : '#ff8a3a'; g.beginPath(); g.moveTo(fx - 9, H2 * .84); g.quadraticCurveTo(fx - 6 + Math.sin(t * 7 + k) * 3, H2 * .84 - fh * .6, fx + Math.sin(t * 9 + k) * 4, H2 * .84 - fh); g.quadraticCurveTo(fx + 6, H2 * .84 - fh * .5, fx + 9, H2 * .84); g.fill(); }
+  g.fillStyle = '#2a1a10'; g.fillRect(W2 * .3 - 22, H2 * .84, 44, 6);
+  // the fox curled by the fire, breathing
+  const br = 1 + .03 * Math.sin(t * 1.6); g.save(); g.translate(W2 * .16, H2 * .86); g.scale(br, br);
+  g.fillStyle = '#e8f6ff'; g.beginPath(); g.ellipse(0, -12, 34, 15, 0, 0, TAU); g.fill(); g.fillStyle = '#f6fbff'; g.beginPath(); g.ellipse(26, -16, 26, 12, -.3, 0, TAU); g.fill();
+  g.beginPath(); g.ellipse(-22, -18, 13, 10, .2, 0, TAU); g.fill(); g.beginPath(); g.moveTo(-30, -24); g.lineTo(-26, -38); g.lineTo(-20, -26); g.fill(); g.beginPath(); g.moveTo(-20, -26); g.lineTo(-14, -37); g.lineTo(-12, -24); g.fill();
+  g.strokeStyle = 'rgba(120,170,200,.5)'; g.lineWidth = 1.5; g.beginPath(); g.moveTo(-26, -16); g.lineTo(-20, -16); g.stroke(); g.restore();
+  gr = g.createRadialGradient(W2 * .16, H2 * .8, 4, W2 * .16, H2 * .8, 70); gr.addColorStop(0, 'rgba(190,240,255,.25)'); gr.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = gr; g.fillRect(0, 0, W2, H2);
+  // the owl on a root
+  g.strokeStyle = '#1e1610'; g.lineWidth = 8; g.beginPath(); g.moveTo(W2 * .38, H2 * .25); g.quadraticCurveTo(W2 * .44, H2 * .3, W2 * .52, H2 * .26); g.stroke();
+  const ox = W2 * .45, oy = H2 * .2, blink = (t % 4) < .12; g.fillStyle = '#3a2c22'; g.beginPath(); g.ellipse(ox, oy, 14, 20, 0, 0, TAU); g.fill();
+  g.beginPath(); g.moveTo(ox - 12, oy - 14); g.lineTo(ox - 9, oy - 24); g.lineTo(ox - 4, oy - 16); g.moveTo(ox + 12, oy - 14); g.lineTo(ox + 9, oy - 24); g.lineTo(ox + 4, oy - 16); g.fill();
+  for (const sx of [-6, 6]) { g.fillStyle = blink ? '#3a2c22' : '#ffd27a'; g.beginPath(); g.arc(ox + sx, oy - 8, 4, 0, TAU); g.fill(); if (!blink) { g.fillStyle = '#1a0e06'; g.beginPath(); g.arc(ox + sx, oy - 8, 1.6, 0, TAU); g.fill(); } }
+  if (meta.cubMet) { const cx = W2 * .36, cy = H2 * .86 + Math.sin(t * 3) * 2; gr = g.createRadialGradient(cx, cy - 8, 1, cx, cy - 8, 16); gr.addColorStop(0, 'rgba(220,250,255,.95)'); gr.addColorStop(1, 'rgba(160,220,255,0)'); g.fillStyle = gr; g.fillRect(cx - 16, cy - 24, 32, 32); }
+  // embers drifting up
+  for (let i = 0; i < 14; i++) { const k = (t * .3 + i * .17) % 1; g.fillStyle = `rgba(255,170,90,${(1 - k) * .8})`; g.fillRect(W2 * .3 + Math.sin(i * 3 + t) * 20, H2 * .82 - k * 160, 2, 2); }
+  requestAnimationFrame(drawDen);
+}
 // ---------- screens ----------
-const screens = ['scrTitle', 'scrHero', 'scrHow', 'scrShop', 'scrDraft', 'scrPath', 'scrMerchant', 'scrAltar', 'scrAch', 'scrTest', 'scrForm', 'scrEvent', 'scrEnd', 'scrVow', 'scrPause', 'scrOver'];
+const screens = ['scrTitle', 'scrHero', 'scrHow', 'scrShop', 'scrDraft', 'scrPath', 'scrMerchant', 'scrAltar', 'scrAch', 'scrTest', 'scrForm', 'scrEvent', 'scrEnd', 'scrVow', 'scrDen', 'scrPause', 'scrOver'];
 let backTo = 'scrTitle';
 function show(id) { screens.forEach(s => $(s).hidden = s !== id); $('hud').hidden = !G || id === 'scrTitle' || id === 'scrHow' || id === 'scrShop' || id === 'scrTest'; }
 function titleScreen() {
   G = null; paused = false; $('tBest').textContent = meta.best; $('tShards').textContent = meta.shards;
   const di = dailyInfo(), best = meta.daily && meta.daily.key === di.key ? meta.daily.best : 0;
   $('dailyLbl').textContent = di.hero.n + ' · ' + di.mod.n + (best ? ' · en iyi ' + best : '');
+  $('denLbl').innerHTML = denHasNew() ? 'yeni bir şey anlatılacak<span class="newdot"></span>' : 'hikâye ve sohbet';
   renderHistory(); $('achLbl').textContent = Object.keys(meta.ach || {}).length + ' / ' + ACH.length; show('scrTitle');
 }
 function renderHistory() {
@@ -4077,8 +4182,8 @@ const EVENTS = [
     c: [{ n: 'Aynaya dokun', d: 'Bir gücünün seviyesi +1 · azami can -15', go: () => { const own = Object.keys(G.ups).map(id => UPS.find(u => u.id === id)).filter(u => G.ups[u.id] < u.max); const u = own[Math.floor(crand() * own.length)]; G.maxHpPenalty = (G.maxHpPenalty || 0) + 15; const n = u ? giveUp(u) : ''; recomputeStats(); G.p.hp = Math.min(G.p.hp, G.s.maxHp); return n ? n + ' güçlendi.' : 'Ayna boş baktı.'; } },
         { n: 'Aynayı kır', d: '+15 ruh parçası', go: () => { G.shards += 15; return 'Kırıklar parça parça parladı.'; } }] },
   { id: 'cub', t: 'Kayıp Yavru', x: 'Karanlıkta titreyen küçücük bir ruh yavrusu buluyorsun. Annesinin ışığını arıyor.',
-    c: [{ n: 'Yanına al', d: '+1 Ruh Yavrusu', go: () => { G.ups.spirit = (G.ups.spirit || 0) + 1; G.s.spirits++; return 'Yavru etrafında dönmeye başladı.'; } },
-        { n: 'Yolunu göster', d: 'Canının %20\'si · sonraki odaya dolu Coşku ile girersin', go: () => { heal(G.s.maxHp * .2); G.feverNext = true; return 'Yavru annesine koştu; içini bir coşku kapladı.'; } }] },
+    c: [{ n: 'Yanına al', d: '+1 Ruh Yavrusu', go: () => { G.ups.spirit = (G.ups.spirit || 0) + 1; G.s.spirits++; if (!G.test) { meta.cubMet = 1; store.set('ym_meta', meta); } return 'Yavru etrafında dönmeye başladı.'; } },
+        { n: 'Yolunu göster', d: 'Canının %20\'si · sonraki odaya dolu Coşku ile girersin', go: () => { heal(G.s.maxHp * .2); G.feverNext = true; if (!G.test) { meta.cubMet = 1; store.set('ym_meta', meta); } return 'Yavru annesine koştu; içini bir coşku kapladı.'; } }] },
   { id: 'shrine', t: 'Unutulmuş Sunak', x: 'Yosun tutmuş bir sunak, üstünde iki kandil. Biri ay ışığı gibi soğuk, diğeri kor gibi sıcak.',
     c: [{ n: 'Soğuk kandil', d: 'Rastgele bir Ruh Atası\'nın çekirdek gücü', go: () => { const cores = ['p_moon', 'p_ember', 'p_frost', 'p_storm'].filter(id => !G.ups[id]); const id = cores[Math.floor(crand() * cores.length)]; return id ? 'Bir Ata sana döndü: ' + giveUp(UPS.find(u => u.id === id)) : 'Kandil sessizce söndü.'; } },
         { n: 'Sıcak kandil', d: '+25 ruh parçası', go: () => { G.shards += 25; return 'Kandil parçalara dönüştü.'; } }] },
@@ -4108,7 +4213,7 @@ function victory() {
   upChips($('wUps')); setTimeout(() => { if (G && G.phase === 'won') show('scrEnd'); }, 3200);
 }
 $('btnEndless').addEventListener('click', () => { if (!G || G.phase !== 'won') return; G.phase = 'clear'; G.clearT = 0; G.endless = true; show(null); toast('Sonsuz Av: ay ışığında av sürüyor. Her oda daha zor.'); });
-$('btnEndRun').addEventListener('click', () => { if (!G) return; if (!G.test) { meta.shards += Math.round(G.shards * (1 + .1 * vowScore(G.vow))); meta.history = [{ h: G.hero.id, room: G.room, t: Math.floor(G.time), d: !!G.daily, w: 1 }, ...(meta.history || [])].slice(0, 10); store.set('ym_meta', meta); } titleScreen(); });
+$('btnEndRun').addEventListener('click', () => { if (!G) return; if (!G.test) { meta.runs = (meta.runs || 0) + 1; meta.lastCause = null; meta.shards += Math.round(G.shards * (1 + .1 * vowScore(G.vow))); meta.history = [{ h: G.hero.id, room: G.room, t: Math.floor(G.time), d: !!G.daily, w: 1 }, ...(meta.history || [])].slice(0, 10); store.set('ym_meta', meta); } showDen(); });
 function showForms() {
   const left = FORMS.filter(f => !G.forms[f.id]); if (!left.length) return showDraft();
   G.phase = 'form'; $('banner').classList.remove('on'); const c = $('formCards'); c.innerHTML = '';
@@ -4239,13 +4344,14 @@ function chooseDoor(t) {
 function gameOver() {
   if (!G || G.phase === 'over') return; G.phase = 'over';
   shatter({ x: G.p.x, y: G.p.y, r: 16, type: 'player', stacks: 0 }, true);
+  if (!G.test) { meta.runs = (meta.runs || 0) + 1; meta.lastCause = G.lastHit || null; }
   const reached = G.room; if (!G.test) { meta.shards += Math.round(G.shards * (1 + .1 * vowScore(G.vow))); meta.best = Math.max(meta.best, reached); }
   if (G.daily) { const prev = meta.daily && meta.daily.key === G.daily.key ? meta.daily.best : 0; meta.daily = { key: G.daily.key, best: Math.max(prev, reached) }; }
   if (!G.test) meta.history = [{ h: G.hero.id, room: reached, t: Math.floor(G.time), d: !!G.daily }, ...(meta.history || [])].slice(0, 10);
   store.set('ym_meta', meta);
   const m = Math.floor(G.time / 60), sec = Math.floor(G.time % 60);
   $('oStats').innerHTML = `<div>Oda<b>${reached}</b></div><div>Öldürme<b>${G.kills}</b></div><div>Sekme<b>${G.hops}</b></div><div>Süre<b>${m}:${String(sec).padStart(2, '0')}</b></div><div>Ruh parçası<b>+${Math.round(G.shards * (1 + .1 * vowScore(G.vow)))}</b></div>` + (vowScore(G.vow) ? `<div>Yemin<b>${vowScore(G.vow)}</b></div>` : '');
-  upChips($('oUps'));
+  upChips($('oUps')); $('overDenLbl').innerHTML = denHasNew() ? 'baykuş seni bekliyor<span class="newdot"></span>' : '';
   const DL = { yanma: 'Yanma', kor: 'Kor patlaması', isil: 'Isıl Şok', simsek: 'Zincir şimşek', yildirimDus: 'Gök Gürültüsü', tutulma: 'Tutulma Ateşi', kanca: 'Işık Kancası', yildirim: 'Yıldırım Adım', duvar: 'Duvar Sekmesi', yanki: 'Yankı Sekmesi', nova: 'Söküm Novası', spear: 'Mızrak', q: 'Delici Mızrak', rend: 'Söküm', kader: 'Ay Sıçrayışı', sok: 'İniş Şoku', bomba: 'Kemik Bombası', iz: 'Ruh İzi', spirit: 'Ruh Yavrusu', launch: 'Patlama' };
   const rows = Object.entries(G.dmgBy || {}).filter(([, v]) => v >= 1).sort((a, b) => b[1] - a[1]).slice(0, 6), tot = rows.reduce((a, [, v]) => a + v, 0) || 1, mx = rows.length ? rows[0][1] : 1;
   $('oDmg').innerHTML = rows.length ? '<span class="hl">Hasar kaynakları</span>' + rows.map(([k, v]) => `<div class="dmgrow"><span>${DL[k] || k}</span><i style="width:${Math.max(3, 100 * v / mx)}%"></i><b>${Math.round(100 * v / tot)}%</b></div>`).join('') : '';

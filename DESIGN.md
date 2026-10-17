@@ -310,6 +310,12 @@ Sönmüş Ay bir kez yenilince tilki seçim ekranında **Ruh Yemini** açılır.
 
 En az 8 yeminle kazanmak "Ağır Yemin" başarımını (Tutulma kürkü) açar.
 
+## Tilki İni ve süren hikâye
+
+Başlangıç ekranındaki **Tilki İni** ve av sonundaki "İne dön" düğmesi küçük, canlı çizilen bir sahneye götürür: mağara ağzından gece göğü (oyun kazanıldıysa parlak Ay), çıtırdayan kor ateşi ve yükselen kıvılcımlar, dalda göz kırpan Yaşlı Baykuş, ateşin yanında nefes alan beyaz tilki ve (Kayıp Yavru olayında yardım ettiysen) yanında süzülen ruh yavrusu. Buradan ava çıkılır, Ruh Sunağı'na gidilir.
+
+Hikâye adımları ilerlemeye göre açılır ve her biri bir kez, sırayla anlatılır (birkaç satır, "Devam" ile): ilk geliş, ilk ölüm, Kemik Lordu, Buz Mezarlığı'na varış, Gölge Atlı, Kan Katedrali'nde Ay'ın sesini ilk duymak, Yas Kraliçesi, Kan Kardinali, Ruh Ormanı (tilkinin Ay'ın son ışığından doğduğu), Kadim Ağaç (Ay'ın 40. kapıya çağrısı), zafer (Ay'ın gölgesinin hâlâ kıpırdadığı) ve Kayıp Yavru. Yeni adım varsa başlangıç ve av sonu düğmelerinde parlayan bir nokta görünür. Anlatılacak yeni bir şey yoksa baykuş, seni deviren şeye göre bir öğüt (tükürgen, çığlık halkası, dev, ışık kolu, uçurum, spor, kökler, Ay ışını) ya da genel bir ipucu verir.
+
 ## Ruh Ataları, olaylar ve anlatım (Aşama 3)
 
 **Ata Kapısı** (kapı havuzunda iki kez, her biri farklı ata): bir savaş odası; ödül seçimi yalnızca o atanın kartlarından gelir ve atanın çekirdek kartı henüz alınmadıysa ilk seçenek odur. Ata kartları normal seçimlerde ancak o atanın çekirdeği alındıktan sonra çıkar.
