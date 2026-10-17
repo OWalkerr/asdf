@@ -667,6 +667,14 @@ const SND = {
   thorn: (o, t) => { nz(o, t, .08, .2, 'highpass', 2600, 5200, 1, .002); osc(o, 'triangle', 300, 120, t, .1, .08); },
   spore: (o, t) => { nz(o, t, .7, .14, 'lowpass', 600, 2400, 1.2, .08); nz(o, t + .05, .5, .05, 'bandpass', 4000, 1800, 4, .1); },
   howl: (o, t) => { for (const [f, d] of [[440, 0], [466, .02]]) osc(o, 'sawtooth', f * .8, f * 1.2, t + d, 1.4, .025, .35); nz(o, t, 1.4, .02, 'bandpass', 900, 1300, 6, .4); },
+  fever: (o, t) => { nz(o, t, .7, .1, 'bandpass', 400, 5000, 1.5, .5); osc(o, 'sine', 70, 140, t, .8, .3, .3); [523, 659, 784, 1047].forEach((f, i) => bell(o, f, t + .45 + i * .04, 1.4, .05, 2, 1)); duck(.5, 1.2); },
+  perfect: (o, t) => { nz(o, t, .5, .14, 'lowpass', 6000, 200, 1, .01); osc(o, 'sine', 1800, 300, t, .45, .05); bell(o, 2637, t + .02, 1.2, .06, 3.5, 1.4); bell(o, 1976, t + .08, 1, .04, 3.5, 1.4); duck(.4, .6); },
+  freeze: (o, t) => { nz(o, t, .2, .14, 'highpass', 7000, 3000, 2); bell(o, 3136, t, .5, .04, 4.2, 1.6); bell(o, 2349, t + .03, .5, .03, 4.2, 1.6); },
+  burn: (o, t) => { nz(o, t, .35, .1, 'bandpass', 600, 2600, 1.4, .05); },
+  zap: (o, t) => { osc(o, 'square', 1200, 300, t, .1, .025); nz(o, t, .12, .12, 'highpass', 5000, 9000, 1); osc(o, 'sawtooth', 90, 60, t, .12, .04); },
+  ret: (o, t) => { osc(o, 'sine', 900, 1500, t, .25, .025, .05); osc(o, 'sine', 1350, 2250, t, .25, .01, .05); },
+  beam: (o, t) => { osc(o, 'sawtooth', 110, 112, t, 1.2, .05, .3); osc(o, 'sawtooth', 165, 166, t, 1.2, .03, .3); nz(o, t, 1.2, .04, 'bandpass', 900, 1400, 4, .3); },
+  victory: (o, t) => { [[262, 330, 392], [294, 370, 440], [330, 415, 494], [392, 494, 587]].forEach((ch, i) => ch.forEach(f => { bell(o, f * 2, t + i * .45, 2.6, .045, 2, 1.2); osc(o, 'triangle', f, f, t + i * .45, 1.6, .03, .1); })); osc(o, 'sine', 65, 65, t, 2.5, .2, .4); duck(.9, 3); },
   rest: (o, t) => { [523, 659, 784, 1047, 1319].forEach((f, i) => bell(o, f, t + i * .12, 1.6, .04, 2, .6)); },
   pling: (o, t) => { const f = 1100 + Math.min(G ? G.combo : 0, 30) * 28; bell(o, f, t, .4, .05, 3.5, 1.4); osc(o, 'sine', f * 2, f * 2, t, .15, .015); },
   ding: (o, t) => { bell(o, 1568, t, 1.6, .1, 2.76, 3); bell(o, 2349, t + .01, 1.2, .06, 2.76, 2.5); },
@@ -675,8 +683,8 @@ const SND = {
   fuse: (o, t) => { [600, 900, 1300].forEach((f, i) => { bell(o, f, t + i * .25, .2, .035, 4, 1); nz(o, t + i * .25, .05, .05, 'highpass', 6000, 4000); }); },
   crunch: (o, t) => crunch(o, t),
 };
-const SENDS = { throw: .2, hit: .12, hop: .3, q: .4, rend: .45, rise: .7, thump: .35, boom: .35, bigboom: .5, hurt: .15, pick: .45, rest: .8, bossIn: .6, bossRise: .5, pling: .3, thorn: .2, spore: .35, howl: .7, ding: .65, shimmer: .7, scream: .6, fuse: .3, crunch: .2 };
-const GAP = { root: .06, howl: 2.5, thorn: .05, hit: .04, crunch: .03, pling: .035, throw: .03 };
+const SENDS = { throw: .2, hit: .12, hop: .3, q: .4, rend: .45, rise: .7, thump: .35, boom: .35, bigboom: .5, hurt: .15, pick: .45, rest: .8, bossIn: .6, bossRise: .5, pling: .3, fever: .6, perfect: .7, freeze: .5, burn: .2, zap: .3, ret: .3, beam: .5, victory: .8, thorn: .2, spore: .35, howl: .7, ding: .65, shimmer: .7, scream: .6, fuse: .3, crunch: .2 };
+const GAP = { burn: .12, zap: .07, freeze: .08, ret: .08, root: .06, howl: 2.5, thorn: .05, hit: .04, crunch: .03, pling: .035, throw: .03 };
 // loudness trims so frequent small sounds sit above the music (measured offline)
 const VOL = { throw: 2.8, hit: 3, hop: 1.6, pling: 2.6, q: 1.2, crunch: 1.4, scream: 1.5 }, DVOL = { ghoul: 2.6, wisp: 2.2, archer: 2.2, bat: 2.4, bomb: 2.4, spitter: 1.5, frost: 1.6, knight: 1.6, brute: 1, mimic: 1.5, thorn: 1.8, sporer: 1.4, wolf: 2 };
 // x: world x of the source (stereo placement); without it the sound is centred
@@ -792,6 +800,7 @@ function schedMusic() {
     }
     if (fight || s % 2 === 0) { const f = th.scale[th.pat[s]] * (s % 8 === 7 ? 2 : 1); pluck(mo, f, t, fight ? step * 2.2 : step * 3.5, (fight ? th.vol : .035) * (.75 + .3 * I)); if (fury && s % 2 === 0) pluck(mo, f * 2, t, step, .02); }
     if (fight && s % 4 === 0) { osc(mo, 'sine', root / 4, root / 4, t, step * 3.6, .09 * (.6 + .4 * I), .01); osc(mo, 'triangle', root / 4, root / 4, t, step * 2, .03, .01); }
+    if (G && G.feverT > 0 && fight) { const f2 = th.scale[th.pat[(s + 3) % 16]] * 2; pluck(mo, f2, t + step * .5, step, .022); }
     if (fight && th.kick(s)) { osc(mo, 'sine', 140, 38, t, .22, .2 + .14 * I); nz(mo, t, .03, .12, 'highpass', 4000, 3000); BEATS.push(t, 1); }
     if (fight && I > .45 && s % 8 === 4) { nz(mo, t, .18, .16 * I, 'bandpass', 1800, 1200, 1.2); osc(mo, 'triangle', 190, 160, t, .08, .08); BEATS.push(t, .55); }
     if (fight && I > .6 && s % 2 === 1) nz(mo, t, .04, .035 * I, 'highpass', 8000, 7000);
@@ -1089,7 +1098,7 @@ function nextRoom(type = 'fight') {
   G.waves = boss ? bossWaves(r) : type === 'chest' ? chestWaves(r) : roomWaves(r); G.waveIdx = 0; G.waveT = 1.1; G.phase = 'fight'; G.clearT = 0; G.isBoss = boss;
   setupRoomMods();
   banner(boss ? 'Muhafız' : type === 'elite' ? 'Elit Oda' : type === 'cursed' ? 'Lanetli Oda' : type === 'chest' ? 'Ruh Sandığı' : 'Oda ' + r);
-  $('hint').style.opacity = r === 1 && G.hops < 4 ? 1 : 0;
+  if (!G.tutCur) $('hint').style.opacity = 0;
   if (r === 2 && !meta.perfectTip) setTimeout(() => toast('İpucu: bir mermi ya da saldırı çarpmadan hemen önce sek: Mükemmel Sekme.'), 2000);
 }
 
@@ -1153,20 +1162,20 @@ function tickSpawns(dt) {
   for (let i = G.spawns.length - 1; i >= 0; i--) { const sp = G.spawns[i]; sp.t -= dt; if (sp.t <= 0) { { const ne = makeEnemyFull(sp.type, sp.x, sp.y, sp.elite); ne.mimic = sp.mimic; G.enemies.push(ne); if (ne.type === 'wolf') sfx('howl', ne.x); if (G.obj && G.obj.k === 'lantern' && !ne.boss && ['ghoul', 'brute', 'knight', 'frost', 'wolf', 'sporer', 'mimic'].includes(ne.type)) ne.lt = Math.random() < .55; } burst(sp.x, sp.y, COL.ember, 10, 160, .4); G.spawns.splice(i, 1); } }
 }
 // ---------- patron mechanics: returning, burning, freezing and chaining spears ----------
-function ignite(e) { const s = G.s; if (e.dead || e.dying) return; if (s.thermal && e.frozenT > 0) { thermalBlast(e); return; } e.burnT = s.burnT; e.burnDps = s.dmg * .25 * s.burnMul; }
+function ignite(e) { const s = G.s; if (e.dead || e.dying) return; if (s.thermal && e.frozenT > 0) { thermalBlast(e); return; } if (!(e.burnT > 0)) sfx('burn', e.x); e.burnT = s.burnT; e.burnDps = s.dmg * .25 * s.burnMul; }
 function thermalBlast(e) { if (e._thermal) return; e._thermal = true; e.frozenT = 0; e.stunT = 0; starBoom(e.x, e.y, 70); sfx('boom', e.x); G.shake = Math.max(G.shake, 7);
   for (const o of G.enemies) if (!o.dead && o.hp > 0 && hyp(o.x - e.x, o.y - e.y) < 110 + o.r) dmgEnemy(o, G.s.dmg * 3, false, 'launch', 'isil'); e._thermal = false; }
 function chillHit(e, n) {
   const s = G.s; if (e.dead || e.dying) return;
   if (!s.frostSpear) { e.slowT = Math.max(e.slowT, 1.5); e.slowAmt = Math.max(e.slowAmt, .5); return; }
-  e.chillN = (e.chillN || 0) + n; if (e.chillN >= 4 && !(e.frozenT > 0)) { e.chillN = 0; e.frozenT = e.boss ? .5 : 1.2; e.stunT = Math.max(e.stunT, e.frozenT); burst(e.x, e.y - e.r, '#e0f6ff', 10, 200, .35, 2.5); sfx('ding', e.x); }
+  e.chillN = (e.chillN || 0) + n; if (e.chillN >= 4 && !(e.frozenT > 0)) { e.chillN = 0; e.frozenT = e.boss ? .5 : 1.2; e.stunT = Math.max(e.stunT, e.frozenT); burst(e.x, e.y - e.r, '#e0f6ff', 10, 200, .35, 2.5); sfx('freeze', e.x); }
 }
 function chainFrom(e, dmg, n) {
   const s = G.s, hit = [e]; let from = e;
   for (let k = 0; k < n; k++) { let best = null, bd = 190; for (const o of G.enemies) { if (o.dead || o.dying || hit.includes(o)) continue; const d = hyp(o.x - from.x, o.y - from.y); if (d < bd) { bd = d; best = o; } }
     if (!best) break; hit.push(best); G.bolts.push({ x0: from.x, y0: from.y - from.r, x1: best.x, y1: best.y - best.r, life: .16 });
     if (s.crystal) chillHit(best, 1); dmgEnemy(best, dmg * (s.crystal && best.frozenT > 0 ? 2 : 1), false, 'launch', 'simsek'); from = best; }
-  if (hit.length > 1) sfx('hit', e.x);
+  if (hit.length > 1) sfx('zap', e.x);
 }
 // called on every spear hit
 function patronHit(sp, e) {
@@ -1235,7 +1244,7 @@ function setupRoomMods() {
   else if (k === 'hunt') { G.obj = { k, t: 20, done: false }; G.waves = G.waves.slice(0, 2); }
   else if (k === 'lantern') G.obj = { k, hp: 150 + G.room * 6, max: 150 + G.room * 6, x: 0, y: -30 };
   else if (k === 'gauntlet') { G.obj = { k, a: crand() * TAU, arms: G.room >= 15 ? 3 : 2, trapT: 2.5 }; G.waves = G.waves.map(w => w.slice(0, Math.ceil(w.length * .7))); }
-  setTimeout(() => G && G.obj && banner(OBJN[G.obj.k]), 1500);
+  setTimeout(() => { if (G && G.obj) { banner(OBJN[G.obj.k]); sfx('shimmer'); if (G.obj.k === 'gauntlet') sfx('beam'); } }, 1500);
 }
 function objText() {
   const o = G.obj; if (!o || G.phase !== 'fight') return '';
@@ -1413,7 +1422,7 @@ function addFervor(n) {
   if (!G || G.phase !== 'fight') return; G.fervorIdle = 0;
   if (G.feverT > 0) { G.feverT = Math.min(FEVER_T, G.feverT + n * .03); return; }
   G.fervor = Math.min(100, G.fervor + n);
-  if (G.fervor >= 100) { G.feverT = FEVER_T; G.fervor = 0; banner('Coşku!'); sfx('rise'); flashScreen(.18); G.zp = Math.max(G.zp, .06); shock(G.p.x, G.p.y, 380, 1, .5); buzz([20, 30, 20]); }
+  if (G.fervor >= 100) { G.feverT = FEVER_T; G.fervor = 0; banner('Coşku!'); sfx('fever'); flashScreen(.18); G.zp = Math.max(G.zp, .06); shock(G.p.x, G.p.y, 380, 1, .5); buzz([20, 30, 20]); }
 }
 function updFervor(dt) {
   if (G.feverT > 0) { G.feverT -= dt; if (G.feverT <= 0) { G.feverT = 0; G.fervor = 30; } return; }
@@ -1432,11 +1441,25 @@ function threatened() {
 }
 function perfectHop() {
   const p = G.p, tw = !!G.forms.time; p.lastPerfect = G.time; p.iT = Math.max(p.iT, tw ? .8 : .45); slowmo(tw ? 1.1 : .4, tw ? .2 : .3); if (tw) addFervor(15); G.zp = Math.max(G.zp, .05);
-  txt(p.x, p.y - 34, 'MÜKEMMEL', '#ffe39a', true); G.parts.push({ ring: true, x: p.x, y: p.y, r: 70, life: .3, max: .3, c: '#ffe39a' }); sfx('ding'); buzz(25);
+  txt(p.x, p.y - 34, 'MÜKEMMEL', '#ffe39a', true); G.parts.push({ ring: true, x: p.x, y: p.y, r: 70, life: .3, max: .3, c: '#ffe39a' }); sfx('perfect'); buzz(25);
   for (let i = G.eshots.length - 1; i >= 0; i--) { const b = G.eshots[i]; if (hyp(b.x - p.x, b.y - p.y) < 140 && !b.orb) { burst(b.x, b.y, '#ffe39a', 4, 140, .25, 2); G.eshots.splice(i, 1); } }
   for (let k = 0; k < 3; k++) { const e = k === 0 ? nearestEnemy(p.x, p.y, G.s.range + 120) : G.enemies.filter(o => !o.dead && !o.dying)[Math.floor(Math.random() * G.enemies.length)]; if (e) fireSpear(Math.atan2(e.y - p.y, e.x - p.x), 1, 'spear'); }
   addFervor(25); G.perfects = (G.perfects || 0) + 1;
   if (!meta.perfectTip) { meta.perfectTip = 1; store.set('ym_meta', meta); toast('Mükemmel Sekme! Saldırı çarpmadan hemen önce sekmek zamanı büker ve Coşku doldurur.'); }
+}
+const TUT = [
+  { id: 'move', when: () => G.room === 1 && G.time > .5, h: '<strong>Sürükle</strong> ile yön ver. Mızrak kendiliğinden fırlar; fırlarken yönü tutarsan o yöne <strong>sekersin</strong>.', done: () => G.hops >= 4 },
+  { id: 'rend', when: () => G.enemies.some(e => !e.dead && e.stacks >= 3), h: 'Düşmanlarda mızraklar birikti. <strong>SÖK (E)</strong> ile hepsini birden kopar; ne kadar çok mızrak, o kadar hasar.', done: () => G.dmgBy && G.dmgBy.rend > 0 },
+  { id: 'q', when: () => G.room >= 2 && G.p.qCd <= 0, h: '<strong>Delici Işık (Q)</strong> bir hat boyunca her şeyi deler ve 2 mızrak saplar.', done: () => G.dmgBy && G.dmgBy.q > 0 },
+  { id: 'r', when: () => G.room >= 2 && G.p.rCd <= 0 && G.enemies.filter(e => !e.dead).length >= 4, h: '<strong>Ay Sıçrayışı (R)</strong>: havaya yüksel ve kalabalığın ortasına çak. İnerken hasar almazsın.', done: () => G.dmgBy && G.dmgBy.kader > 0 },
+  { id: 'fervor', when: () => G.fervor >= 60, h: 'Altın çubuk <strong>Coşku</strong>. Durmadan öldür ve sek; dolunca 7 sn boyunca hızlanırsın.', done: () => G.feverT > 0 },
+];
+function updTutorial(dt) {
+  if (G.test || G.daily) return; meta.tut = meta.tut || {}; G.tutT = (G.tutT || 0) - dt; if (G.tutT > 0) return; G.tutT = .4;
+  const cur = G.tutCur && TUT.find(x => x.id === G.tutCur);
+  if (cur) { if (cur.done() || (G.tutShown || 0) > 12) { meta.tut[cur.id] = 1; store.set('ym_meta', meta); G.tutCur = null; $('hint').style.opacity = 0; } else { G.tutShown = (G.tutShown || 0) + .4; return; } }
+  const nx = TUT.find(x => !meta.tut[x.id] && x.when()); if (!nx) return;
+  G.tutCur = nx.id; G.tutShown = 0; $('hint').innerHTML = nx.h; $('hint').style.opacity = 1;
 }
 function startHop(dx, dy) {
   const p = G.p, s = G.s; const l = hyp(dx, dy) || 1; dx /= l; dy /= l;
@@ -1450,7 +1473,6 @@ function startHop(dx, dy) {
   p.wb = 0; p.hvx = dx * hd / s.hopTime; p.hvy = dy * hd / s.hopTime; p.state = 'hop'; p.t = s.hopTime; p.buf = false;
   if (G.phase === 'fight' && G.time - p.lastPerfect > .8 && threatened()) perfectHop();
   p.rStacks = G.time - p.lastHop < 1.6 ? Math.min(5, p.rStacks + 1) : 1; p.lastHop = G.time; G.hops++; if (s.dance) p.danceT = .8; if (G.hops >= 500) unlock('hop500');
-  if (G.room === 1 && G.hops === 4) $('hint').style.opacity = 0;
   for (let i = 0; i < s.shadow; i++) {
     const e = i === 0 ? nearestEnemy(p.x, p.y, s.range + 100) : nearestEnemy(p.x, p.y, s.range + 100, nearestEnemy(p.x, p.y, s.range + 100));
     if (e) fireSpear(Math.atan2(e.y - p.y, e.x - p.x), .7);
@@ -1643,7 +1665,7 @@ function update(dt) {
   for (let i = G.fires.length - 1; i >= 0; i--) { const f = G.fires[i]; f.t -= dt; if (f.t > 0) continue;
     const t = nearestEnemy(f.x, f.y, 520); if (t) { fireSpear(Math.atan2(t.y - f.y, t.x - f.x), s.groveLord ? 1 : .55, 'spear', f.x, f.y); if (s.groveLord) G.spears[G.spears.length - 1].chill = true; sfx('throw'); }
     if (--f.n > 0 && t) f.t = .18; else G.fires.splice(i, 1); }
-  updFervor(dt); updObjective(dt); updPatron(dt);
+  updFervor(dt); updObjective(dt); updPatron(dt); if (G.phase === 'fight') updTutorial(dt);
   if (vowLv('hurry') && G.phase === 'fight' && !G.isBoss) { G.roomT = (G.roomT || 0) + dt; if (G.roomT > 45) { G.hurryT = (G.hurryT || 0) - dt; if (G.hurryT <= 0) { G.hurryT = 2; const a = rand(0, TAU); SHOOTER = null; eshot(Math.cos(a) * ARENA, Math.sin(a) * ARENA, a + Math.PI, 230, 8 + G.room * .4, 9); const b = G.eshots[G.eshots.length - 1]; b.soul = true; b.home = 1.2; b.life = 6; b.src = 'Sabırsız Ay'; } } }
   if (G.lay && G.lay.k === 'collapse' && G.phase === 'fight') { G.lay.t += dt; if (G.lay.t > 6) G.lay.R = Math.min(210, G.lay.R + 40 * dt); }
   const inp = inputDir();
@@ -1757,7 +1779,7 @@ function update(dt) {
     if (sp.ret) { // Ay Mızrağı: the spear homes back to the fox
       const dx = p.x - sp.x, dy = p.y - sp.y, d = hyp(dx, dy) || 1, v = hyp(sp.vx, sp.vy); sp.vx = dx / d * v; sp.vy = dy / d * v; sp.life = 1;
       if (d < 26) { if (G.s.eclipse) { starBoom(p.x, p.y, 34); for (const e of G.enemies) if (!e.dead && hyp(e.x - p.x, e.y - p.y) < 100 + e.r) { ignite(e); dmgEnemy(e, G.s.dmg * .6, false, 'launch', 'tutulma'); } } G.spears.splice(i, 1); continue; } }
-    else if (G.s.moonSpear && sp.kind === 'spear' && !sp.gen && (sp.life <= 0 || hyp(sp.x, sp.y) > ARENA + 20)) { sp.ret = true; sp.hit = []; sp.dmg *= G.s.retMul; sp.pierce = 99; sp.life = 1; }
+    else if (G.s.moonSpear && sp.kind === 'spear' && !sp.gen && (sp.life <= 0 || hyp(sp.x, sp.y) > ARENA + 20)) { sp.ret = true; sp.hit = []; sp.dmg *= G.s.retMul; sp.pierce = 99; sp.life = 1; sfx('ret', sp.x); }
     let remove = sp.life <= 0 || hyp(sp.x, sp.y) > ARENA + 40;
     if (!remove) for (const e of G.enemies) {
       if (e.dead || e.dying || sp.hit.includes(e)) continue;
@@ -1784,7 +1806,7 @@ function update(dt) {
         if (sp.kind !== 'q') patronHit(sp, e);
         if (!e.boss) { e.kx += sp.vx * .05; e.ky += sp.vy * .05; }
         burst(sp.x, sp.y, COL.spear, 3, 120, .2, 2); sfx('hit', sp.x); G.hitstars.push({ x: sp.x, y: sp.y - 16, life: .1, s: sp.crit ? 24 : 13, crit: sp.crit });
-        if (sp.pierce-- <= 0) { if (G.s.moonSpear && sp.kind === 'spear' && !sp.gen && !sp.ret) { sp.ret = true; sp.hit = [e]; sp.dmg *= G.s.retMul; sp.pierce = 99; break; } remove = true; break; }
+        if (sp.pierce-- <= 0) { if (G.s.moonSpear && sp.kind === 'spear' && !sp.gen && !sp.ret) { sp.ret = true; sp.hit = [e]; sp.dmg *= G.s.retMul; sp.pierce = 99; sfx('ret', sp.x); break; } remove = true; break; }
       }
     }
     if (!remove && G.lay && G.lay.P && G.lay.P.some(c => hyp(sp.x - c.x, sp.y - c.y) < c.r)) { remove = true; burst(sp.x, sp.y, COL.spear, 4, 140, .2, 2); }
@@ -2017,7 +2039,7 @@ function moonAI(e, dt, nx, ny, d) {
     }
   }
   else if (e.st === 'shift') { if (e.t <= 0) { e.st = 'walk'; e.t = .8; } }
-  else if (e.st === 'beamsUp') { if (e.t <= 0) { e.st = 'beams'; e.t = 3.4; sfx('rise', e.x); } }
+  else if (e.st === 'beamsUp') { if (e.t <= 0) { e.st = 'beams'; e.t = 3.4; sfx('beam', e.x); } }
   else if (e.st === 'beams') {
     e.bA += (ph === 3 ? 1.05 : .8) * dt;
     const air = p.state === 'hop' || p.state === 'fling' || p.state === 'rise';
@@ -4204,7 +4226,7 @@ function showEvent() {
 }
 // The end: the moon is reborn. The run can stop here (a win) or carry on as an endless hunt.
 function victory() {
-  G.phase = 'won'; G.lay = null; G.eshots.length = 0; G.erupts.length = 0; G.rings.length = 0; flashScreen(1); slowmo(2, .2); G.zp = .25; cinematic(6);
+  G.phase = 'won'; G.lay = null; setTimeout(() => sfx('victory'), 900); G.eshots.length = 0; G.erupts.length = 0; G.rings.length = 0; flashScreen(1); slowmo(2, .2); G.zp = .25; cinematic(6);
   for (let i = 0; i < 4; i++) setTimeout(() => G && twinkleWorld(rand(-300, 300), rand(-300, 300), Math.min(W, H) * .6), i * 400);
   if (!G.test && vowScore(G.vow) >= 8) unlock('vow8');
   if (!G.test) { meta.wins = (meta.wins || 0) + 1; meta.best = Math.max(meta.best, G.room); store.set('ym_meta', meta); }

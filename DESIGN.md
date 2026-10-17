@@ -316,6 +316,11 @@ Başlangıç ekranındaki **Tilki İni** ve av sonundaki "İne dön" düğmesi k
 
 Hikâye adımları ilerlemeye göre açılır ve her biri bir kez, sırayla anlatılır (birkaç satır, "Devam" ile): ilk geliş, ilk ölüm, Kemik Lordu, Buz Mezarlığı'na varış, Gölge Atlı, Kan Katedrali'nde Ay'ın sesini ilk duymak, Yas Kraliçesi, Kan Kardinali, Ruh Ormanı (tilkinin Ay'ın son ışığından doğduğu), Kadim Ağaç (Ay'ın 40. kapıya çağrısı), zafer (Ay'ın gölgesinin hâlâ kıpırdadığı) ve Kayıp Yavru. Yeni adım varsa başlangıç ve av sonu düğmelerinde parlayan bir nokta görünür. Anlatılacak yeni bir şey yoksa baykuş, seni deviren şeye göre bir öğüt (tükürgen, çığlık halkası, dev, ışık kolu, uçurum, spor, kökler, Ay ışını) ya da genel bir ipucu verir.
 
+## Cila: sesler ve öğretici
+
+- Yeni sesler (Web Audio ile kodla): Coşku başlangıcı (yükselen hava + sub + parlak çan akoru, müziği kısar), Mükemmel Sekme (aşağı inen "zaman bükülmesi" süpürmesi + kristal çanlar), donma (buz çatırtısı), tutuşma, zincir şimşek, geri dönen Ay mızrağının ıslığı, ışık kolu uğultusu (Ay ve Tuzaklı Geçit), zafer akorları. Coşku sırasında müziğe yarım adım kaydırılmış parlak bir arpej katmanı eklenir.
+- İlk av öğreticisi: ipuçları ipucu kutusunda tek tek ve ancak anı gelince çıkar, oyuncu yapınca (ya da ~12 sn sonra) kaybolur ve bir daha gösterilmez: yön ve sekme, mızraklar birikince SÖK, Delici Işık, kalabalıkta Ay Sıçrayışı, Coşku çubuğu. Deneme Odası ve Günün Avı'nda çıkmaz.
+
 ## Ruh Ataları, olaylar ve anlatım (Aşama 3)
 
 **Ata Kapısı** (kapı havuzunda iki kez, her biri farklı ata): bir savaş odası; ödül seçimi yalnızca o atanın kartlarından gelir ve atanın çekirdek kartı henüz alınmadıysa ilk seçenek odur. Ata kartları normal seçimlerde ancak o atanın çekirdeği alındıktan sonra çıkar.
