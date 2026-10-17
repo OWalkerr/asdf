@@ -23,6 +23,7 @@ const RUNS = +process.argv[2] || 4, META = process.argv[3] === 'meta', START = +
         if (G.phase === 'draft') { const PR = ['dmg', 'as', 'multi', 'rend', 'pierce', 'heavy', 'crit', 'hp', 'leech', 'spirit', 'rendcd', 'exec', 'shadow', 'ghost', 'qup']; const sc = u => (u.r === 'leg' ? 100 : u.r === 'epic' ? 60 : 0) + (PR.includes(u.id) ? 40 - PR.indexOf(u.id) * 2 : 0); pick(draftOpts.slice().sort((a, b) => sc(b) - sc(a))[0]); continue; }
         if (G.phase === 'path') { const t = G.p.hp < G.s.maxHp * .5 ? 'rest' : 'fight'; G.nextMods = t === 'fight' ? rollRoomMods(G.room + 1) : null; chooseDoor(t); continue; }
         if (G.phase === 'altar') { showPath(); continue; }
+        if (G.phase === 'form') { const f = FORMS.find(f => !G.forms[f.id]); G.forms[f.id] = 1; showDraft(); continue; }
         if (G.phase === 'shop') { showPath(); continue; }
         // steering: flee threats, keep off the wall, otherwise approach to range
         let fx = 0, fy = 0;

@@ -271,6 +271,18 @@ Oyuncu geri bildirimi: oynanış bir süre sonra "hep aynı oda" gibi hissettiri
 - **Arena şekilleri** (%65 şansla): Sütunlu salon (7 taş sütun; mızrakları ve mermileri keser, siper olur), Yarık halkası (dört köprülü boşluk halkası; yürüyerek geçilmez, sekerek atlanır; düşersen son durduğun yere dönersin), Çöken merkez (6. saniyeden sonra ortası büyüyen bir uçuruma döner; önce çatlaklar uyarır). Düşmanlar boşluğa giremez (uçanlar hariç).
 - Deneme Odası'nda görev ve arena da seçilebilir. Denge botu kapılardaki görevleri gerçek oyundaki gibi alır, ışık kollarından ve uçurumdan kaçınır; yükseltmeli bot medyan 7–15. oda (öncekiyle benzer).
 
+## Ruh Biçimleri (Aşama 2)
+
+Her muhafız yenilince güç seçiminden önce henüz alınmamış 5 biçimden 3'ü sunulur; biri seçilir ve av boyunca sekmeyi değiştirir (en fazla 5):
+
+- **Çift Sekme:** sekme bitince 0.45 sn içinde, yeniden atış yapmadan bir kez daha sekilebilir (atış ya da duvar sekmesi hakkı yeniler).
+- **Duvar Sekmesi:** arena kenarına ya da sütuna çarpan sekme yansır (sekme başına 2 kez), %15 hızlanır; çarptığı yerde ışık patlaması (%120 hasar, 1 mızrak, Coşku +5).
+- **Işık Kancası:** 380 birim içindeki bir düşmana doğru sekince ona kadar çekilirsin; varınca %180 hasar ve 2 mızrak, düşman itilir.
+- **Yıldırım Adım:** sekme yolundaki her düşman %90 hasar alır, 1 mızrak saplanır; sekerken hasar alınmaz.
+- **Zaman Bükümü:** Mükemmel Sekme penceresi %50 genişler; ağır çekim 1.1 sn ve ×0.2, hasarsızlık 0.8 sn, ek Coşku +15.
+
+Duraklat ve av sonu ekranlarında alınan biçimler ◆ ile güçlerin önünde listelenir; hasar dökümünde Kanca, Yıldırım Adım ve Duvar Sekmesi ayrı görünür.
+
 ## Ruh Ormanı (30. oda ve sonrası)
 
 Dördüncü biyom. Yosunlu taş zemin, kenardan sürünen kökler, çimen öbekleri ve düşmüş yapraklar; mum yerine üstünde parlayan mantarlar olan kütükler; altın-yeşil ruh ateşi; ateş böcekleri ve güçlü ışık hüzmeleri. Ortamda kuş cıvıltısı, baykuş, yaprak hışırtısı ve uzak çanlar.

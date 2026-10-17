@@ -187,6 +187,7 @@ p{margin:0;line-height:1.45;color:var(--ink)}
 .lead{font-size:17px;color:#cfdcd8;max-width:34ch;text-shadow:0 1px 3px #000}
 .btns{display:flex;flex-direction:column;gap:10px;width:100%}
 .card.locked{opacity:.45;filter:grayscale(.7);cursor:default}
+.ups span.form{border-color:var(--gold);color:#ffe9b0}
 .opts{display:grid;grid-template-columns:1fr 1fr;gap:8px}.opts .btn{padding-inline:8px;font-size:13px;min-height:44px}
 #hud.bigbtn .abil{transform:scale(1.22);transform-origin:100% 100%}#hud.bigbtn.lefty .abil{transform-origin:0 100%}
 .btn{position:relative;border:1px solid var(--line);background:linear-gradient(180deg,rgba(22,40,44,.95),rgba(10,20,23,.95));color:var(--ink);padding:15px 18px;border-radius:3px;
@@ -355,6 +356,15 @@ p{margin:0;line-height:1.45;color:var(--ink)}
     <h2>Bir güç seç</h2>
     <div class="cards" id="cards"></div>
     <div class="btns"><button class="btn" id="btnReroll">Yeniden çek <small id="rerollN">0</small></button></div>
+  </div>
+</section>
+
+<section class="screen" id="scrForm" hidden>
+  <div class="panel">
+    <div class="eyebrow" id="fEyebrow">Muhafız yenildi</div>
+    <h2>Bir Ruh Biçimi seç</h2>
+    <p class="fine">Ruh Biçimleri sekmenin nasıl çalıştığını kalıcı olarak değiştirir. Av boyunca her muhafızdan sonra bir tane daha.</p>
+    <div class="cards" id="formCards"></div>
   </div>
 </section>
 
@@ -955,7 +965,7 @@ function newRun(daily, testHero) {
   G = { s, hero, skin, trail: trailById(meta.trail), ups: {}, room: 0, kills: 0, time: 0, shards: 0, rerolls: meta.reroll, hops: 0, phase: 'fight',
     p: { x: 0, y: 0, hp: s.maxHp, state: 'idle', t: 0, atkCd: .3, face: -Math.PI / 2, target: null, iT: 0, hvx: 0, hvy: 0, buf: false,
       lastHop: -9, lastPerfect: -9, rStacks: 0, ghosts: [], wardT: 0, qCd: 0, rendCd: 0, rCd: 0, qQueued: false, shots: 0, spA: 0, spCd: [], trailAcc: 0 },
-    fervor: 0, feverT: 0, fervorIdle: 0, enemies: [], spears: [], eshots: [], echoes: [], fires: [], parts: [], texts: [], trails: [], spawns: [], hazards: [], hitstop: 0, gibs: [], decals: [], booms: [], flashA: 0, combo: 0, comboT: 0, zp: 0, hurtA: 0, twinkles: [], rings: [], erupts: [], orbs: [], hitstars: [], impactT: 0, speedT: 0, beamT: 0, lastKill: null, slowT: 0, slowS: 1, roomType: 'fight', pending: 0, waves: [], waveIdx: 0, waveT: 0, shake: 0, clearT: 0,
+    forms: {}, fervor: 0, feverT: 0, fervorIdle: 0, enemies: [], spears: [], eshots: [], echoes: [], fires: [], parts: [], texts: [], trails: [], spawns: [], hazards: [], hitstop: 0, gibs: [], decals: [], booms: [], flashA: 0, combo: 0, comboT: 0, zp: 0, hurtA: 0, twinkles: [], rings: [], erupts: [], orbs: [], hitstars: [], impactT: 0, speedT: 0, beamT: 0, lastKill: null, slowT: 0, slowS: 1, roomType: 'fight', pending: 0, waves: [], waveIdx: 0, waveT: 0, shake: 0, clearT: 0,
     cam: { x: 0, y: 0 } };
   G.mod = {}; G.daily = daily || null; G.rng = daily ? mulberry32(daily.seed) : null;
   if (daily && daily.mod.g) daily.mod.g(G.mod);
@@ -1250,7 +1260,7 @@ function attackThrow() {
   const p = G.p, s = G.s, t = p.target && !p.target.dead ? p.target : nearestEnemy(p.x, p.y, s.range + 60);
   if (!t) return;
   const ang = Math.atan2(t.y - p.y, t.x - p.x); p.face = ang;
-  fireSpear(ang, 1);
+  fireSpear(ang, 1); p.extraHop = !!G.forms.double;
   for (let i = 1; i <= s.multi; i++) { const off = .2 * Math.ceil(i / 2) * (i % 2 ? 1 : -1); fireSpear(ang + off, .6); }
   p.shots++;
   if (s.storm && p.shots % 8 === 0) { for (let i = 0; i < 8; i++) fireSpear(ang + i * TAU / 8, .6); burst(p.x, p.y, COL.spear, 14, 260, .4); }
@@ -1275,14 +1285,15 @@ function updFervor(dt) {
 // slows time, deflects nearby bolts, fires free spears and fills Coşku.
 function threatened() {
   const p = G.p;
-  for (const b of G.eshots) { const dx = p.x - b.x, dy = p.y - b.y, d = hyp(dx, dy), v = hyp(b.vx, b.vy) || 1; if (d < 95 && (dx * b.vx + dy * b.vy) / (d * v || 1) > .5 && d / v < .32) return true; }
+  const W2 = G.forms.time ? 1.5 : 1;
+  for (const b of G.eshots) { const dx = p.x - b.x, dy = p.y - b.y, d = hyp(dx, dy), v = hyp(b.vx, b.vy) || 1; if (d < 95 * W2 && (dx * b.vx + dy * b.vy) / (d * v || 1) > .5 && d / v < .32 * W2) return true; }
   for (const e of G.enemies) { if (e.dead || e.dying) continue; const d = hyp(e.x - p.x, e.y - p.y) - e.r; if (d < 70 && (e.st === 'dash' || e.st === 'dive' || e.st === 'leap' || e.sub === 'dash' || (e.st === 'fuse' && e.t < .3))) return true; }
   for (const u of G.erupts) if (u.t < .35 && hyp(u.x - p.x, u.y - p.y) < u.r + 12) return true;
   for (const r of G.rings) if (Math.abs(hyp(r.x - p.x, r.y - p.y) - r.r) < 45) return true;
   return false;
 }
 function perfectHop() {
-  const p = G.p; p.lastPerfect = G.time; p.iT = Math.max(p.iT, .45); slowmo(.4, .3); G.zp = Math.max(G.zp, .05);
+  const p = G.p, tw = !!G.forms.time; p.lastPerfect = G.time; p.iT = Math.max(p.iT, tw ? .8 : .45); slowmo(tw ? 1.1 : .4, tw ? .2 : .3); if (tw) addFervor(15); G.zp = Math.max(G.zp, .05);
   txt(p.x, p.y - 34, 'MÜKEMMEL', '#ffe39a', true); G.parts.push({ ring: true, x: p.x, y: p.y, r: 70, life: .3, max: .3, c: '#ffe39a' }); sfx('ding'); buzz(25);
   for (let i = G.eshots.length - 1; i >= 0; i--) { const b = G.eshots[i]; if (hyp(b.x - p.x, b.y - p.y) < 140 && !b.orb) { burst(b.x, b.y, '#ffe39a', 4, 140, .25, 2); G.eshots.splice(i, 1); } }
   for (let k = 0; k < 3; k++) { const e = k === 0 ? nearestEnemy(p.x, p.y, G.s.range + 120) : G.enemies.filter(o => !o.dead && !o.dying)[Math.floor(Math.random() * G.enemies.length)]; if (e) fireSpear(Math.atan2(e.y - p.y, e.x - p.x), 1, 'spear'); }
@@ -1295,7 +1306,10 @@ function startHop(dx, dy) {
   const tx = Math.cos(p.face), ty = Math.sin(p.face), dot = dx * tx + dy * ty;
   const f = dot >= 0 ? 1 - .4 * dot : 1 + .25 * -dot;
   const dist = s.hopDist * f * (p.chillT > 0 ? .8 : 1) * (G.feverT > 0 ? 1.15 : 1);
-  p.hvx = dx * dist / s.hopTime; p.hvy = dy * dist / s.hopTime; p.state = 'hop'; p.t = s.hopTime; p.buf = false;
+  let hd = dist; p.hookE = null; p.boltHit = [];
+  if (G.forms.hook) { let best = null, bd = 0; for (const e of G.enemies) { if (e.dead || e.dying) continue; const ex = e.x - p.x, ey = e.y - p.y, el = hyp(ex, ey); if (el > 380 + e.r || el < 30) continue; const dot = (ex * dx + ey * dy) / el; if (dot > .82 && dot / el > bd) { bd = dot / el; best = e; } }
+    if (best) { hd = Math.max(dist, hyp(best.x - p.x, best.y - p.y) - best.r - 4); const l2 = hyp(best.x - p.x, best.y - p.y) || 1; dx = (best.x - p.x) / l2; dy = (best.y - p.y) / l2; p.hookE = best; G.parts.push({ ring: true, x: best.x, y: best.y, r: best.r + 10, life: .2, max: .2, c: '#bfe8ff' }); } }
+  p.wb = 0; p.hvx = dx * hd / s.hopTime; p.hvy = dy * hd / s.hopTime; p.state = 'hop'; p.t = s.hopTime; p.buf = false;
   if (G.phase === 'fight' && G.time - p.lastPerfect > .8 && threatened()) perfectHop();
   p.rStacks = G.time - p.lastHop < 1.6 ? Math.min(5, p.rStacks + 1) : 1; p.lastHop = G.time; G.hops++; if (s.dance) p.danceT = .8; if (G.hops >= 500) unlock('hop500');
   if (G.room === 1 && G.hops === 4) $('hint').style.opacity = 0;
@@ -1308,6 +1322,8 @@ function startHop(dx, dy) {
 }
 function endHop() {
   const p = G.p, s = G.s; p.state = 'idle'; p.land = .12;
+  p.lastLand = G.time;
+  if (p.hookE) { const e = p.hookE; p.hookE = null; if (!e.dead && !e.dying && hyp(e.x - p.x, e.y - p.y) < e.r + 60) { e.stacks += 2; e.stackT = 4; dmgEnemy(e, s.dmg * 1.8, false, 'launch', 'kanca'); starBoom(e.x, e.y, 40); sfx('hit', e.x); G.shake = Math.max(G.shake, 6); if (!e.boss) { e.kx += p.hvx * .25; e.ky += p.hvy * .25; } } }
   if (s.postIframe) p.iT = Math.max(p.iT, s.postIframe);
   if (s.flow) p.atkCd *= Math.pow(.7, s.flow);
   if (s.groveFire) G.fires.push({ x: p.x, y: p.y, t: .4, n: s.foxfire + 1 });
@@ -1453,7 +1469,7 @@ function updFx(dt) {
   for (let i = G.decals.length - 1; i >= 0; i--) { G.decals[i].life -= dt; if (G.decals[i].life <= 0) G.decals.splice(i, 1); }
   for (let i = G.booms.length - 1; i >= 0; i--) { G.booms[i].life -= dt; if (G.booms[i].life <= 0) G.booms.splice(i, 1); }
 }
-function invuln() { const p = G.p; return p.iT > 0 || (p.state === 'hop' && G.s.ghostHop) || p.state === 'rise' || p.state === 'fling'; }
+function invuln() { const p = G.p; return p.iT > 0 || (p.state === 'hop' && (G.s.ghostHop || G.forms.bolt)) || p.state === 'rise' || p.state === 'fling'; }
 function hurt(d, src) {
   const p = G.p; if (G.phase !== 'fight' || invuln()) return;
   if (G.god) { txt(p.x, p.y - 30, '-' + Math.round(d), '#88a29c'); return; }
@@ -1495,7 +1511,7 @@ function update(dt) {
     if (G.waveIdx >= G.waves.length && alive === 0 && G.spawns.length === 0 && !(G.obj && G.obj.k === 'siege' && G.obj.t > 0)) { G.phase = 'clear'; objCleared(); G.clearT = 1.6; if (G.room >= 5 && !G.isBoss && !G.roomDmg) unlock('nohit'); G.eshots.length = 0; G.rings.length = 0; G.erupts.length = 0;
       if (!G.isBoss && G.lastKill) { twinkleWorld(G.lastKill.x, G.lastKill.y, Math.min(W, H) * .5, .15); slowmo(.7, .25); G.zp = Math.max(G.zp, .08); }
       G.hazards.length = 0; banner('Temizlendi'); G.shards += 2 + Math.floor(G.room / 3) + (G.roomType === 'elite' ? 5 : G.roomType === 'cursed' ? 8 : 0); }
-  } else if (G.phase === 'clear') { G.clearT -= dt; if (G.clearT <= 0) showDraft(); }
+  } else if (G.phase === 'clear') { G.clearT -= dt; if (G.clearT <= 0) { if (G.isBoss) showForms(); else showDraft(); } }
   tickSpawns(dt);
 
   // player state machine (throw, then hop)
@@ -1506,6 +1522,7 @@ function update(dt) {
         p.face = e ? Math.atan2(e.y - p.y, e.x - p.x) : inp.m > .2 ? Math.atan2(inp.y, inp.x) : p.face; p.buf = false; break; }
       const tgt = p.atkCd <= 0 && G.phase === 'fight' ? nearestEnemy(p.x, p.y, s.range) : null;
       if (tgt) { p.state = 'windup'; p.t = Math.max(.07, .3 / (s.as * asMul())); p.target = tgt; p.buf = false; p.face = Math.atan2(tgt.y - p.y, tgt.x - p.x); }
+      else if (G.forms.double && p.extraHop && inp.m > .5 && G.time - (p.lastLand || -9) < .45 && G.phase === 'fight') { p.extraHop = false; startHop(inp.x, inp.y); p.ghosts.push({ x: p.x, y: p.y, life: .4 }); }
       else if (inp.m > .12) { const sp = s.walk * inp.m * (p.chillT > 0 ? .6 : 1) * (G.feverT > 0 ? 1.25 : 1); p.x += inp.x * sp * dt; p.y += inp.y * sp * dt; p.face = Math.atan2(inp.y, inp.x); }
       break;
     }
@@ -1532,6 +1549,13 @@ function update(dt) {
     case 'fling': G.speedT = Math.max(G.speedT, .15); p.t -= dt; p.x += p.hvx * dt; p.y += p.hvy * dt; p.ghosts.push({ x: p.x, y: p.y, life: .35 }); if (p.t <= 0) rImpact(); break;
     case 'hop': {
       p.t -= dt; p.x += p.hvx * dt; p.y += p.hvy * dt;
+      if (G.forms.bolt) for (const e of G.enemies) if (!e.dead && !e.dying && !p.boltHit.includes(e) && hyp(e.x - p.x, e.y - p.y) < e.r + 18) { p.boltHit.push(e); e.stacks++; e.stackT = 4; dmgEnemy(e, s.dmg * .9, false, 'launch', 'yildirim'); burst(e.x, e.y, '#bfe8ff', 6, 220, .25, 2); sfx('hit', e.x); }
+      if (G.forms.wall && p.wb < 2) { let nx = 0, ny = 0; const pl2 = hyp(p.x, p.y);
+        if (pl2 > ARENA - 22) { nx = -p.x / pl2; ny = -p.y / pl2; } else if (G.lay && G.lay.P) for (const c of G.lay.P) { const d2 = hyp(p.x - c.x, p.y - c.y); if (d2 < c.r + 14) { nx = (p.x - c.x) / d2; ny = (p.y - c.y) / d2; } }
+        const vn = p.hvx * nx + p.hvy * ny;
+        if ((nx || ny) && vn < 0) { p.wb++; p.hvx = (p.hvx - 2 * vn * nx) * 1.15; p.hvy = (p.hvy - 2 * vn * ny) * 1.15; p.t = Math.max(p.t, s.hopTime * .7); p.extraHop = !!G.forms.double;
+          G.parts.push({ ring: true, x: p.x, y: p.y, r: 80, life: .25, max: .25, c: '#bfe8ff' }); shock(p.x, p.y, 200, .7, .35); sfx('boom', p.x); G.shake = Math.max(G.shake, 5); addFervor(5);
+          for (const e of G.enemies) if (!e.dead && hyp(e.x - p.x, e.y - p.y) < 90 + e.r) { e.stacks++; e.stackT = 4; dmgEnemy(e, s.dmg * 1.2, false, 'launch', 'duvar'); } } }
       p.ghosts.push({ x: p.x, y: p.y, life: .25 });
       if (s.trail) { p.trailAcc += dt; if (p.trailAcc > .025) { p.trailAcc = 0; G.trails.push({ x: p.x, y: p.y, life: .7 + .2 * s.trail }); } }
       if (p.t <= 0) endHop();
@@ -2447,6 +2471,8 @@ function drawWorld(T, now) {
   }
   for (const b of G.booms) light(b.x, b.y, b.R * 3, Math.min(1, b.life / b.max * 1.6), '255,224,180');
   if (G.phase !== 'over') light(p.x, p.y - 10, 330, .95, G.feverT > 0 ? '255,230,160' : '215,255,245');
+  if (p.state === 'hop' && G.forms.bolt) { emit('170,220,255', p.x, p.y - 16, 40, .7); light(p.x, p.y, 160, .7, '170,220,255'); }
+  if (p.state === 'hop' && p.hookE && !p.hookE.dead) { const e = p.hookE; for (let k = 1; k < 6; k++) emit('200,240,255', p.x + (e.x - p.x) * k / 6, p.y - 16 + (e.y - p.y) * k / 6, 10, .8); }
   if (G.feverT > 0) { emit('255,215,120', p.x, p.y - 18, 46 + 6 * Math.sin(G.time * 14), .45); emit('255,250,220', p.x, p.y - 18, 16, .6); }
   for (const f of G.fires) { const fl = .8 + .2 * Math.sin(G.time * 30 + f.x); emit('120,200,255', f.x, f.y - 14, 26 * fl, .8); emit('235,250,255', f.x, f.y - 14, 8 * fl, 1); light(f.x, f.y, 90, .5, '120,200,255'); }
   for (const u of G.echoes) { const k = 1 - u.t / .35; emit('190,232,255', u.x, u.y - 6, u.R * .6 * k, .5 * k); }
@@ -3687,7 +3713,7 @@ const icon = k => `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" s
 
 
 // ---------- screens ----------
-const screens = ['scrTitle', 'scrHero', 'scrHow', 'scrShop', 'scrDraft', 'scrPath', 'scrMerchant', 'scrAltar', 'scrAch', 'scrTest', 'scrPause', 'scrOver'];
+const screens = ['scrTitle', 'scrHero', 'scrHow', 'scrShop', 'scrDraft', 'scrPath', 'scrMerchant', 'scrAltar', 'scrAch', 'scrTest', 'scrForm', 'scrPause', 'scrOver'];
 let backTo = 'scrTitle';
 function show(id) { screens.forEach(s => $(s).hidden = s !== id); $('hud').hidden = !G || id === 'scrTitle' || id === 'scrHow' || id === 'scrShop' || id === 'scrTest'; }
 function titleScreen() {
@@ -3800,7 +3826,7 @@ $('btnHand').addEventListener('click', () => { OPTS.hand = OPTS.hand === 'left' 
 syncTouch();
 $('btnMute').addEventListener('click', () => { muted = !muted; store.set('ym_opts', Object.assign(OPTS, { muted })); syncMute(); initAudio(); if (MG) MG.gain.setTargetAtTime(muted ? 0 : 1, AC.currentTime, .05); }); syncMute();
 
-function upChips(el) { el.innerHTML = ''; const ids = Object.keys(G.ups); if (!ids.length) { el.innerHTML = '<span>Henüz güç yok</span>'; return; }
+function upChips(el) { el.innerHTML = ''; const ids = Object.keys(G.ups); for (const f of FORMS) if (G.forms[f.id]) { const sp = document.createElement('span'); sp.className = 'form'; sp.textContent = '◆ ' + f.n; el.appendChild(sp); } if (!ids.length) { if (!el.children.length) el.innerHTML = '<span>Henüz güç yok</span>'; return; }
   for (const id of ids) { const u = UPS.find(x => x.id === id); const sp = document.createElement('span'); sp.textContent = u.n + (G.ups[id] > 1 ? ' ×' + G.ups[id] : ''); el.appendChild(sp); } }
 function pause() { if (!G || G.phase !== 'fight' || paused) return; paused = true; $('pTitle').textContent = G.isBoss ? 'Oda ' + G.room + ' · ' + bossName(G.room) : 'Oda ' + G.room; upChips($('pUps')); show('scrPause'); }
 function resume() { paused = false; show(null); last = performance.now(); }
@@ -3817,6 +3843,25 @@ function rollDraft() {
     out.push(avail.splice(Math.min(i, avail.length - 1), 1)[0]);
   }
   return out;
+}
+// Ruh Biçimleri: movement forms chosen after each guardian; they change what a hop does for the rest of the run.
+const FORMS = [
+  { id: 'double', n: 'Çift Sekme', d: 'Sekme bitince, yeniden atış yapmadan bir kez daha sekebilirsin. Yönünü değiştir, kaç, yeniden dal.' },
+  { id: 'wall', n: 'Duvar Sekmesi', d: 'Arena kenarına ya da bir sütuna çarpan sekmen geri yansır, hızlanır ve çarptığı yerde ışık patlaması yapar.' },
+  { id: 'hook', n: 'Işık Kancası', d: 'Bir düşmana doğru sekersen ona kadar çekilirsin (380 birime kadar). Çarpınca güçlü hasar verir ve 2 mızrak saplarsın.' },
+  { id: 'bolt', n: 'Yıldırım Adım', d: 'Sekerken içinden geçtiğin her düşman hasar alır ve üstüne bir mızrak saplanır. Sekme boyunca hasar almazsın.' },
+  { id: 'time', n: 'Zaman Bükümü', d: 'Mükemmel Sekme penceresi genişler; zaman daha uzun ve daha çok yavaşlar, Coşku daha çok dolar.' },
+];
+function showForms() {
+  const left = FORMS.filter(f => !G.forms[f.id]); if (!left.length) return showDraft();
+  G.phase = 'form'; $('banner').classList.remove('on'); const c = $('formCards'); c.innerHTML = '';
+  const opts = left.slice().sort(() => crand() - .5).slice(0, 3);
+  $('fEyebrow').textContent = bossName(G.room) + ' yenildi · Ruh Biçimi ' + (Object.keys(G.forms).length + 1) + '/5';
+  for (const f of opts) { const b = document.createElement('button'); b.className = 'card leg';
+    b.innerHTML = `<span class="ic">${icon('Sekme')}</span><span class="nm"></span><span class="rr">Ruh Biçimi</span><span class="ds"></span>`;
+    b.querySelector('.nm').textContent = f.n; b.querySelector('.ds').textContent = f.d;
+    b.addEventListener('click', () => { if (!G || G.phase !== 'form') return; G.forms[f.id] = 1; sfx('rise'); G.beamT = 1.4; showDraft(); }); c.appendChild(b); }
+  show('scrForm');
 }
 function showDraft() {
   const altar = G.roomType === 'altar'; G.phase = 'draft'; if (!altar) heal(G.s.maxHp * .15); $('banner').classList.remove('on'); G.pending = G.roomType === 'cursed' ? 2 : altar ? G.altarPicks || 1 : 1;
@@ -3941,7 +3986,7 @@ function gameOver() {
   const m = Math.floor(G.time / 60), sec = Math.floor(G.time % 60);
   $('oStats').innerHTML = `<div>Oda<b>${reached}</b></div><div>Öldürme<b>${G.kills}</b></div><div>Sekme<b>${G.hops}</b></div><div>Süre<b>${m}:${String(sec).padStart(2, '0')}</b></div><div>Ruh parçası<b>+${G.shards}</b></div>`;
   upChips($('oUps'));
-  const DL = { spear: 'Mızrak', q: 'Delici Mızrak', rend: 'Söküm', kader: 'Ay Sıçrayışı', sok: 'İniş Şoku', bomba: 'Kemik Bombası', iz: 'Ruh İzi', spirit: 'Ruh Yavrusu', launch: 'Patlama' };
+  const DL = { kanca: 'Işık Kancası', yildirim: 'Yıldırım Adım', duvar: 'Duvar Sekmesi', yanki: 'Yankı Sekmesi', nova: 'Söküm Novası', spear: 'Mızrak', q: 'Delici Mızrak', rend: 'Söküm', kader: 'Ay Sıçrayışı', sok: 'İniş Şoku', bomba: 'Kemik Bombası', iz: 'Ruh İzi', spirit: 'Ruh Yavrusu', launch: 'Patlama' };
   const rows = Object.entries(G.dmgBy || {}).filter(([, v]) => v >= 1).sort((a, b) => b[1] - a[1]).slice(0, 6), tot = rows.reduce((a, [, v]) => a + v, 0) || 1, mx = rows.length ? rows[0][1] : 1;
   $('oDmg').innerHTML = rows.length ? '<span class="hl">Hasar kaynakları</span>' + rows.map(([k, v]) => `<div class="dmgrow"><span>${DL[k] || k}</span><i style="width:${Math.max(3, 100 * v / mx)}%"></i><b>${Math.round(100 * v / tot)}%</b></div>`).join('') : '';
   const cause = $('oCause'); cause.textContent = '';
