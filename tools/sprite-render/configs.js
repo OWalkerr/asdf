@@ -2,7 +2,7 @@
 // anims: { name, n, clip, from, to } plays a GLB clip between fractions from..to; { name, n, pose(H, u) } builds a pose by hand.
 const TAIL = ['tailstart', 'tail1', 'tail2', 'tail3'];
 const LEGS = ['frontleg', 'R_frontleg', 'backleg', 'R_backleg', 'frontleg0', 'R_frontleg0', 'backleg0', 'R_backleg0', 'frontleg1', 'R_frontleg1', 'backleg1', 'R_backleg1'];
-import { buildBomb, buildBat, buildChest, buildMimic } from './models.js';
+import { buildBomb, buildBat, buildChest, buildMimic, buildThorn, buildSporer } from './models.js';
 const T2 = 2 * Math.PI, DIRS5 = [0, 45, 90, -45, -90];
 // Meshy humanoids (Mixamo skeleton): clips play in place, size is measured by height
 const HUM = { fw: 200, fh: 224, elev: 51, dirs: DIRS5, byHeight: true, inPlace: 'mixamorigHips', points: { eye: 'mixamorigHead' }, emissive: .18, emissiveColor: 0xffffff, exposure: 1.05 };
@@ -93,6 +93,28 @@ export const CFG = {
     anims: [
       { name: 'walk', n: 8, pose: (H, u) => { H.reset(); const a = u * T2; H.rotW('lid', H.X, -.25 - .35 * Math.max(0, Math.sin(2 * a))); return .08 * Math.abs(Math.sin(a)); } },
       { name: 'attack', n: 6, pose: (H, u) => { H.reset(); H.rotW('lid', H.X, -.4 - .9 * Math.sin(Math.PI * Math.min(1, u * 1.4))); H.bones.tongue.scale.set(1.3, .35 + .3 * u, 1.4 + .6 * u); return .05; } },
+    ] },
+  // ---------- Spirit Forest ----------
+  thorn: { build: buildThorn, fw: 176, fh: 208, elev: 51, dirs: [0, 90, -90], len: 1.4, exposure: 1.1, points: { eye: 'core' },
+    anims: [
+      { name: 'walk', n: 8, pose: (H, u) => { H.reset(); const a = u * T2; for (let i = 0; i < 4; i++) { H.rotW('seg' + i, H.Z, .1 * Math.sin(a - i * .6)); H.rotW('seg' + i, H.X, .06 * Math.cos(a - i * .6)); }
+        for (let k = 0; k < 6; k++) H.bones['petal' + k].rotation.x = -.9 + .1 * Math.sin(a); } },
+      { name: 'attack', n: 6, pose: (H, u) => { H.reset(); const back = Math.sin(Math.PI * Math.min(1, u / .6)), whip = Math.max(0, Math.sin(Math.PI * (u - .5) / .5));
+        for (let i = 1; i < 4; i++) H.rotW('seg' + i, H.X, .28 * back - .4 * whip); for (let k = 0; k < 6; k++) H.bones['petal' + k].rotation.x = -.9 + 1.25 * Math.min(1, u * 1.6);
+        H.bones.core.scale.setScalar(1 + .8 * u); } },
+    ] },
+  sporer: { build: buildSporer, fw: 192, fh: 192, elev: 51, dirs: DIRS5, len: 1, exposure: 1.1, points: { eye: 'face' },
+    anims: [
+      { name: 'walk', n: 8, pose: (H, u) => { H.reset(); const a = u * T2; for (let i = 0; i < 4; i++) H.rotW('leg' + i, H.X, .45 * Math.sin(a + (i % 2) * Math.PI)); H.rotW('body', H.Z, .1 * Math.sin(a)); H.bones.cap.rotation.z = .06 * Math.sin(a + 1); H.bones.cap.rotation.x = -.35; return .03 * Math.abs(Math.sin(a)); } },
+      { name: 'attack', n: 6, pose: (H, u) => { H.reset(); const k = Math.sin(Math.PI * u); H.bones.cap.scale.set(1 + .25 * k, 1 - .3 * k + .4 * Math.max(0, u - .6), 1 + .25 * k); H.bones.body.scale.set(1 + .1 * k, 1 - .12 * k, 1 + .1 * k); } },
+    ] },
+  wolf: { glb: 'models/frostlight_fox_walk.glb', fw: 224, fh: 200, margin: 1.02, elev: 51, dirs: DIRS5, len: .0062, exposure: 1.2, points: { eye: 'head' },
+    recolor: { color: 0x6a5a9a, emissive: 0x4a2a8a, emissiveIntensity: .45 }, rimColor: 0xc890ff, rim: 5,
+    anims: [
+      { name: 'walk', n: 8, pose: (H, u) => { H.clip(0, u); H.exaggerate(LEGS, 1.75); const c = Math.sin(u * 2 * T2); H.rotW('Hips', H.X, .07 * c); TAIL.forEach((t, i) => H.rotW(t, H.X, -.1 + .08 * Math.sin(u * 2 * T2 - i * .8))); H.rotW('head', H.X, .12); return Math.abs(Math.cos(u * T2)) * .00012; } },
+      { name: 'attack', n: 6, pose: (H, u) => { H.reset(); const s = Math.sin(Math.PI * u), early = Math.max(0, 1 - u * 5);
+        H.rotW('Hips', H.X, -.25 * (1 - 2 * u) * s); ['frontleg', 'R_frontleg'].forEach(n => H.rotW(n, H.X, -1.15 * s + .35 * early)); ['backleg', 'R_backleg'].forEach(n => H.rotW(n, H.X, 1.05 * s - .3 * early));
+        TAIL.forEach(t => H.rotW(t, H.X, -.1)); H.rotW('head', H.X, .25 - .2 * s); } },
     ] },
   // Enemy template: Meshy exports one GLB per animation; list the walk clip as glb and the others in extraClips.
   // Every enemy needs 'walk'; 'attack' (wind-up / shot) and 'die' are optional and used when present.

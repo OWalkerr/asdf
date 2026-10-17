@@ -59,3 +59,41 @@ function buildBox(T, mimic) {
 }
 export const buildChest = T => buildBox(T, false);
 export const buildMimic = T => buildBox(T, true);
+
+// ---------- Spirit Forest ----------
+// Thorn vine: a root mound, a four-segment stalk (seg0..seg3, each bends) and a flower head whose petals open to fire.
+export function buildThorn(T) {
+  const root = new T.Group(), bark = mat(T, 0x3a2a1a, 0x000000, 0, .9), stem = mat(T, 0x3f6a24, 0x0a1a04, .3, .75), thornM = mat(T, 0xd8e8a0, 0x203010, .2, .5);
+  const mound = new T.Mesh(new T.SphereGeometry(.42, 20, 12), bark); mound.scale.set(1, .32, 1); root.add(mound);
+  for (let i = 0; i < 5; i++) { const a = i * 1.26 + .3, c = new T.CatmullRomCurve3([new T.Vector3(Math.cos(a) * .25, .08, Math.sin(a) * .25), new T.Vector3(Math.cos(a) * .5, .03, Math.sin(a) * .5), new T.Vector3(Math.cos(a + .2) * .72, 0, Math.sin(a + .2) * .72)]);
+    root.add(new T.Mesh(new T.TubeGeometry(c, 10, .045, 6), bark)); }
+  let parent = root, y0 = .1;
+  for (let i = 0; i < 4; i++) {
+    const seg = grp(T, 'seg' + i), L = .32 - i * .02, rr = .085 - i * .014, cyl = at(new T.Mesh(new T.CylinderGeometry(rr * .85, rr, L, 10), stem), 0, L / 2, 0); seg.add(cyl);
+    for (let k = 0; k < 3; k++) { const a = k * 2.1 + i, th = at(new T.Mesh(new T.ConeGeometry(.025, .12, 5), thornM), Math.cos(a) * rr, L * (.3 + .25 * k), Math.sin(a) * rr); th.rotation.set(Math.sin(a) * 1.3, 0, -Math.cos(a) * 1.3); seg.add(th); }
+    if (i === 1 || i === 2) { const lf = new T.Mesh(new T.SphereGeometry(.12, 10, 6), mat(T, 0x5a9a34, 0x10300a, .3, .7)); lf.scale.set(1.6, .15, .7); lf.position.set(i === 1 ? .16 : -.16, L * .6, 0); lf.rotation.z = i === 1 ? .4 : -.4; seg.add(lf); }
+    seg.position.y = y0; parent.add(seg); parent = seg; y0 = L;
+  }
+  const head = grp(T, 'head'); head.position.y = y0; parent.add(head);
+  const bulb = new T.Mesh(new T.SphereGeometry(.15, 16, 12), mat(T, 0x5a1a3a, 0x200010, .3, .6)); bulb.scale.set(1, .8, 1); head.add(bulb);
+  const petalG = new T.SphereGeometry(.16, 12, 8); petalG.scale(.55, .12, 1); petalG.translate(0, 0, .14);
+  for (let k = 0; k < 6; k++) { const pg = grp(T, 'petal' + k), pm = new T.Mesh(petalG, mat(T, k % 2 ? 0x8a2a5a : 0xa83a6a, 0x300818, .4, .6)); pg.add(pm); pg.rotation.order = 'YXZ'; pg.rotation.y = k * Math.PI / 3; pg.rotation.x = -.9; pg.position.y = .05; head.add(pg); }
+  const core = at(new T.Mesh(new T.SphereGeometry(.075, 14, 10), mat(T, 0xe8ff9a, 0xb8ff50, 2.4)), 0, .1, 0); core.name = 'core'; head.add(core);
+  return root;
+}
+// Spore mushroom: a stubby pale body on root feet under a wide cap dotted with glowing spots.
+export function buildSporer(T) {
+  const root = new T.Group(), body = grp(T, 'body'), flesh = mat(T, 0xd8c8a8, 0x201810, .15, .85);
+  const stalk = at(new T.Mesh(new T.CylinderGeometry(.21, .28, .62, 16), flesh), 0, .31, 0); body.add(stalk);
+  const eyeM = mat(T, 0xd8ff8a, 0xa8ff40, 2.6); for (const s of [-1, 1]) body.add(at(new T.Mesh(new T.SphereGeometry(.045, 8, 6), eyeM), s * .09, .4, .235));
+  const mouth = at(new T.Mesh(new T.TorusGeometry(.05, .012, 6, 12, Math.PI), mat(T, 0x2a1a10)), 0, .3, .26); mouth.rotation.z = Math.PI; body.add(mouth);
+  const face = grp(T, 'face'); face.position.set(0, .4, .25); body.add(face);
+  const cap = grp(T, 'cap'), capM = new T.Mesh(new T.SphereGeometry(.4, 24, 14, 0, Math.PI * 2, 0, Math.PI / 2), mat(T, 0xa83a6a, 0x30081a, .3, .7)); capM.scale.set(1, .7, 1); cap.add(capM);
+  const gill = new T.Mesh(new T.CircleGeometry(.4, 24), mat(T, 0x6a3a3a, 0x000000, 0, .9)); gill.rotation.x = Math.PI / 2; cap.add(gill);
+  const spotM = mat(T, 0xe8ffa0, 0xb0ff50, 1.8);
+  for (let k = 0; k < 9; k++) { const a = k * 2.4, el = .35 + (k % 3) * .3, sp = new T.Mesh(new T.SphereGeometry(.05 + (k % 2) * .025, 10, 8), spotM);
+    sp.position.set(Math.cos(a) * Math.cos(el) * .4, Math.sin(el) * .28, Math.sin(a) * Math.cos(el) * .4); sp.scale.set(1, .5, 1); cap.add(sp); }
+  cap.position.y = .6; cap.rotation.x = -.35; body.add(cap); body.position.y = .12; root.add(body);
+  for (let i = 0; i < 4; i++) { const a = i * Math.PI / 2 + Math.PI / 4, leg = grp(T, 'leg' + i), f = new T.Mesh(new T.CylinderGeometry(.05, .03, .2, 6), mat(T, 0x5a4a32, 0, 0, .9)); f.position.y = -.08; f.rotation.z = .3; leg.add(f); leg.position.set(Math.cos(a) * .18, .16, Math.sin(a) * .18); leg.rotation.y = -a; root.add(leg); }
+  return root;
+}

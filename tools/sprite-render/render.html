@@ -17,7 +17,9 @@ const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserv
 renderer.setPixelRatio(1); renderer.setSize(FW, FH); renderer.setClearColor(0x000000, 0);
 renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = C.exposure ?? .92;
 document.body.appendChild(renderer.domElement);
-root.traverse(o => { if (o.isMesh) { o.frustumCulled = false; const m = o.material; if (C.emissive && !C.build) { m.emissive = new THREE.Color(C.emissiveColor ?? 0xffffff); m.emissiveMap = m.map; m.emissiveIntensity = C.emissive; } m.metalness = 0; m.roughness = Math.max(.6, m.roughness ?? 1); } });
+// recolor: tint a GLB's materials (the shadow wolf is the fox model in dark fur)
+if (C.recolor) root.traverse(o => { if (o.isMesh) { const m = o.material = o.material.clone(); m.color.setHex(C.recolor.color); m.emissive = new THREE.Color(C.recolor.emissive ?? 0); m.emissiveIntensity = C.recolor.emissiveIntensity ?? 0; } });
+root.traverse(o => { if (o.isMesh) { o.frustumCulled = false; const m = o.material; if (C.emissive && !C.build && !C.recolor) { m.emissive = new THREE.Color(C.emissiveColor ?? 0xffffff); m.emissiveMap = m.map; m.emissiveIntensity = C.emissive; } m.metalness = 0; m.roughness = Math.max(.6, m.roughness ?? 1); } });
 scene.add(new THREE.HemisphereLight(0xcfe8ff, 0x2a2450, C.hemi ?? 1.3));
 const key = new THREE.DirectionalLight(0xffffff, 2.4); key.position.set(-2, 4, 1.5); scene.add(key);
 const rim = new THREE.DirectionalLight(C.rimColor ?? 0x9fe8ff, C.rim ?? 3.2); rim.position.set(2, 1.5, -2.5); scene.add(rim);
