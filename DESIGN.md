@@ -244,6 +244,12 @@ Mevcut 2D tuval her kare bir WebGL dokusuna aktarılır ve tek bir shader zincir
 - [x] Boyanmış arka planlar: zemin, uçurum ve yüzen adalar kodla çizildikten sonra kendi renklerinden örneklenen yönlü fırça darbeleriyle yeniden boyanır (dört kat: geniş taban darbeleri → orta → yalnız ayrıntılı yerlerde ince darbeler; darbeler kenar boyunca, düz alanlarda yumuşak bir akış alanı boyunca uzanır, açık ve koyu kıl izleri taşır). Taş araları yumuşatıldı, zemine biyom renginde geniş ışık ve gölge lekeleri eklendi; mühür, boyamanın üstüne net olarak yeniden kazınır. Boyama arka planda küçük zaman dilimleriyle yapılır (oyun sırasında kare başına en çok 4 ms); hazır olana kadar düz doku görünür, bitince aynı tuvale kopyalanıp GPU dokusu yenilenir. Diğer biyomların zeminleri açılış ekranındayken önceden boyanır, açılış süresi değişmez.
 - [ ] Elle boyanmış arka plan görselleri eklenirse kodla üretilenlerin yerini alacak.
 
+## Sahne yönetimi
+
+- **Muhafız girişi:** muhafızın kapısı açılınca savaş durur; siyah şeritler iner, kamera kapıya kayıp yakınlaşır, kapıdan mor kıvılcımlar dökülür ve yükselen bir uğultu duyulur. Muhafız çıktığı anda kükrer (saldırı kareleri), yıldız patlaması, sarsıntı, titreşim; alt bas düşüşü + gong + bakır akoru. Ekranın alt üçte birinde adı ve unvanı belirir (Kemik Lordu — Mezarların Efendisi, Gölge Atlı — Gecenin Süvarisi, Yas Kraliçesi — Yasın Sesi, Kan Kardinali — Kanın Rahibi), her biri kendi renginde parlar. Sonra kamera tilkiye döner ve savaş başlar. Toplam ~3,5 sn; açıklamadan sonra dokunmak geri kalanı atlar.
+- **Müzikle nabız:** müziğin bas davulu ve trampeti zamanlanırken kaydedilir; mangal alevleri ve ışıkları, zemin mührü ve dönen rün çemberi her vuruşta ses çıkışının gecikmesi hesaba katılarak parlar. "Hareketi azalt" açıkken etki %40.
+- **Sarsıntı:** beyaz gürültü yerine üç katmanlı yumuşak dalga; büyük vuruşlar titremek yerine yuvarlanır, küçük sarsıntılar daha hafif.
+
 ## Ses tasarımı
 
 Tamamı Web Audio ile kodda üretilir (dosya yok).
