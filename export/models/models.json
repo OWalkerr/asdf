@@ -1,0 +1,229 @@
+{
+  "archer": {
+    "glb": "models/archer.glb",
+    "animations": [
+      "walk",
+      "attack"
+    ],
+    "game_radius": 13,
+    "drawn_length_in_radii": 5.8,
+    "eye_glow_rgb": "200,120,255",
+    "note": "Scale the model so its length (side view; height for humanoids/guardians) is game_radius * drawn_length_in_radii game units."
+  },
+  "bat": {
+    "glb": "models/bat.glb",
+    "animations": [
+      "walk",
+      "attack"
+    ],
+    "game_radius": 10,
+    "drawn_length_in_radii": 2.5,
+    "eye_glow_rgb": "255,60,90",
+    "note": "Scale the model so its length (side view; height for humanoids/guardians) is game_radius * drawn_length_in_radii game units."
+  },
+  "bomb": {
+    "glb": "models/bomb.glb",
+    "animations": [
+      "walk",
+      "attack"
+    ],
+    "game_radius": 11,
+    "drawn_length_in_radii": 2.4,
+    "eye_glow_rgb": "255,140,60",
+    "note": "Scale the model so its length (side view; height for humanoids/guardians) is game_radius * drawn_length_in_radii game units."
+  },
+  "brute": {
+    "glb": "models/brute.glb",
+    "animations": [
+      "walk",
+      "attack"
+    ],
+    "game_radius": 25,
+    "drawn_length_in_radii": 4.8,
+    "eye_glow_rgb": "255,80,50",
+    "note": "Scale the model so its length (side view; height for humanoids/guardians) is game_radius * drawn_length_in_radii game units."
+  },
+  "cardinal": {
+    "glb": "models/cardinal.glb",
+    "animations": [
+      "walk",
+      "attack",
+      "die"
+    ],
+    "game_radius": 40,
+    "drawn_length_in_radii": 4.6,
+    "eye_glow_rgb": "255,60,60",
+    "note": "Scale the model so its length (side view; height for humanoids/guardians) is game_radius * drawn_length_in_radii game units."
+  },
+  "chest": {
+    "glb": "models/chest.glb",
+    "animations": [
+      "walk"
+    ],
+    "game_radius": 18,
+    "drawn_length_in_radii": 2.4,
+    "eye_glow_rgb": "255,210,120",
+    "note": "Scale the model so its length (side view; height for humanoids/guardians) is game_radius * drawn_length_in_radii game units."
+  },
+  "fox": {
+    "glb": "models/fox.glb",
+    "animations": [
+      "idle",
+      "walk",
+      "run",
+      "hop",
+      "cast"
+    ],
+    "game_radius": null,
+    "drawn_length_in_radii": 1,
+    "eye_glow_rgb": "255,170,90",
+    "note": "Player: drawn ~84 game units long (FOX_LEN). Hop/cast frames are driven by hop progress and spear charge."
+  },
+  "ghoul": {
+    "glb": "models/ghoul.glb",
+    "animations": [
+      "walk",
+      "attack"
+    ],
+    "game_radius": 15,
+    "drawn_length_in_radii": 3.7,
+    "eye_glow_rgb": "255,170,90",
+    "note": "Scale the model so its length (side view; height for humanoids/guardians) is game_radius * drawn_length_in_radii game units."
+  },
+  "knight": {
+    "glb": "models/knight.glb",
+    "animations": [
+      "walk",
+      "attack"
+    ],
+    "game_radius": 18,
+    "drawn_length_in_radii": 5.5,
+    "eye_glow_rgb": "150,180,255",
+    "note": "Scale the model so its length (side view; height for humanoids/guardians) is game_radius * drawn_length_in_radii game units."
+  },
+  "lord": {
+    "glb": "models/lord.glb",
+    "animations": [
+      "walk",
+      "attack",
+      "die"
+    ],
+    "game_radius": 46,
+    "drawn_length_in_radii": 4.6,
+    "eye_glow_rgb": "120,200,255",
+    "note": "Scale the model so its length (side view; height for humanoids/guardians) is game_radius * drawn_length_in_radii game units."
+  },
+  "mimic": {
+    "glb": "models/mimic.glb",
+    "animations": [
+      "walk",
+      "attack"
+    ],
+    "game_radius": 22,
+    "drawn_length_in_radii": 2.5,
+    "eye_glow_rgb": "255,60,60",
+    "note": "Scale the model so its length (side view; height for humanoids/guardians) is game_radius * drawn_length_in_radii game units."
+  },
+  "moon": {
+    "glb": "models/moon.glb",
+    "animations": [
+      "walk",
+      "attack",
+      "die"
+    ],
+    "game_radius": 54,
+    "drawn_length_in_radii": 4,
+    "eye_glow_rgb": "225,215,255",
+    "note": "Scale the model so its length (side view; height for humanoids/guardians) is game_radius * drawn_length_in_radii game units."
+  },
+  "queen": {
+    "glb": "models/queen.glb",
+    "animations": [
+      "walk",
+      "attack",
+      "die"
+    ],
+    "game_radius": 38,
+    "drawn_length_in_radii": 4.8,
+    "eye_glow_rgb": "255,170,90",
+    "note": "Scale the model so its length (side view; height for humanoids/guardians) is game_radius * drawn_length_in_radii game units."
+  },
+  "rider": {
+    "glb": "models/rider.glb",
+    "animations": [
+      "walk",
+      "attack",
+      "die"
+    ],
+    "game_radius": 40,
+    "drawn_length_in_radii": 3,
+    "eye_glow_rgb": "255,170,90",
+    "note": "Scale the model so its length (side view; height for humanoids/guardians) is game_radius * drawn_length_in_radii game units."
+  },
+  "spitter": {
+    "glb": "models/spitter.glb",
+    "animations": [
+      "walk",
+      "attack"
+    ],
+    "game_radius": 18,
+    "drawn_length_in_radii": 3,
+    "eye_glow_rgb": "255,150,80",
+    "note": "Scale the model so its length (side view; height for humanoids/guardians) is game_radius * drawn_length_in_radii game units."
+  },
+  "sporer": {
+    "glb": "models/sporer.glb",
+    "animations": [
+      "walk",
+      "attack"
+    ],
+    "game_radius": 19,
+    "drawn_length_in_radii": 2.7,
+    "eye_glow_rgb": "200,255,120",
+    "note": "Scale the model so its length (side view; height for humanoids/guardians) is game_radius * drawn_length_in_radii game units."
+  },
+  "thorn": {
+    "glb": "models/thorn.glb",
+    "animations": [
+      "walk",
+      "attack"
+    ],
+    "game_radius": 16,
+    "drawn_length_in_radii": 3.4,
+    "eye_glow_rgb": "200,255,120",
+    "note": "Scale the model so its length (side view; height for humanoids/guardians) is game_radius * drawn_length_in_radii game units."
+  },
+  "treant": {
+    "glb": "models/treant.glb",
+    "animations": [
+      "walk",
+      "attack",
+      "die"
+    ],
+    "game_radius": 48,
+    "drawn_length_in_radii": 4.4,
+    "eye_glow_rgb": "170,255,110",
+    "note": "Scale the model so its length (side view; height for humanoids/guardians) is game_radius * drawn_length_in_radii game units."
+  },
+  "wolf": {
+    "glb": "models/wolf.glb",
+    "animations": [
+      "walk",
+      "attack"
+    ],
+    "game_radius": 15,
+    "drawn_length_in_radii": 3.6,
+    "eye_glow_rgb": "255,60,60",
+    "note": "Scale the model so its length (side view; height for humanoids/guardians) is game_radius * drawn_length_in_radii game units."
+  },
+  "frost": {
+    "glb": "models/ghoul.glb",
+    "reuse": "ghoul tinted icy blue",
+    "game_radius": 16
+  },
+  "wisp": {
+    "glb": null,
+    "note": "Fire spirit: drawn procedurally (flame + glow); make a particle effect.",
+    "game_radius": 9
+  }
+}

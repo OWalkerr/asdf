@@ -1,0 +1,67 @@
+[
+  {
+    "id": "oath",
+    "name": "Ak Tilki",
+    "desc": "Dengeli ruh tilkisi. Ek bir özelliği yok, her yola uyar.",
+    "lockedBy": null,
+    "fur": [
+      "#9fdcf0",
+      "#5f9ec0",
+      "#1e3c58"
+    ],
+    "rim": "185,240,255",
+    "effect": "s => {}"
+  },
+  {
+    "id": "shade",
+    "name": "Gölge Tilki",
+    "desc": "Sekme mesafesi +%35 ve sekerken hasar almaz. Mızrak hasarı -%15, can -20.",
+    "lockedBy": null,
+    "fur": [
+      "#5a58a0",
+      "#29275a",
+      "#0e0d22"
+    ],
+    "rim": "200,190,255",
+    "effect": "s => { s.hopDist *= 1.35; s.ghostHop = true; s.dmg *= .85; s.maxHp -= 20; }"
+  },
+  {
+    "id": "heavy",
+    "name": "Kor Tilki",
+    "desc": "Mızrak hasarı +%30, mızraklar %25 şansla 2 saplanır. Saldırı hızı -%10, sekme -%5.",
+    "lockedBy": null,
+    "fur": [
+      "#9a6838",
+      "#4e2e18",
+      "#1e1008"
+    ],
+    "rim": "255,205,140",
+    "effect": "s => { s.dmg *= 1.3; s.heavy += .25; s.as *= .9; s.hopDist *= .95; }"
+  },
+  {
+    "id": "caller",
+    "name": "Ruh Çağıran",
+    "desc": "Bir Ruh Yavrusu ile başlar, Ay Sıçrayışı bekleme süresi -%30. Mızrak hasarı -%10.",
+    "lockedBy": null,
+    "fur": [
+      "#3c84a8",
+      "#1a3a56",
+      "#081624"
+    ],
+    "rim": "165,225,255",
+    "effect": "s => { s.spirits += 1; s.rCd *= .7; s.dmg *= .9; }"
+  },
+  {
+    "id": "grove",
+    "name": "Orman Tilkisi",
+    "desc": "Bir Tilki Ateşi ile başlar; tilki ateşleri bir mızrak fazla atar ve inişte de ateş bırakır. Mızrak hasarı -%10.",
+    "lockedBy": "treant",
+    "fur": [
+      "#8ac860",
+      "#3a6a28",
+      "#10200a"
+    ],
+    "rim": "210,255,160",
+    "effect": "s => { s.foxfire += 1; s.groveFire = true; s.dmg *= .9; }"
+  }
+]

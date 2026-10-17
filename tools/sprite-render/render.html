@@ -83,6 +83,36 @@ const H = {
     if (C.inPlace && bones[C.inPlace]) { const b = bones[C.inPlace]; b.position.x = rest[C.inPlace].p.x; b.position.z = rest[C.inPlace].p.z; } },
   exaggerate(names, k) { for (const n of names) { const b = bones[n]; if (!b) continue; const d = b.quaternion.clone().multiply(rest[n].q.clone().invert()); const ang = 2 * Math.acos(Math.min(1, Math.abs(d.w))); if (ang < 1e-5) continue; const ax = new THREE.Vector3(d.x, d.y, d.z).normalize(); if (d.w < 0) ax.negate(); b.quaternion.copy(new THREE.Quaternion().setFromAxisAngle(ax, ang * k).multiply(rest[n].q)); } },
 };
+// glb=1: instead of rendering sprites, bake every animation (Meshy clips and hand-written poses alike) into real
+// keyframe clips and export the model with them as a binary glTF, ready for Godot or any engine.
+if (P.get('glb')) {
+  const { GLTFExporter } = await import('three/addons/exporters/GLTFExporter.js');
+  root.name = 'Root'; const nodes = []; root.traverse(o => { if (o !== root && o.name && (o.isBone || C.build)) nodes.push(o); });
+  const DUR = { walk: .9, run: .6, idle: 2, hop: .45, cast: .35, attack: .7, die: 1.4 };
+  const out = [];
+  for (const A of C.anims) {
+    const k = Math.max(12, A.n * 3), dur = DUR[A.name] || 1, times = [], tr = new Map();
+    for (let i = 0; i <= k; i++) {
+      const u = (i % k) / k; root.rotation.y = FIX; root.updateMatrixWorld(true);
+      const lift = A.pose ? A.pose(H, A.name === 'die' ? Math.min(.999, i / k) : u) : (H.clip(A.clip, A.from + (A.to - A.from) * u), 0);
+      times.push(dur * i / k);
+      for (const o of [root, ...nodes]) { let r = tr.get(o); if (!r) tr.set(o, r = { q: [], p: [], s: [] }); if (o === root) { r.p.push(0, lift || 0, 0); r.q.push(...root.quaternion.toArray()); r.s.push(1, 1, 1); } else { r.q.push(...o.quaternion.toArray()); r.p.push(...o.position.toArray()); r.s.push(...o.scale.toArray()); } }
+    }
+    const tracks = [];
+    for (const [o, r] of tr) {
+      const moves = a => a.some((v, j) => Math.abs(v - a[j % (a.length / times.length) ]) > 1e-4);
+      if (moves(r.q) || o === root) tracks.push(new THREE.QuaternionKeyframeTrack(o.name + '.quaternion', times, r.q));
+      if (moves(r.p) || o === root) tracks.push(new THREE.VectorKeyframeTrack(o.name + '.position', times, r.p));
+      if (moves(r.s)) tracks.push(new THREE.VectorKeyframeTrack(o.name + '.scale', times, r.s));
+    }
+    out.push(new THREE.AnimationClip(A.name, dur, tracks));
+  }
+  H.reset(); root.rotation.y = FIX; root.position.set(root.position.x, 0, root.position.z); root.updateMatrixWorld(true);
+  const glb = await new GLTFExporter().parseAsync(root, { binary: true, animations: out, onlyVisible: true });
+  let bin = ''; const u8 = new Uint8Array(glb); for (let i = 0; i < u8.length; i += 0x8000) bin += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000));
+  window.RESULT = { glb: btoa(bin), clips: out.map(c => c.name + ' ' + c.duration + 's ' + c.tracks.length + 'tr') };
+  await new Promise(() => {});
+}
 // Model faces +z; the camera looks from -x, so yaw 0 shows the head on the right (east).
 // dirs: facing angles to bake, in screen terms: 0 east, 45 south-east (toward the viewer), 90 south, -45 north-east, -90 north.
 // The west half is the mirror image and is flipped in the game.

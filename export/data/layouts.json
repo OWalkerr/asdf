@@ -1,0 +1,9 @@
+{
+  "names": {
+    "pillars": "Sütunlu salon",
+    "chasm": "Yarık halkası",
+    "collapse": "Çöken merkez"
+  },
+  "make": "function makeLayout(k) {\n  if (k === 'pillars') { const P = []; for (let n = 0; n < 60 && P.length < 7; n++) { const a = crand() * TAU, d = 220 + crand() * 360, x = Math.cos(a) * d, y = Math.sin(a) * d, r = 30 + crand() * 14; if (P.every(c => hyp(c.x - x, c.y - y) > c.r + r + 110)) P.push({ x, y, r }); } return { k, P }; }\n  if (k === 'chasm') { const o = crand() * TAU; return { k, r0: 330, r1: 440, br: [0, 1, 2, 3].map(i => o + i * Math.PI / 2) }; }\n  return { k: 'collapse', R: 0, t: 0 };\n}",
+  "inVoid": "function inVoid(x, y) {\n  const L = G && G.lay; if (!L) return false; const d = hyp(x, y);\n  if (L.k === 'chasm') { if (d < L.r0 || d > L.r1) return false; const a = Math.atan2(y, x); for (const b of L.br) if (Math.abs(((a - b + Math.PI * 3) % TAU) - Math.PI) * d < 46) return false; return true; }\n  if (L.k === 'collapse') return d < L.R;\n  if (L.k === 'edge') return d > L.R;\n  return false;\n}"
+}

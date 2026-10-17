@@ -1,0 +1,22 @@
+[
+  {
+    "id": "bloodmoon",
+    "name": "Kanlı Ay",
+    "desc": "Düşmanlar %25 daha hızlı, ruh parçası kazancı iki katı."
+  },
+  {
+    "id": "glass",
+    "name": "Cam Kalp",
+    "desc": "Azami can yarıya iner, Söküm hasarı +%60."
+  },
+  {
+    "id": "elitenight",
+    "name": "Elit Gecesi",
+    "desc": "Her odada düşmanların %30'u fazladan elit olur; elitler iki kat parça düşürür."
+  },
+  {
+    "id": "gift",
+    "name": "Kehanet Armağanı",
+    "desc": "Ava 2 rastgele destansı güçle başlarsın ama yeniden çekme hakkın yok."
+  }
+]

@@ -1,0 +1,1 @@
+"r => r >= 30 ? THEMES.forest : r >= 20 ? THEMES.blood : r >= 10 ? THEMES.ice : THEMES.witch"

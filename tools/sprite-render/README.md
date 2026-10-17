@@ -35,3 +35,7 @@ Rigli ama animasyonsuz modeller için de `pose(H, u)` ile hareket yazılabilir: 
 - `byHeight` / `len`: ölçek için kullanılan model boyu.
 
 Hata ayıklama: `probe.html?f=models/x.glb` kemik ağacı ve üç yönden önizleme, `grid.html?f=x&fix=..&anchor=1` ızgaralı yan ve ön görünüm. `QUICK=1 node render.js x` iki yön ve dört kareyle hızlı önizleme yapar.
+
+## Animasyonlu GLB (Godot ve diğer motorlar için)
+
+`node export.js fox ghoul ...` her modeli, `configs.js` içindeki bütün animasyonlar (Meshy klipleri ve elle yazılmış pozlar) gerçek anahtar karelere çevrilmiş halde `out/glb/<ad>.glb` olarak dışa aktarır. Silahlar el kemiklerine bağlı, eklenen bacak kemikleri dahil. Dokuları küçültmek için: `node_modules/.bin/gltf-transform resize in.glb out.glb --width 1024 --height 1024`. Hazır çıktılar: `export/models/`. Doğrulama: `checkglb.html?f=fox,ghoul`.

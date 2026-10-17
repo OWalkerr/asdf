@@ -1,0 +1,32 @@
+[
+  {
+    "id": "move",
+    "html": "<strong>Sürükle</strong> ile yön ver. Mızrak kendiliğinden fırlar; fırlarken yönü tutarsan o yöne <strong>sekersin</strong>.",
+    "when": "() => G.room === 1 && G.time > .5",
+    "done": "() => G.hops >= 4"
+  },
+  {
+    "id": "rend",
+    "html": "Düşmanlarda mızraklar birikti. <strong>SÖK (E)</strong> ile hepsini birden kopar; ne kadar çok mızrak, o kadar hasar.",
+    "when": "() => G.enemies.some(e => !e.dead && e.stacks >= 3)",
+    "done": "() => G.dmgBy && G.dmgBy.rend > 0"
+  },
+  {
+    "id": "q",
+    "html": "<strong>Delici Işık (Q)</strong> bir hat boyunca her şeyi deler ve 2 mızrak saplar.",
+    "when": "() => G.room >= 2 && G.p.qCd <= 0",
+    "done": "() => G.dmgBy && G.dmgBy.q > 0"
+  },
+  {
+    "id": "r",
+    "html": "<strong>Ay Sıçrayışı (R)</strong>: havaya yüksel ve kalabalığın ortasına çak. İnerken hasar almazsın.",
+    "when": "() => G.room >= 2 && G.p.rCd <= 0 && G.enemies.filter(e => !e.dead).length >= 4",
+    "done": "() => G.dmgBy && G.dmgBy.kader > 0"
+  },
+  {
+    "id": "fervor",
+    "html": "Altın çubuk <strong>Coşku</strong>. Durmadan öldür ve sek; dolunca 7 sn boyunca hızlanırsın.",
+    "when": "() => G.fervor >= 60",
+    "done": "() => G.feverT > 0"
+  }
+]

@@ -1,0 +1,107 @@
+{
+  "ghoul": {
+    "name": "Hortlak",
+    "hp": 55,
+    "r": 15,
+    "spd": 95,
+    "dmg": 10
+  },
+  "wisp": {
+    "name": "Ateş Ruhu",
+    "hp": 20,
+    "r": 9,
+    "spd": 170,
+    "dmg": 6
+  },
+  "archer": {
+    "name": "Ruh Okçusu",
+    "hp": 38,
+    "r": 13,
+    "spd": 90,
+    "dmg": 9
+  },
+  "brute": {
+    "name": "Kemik Dev",
+    "hp": 170,
+    "r": 25,
+    "spd": 58,
+    "dmg": 18
+  },
+  "spitter": {
+    "name": "Tükürgen",
+    "hp": 85,
+    "r": 18,
+    "spd": 40,
+    "dmg": 8
+  },
+  "knight": {
+    "name": "Kalkanlı Şövalye",
+    "hp": 130,
+    "r": 18,
+    "spd": 66,
+    "dmg": 14
+  },
+  "frost": {
+    "name": "Buz Hortlağı",
+    "hp": 70,
+    "r": 16,
+    "spd": 80,
+    "dmg": 11
+  },
+  "bat": {
+    "name": "Kan Yarasası",
+    "hp": 26,
+    "r": 10,
+    "spd": 150,
+    "dmg": 7
+  },
+  "thorn": {
+    "name": "Diken Sarmaşığı",
+    "hp": 90,
+    "r": 16,
+    "spd": 0,
+    "dmg": 9
+  },
+  "sporer": {
+    "name": "Spor Mantarı",
+    "hp": 120,
+    "r": 19,
+    "spd": 42,
+    "dmg": 10
+  },
+  "wolf": {
+    "name": "Gölge Kurt",
+    "hp": 60,
+    "r": 15,
+    "spd": 135,
+    "dmg": 12
+  },
+  "bomb": {
+    "name": "Kemik Bombası",
+    "hp": 22,
+    "r": 11,
+    "spd": 150,
+    "dmg": 0
+  },
+  "chest": {
+    "name": "Sandık",
+    "hp": 70,
+    "r": 18,
+    "spd": 0,
+    "dmg": 0
+  },
+  "mimic": {
+    "name": "Mimik",
+    "hp": 300,
+    "r": 22,
+    "spd": 80,
+    "dmg": 16
+  },
+  "boss": {
+    "name": "guardian base",
+    "hp": 1050,
+    "r": 46,
+    "spd": 74,
+    "dmg": 15
+  }
+}

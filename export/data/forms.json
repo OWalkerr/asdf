@@ -1,0 +1,27 @@
+[
+  {
+    "id": "double",
+    "n": "Çift Sekme",
+    "d": "Sekme bitince, yeniden atış yapmadan bir kez daha sekebilirsin. Yönünü değiştir, kaç, yeniden dal."
+  },
+  {
+    "id": "wall",
+    "n": "Duvar Sekmesi",
+    "d": "Arena kenarına ya da bir sütuna çarpan sekmen geri yansır, hızlanır ve çarptığı yerde ışık patlaması yapar."
+  },
+  {
+    "id": "hook",
+    "n": "Işık Kancası",
+    "d": "Bir düşmana doğru sekersen ona kadar çekilirsin (380 birime kadar). Çarpınca güçlü hasar verir ve 2 mızrak saplarsın."
+  },
+  {
+    "id": "bolt",
+    "n": "Yıldırım Adım",
+    "d": "Sekerken içinden geçtiğin her düşman hasar alır ve üstüne bir mızrak saplanır. Sekme boyunca hasar almazsın."
+  },
+  {
+    "id": "time",
+    "n": "Zaman Bükümü",
+    "d": "Mükemmel Sekme penceresi genişler; zaman daha uzun ve daha çok yavaşlar, Coşku daha çok dolar."
+  }
+]

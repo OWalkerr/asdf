@@ -1,0 +1,30 @@
+[
+  {
+    "id": "hp",
+    "name": "Ruh Kalkanı",
+    "desc": "Başlangıç canı +12",
+    "max": 5,
+    "cost": "l => 20 + l * 15"
+  },
+  {
+    "id": "dmg",
+    "name": "Kadim Uç",
+    "desc": "Başlangıç mızrak hasarı +%6",
+    "max": 5,
+    "cost": "l => 25 + l * 20"
+  },
+  {
+    "id": "hop",
+    "name": "Ruh Adımı",
+    "desc": "Başlangıç sekme mesafesi +%6",
+    "max": 3,
+    "cost": "l => 30 + l * 25"
+  },
+  {
+    "id": "reroll",
+    "name": "Kehanet",
+    "desc": "Her avda +1 yeniden çekme hakkı",
+    "max": 3,
+    "cost": "l => 40 + l * 35"
+  }
+]

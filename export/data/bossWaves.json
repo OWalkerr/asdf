@@ -1,0 +1,1 @@
+"function bossWaves(r) { const esc = r >= 10 ? ['archer', 'archer', 'spitter'] : ['ghoul', 'ghoul', 'archer']; return [['boss'], esc]; }"

@@ -1,0 +1,56 @@
+{
+  "fight": {
+    "n": "Savaş Odası",
+    "r": "common",
+    "risk": "Risk: düşük",
+    "d": "Sıradan düşmanlar. Oda sonunda 1 güç seçimi."
+  },
+  "elite": {
+    "n": "Elit Oda",
+    "r": "rare",
+    "risk": "Risk: orta",
+    "d": "Kalkanlı, hızlı ya da patlayan elitler. Ödül: nadir ağırlıklı güçler ve +5 ruh parçası."
+  },
+  "cursed": {
+    "n": "Lanetli Oda",
+    "r": "leg",
+    "risk": "Risk: yüksek",
+    "d": "Düşmanların çoğu elit ve daha hızlı. Ödül: 2 güç seçimi ve +8 ruh parçası."
+  },
+  "chest": {
+    "n": "Ruh Sandığı",
+    "r": "epic",
+    "risk": "Risk: düşük",
+    "d": "Az düşman ve bir sandık. Sandığı kır: nadir veya daha iyi güçler ve 12 parça. Ama her sandık sandık değildir."
+  },
+  "altar": {
+    "n": "Kan Sunağı",
+    "r": "leg",
+    "risk": "Bedeli can",
+    "d": "Savaş yok. Canından ya da azami canından vererek nadir veya daha iyi güçler seç."
+  },
+  "shop": {
+    "n": "Ruh Tüccarı",
+    "r": "rare",
+    "risk": "Savaş yok",
+    "d": "Bu avda topladığın ruh parçalarıyla güç, can ya da yeniden çekme hakkı satın al. Harcadığın parçalar kalıcı birikimine eklenmez."
+  },
+  "patron": {
+    "n": "Ata Kapısı",
+    "r": "epic",
+    "risk": "Risk: düşük",
+    "d": "Savaş odası; ödülü bir Ruh Atası'nın kartları."
+  },
+  "event": {
+    "n": "Ruh Olayı",
+    "r": "rare",
+    "risk": "Bilinmez",
+    "d": "Bir yolcu, bir sunak ya da bir fısıltı. Savaş yok; seçimin bir bedeli ve ödülü var."
+  },
+  "rest": {
+    "n": "Ruh Pınarı",
+    "r": "epic",
+    "risk": "Savaş yok",
+    "d": "Canının %40'ını yenile ve +1 yeniden çekme hakkı kazan. Bu odadan güç çıkmaz."
+  }
+}

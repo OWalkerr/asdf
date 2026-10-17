@@ -1,0 +1,22 @@
+{
+  "moon": {
+    "n": "Ay Atası",
+    "rgb": "190,200,255",
+    "d": "Ay Atası: geri dönen mızraklar."
+  },
+  "ember": {
+    "n": "Kor Atası",
+    "rgb": "255,150,80",
+    "d": "Kor Atası: yakan mızraklar, patlayan ölüler."
+  },
+  "frost": {
+    "n": "Buz Atası",
+    "rgb": "160,225,255",
+    "d": "Buz Atası: donduran mızraklar."
+  },
+  "storm": {
+    "n": "Fırtına Atası",
+    "rgb": "200,170,255",
+    "d": "Fırtına Atası: zincir şimşekler."
+  }
+}

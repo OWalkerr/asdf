@@ -1,0 +1,48 @@
+[
+  {
+    "id": "ruh",
+    "n": "Ruh",
+    "need": 0,
+    "rgb": "170,255,235",
+    "smoke": "s"
+  },
+  {
+    "id": "alev",
+    "n": "Alev",
+    "need": 2,
+    "rgb": "255,150,70",
+    "smoke": "f",
+    "spark": "#ffc878"
+  },
+  {
+    "id": "buz",
+    "n": "Buz",
+    "need": 4,
+    "rgb": "190,235,255",
+    "smoke": "i",
+    "spark": "#ffffff"
+  },
+  {
+    "id": "kan",
+    "n": "Kan",
+    "need": 6,
+    "rgb": "255,60,80",
+    "smoke": "k",
+    "spark": "#ff6a7a"
+  },
+  {
+    "id": "golge",
+    "n": "Gölge",
+    "need": 8,
+    "rgb": "190,140,255",
+    "smoke": "v"
+  },
+  {
+    "id": "yildiz",
+    "n": "Yıldız",
+    "need": 11,
+    "rgb": "255,240,200",
+    "smoke": "s",
+    "star": true
+  }
+]

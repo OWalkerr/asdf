@@ -1,0 +1,58 @@
+[
+  {
+    "id": "fast",
+    "name": "Hızlı Gölgeler",
+    "max": 2,
+    "desc1": "Düşmanlar %15 daha hızlı.",
+    "desc2": "Düşmanlar %30 daha hızlı."
+  },
+  {
+    "id": "bone",
+    "name": "Kalın Kemik",
+    "max": 2,
+    "desc1": "Düşman canı +%20.",
+    "desc2": "Düşman canı +%40."
+  },
+  {
+    "id": "crowd",
+    "name": "Kalabalık",
+    "max": 2,
+    "desc1": "Dalgalar %20 daha kalabalık.",
+    "desc2": "Dalgalar %40 daha kalabalık."
+  },
+  {
+    "id": "pain",
+    "name": "Ağır Bedel",
+    "max": 2,
+    "desc1": "Aldığın hasar +%20.",
+    "desc2": "Aldığın hasar +%40."
+  },
+  {
+    "id": "scarce",
+    "name": "Kıt Işık",
+    "max": 2,
+    "desc1": "Oda sonu iyileşmesi ve Ruh Pınarı %50 az.",
+    "desc2": "Oda sonunda iyileşme yok, Ruh Pınarı yarı yarıya."
+  },
+  {
+    "id": "wrath",
+    "name": "Öfkeli Muhafızlar",
+    "max": 1,
+    "desc1": "Bütün muhafızlar Yükselmiş gelir (+%25 can, ek saldırılar).",
+    "desc2": null
+  },
+  {
+    "id": "elite",
+    "name": "Elit Gecesi",
+    "max": 1,
+    "desc1": "Her odada düşmanların %25'i fazladan elit.",
+    "desc2": null
+  },
+  {
+    "id": "hurry",
+    "name": "Sabırsız Ay",
+    "max": 1,
+    "desc1": "Bir oda 45 sn'den uzun sürerse her 2 sn'de sana bir ay mermisi gelir.",
+    "desc2": null
+  }
+]

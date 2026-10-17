@@ -1,0 +1,226 @@
+[
+  {
+    "id": "lord",
+    "n": "Kemik Yıkan",
+    "d": "Kemik Lordu'nu yen.",
+    "skin": {
+      "n": "Kemik Beyazı",
+      "cloak": [
+        "#d9d2c0",
+        "#857d68",
+        "#2a261e"
+      ],
+      "rim": "255,240,205"
+    }
+  },
+  {
+    "id": "rider",
+    "n": "Atlıyı Düşüren",
+    "d": "Gölge Atlı'yı yen.",
+    "skin": {
+      "n": "Gece Moru",
+      "cloak": [
+        "#7a5cc8",
+        "#33246a",
+        "#120a2a"
+      ],
+      "rim": "200,170,255"
+    }
+  },
+  {
+    "id": "cardinal",
+    "n": "Kanı Durduran",
+    "d": "Kan Kardinali'ni yen.",
+    "skin": {
+      "n": "Kardinal Kızılı",
+      "cloak": [
+        "#b3192c",
+        "#5a0814",
+        "#1e0206"
+      ],
+      "rim": "255,200,140"
+    }
+  },
+  {
+    "id": "vow8",
+    "n": "Ağır Yemin",
+    "d": "En az 8 yeminle Sönmüş Ay'ı yen.",
+    "skin": {
+      "n": "Tutulma",
+      "cloak": [
+        "#3a2a5a",
+        "#1a1030",
+        "#06020e"
+      ],
+      "rim": "255,120,90"
+    }
+  },
+  {
+    "id": "moon",
+    "n": "Ay Doğdu",
+    "d": "Sönmüş Ay'ı yen ve ışığı geri getir.",
+    "skin": {
+      "n": "Ay Işığı",
+      "cloak": [
+        "#ece8ff",
+        "#8a84c8",
+        "#1c1a3a"
+      ],
+      "rim": "255,250,235"
+    }
+  },
+  {
+    "id": "treant",
+    "n": "Kökleri Kesen",
+    "d": "Kadim Ağaç'ı yen.",
+    "skin": {
+      "n": "Yosun",
+      "cloak": [
+        "#7aa84a",
+        "#2e4a1e",
+        "#0a1a06"
+      ],
+      "rim": "225,255,170"
+    }
+  },
+  {
+    "id": "queen",
+    "n": "Yası Bitiren",
+    "d": "Yas Kraliçesi'ni yen.",
+    "skin": {
+      "n": "Yas Gümüşü",
+      "cloak": [
+        "#c8cede",
+        "#5e6478",
+        "#1c1f2a"
+      ],
+      "rim": "235,240,255"
+    }
+  },
+  {
+    "id": "combo50",
+    "n": "Durdurulamaz",
+    "d": "50 seri yap.",
+    "skin": {
+      "n": "Altın Kürk",
+      "cloak": [
+        "#e0b858",
+        "#7a5a1e",
+        "#2a1e08"
+      ],
+      "rim": "255,220,140"
+    }
+  },
+  {
+    "id": "rend5",
+    "n": "Toplu Söküm",
+    "d": "Tek Sökümle 5 düşman öldür.",
+    "skin": {
+      "n": "Kan Kırmızısı",
+      "cloak": [
+        "#c8404e",
+        "#5e1420",
+        "#22060c"
+      ],
+      "rim": "255,150,160"
+    }
+  },
+  {
+    "id": "hop500",
+    "n": "Rüzgâr Adım",
+    "d": "Tek avda 500 kez sek.",
+    "skin": {
+      "n": "Rüzgâr",
+      "cloak": [
+        "#9ee6f0",
+        "#3a7f8e",
+        "#0e2a32"
+      ],
+      "rim": "200,250,255"
+    }
+  },
+  {
+    "id": "room20",
+    "n": "Derinlere",
+    "d": "20. odaya ulaş.",
+    "skin": {
+      "n": "Yıldız Tozu",
+      "cloak": [
+        "#4a4a9e",
+        "#1c1c4e",
+        "#06061c"
+      ],
+      "rim": "255,255,220"
+    }
+  },
+  {
+    "id": "mimic",
+    "n": "Sandık Avcısı",
+    "d": "Bir Mimik yen.",
+    "skin": {
+      "n": "Sandık Altını",
+      "cloak": [
+        "#a8703a",
+        "#5a3418",
+        "#200f04"
+      ],
+      "rim": "255,210,120"
+    }
+  },
+  {
+    "id": "nohit",
+    "n": "Dokunulmaz",
+    "d": "5. odadan sonra bir odayı hasar almadan bitir.",
+    "skin": {
+      "n": "Kristal",
+      "cloak": [
+        "#bff7ff",
+        "#5aa6c0",
+        "#123848"
+      ],
+      "rim": "230,255,255"
+    }
+  },
+  {
+    "id": "daily10",
+    "n": "Günün Avcısı",
+    "d": "Günün Avı'nda 10. odaya ulaş.",
+    "skin": {
+      "n": "Şafak",
+      "cloak": [
+        "#f0a070",
+        "#8a4a5a",
+        "#2a1428"
+      ],
+      "rim": "255,210,170"
+    }
+  },
+  {
+    "id": "altar",
+    "n": "Kurban",
+    "d": "Kan Sunağı'nda Ruh Bağışı yap.",
+    "skin": {
+      "n": "Kurban",
+      "cloak": [
+        "#5a1a2a",
+        "#2a0a12",
+        "#0a0206"
+      ],
+      "rim": "255,90,120"
+    }
+  },
+  {
+    "id": "allheroes",
+    "n": "Dört Tilki",
+    "d": "Dört tilkinin her biriyle Kemik Lordu'nu yen.",
+    "skin": {
+      "n": "Ruh Lordu",
+      "cloak": [
+        "#8fe3cf",
+        "#6a4ac8",
+        "#140a2a"
+      ],
+      "rim": "255,255,255"
+    }
+  }
+]

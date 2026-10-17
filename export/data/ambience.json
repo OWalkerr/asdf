@@ -1,0 +1,69 @@
+{
+  "witch": {
+    "root": 55,
+    "chord": [
+      1,
+      1.5,
+      2,
+      2.38
+    ],
+    "lp": 650,
+    "wind": 520,
+    "ev": [
+      "drip",
+      "chime",
+      "whisper",
+      "drip"
+    ]
+  },
+  "ice": {
+    "root": 61.74,
+    "chord": [
+      1,
+      1.5,
+      2,
+      3
+    ],
+    "lp": 1500,
+    "wind": 1500,
+    "ev": [
+      "tink",
+      "gust",
+      "tink"
+    ]
+  },
+  "blood": {
+    "root": 46.25,
+    "chord": [
+      1,
+      1.19,
+      1.5,
+      2
+    ],
+    "lp": 420,
+    "wind": 300,
+    "ev": [
+      "heart",
+      "growl",
+      "drip"
+    ]
+  },
+  "forest": {
+    "root": 49,
+    "chord": [
+      1,
+      1.5,
+      2,
+      2.52
+    ],
+    "lp": 1100,
+    "wind": 900,
+    "ev": [
+      "bird",
+      "leaves",
+      "owl",
+      "chime",
+      "bird"
+    ]
+  }
+}

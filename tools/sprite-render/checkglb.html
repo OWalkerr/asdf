@@ -1,0 +1,9 @@
+<!doctype html><script type="importmap">{"imports":{"three":"./node_modules/three/build/three.module.js","three/addons/":"./node_modules/three/examples/jsm/"}}</script>
+<script type="module">
+import * as THREE from 'three'; import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+const names = new URLSearchParams(location.search).get('f').split(','), L = new GLTFLoader(), out = [];
+for (const n of names) { const g = await L.loadAsync('out/glbc/' + n + '.glb'); let sk = 0, mesh = 0; g.scene.traverse(o => { if (o.isSkinnedMesh) sk++; if (o.isMesh) mesh++; });
+  const mx = new THREE.AnimationMixer(g.scene); let moved = 0; const a = mx.clipAction(g.animations[0]); a.play(); const box0 = new THREE.Box3().setFromObject(g.scene, true).max.y; mx.setTime(g.animations[0].duration * .37); g.scene.updateMatrixWorld(true);
+  out.push(`${n}: anims=${g.animations.map(c => c.name).join('/')} meshes=${mesh} skinned=${sk}`); }
+window.RESULT = out;
+</script>

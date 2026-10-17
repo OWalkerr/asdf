@@ -1,0 +1,104 @@
+[
+  {
+    "id": "owl",
+    "title": "Yaşlı Baykuş",
+    "text": "Kırık bir sütunun tepesinde yaşlı bir baykuş seni izliyor. \"Genç tilki,\" diyor, \"yolun uzun. Işığından biraz paylaşırsan sana bir sır veririm.\"",
+    "choices": [
+      {
+        "name": "Işığını paylaş",
+        "desc": "-20 can · rastgele bir nadir güç ve +1 yeniden çekme",
+        "effect": "() => { G.p.hp = Math.max(1, G.p.hp - 20); G.rerolls++; return 'Baykuşun sırrı: ' + giveUp(randUp('rare')); }"
+      },
+      {
+        "name": "Selam verip geç",
+        "desc": "Canının %15'ini yenile",
+        "effect": "() => { heal(G.s.maxHp * .15); return 'Baykuş başını eğdi.'; }"
+      }
+    ]
+  },
+  {
+    "id": "mirror",
+    "title": "Fısıldayan Ayna",
+    "text": "Çatlak bir ayna başka bir tilkiyi gösteriyor: senden daha güçlü, daha yorgun. Ayna fısıldıyor: \"Benimle yer değiştir.\"",
+    "choices": [
+      {
+        "name": "Aynaya dokun",
+        "desc": "Bir gücünün seviyesi +1 · azami can -15",
+        "effect": "() => { const own = Object.keys(G.ups).map(id => UPS.find(u => u.id === id)).filter(u => G.ups[u.id] < u.max); const u = own[Math.floor(crand() * own.length)]; G.maxHpPenalty = (G.maxHpPenalty || 0) + 15; const n = u ? giveUp(u) : ''; recomputeStats(); G.p.hp = Math.min(G.p.hp, G.s.maxHp); return n ? n + ' güçlendi.' : 'Ayna boş baktı.'; }"
+      },
+      {
+        "name": "Aynayı kır",
+        "desc": "+15 ruh parçası",
+        "effect": "() => { G.shards += 15; return 'Kırıklar parça parça parladı.'; }"
+      }
+    ]
+  },
+  {
+    "id": "cub",
+    "title": "Kayıp Yavru",
+    "text": "Karanlıkta titreyen küçücük bir ruh yavrusu buluyorsun. Annesinin ışığını arıyor.",
+    "choices": [
+      {
+        "name": "Yanına al",
+        "desc": "+1 Ruh Yavrusu",
+        "effect": "() => { G.ups.spirit = (G.ups.spirit || 0) + 1; G.s.spirits++; if (!G.test) { meta.cubMet = 1; store.set('ym_meta', meta); } return 'Yavru etrafında dönmeye başladı.'; }"
+      },
+      {
+        "name": "Yolunu göster",
+        "desc": "Canının %20'si · sonraki odaya dolu Coşku ile girersin",
+        "effect": "() => { heal(G.s.maxHp * .2); G.feverNext = true; if (!G.test) { meta.cubMet = 1; store.set('ym_meta', meta); } return 'Yavru annesine koştu; içini bir coşku kapladı.'; }"
+      }
+    ]
+  },
+  {
+    "id": "shrine",
+    "title": "Unutulmuş Sunak",
+    "text": "Yosun tutmuş bir sunak, üstünde iki kandil. Biri ay ışığı gibi soğuk, diğeri kor gibi sıcak.",
+    "choices": [
+      {
+        "name": "Soğuk kandil",
+        "desc": "Rastgele bir Ruh Atası'nın çekirdek gücü",
+        "effect": "() => { const cores = ['p_moon', 'p_ember', 'p_frost', 'p_storm'].filter(id => !G.ups[id]); const id = cores[Math.floor(crand() * cores.length)]; return id ? 'Bir Ata sana döndü: ' + giveUp(UPS.find(u => u.id === id)) : 'Kandil sessizce söndü.'; }"
+      },
+      {
+        "name": "Sıcak kandil",
+        "desc": "+25 ruh parçası",
+        "effect": "() => { G.shards += 25; return 'Kandil parçalara dönüştü.'; }"
+      }
+    ]
+  },
+  {
+    "id": "dice",
+    "title": "Ruh Zarı",
+    "text": "Gölgeden bir el uzanıyor, avucunda yedi yüzlü bir zar. \"At,\" diyor, \"talih ya da bedel.\"",
+    "choices": [
+      {
+        "name": "Zarı at",
+        "desc": "%55 destansı güç · %45 -25 can",
+        "effect": "() => { if (crand() < .55) return 'Talih: ' + (giveUp(randUp('epic')) || giveUp(randUp('rare'))); G.p.hp = Math.max(1, G.p.hp - 25); G.hurtA = 1; return 'Bedel ödendi.'; }"
+      },
+      {
+        "name": "Reddet",
+        "desc": "Hiçbir şey olmaz",
+        "effect": "() => 'El gölgeye geri çekildi.'"
+      }
+    ]
+  },
+  {
+    "id": "spring",
+    "title": "Ay Pınarı",
+    "text": "Taşların arasında ay ışığıyla titreyen bir pınar. Su, dokunduğun yerde gümüş gibi parlıyor.",
+    "choices": [
+      {
+        "name": "İç",
+        "desc": "Canın tamamen dolar",
+        "effect": "() => { heal(G.s.maxHp); return 'Ruhun tazelendi.'; }"
+      },
+      {
+        "name": "Yüzünü yıka",
+        "desc": "Azami can +12",
+        "effect": "() => { G.maxHpPenalty = (G.maxHpPenalty || 0) - 12; recomputeStats(); heal(12); return 'Işığın biraz daha güçlendi.'; }"
+      }
+    ]
+  }
+]

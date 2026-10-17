@@ -1,0 +1,112 @@
+[
+  {
+    "id": "intro",
+    "who": "Yaşlı Baykuş",
+    "when": "() => true",
+    "lines": [
+      "Hoş geldin, küçük ışık. Ben bu inin bekçisiyim; Ay sönmeden önce de buradaydım.",
+      "Ay söndüğünden beri zindandaki ruhlar yolunu kaybetti. Sen onların arasında parlayan tek şeysin.",
+      "Aşağı in, sek, mızrağını at. Düştüğünde buraya dönersin; ışık burada asla sönmez."
+    ]
+  },
+  {
+    "id": "firstfall",
+    "who": "Yaşlı Baykuş",
+    "when": "() => (meta.runs || 0) >= 1",
+    "lines": [
+      "Düştün. Herkes düşer. Önemli olan, her inişte biraz daha derine inebilmen.",
+      "Ruh parçalarını Ruh Sunağı'na ver; ışığın her avda biraz daha güçlü başlar."
+    ]
+  },
+  {
+    "id": "lord",
+    "who": "Yaşlı Baykuş",
+    "when": "() => meta.ach && meta.ach.lord",
+    "lines": [
+      "Kemik Lordu... Bir zamanlar bu zindanın bekçisiydi, tıpkı benim gibi. Ay sönünce karanlık onu kemiğine kadar kemirdi.",
+      "Onu yenmen bir kurtuluş sayılır. Belki bir gün teşekkür eder."
+    ]
+  },
+  {
+    "id": "ice",
+    "who": "Yaşlı Baykuş",
+    "when": "() => meta.best >= 10",
+    "lines": [
+      "Buz Mezarlığı'na ulaştın. Oradaki yüzleri gördün mü? Ay'a son kez bakmak için başlarını kaldırmışlar.",
+      "Buz onları korumak için değil, unutmamak için tutuyor."
+    ]
+  },
+  {
+    "id": "rider",
+    "who": "Yaşlı Baykuş",
+    "when": "() => meta.ach && meta.ach.rider",
+    "lines": [
+      "Gölge Atlı geceleri Ay'ın ışığını taşırdı köyden köye. Işık bitince durmadan koşmaya devam etti, taşıyacak bir şey kalmadan."
+    ]
+  },
+  {
+    "id": "blood",
+    "who": "Ay'ın Sesi",
+    "when": "() => meta.best >= 20",
+    "lines": [
+      "...tilki... beni duyuyor musun...",
+      "Katedralin altında... çatlaklarımın arasından sızan kan benim değil... ama acısı benim...",
+      "(Baykuş kanatlarını kabartıyor.) Bu sesi yıllardır duymamıştım. Ay seni çağırıyor."
+    ]
+  },
+  {
+    "id": "queen",
+    "who": "Yaşlı Baykuş",
+    "when": "() => meta.ach && meta.ach.queen",
+    "lines": [
+      "Yas Kraliçesi her gece Ay için ağıt yakardı. Çığlıkları ağıttan başka bir şey değil.",
+      "Onu susturmak zordu, değil mi? Bazı yaslar bitmek istemez."
+    ]
+  },
+  {
+    "id": "cardinal",
+    "who": "Yaşlı Baykuş",
+    "when": "() => meta.ach && meta.ach.cardinal",
+    "lines": [
+      "Kan Kardinali, Ay'ı geri getirmek için kan döktü. Ne kadar çok döktüyse Ay o kadar karardı.",
+      "Bazen ışığı geri getirmenin yolu bir şey almak değil, bir şey vermektir."
+    ]
+  },
+  {
+    "id": "forest",
+    "who": "Yaşlı Baykuş",
+    "when": "() => meta.best >= 30",
+    "lines": [
+      "Kökler... Ruh Ormanı'na ulaştın demek. Orası senin doğduğun yer, küçük tilki.",
+      "Ay'ın son ışığı oraya düştü ve senin şeklini aldı. Bilmiyor muydun?"
+    ]
+  },
+  {
+    "id": "treant",
+    "who": "Ay'ın Sesi",
+    "when": "() => meta.ach && meta.ach.treant",
+    "lines": [
+      "Kadim Ağaç benim son düşen ışığımı yüzyıllarca korudu... seni.",
+      "Artık hazırsın. Kırkıncı kapının ardında... beni bekleyen gölge, benim kendi gölgem."
+    ]
+  },
+  {
+    "id": "won",
+    "who": "Yaşlı Baykuş",
+    "when": "() => (meta.wins || 0) >= 1",
+    "lines": [
+      "Ay yeniden doğdu. Gökyüzüne bak; ruhlar eve dönüyor.",
+      "Ama zindanın en dibinde bir şey hâlâ kıpırdıyor. Ay'ın gölgesi tamamen ölmedi.",
+      "Daha zoru istersen, Ruh Yemini artık seni dinler. Ve Sonsuz Av hep orada."
+    ]
+  },
+  {
+    "id": "cub",
+    "who": "Kayıp Yavru",
+    "when": "() => meta.cubMet",
+    "lines": [
+      "(Küçük ruh yavrusu inin köşesinde, ateşin yanında kıvrılmış.) ...anne?",
+      "(Baykuş:) Onu sen getirdin. Artık burada kalabilir. Işık ışığı çağırır."
+    ]
+  }
+]
