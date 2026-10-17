@@ -256,6 +256,21 @@ Mevcut 2D tuval her kare bir WebGL dokusuna aktarılır ve tek bir shader zincir
 - [x] Boyanmış arka planlar: zemin, uçurum ve yüzen adalar kodla çizildikten sonra kendi renklerinden örneklenen yönlü fırça darbeleriyle yeniden boyanır (dört kat: geniş taban darbeleri → orta → yalnız ayrıntılı yerlerde ince darbeler; darbeler kenar boyunca, düz alanlarda yumuşak bir akış alanı boyunca uzanır, açık ve koyu kıl izleri taşır). Taş araları yumuşatıldı, zemine biyom renginde geniş ışık ve gölge lekeleri eklendi; mühür, boyamanın üstüne net olarak yeniden kazınır. Boyama arka planda küçük zaman dilimleriyle yapılır (oyun sırasında kare başına en çok 4 ms); hazır olana kadar düz doku görünür, bitince aynı tuvale kopyalanıp GPU dokusu yenilenir. Diğer biyomların zeminleri açılış ekranındayken önceden boyanır, açılış süresi değişmez.
 - [ ] Elle boyanmış arka plan görselleri eklenirse kodla üretilenlerin yerini alacak.
 
+## Aksiyon ve çeşitlilik (Aşama 1)
+
+Oyuncu geri bildirimi: oynanış bir süre sonra "hep aynı oda" gibi hissettiriyordu. Teşhis: her oda aynı görev ve aynı yuvarlak arena, odalar 60–100 sn sürüyordu, güçlerin çoğu sayısal, hareket kabiliyeti büyümüyor, ustalık anı yok. Üç aşamalı plan: (1) aksiyon paketi, (2) Ruh Biçimleri (avda büyüyen hareket yetenekleri), (3) Ruh Ataları ve hikâye.
+
+- **Tempo:** sıradan düşmanların canı %28 az, dalga bütçesi %30 fazla, yeni dalga 3 düşman kalınca ya da 9 sn'de gelir, doğma süresi kısaldı. Odalar 60–100 sn'den 25–55 sn'ye indi.
+- **Coşku göstergesi** (can çubuğunun altında): öldürme (+8, elit +14, muhafız +30), isabet (+0.8) ve Mükemmel Sekme (+25) doldurur; 2.5 sn boş kalınca boşalır, hasar almak 35 düşürür. Dolunca 7 sn **Coşku**: saldırı hızı ×1.35, yürüme ×1.25, sekme ×1.15, mızraklar +1 delip geçer, tilki altın parlar, müzik tam yoğunluğa çıkar; bu sırada öldürmeler süreyi uzatır.
+- **Mükemmel Sekme:** bir mermi, atılma, çığlık halkası, patlama ya da fitil çarpmadan hemen önce sekersen zaman yavaşlar, yakındaki mermiler söner, 3 bedava mızrak fırlar, 0.45 sn hasarsızlık ve Coşku +25. İlk seferde ve 2. odada ipucu çıkar.
+- **Oda görevleri** (Savaş, Elit ve Lanetli kapılarında %70 şansla, kapı kartında yazar):
+  - Kuşatma: 25 sn boyunca kenarlardan durmadan düşman gelir; süre bitince kalanlar dağılır (+8 parça).
+  - Av: kaçan altın bir ruh; 20 sn içinde yakalarsan +12 parça, %15 can, büyük Coşku. Yakalanmazsa kaçar.
+  - Fener: ortada canı olan bir Ruh Feneri; yakın dövüşçülerin yarısı fenere saldırır. Ayakta kalırsa %25 can ve +6 parça.
+  - Tuzaklı Geçit: merkezden dönen 2 (15. odadan sonra 3) ışık kolu (üstünden sekilir; değince itilirsin) ve ayağının altında beliren tuzaklar (+10 parça).
+- **Arena şekilleri** (%65 şansla): Sütunlu salon (7 taş sütun; mızrakları ve mermileri keser, siper olur), Yarık halkası (dört köprülü boşluk halkası; yürüyerek geçilmez, sekerek atlanır; düşersen son durduğun yere dönersin), Çöken merkez (6. saniyeden sonra ortası büyüyen bir uçuruma döner; önce çatlaklar uyarır). Düşmanlar boşluğa giremez (uçanlar hariç).
+- Deneme Odası'nda görev ve arena da seçilebilir. Denge botu kapılardaki görevleri gerçek oyundaki gibi alır, ışık kollarından ve uçurumdan kaçınır; yükseltmeli bot medyan 7–15. oda (öncekiyle benzer).
+
 ## Ruh Ormanı (30. oda ve sonrası)
 
 Dördüncü biyom. Yosunlu taş zemin, kenardan sürünen kökler, çimen öbekleri ve düşmüş yapraklar; mum yerine üstünde parlayan mantarlar olan kütükler; altın-yeşil ruh ateşi; ateş böcekleri ve güçlü ışık hüzmeleri. Ortamda kuş cıvıltısı, baykuş, yaprak hışırtısı ve uzak çanlar.

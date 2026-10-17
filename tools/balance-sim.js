@@ -21,7 +21,7 @@ const RUNS = +process.argv[2] || 4, META = process.argv[3] === 'meta', START = +
         steps++;
         const p = G.p, s = G.s;
         if (G.phase === 'draft') { const PR = ['dmg', 'as', 'multi', 'rend', 'pierce', 'heavy', 'crit', 'hp', 'leech', 'spirit', 'rendcd', 'exec', 'shadow', 'ghost', 'qup']; const sc = u => (u.r === 'leg' ? 100 : u.r === 'epic' ? 60 : 0) + (PR.includes(u.id) ? 40 - PR.indexOf(u.id) * 2 : 0); pick(draftOpts.slice().sort((a, b) => sc(b) - sc(a))[0]); continue; }
-        if (G.phase === 'path') { chooseDoor(G.p.hp < G.s.maxHp * .5 ? 'rest' : 'fight'); continue; }
+        if (G.phase === 'path') { const t = G.p.hp < G.s.maxHp * .5 ? 'rest' : 'fight'; G.nextMods = t === 'fight' ? rollRoomMods(G.room + 1) : null; chooseDoor(t); continue; }
         if (G.phase === 'altar') { showPath(); continue; }
         if (G.phase === 'shop') { showPath(); continue; }
         // steering: flee threats, keep off the wall, otherwise approach to range
@@ -29,9 +29,13 @@ const RUNS = +process.argv[2] || 4, META = process.argv[3] === 'meta', START = +
         for (const e of G.enemies) { if (e.dead) continue; const dx = p.x - e.x, dy = p.y - e.y, d = Math.hypot(dx, dy) || 1; if (d < 260 + e.r) { const w = 1 / (d * d) * 1e4; fx += dx / d * w; fy += dy / d * w; } }
         for (const sh of G.eshots) { const dx = p.x - sh.x, dy = p.y - sh.y, d = Math.hypot(dx, dy) || 1; if (d < 160) { const w = 4e3 / (d * d); fx += -sh.vy / 300 * w * Math.sign(dx * -sh.vy + dy * sh.vx || 1); fy += sh.vx / 300 * w * Math.sign(dx * -sh.vy + dy * sh.vx || 1); } }
         const pl = Math.hypot(p.x, p.y); if (pl > ARENA - 180) { fx -= p.x / pl * 2; fy -= p.y / pl * 2; }
+        // room hazards: step off light arms, keep away from the void edge
+        if (G.obj && G.obj.k === 'gauntlet') for (let k = 0; k < G.obj.arms; k++) { const an = G.obj.a + k * 2 * Math.PI / G.obj.arms, cx = Math.cos(an), cy = Math.sin(an), along = p.x * cx + p.y * cy, side = p.y * cx - p.x * cy; if (along > 60 && Math.abs(side) < 70) { fx += -cy * Math.sign(side || 1) * 3; fy += cx * Math.sign(side || 1) * 3; } }
+        if (G.lay) for (const [ax, ay] of [[1, 0], [-1, 0], [0, 1], [0, -1], [.7, .7], [-.7, .7], [.7, -.7], [-.7, -.7]]) if (inVoid(p.x + ax * 60, p.y + ay * 60)) { fx -= ax * 1.5; fy -= ay * 1.5; }
         let m = Math.hypot(fx, fy);
         if (m < .15) { const t = nearestEnemy(p.x, p.y, 2000); if (t && Math.hypot(t.x - p.x, t.y - p.y) > s.range * .85) { fx = t.x - p.x; fy = t.y - p.y; m = Math.hypot(fx, fy); } }
         bot = m > .15 ? { x: fx / m, y: fy / m, m: 1 } : { x: 0, y: 0, m: 0 };
+        if (G.lay && bot.m && inVoid(p.x + bot.x * 170, p.y + bot.y * 170)) bot = { x: bot.y, y: -bot.x, m: 1 };
         if (p.rendCd <= 0 && G.enemies.some(e => !e.dead && !e.dying && e.stacks > 0 && (rendDmg(e) >= e.hp || e.stacks >= 7))) castRend();
         if (p.qCd <= 0 && G.enemies.length) queueQ();
         if (p.rCd <= 0 && (p.hp < s.maxHp * .4 || G.enemies.filter(e => !e.dead && Math.hypot(e.x - p.x, e.y - p.y) < 130).length >= 3)) castR();
