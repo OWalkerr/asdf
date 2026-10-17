@@ -97,3 +97,32 @@ export function buildSporer(T) {
   for (let i = 0; i < 4; i++) { const a = i * Math.PI / 2 + Math.PI / 4, leg = grp(T, 'leg' + i), f = new T.Mesh(new T.CylinderGeometry(.05, .03, .2, 6), mat(T, 0x5a4a32, 0, 0, .9)); f.position.y = -.08; f.rotation.z = .3; leg.add(f); leg.position.set(Math.cos(a) * .18, .16, Math.sin(a) * .18); leg.rotation.y = -a; root.add(leg); }
   return root;
 }
+// Elder Treant (guardian): a tapering trunk on two root legs, branch arms with twig fingers, a glowing face and a
+// leafy crown with spirit blossoms. Parts: body, face, crown, armL/armR (+ elbowL/elbowR), legL/legR.
+export function buildTreant(T) {
+  const root = new T.Group(), bark = mat(T, 0x5a4230, 0x120a04, .2, .95), dark = mat(T, 0x2e2018, 0, 0, .95), moss = mat(T, 0x5a8a34, 0x10280a, .35, .8);
+  const body = grp(T, 'body'); body.position.y = .62; root.add(body);
+  const trunk = at(new T.Mesh(new T.CylinderGeometry(.3, .4, 1.25, 14, 4), bark), 0, .55, 0); body.add(trunk);
+  for (let i = 0; i < 7; i++) { const a = i * .9, r = new T.Mesh(new T.BoxGeometry(.05, .9 + (i % 3) * .15, .04), dark); r.position.set(Math.cos(a) * .36, .5, Math.sin(a) * .36); r.rotation.y = -a; body.add(r); }
+  for (let i = 0; i < 4; i++) { const m = new T.Mesh(new T.SphereGeometry(.16, 10, 8), moss); m.scale.set(1.2, .5, .8); const a = i * 1.7 + .4; m.position.set(Math.cos(a) * .34, .2 + i * .25, Math.sin(a) * .34); body.add(m); }
+  const face = grp(T, 'face'); face.position.set(0, .78, .33); body.add(face);
+  const eyeM = mat(T, 0xd8ff9a, 0x9aff40, 3);
+  for (const s of [-1, 1]) { const sock = at(new T.Mesh(new T.SphereGeometry(.09, 10, 8), dark), s * .12, 0, -.02); sock.scale.set(1.3, .8, .6); face.add(sock); face.add(at(new T.Mesh(new T.SphereGeometry(.06, 10, 8), eyeM), s * .12, 0, .03)); }
+  const mouth = at(new T.Mesh(new T.BoxGeometry(.24, .06, .06), mat(T, 0x1a0e06, 0x80ff40, 1.4)), 0, -.2, 0); face.add(mouth);
+  const crown = grp(T, 'crown'); crown.position.set(0, 1.42, -.12); crown.scale.set(1.1, .7, 1); body.add(crown);
+  const leafA = mat(T, 0x2e6a2a, 0x0a2a08, .3, .8), leafB = mat(T, 0x4a8a34, 0x143a0a, .35, .8), bloom = mat(T, 0xffe8a0, 0xffc860, 2.2);
+  for (let i = 0; i < 9; i++) { const a = i * 2.3, rr = i ? .32 : 0, b = new T.Mesh(new T.IcosahedronGeometry(.28 + (i % 3) * .06, 1), i % 2 ? leafA : leafB); b.position.set(Math.cos(a) * rr, .12 + (i % 3) * .12, Math.sin(a) * rr); b.scale.y = .75; crown.add(b); }
+  for (let i = 0; i < 6; i++) { const a = i * 1.05 + .2, f = new T.Mesh(new T.SphereGeometry(.05, 8, 6), bloom); f.position.set(Math.cos(a) * .48, .2 + (i % 2) * .18, Math.sin(a) * .48); crown.add(f); }
+  for (const s of [-1, 1]) {
+    const arm = grp(T, s > 0 ? 'armL' : 'armR'); arm.position.set(s * .32, 1.0, 0); body.add(arm);
+    const up = new T.Mesh(new T.CylinderGeometry(.07, .1, .55, 8), bark); up.rotation.z = s * 1.0; up.position.set(s * .22, -.12, 0); arm.add(up);
+    const elbow = grp(T, s > 0 ? 'elbowL' : 'elbowR'); elbow.position.set(s * .45, -.28, 0); arm.add(elbow);
+    const lo = new T.Mesh(new T.CylinderGeometry(.05, .07, .5, 8), bark); lo.position.set(0, -.24, .05); lo.rotation.x = .2; elbow.add(lo);
+    for (let k = 0; k < 3; k++) { const tw = new T.Mesh(new T.ConeGeometry(.025, .22, 5), dark); tw.position.set((k - 1) * .05, -.52, .1); tw.rotation.set(Math.PI + .3, 0, (k - 1) * .4); elbow.add(tw); }
+    const lf = new T.Mesh(new T.IcosahedronGeometry(.12, 0), leafB); lf.position.set(s * .12, -.05, 0); elbow.add(lf);
+    const leg = grp(T, s > 0 ? 'legL' : 'legR'); leg.position.set(s * .18, .66, 0); root.add(leg);
+    const th = new T.Mesh(new T.CylinderGeometry(.12, .16, .62, 8), bark); th.position.y = -.31; leg.add(th);
+    for (let k = 0; k < 3; k++) { const a = (k - 1) * .7, toe = new T.Mesh(new T.ConeGeometry(.06, .3, 5), dark); toe.position.set(Math.sin(a) * .14, -.62, Math.cos(a) * .14); toe.rotation.set(Math.PI / 2 * Math.cos(a) + .3, 0, -Math.PI / 2 * Math.sin(a)); leg.add(toe); }
+  }
+  return root;
+}

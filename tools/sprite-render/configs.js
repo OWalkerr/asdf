@@ -2,7 +2,7 @@
 // anims: { name, n, clip, from, to } plays a GLB clip between fractions from..to; { name, n, pose(H, u) } builds a pose by hand.
 const TAIL = ['tailstart', 'tail1', 'tail2', 'tail3'];
 const LEGS = ['frontleg', 'R_frontleg', 'backleg', 'R_backleg', 'frontleg0', 'R_frontleg0', 'backleg0', 'R_backleg0', 'frontleg1', 'R_frontleg1', 'backleg1', 'R_backleg1'];
-import { buildBomb, buildBat, buildChest, buildMimic, buildThorn, buildSporer } from './models.js';
+import { buildBomb, buildBat, buildChest, buildMimic, buildThorn, buildSporer, buildTreant } from './models.js';
 const T2 = 2 * Math.PI, DIRS5 = [0, 45, 90, -45, -90];
 // Meshy humanoids (Mixamo skeleton): clips play in place, size is measured by height
 const HUM = { fw: 200, fh: 224, elev: 51, dirs: DIRS5, byHeight: true, inPlace: 'mixamorigHips', points: { eye: 'mixamorigHead' }, emissive: .18, emissiveColor: 0xffffff, exposure: 1.05 };
@@ -115,6 +115,14 @@ export const CFG = {
       { name: 'attack', n: 6, pose: (H, u) => { H.reset(); const s = Math.sin(Math.PI * u), early = Math.max(0, 1 - u * 5);
         H.rotW('Hips', H.X, -.25 * (1 - 2 * u) * s); ['frontleg', 'R_frontleg'].forEach(n => H.rotW(n, H.X, -1.15 * s + .35 * early)); ['backleg', 'R_backleg'].forEach(n => H.rotW(n, H.X, 1.05 * s - .3 * early));
         TAIL.forEach(t => H.rotW(t, H.X, -.1)); H.rotW('head', H.X, .25 - .2 * s); } },
+    ] },
+  treant: { build: buildTreant, fw: 320, fh: 340, elev: 51, dirs: DIRS5, len: 2.2, byHeight: true, exposure: 1.1, points: { eye: 'face' },
+    anims: [
+      { name: 'walk', n: 10, pose: (H, u) => { H.reset(); const a = u * T2, s = Math.sin(a); H.rotW('legL', H.X, .4 * s); H.rotW('legR', H.X, -.4 * s); H.rotW('body', H.Z, .05 * s); H.rotW('armL', H.X, -.25 * s); H.rotW('armR', H.X, .25 * s);
+        H.rotW('crown', H.Z, .04 * Math.sin(a + 1)); return .03 * Math.abs(Math.sin(a)); } },
+      { name: 'attack', n: 8, pose: (H, u) => { H.reset(); const up = Math.sin(Math.PI * Math.min(1, u / .55)), slam = Math.max(0, Math.sin(Math.PI * (u - .45) / .55));
+        for (const n of ['armL', 'armR']) H.rotW(n, H.X, -2.2 * up + 1.2 * slam); H.rotW('body', H.X, -.15 * up + .3 * slam); H.rotW('crown', H.X, .1 * up); } },
+      { name: 'die', n: 8, pose: (H, u) => { H.reset(); const e = u * u * (3 - 2 * u); H.rotW('body', H.X, 1.2 * e); H.rotW('legL', H.X, -.5 * e); H.rotW('legR', H.X, -.3 * e); H.rotW('armL', H.Z, .6 * e); H.rotW('armR', H.Z, -.6 * e); return -.35 * e; } },
     ] },
   // Enemy template: Meshy exports one GLB per animation; list the walk clip as glb and the others in extraClips.
   // Every enemy needs 'walk'; 'attack' (wind-up / shot) and 'die' are optional and used when present.

@@ -102,13 +102,13 @@ Her gün için tarihten üretilen sabit bir tohum: herkes aynı mızrakçıyla, 
 
 Zorluk: oda başına düşman canı +%20, hasar +%8, hız +%1.5. Altın halka = düşman sökümle ölür.
 
-## 6. Güçler (26 adet, 3 nadirlik)
+## 6. Güçler (37 adet, 3 nadirlik + efsanevi)
 
-- **Mızrak:** Keskin Uç, Hızlı El, Uzak Hedef, Ölümcül Göz, Çatallı Mızrak, Delip Geçen, Ağır Mızrak, Buz Uç, Mızrak Fırtınası
-- **Sekme:** Uzun Sekme, Hayalet Adım (sekmede hasarsızlık), Ruh İzi (yakan iz), İniş Şoku, Ritim (art arda sekme hasar çarpanı), Gölge Mızrak (sekmede bedava mızrak), Hafif Ayak
-- **Söküm:** Yırtıcı, Acımasız, İnfaz, Bulaşıcı Işık (ölenin mızrakları yayılır), Ruh Hasadı
-- **Delici / Ay:** Delici Işık, Ay Işığı
-- **Ruh:** Sağlam Ruh, Yenilenme, Kan Bağı, Ruh Yavrusu (etrafında dönüp ışık mızrağı atan küçük ruh)
+- **Mızrak:** Keskin Uç, Hızlı El, Uzak Hedef, Ölümcül Göz, Çatallı Mızrak, Delip Geçen, Ağır Mızrak, Buz Uç, Mızrak Fırtınası, Seken Işık (isabette %35 şansla en yakın başka düşmana seker), Av İşareti (3+ mızraklı düşmana +%15 hasar)
+- **Sekme:** Uzun Sekme, Hayalet Adım (sekmede hasarsızlık), Ruh İzi (yakan iz), İniş Şoku, Ritim (art arda sekme hasar çarpanı), Gölge Mızrak (sekmede bedava mızrak), Hafif Ayak, Akış (inişte sonraki atışın beklemesi -%30), Yankı Sekmesi (her 3. inişte gecikmeli ışık patlaması, %150 hasar + 1 mızrak), Tilki Ateşi (sekmenin başladığı yerde kalan ateş az sonra yakındaki düşmanlara mızrak atar)
+- **Söküm:** Yırtıcı, Acımasız, İnfaz, Bulaşıcı Işık (ölenin mızrakları yayılır), Ruh Hasadı, Söküm Novası (Sökümle ölen düşman patlar)
+- **Delici / Ay:** Delici Işık, Ay Işığı, Yıldız Yağmuru (Ay inişinde 10 yıldız mızrağı)
+- **Ruh:** Sağlam Ruh, Yenilenme, Kan Bağı, Ruh Yavrusu (etrafında dönüp ışık mızrağı atan küçük ruh), Ruh Kalkanı (12 sn'de bir gelen hasarı tamamen engeller)
 
 - **Efsanevi sinerjiler** (iki ön koşul güç alınınca havuza girer):
   - Hayalet Ordusu = Hayalet Adım + Gölge Mızrak → +2 gölge mızrak, inişte 0.4 sn hasarsızlık
@@ -116,6 +116,9 @@ Zorluk: oda başına düşman canı +%20, hasar +%8, hız +%1.5. Altın halka = 
   - Ruh Yangını = Ruh İzi + İniş Şoku → iz hasarı ×2, şok yarıçapı +40
   - Lejyon = 2+ Ruh Yavrusu + Hızlı El → ruhlar iki kat sık atar
   - Ay Tutulması = Ay Işığı + Acımasız → Ay Sıçrayışı inişi bedava Söküm
+  - Işık Zinciri = Seken Işık + Çatallı Mızrak → sekme şansı +%20, seken mızraklar bir kez daha seker
+  - Kuyruklu Yıldız = Yankı Sekmesi + İniş Şoku → yankı her inişte ve daha geniş
+  - Ay Kalkanı = Ruh Kalkanı + Ay Işığı ya da Yıldız Yağmuru → kalkan 8 sn'de dolar, Ay inişi kalkanı anında yeniler ve 1 sn hasarsızlık verir
 
 Nadirlik ağırlıkları: Sıradan 10, Nadir 5, Destansı 2, Efsanevi 6 (yalnızca ön koşullar tamamsa). Elit/Lanetli/Muhafız ödüllerinde sıradan kartların ağırlığı 2'ye düşer.
 
@@ -123,6 +126,8 @@ Nadirlik ağırlıkları: Sıradan 10, Nadir 5, Destansı 2, Efsanevi 6 (yalnız
 - **Sekme ustası:** Hayalet Adım + Gölge Mızrak + Ruh İzi + İniş Şoku + Hızlı El → her saldırı bir hasar patlaması.
 - **Söküm infazcısı:** Ağır Mızrak + Çatallı Mızrak + Yırtıcı + İnfaz + Bulaşıcı Işık → zincirleme Söküm sıfırlamaları.
 - **Ruh ordusu:** Ruh Yavrusu ×3 + Hızlı El + Kan Bağı.
+- **Işık tilkisi:** Tilki Ateşi ×3 + Akış + Yankı Sekmesi + İniş Şoku → her sekme bir mızrak yağmuru ve patlama.
+- **Zincir avcı:** Seken Işık ×2 + Çatallı Mızrak + Av İşareti → kalabalıkta mızraklar düşmandan düşmana atlar.
 
 ## 7. Başarımlar, pelerinler ve mızrak izleri
 
@@ -244,6 +249,18 @@ Mevcut 2D tuval her kare bir WebGL dokusuna aktarılır ve tek bir shader zincir
 - [x] Boyanmış arka planlar: zemin, uçurum ve yüzen adalar kodla çizildikten sonra kendi renklerinden örneklenen yönlü fırça darbeleriyle yeniden boyanır (dört kat: geniş taban darbeleri → orta → yalnız ayrıntılı yerlerde ince darbeler; darbeler kenar boyunca, düz alanlarda yumuşak bir akış alanı boyunca uzanır, açık ve koyu kıl izleri taşır). Taş araları yumuşatıldı, zemine biyom renginde geniş ışık ve gölge lekeleri eklendi; mühür, boyamanın üstüne net olarak yeniden kazınır. Boyama arka planda küçük zaman dilimleriyle yapılır (oyun sırasında kare başına en çok 4 ms); hazır olana kadar düz doku görünür, bitince aynı tuvale kopyalanıp GPU dokusu yenilenir. Diğer biyomların zeminleri açılış ekranındayken önceden boyanır, açılış süresi değişmez.
 - [ ] Elle boyanmış arka plan görselleri eklenirse kodla üretilenlerin yerini alacak.
 
+## Ruh Ormanı (30. oda ve sonrası)
+
+Dördüncü biyom. Yosunlu taş zemin, kenardan sürünen kökler, çimen öbekleri ve düşmüş yapraklar; mum yerine üstünde parlayan mantarlar olan kütükler; altın-yeşil ruh ateşi; ateş böcekleri ve güçlü ışık hüzmeleri. Ortamda kuş cıvıltısı, baykuş, yaprak hışırtısı ve uzak çanlar.
+
+| Düşman | Davranış | Model |
+|---|---|---|
+| Diken Sarmaşığı | Köklü; nişan alıp yelpaze halinde 3 diken atar (elitte 5). Uzak durursan toprağa batar ve yakınında yeniden çıkar. | Kodla: kök tümseği, dört eklemli diken saplı gövde, ateş ederken açılan çiçek başı |
+| Spor Mantarı | Yavaş yürür; yaklaşınca 3 sn kalan zehirli spor bulutu bırakır, ölünce daha büyüğünü. Yakın dövüşü cezalandırır. | Kodla: kök ayaklı gövde, parlayan benekli şapka |
+| Gölge Kurt | Çift gelir, ulur; tilkinin etrafında döner, sonra düz bir hatta atılır. | Tilki modelinin koyu mor kürklü kopyası, kırmızı gözler |
+
+**Kadim Ağaç** (30., 40., 50. … oda muhafızı; diğer muhafız odaları sırayla devam eder): yavaşça yürür. Kök hatları (oyuncuya doğru 3, öfkede 5 sıra; toprak çatlar, kökler sırayla fırlar), yaprak sarmalı (dönerek açılan 3–4 halka), Diken Sarmaşığı çağırma. Kendi müzik teması (88 bpm, koro ve tok davullar), giriş unvanı "Ormanın Kalbi", başarımı "Kökleri Kesen" (Yosun kürkü). Model kodla: kök bacaklar, dal kollar, parlayan yüz, çiçekli taç; yürüme, kolları kaldırıp yere vurma, devrilme.
+
 ## Sahne yönetimi
 
 - **Muhafız girişi:** muhafızın kapısı açılınca savaş durur; siyah şeritler iner, kamera kapıya kayıp yakınlaşır, kapıdan mor kıvılcımlar dökülür ve yükselen bir uğultu duyulur. Muhafız çıktığı anda kükrer (saldırı kareleri), yıldız patlaması, sarsıntı, titreşim; alt bas düşüşü + gong + bakır akoru. Ekranın alt üçte birinde adı ve unvanı belirir (Kemik Lordu — Mezarların Efendisi, Gölge Atlı — Gecenin Süvarisi, Yas Kraliçesi — Yasın Sesi, Kan Kardinali — Kanın Rahibi), her biri kendi renginde parlar. Sonra kamera tilkiye döner ve savaş başlar. Toplam ~3,5 sn; açıklamadan sonra dokunmak geri kalanı atlar.
@@ -343,13 +360,15 @@ Tema: **ruhani mezar arenası**. Karanlık taş zemin, turkuaz ruh ışığı, y
 
 Duraklat menüsünde: **Joystick: serbest / sabit** (sabitte taban ekranın alt köşesinde durur ve hep görünür) ve **Butonlar: sağda / solda** (sol el modu; sabit joystick bu modda sağ alta geçer).
 
+Ayrıca: **Hassasiyet: normal / yüksek / düşük** (tam eğim için gereken parmak çekişi 56 / 40 / 72 piksel), **Buton boyu: normal / büyük** (yetenek düğmeleri %22 büyür, köşeye yaslı kalır), **Titreşim: açık / kapalı**. Seçenekler iki sütunlu düzende telefona sığar.
+
 ## 17. Telefona kurulum (PWA)
 
 `game/` klasörü herhangi bir statik sunucuda (ör. GitHub Pages) yayınlanınca tarayıcının "Ana ekrana ekle" seçeneğiyle tam ekran uygulama gibi kurulur; `sw.js` dosyaları önbelleğe alır, oyun çevrimdışı açılır. Claude artifact sürümünde servis çalışanı devre dışıdır.
 
 ## 18. Performans
 
-Duraklat menüsünde **Grafik: otomatik / yüksek / düşük**. Otomatikte savaş sırasında 3 sn boyunca ortalama kare süresi 26 ms'yi (≈38 fps) aşarsa düşük kaliteye geçer. Düşük kalite: piksel yoğunluğu en fazla 1.25, uzak adalar, sis ve film greni kapalı, sıradan düşman dumanı kapalı, duman sınırı 130 parçacık.
+Duraklat menüsünde **Grafik: otomatik / yüksek / düşük**. **Kare hızı: 60 / 30 (pil)**: 30'da her ikinci ekran karesi atlanır (telefon daha az ısınır, pil daha uzun gider); otomatik kalite eşiği bu modda 45 ms'dir. Otomatikte savaş sırasında 3 sn boyunca ortalama kare süresi 26 ms'yi (≈38 fps) aşarsa düşük kaliteye geçer. Düşük kalite: piksel yoğunluğu en fazla 1.25, uzak adalar, sis ve film greni kapalı, sıradan düşman dumanı kapalı, duman sınırı 130 parçacık.
 
 ## 19. Teknik
 
