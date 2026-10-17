@@ -293,6 +293,23 @@ Avın hedefi 40. oda (oda göstergesinde "/40"). Sönmüş Ay çatlaklarından �
 
 Yenince: ağır çekim, beyaz ekran, art arda yıldız parlamaları; ardından **"Ay yeniden doğdu"** bitiş anlatımı, istatistikler ve av boyunca alınan güçler. "Sonsuz Ava devam et" (Ruh Biçimi ve güç seçimiyle 41. odadan sürer) ya da "Avı bitir" (zafer olarak kaydedilir; son avlarda ☾ ile görünür). Başarım "Ay Doğdu" (Ay Işığı kürkü). Deneme Odası'nda muhafız listesinde.
 
+## Ruh Yemini (tekrar oynanabilirlik)
+
+Sönmüş Ay bir kez yenilince tilki seçim ekranında **Ruh Yemini** açılır. Her yemin seviyesi avı zorlaştırır ve ruh parçası kazancını %10 artırır (av sonunda çarpılır). Günün Avı'nda geçerli değildir.
+
+| Yemin | Seviye başına |
+|---|---|
+| Hızlı Gölgeler (2) | Düşman hızı +%15 |
+| Kalın Kemik (2) | Düşman canı +%20 (muhafızlarda yarısı) |
+| Kalabalık (2) | Dalga bütçesi +%20 |
+| Ağır Bedel (2) | Alınan hasar +%20 |
+| Kıt Işık (2) | Oda sonu iyileşmesi -%50, Ruh Pınarı -%25 |
+| Öfkeli Muhafızlar (1) | Bütün muhafızlar Yükselmiş (+%25 can, ödünç saldırılar) |
+| Elit Gecesi (1) | Her odada +%25 elit |
+| Sabırsız Ay (1) | 45 sn'yi aşan odada her 2 sn'de bir güdümlü ay mermisi |
+
+En az 8 yeminle kazanmak "Ağır Yemin" başarımını (Tutulma kürkü) açar.
+
 ## Ruh Ataları, olaylar ve anlatım (Aşama 3)
 
 **Ata Kapısı** (kapı havuzunda iki kez, her biri farklı ata): bir savaş odası; ödül seçimi yalnızca o atanın kartlarından gelir ve atanın çekirdek kartı henüz alınmadıysa ilk seçenek odur. Ata kartları normal seçimlerde ancak o atanın çekirdeği alındıktan sonra çıkar.

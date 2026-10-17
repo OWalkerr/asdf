@@ -320,7 +320,7 @@ p{margin:0;line-height:1.45;color:var(--ink)}
     <div class="eyebrow">Ava başla</div>
     <h2>Tilkini seç</h2>
     <div class="cards" id="heroes"></div>
-    <div class="btns"><button class="btn" data-back>Geri</button></div>
+    <div class="btns"><button class="btn" id="btnVow">Ruh Yemini <small id="vowLbl"></small></button><button class="btn" data-back>Geri</button></div>
   </div>
 </section>
 
@@ -365,6 +365,17 @@ p{margin:0;line-height:1.45;color:var(--ink)}
     <h2>Bir Ruh Biçimi seç</h2>
     <p class="fine">Ruh Biçimleri sekmenin nasıl çalıştığını kalıcı olarak değiştirir. Av boyunca her muhafızdan sonra bir tane daha.</p>
     <div class="cards" id="formCards"></div>
+  </div>
+</section>
+
+<section class="screen" id="scrVow" hidden>
+  <div class="panel">
+    <div class="eyebrow">Ruh Yemini</div>
+    <h2>Zorluğu sen seç</h2>
+    <p class="fine">Her yemin avı zorlaştırır ve ruh parçası kazancını %10 artırır. Yeminler bir sonraki avdan itibaren geçerlidir (Günün Avı hariç).</p>
+    <div class="statrow"><div>Yemin<b id="vowScore">0</b></div><div>Parça çarpanı<b id="vowMul">×1.0</b></div></div>
+    <div class="shop" id="vowList"></div>
+    <div class="btns"><button class="btn primary" id="btnVowBack">Tamam</button></div>
   </div>
 </section>
 
@@ -938,6 +949,7 @@ const ACH = [
   { id: 'lord', n: 'Kemik Yıkan', d: 'Kemik Lordu\'nu yen.', skin: { n: 'Kemik Beyazı', cloak: ['#d9d2c0', '#857d68', '#2a261e'], rim: '255,240,205' } },
   { id: 'rider', n: 'Atlıyı Düşüren', d: 'Gölge Atlı\'yı yen.', skin: { n: 'Gece Moru', cloak: ['#7a5cc8', '#33246a', '#120a2a'], rim: '200,170,255' } },
   { id: 'cardinal', n: 'Kanı Durduran', d: 'Kan Kardinali\'ni yen.', skin: { n: 'Kardinal Kızılı', cloak: ['#b3192c', '#5a0814', '#1e0206'], rim: '255,200,140' } },
+  { id: 'vow8', n: 'Ağır Yemin', d: 'En az 8 yeminle Sönmüş Ay\'ı yen.', skin: { n: 'Tutulma', cloak: ['#3a2a5a', '#1a1030', '#06020e'], rim: '255,120,90' } },
   { id: 'moon', n: 'Ay Doğdu', d: 'Sönmüş Ay\'ı yen ve ışığı geri getir.', skin: { n: 'Ay Işığı', cloak: ['#ece8ff', '#8a84c8', '#1c1a3a'], rim: '255,250,235' } },
   { id: 'treant', n: 'Kökleri Kesen', d: 'Kadim Ağaç\'ı yen.', skin: { n: 'Yosun', cloak: ['#7aa84a', '#2e4a1e', '#0a1a06'], rim: '225,255,170' } },
   { id: 'queen', n: 'Yası Bitiren', d: 'Yas Kraliçesi\'ni yen.', skin: { n: 'Yas Gümüşü', cloak: ['#c8cede', '#5e6478', '#1c1f2a'], rim: '235,240,255' } },
@@ -1014,6 +1026,7 @@ function newRun(daily, testHero) {
     bolts: [], cinders: [], forms: {}, fervor: 0, feverT: 0, fervorIdle: 0, enemies: [], spears: [], eshots: [], echoes: [], fires: [], parts: [], texts: [], trails: [], spawns: [], hazards: [], hitstop: 0, gibs: [], decals: [], booms: [], flashA: 0, combo: 0, comboT: 0, zp: 0, hurtA: 0, twinkles: [], rings: [], erupts: [], orbs: [], hitstars: [], impactT: 0, speedT: 0, beamT: 0, lastKill: null, slowT: 0, slowS: 1, roomType: 'fight', pending: 0, waves: [], waveIdx: 0, waveT: 0, shake: 0, clearT: 0,
     cam: { x: 0, y: 0 } };
   G.mod = {}; G.daily = daily || null; G.rng = daily ? mulberry32(daily.seed) : null;
+  G.vow = daily ? {} : Object.assign({}, meta.vow || {}); if (G.vow.elite) G.mod.elite = (G.mod.elite || 0) + .25;
   if (daily && daily.mod.g) daily.mod.g(G.mod);
   if (G.mod.gift) {
     G.rerolls = 0;
@@ -1032,7 +1045,7 @@ function roomWaves(r) {
   const n = 2 + (r >= 3) + (r >= 14);
   const waves = [];
   for (let i = 0; i < n; i++) {
-    let b = (4.5 + r * 1.5 + i * 1.5) * 1.3; const w = [];
+    let b = (4.5 + r * 1.5 + i * 1.5) * 1.3 * (1 + .2 * vowLv('crowd')); const w = [];
     while (b > 0) { const t = pool[Math.floor(crand() * pool.length)]; if (t === 'wisp') w.push('wisp', 'wisp', 'wisp'); else if (t === 'bomb') w.push('bomb', 'bomb'); else if (t === 'bat') w.push('bat', 'bat', 'bat'); else if (t === 'wolf') w.push('wolf', 'wolf'); else w.push(t); b -= cost[t]; }
     waves.push(w);
   }
@@ -1051,7 +1064,7 @@ const LORE = {
 function nextRoom(type = 'fight') {
   G.room++; const r = G.room, boss = r % 5 === 0;
   if (r === 1) setTimeout(() => G && G.room === 1 && !G.test && toast('Cadı Zindanı: Ay söndüğünden beri buradaki ruhlar yolunu kaybetti. Işığı geri getir.'), 2200); if (themeFor(r) !== themeFor(r - 1)) setTimeout(() => toast(themeFor(r).n + ': ' + LORE[themeFor(r).id]), 1600); G.roomDmg = 0; if (r >= 20) unlock('room20'); if (G.daily && r >= 10) unlock('daily10'); G.roomType = boss ? 'boss' : type; G.hazards.length = 0; G.gibs.length = 0; G.decals.length = 0; G.booms.length = 0; G.orbs.length = 0; G.twinkles.length = 0; G.rings.length = 0; G.erupts.length = 0; G.p.chillT = 0; G.hitstars.length = 0;
-  G.enemies.length = 0; G.eshots.length = 0; G.spears.length = 0; G.spawns.length = 0; G.trails.length = 0; G.intro = null; G.echoes.length = 0; G.fires.length = 0; G.bolts.length = 0; G.cinders.length = 0; G.feverT = 0; G.fervor = Math.min(G.fervor, 40); if (G.feverNext) { G.feverNext = false; G.fervor = 99; }
+  G.enemies.length = 0; G.eshots.length = 0; G.spears.length = 0; G.spawns.length = 0; G.trails.length = 0; G.intro = null; G.roomT = 0; G.echoes.length = 0; G.fires.length = 0; G.bolts.length = 0; G.cinders.length = 0; G.feverT = 0; G.fervor = Math.min(G.fervor, 40); if (G.feverNext) { G.feverNext = false; G.fervor = 99; }
   G.p.x = 0; G.p.y = 0; G.p.state = 'idle'; G.p.qQueued = false;
   G.waves = boss ? bossWaves(r) : type === 'chest' ? chestWaves(r) : roomWaves(r); G.waveIdx = 0; G.waveT = 1.1; G.phase = 'fight'; G.clearT = 0; G.isBoss = boss;
   setupRoomMods();
@@ -1081,7 +1094,8 @@ function makeEnemy(type, x, y, elite) {
   const d = EDEF[type], r = G.room, hm = 1 + .17 * Math.min(r - 1, 9) + .1 * Math.max(0, r - 10) + .12 * Math.max(0, r - 20), tier = Math.floor(r / 5);
   // regular enemies are frailer but come in bigger, faster waves: rooms last ~30-45 s instead of 60-100
   const hp = type === 'boss' ? d.hp * (1 + .6 * (tier - 1)) * (1 + .05 * r) : d.hp * hm * .72;
-  return { type, x, y, r: d.r, hp, maxHp: hp, spd: d.spd * (1 + .015 * r), dmg: d.dmg * (1 + .08 * (r - 1)), stacks: 0, stackT: 0, slowT: 0, slowAmt: 0,
+  const vh = 1 + .2 * vowLv('bone') * (type === 'boss' ? .5 : 1), vs = 1 + .15 * vowLv('fast');
+  return { type, x, y, r: d.r, hp: hp * vh, maxHp: hp * vh, spd: d.spd * (1 + .015 * r) * vs, dmg: d.dmg * (1 + .08 * (r - 1)), stacks: 0, stackT: 0, slowT: 0, slowAmt: 0,
     flash: 0, kx: 0, ky: 0, cd: rand(1, 2.5), st: 'walk', t: 0, ax: 0, ay: 0, wob: rand(0, TAU), trailCd: 0, boss: type === 'boss', dead: false, ang: 0, n: 0,
     stunT: 0, shield: 0, elite: null };
 }
@@ -1090,7 +1104,7 @@ function makeEnemyFull(type, x, y, elite) {
   if (e.boss) { e.kind = bossKind(r); e.name = bossName(r); e.t = 1.2; if (e.kind === 'rider') { e.spd *= 1.3; e.r = 40; e.hp *= .9; e.maxHp = e.hp; } if (e.kind === 'queen') { e.r = 38; e.spd *= 1.1; e.hp *= .95; e.maxHp = e.hp; e.fade = 1; }
     if (e.kind === 'cardinal') { e.r = 40; e.spd *= .85; }
     if (e.kind === 'treant') { e.r = 48; e.spd *= .7; e.hp *= 1.15; e.maxHp = e.hp; }
-    if (Math.floor(r / 5) >= 4 && e.kind !== 'moon') { e.asc = true; e.name = 'Yükselmiş ' + e.name; e.hp *= 1.2; e.maxHp = e.hp; }
+    if ((Math.floor(r / 5) >= 4 || vowLv('wrath')) && e.kind !== 'moon') { e.asc = true; e.name = 'Yükselmiş ' + e.name; e.hp *= 1.2; e.maxHp = e.hp; }
     if (e.kind === 'moon') { e.r = 54; e.spd *= .9; e.hp *= 1.9; e.maxHp = e.hp; e.phase = 1; e.bA = 0; } }
   if (elite) {
     e.elite = ['shield', 'swift', 'burst'][Math.floor(crand() * 3)];
@@ -1585,6 +1599,7 @@ function hurt(d, src) {
   if (G.s.ward && p.wardT <= 0) { p.wardT = G.s.ward; p.iT = .5; txt(p.x, p.y - 30, 'KALKAN', '#bfe8ff', true); G.parts.push({ ring: true, x: p.x, y: p.y, r: 46, life: .3, max: .3, c: '#bfe8ff' }); sfx('ding'); buzz(15); return; }
   buzz(40);
   G.lastHit = src || 'Bilinmeyen'; G.takenBy = G.takenBy || {}; G.takenBy[G.lastHit] = (G.takenBy[G.lastHit] || 0) + d;
+  d *= 1 + .2 * vowLv('pain');
   G.fervor = Math.max(0, G.fervor - 35); if (G.feverT > 0) G.feverT = Math.max(0, G.feverT - 2);
   p.hp -= d; p.iT = .6; G.hurtA = 1; G.roomDmg = (G.roomDmg || 0) + d; G.shake = Math.max(G.shake, 10); sfx('hurt'); txt(p.x, p.y - 30, '-' + Math.round(d), COL.blood, true);
   burst(p.x, p.y, COL.blood, 10, 180, .4);
@@ -1609,6 +1624,7 @@ function update(dt) {
     const t = nearestEnemy(f.x, f.y, 520); if (t) { fireSpear(Math.atan2(t.y - f.y, t.x - f.x), s.groveLord ? 1 : .55, 'spear', f.x, f.y); if (s.groveLord) G.spears[G.spears.length - 1].chill = true; sfx('throw'); }
     if (--f.n > 0 && t) f.t = .18; else G.fires.splice(i, 1); }
   updFervor(dt); updObjective(dt); updPatron(dt);
+  if (vowLv('hurry') && G.phase === 'fight' && !G.isBoss) { G.roomT = (G.roomT || 0) + dt; if (G.roomT > 45) { G.hurryT = (G.hurryT || 0) - dt; if (G.hurryT <= 0) { G.hurryT = 2; const a = rand(0, TAU); SHOOTER = null; eshot(Math.cos(a) * ARENA, Math.sin(a) * ARENA, a + Math.PI, 230, 8 + G.room * .4, 9); const b = G.eshots[G.eshots.length - 1]; b.soul = true; b.home = 1.2; b.life = 6; b.src = 'Sabırsız Ay'; } } }
   if (G.lay && G.lay.k === 'collapse' && G.phase === 'fight') { G.lay.t += dt; if (G.lay.t > 6) G.lay.R = Math.min(210, G.lay.R + 40 * dt); }
   const inp = inputDir();
 
@@ -3881,7 +3897,7 @@ const icon = k => `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" s
 
 
 // ---------- screens ----------
-const screens = ['scrTitle', 'scrHero', 'scrHow', 'scrShop', 'scrDraft', 'scrPath', 'scrMerchant', 'scrAltar', 'scrAch', 'scrTest', 'scrForm', 'scrEvent', 'scrEnd', 'scrPause', 'scrOver'];
+const screens = ['scrTitle', 'scrHero', 'scrHow', 'scrShop', 'scrDraft', 'scrPath', 'scrMerchant', 'scrAltar', 'scrAch', 'scrTest', 'scrForm', 'scrEvent', 'scrEnd', 'scrVow', 'scrPause', 'scrOver'];
 let backTo = 'scrTitle';
 function show(id) { screens.forEach(s => $(s).hidden = s !== id); $('hud').hidden = !G || id === 'scrTitle' || id === 'scrHow' || id === 'scrShop' || id === 'scrTest'; }
 function titleScreen() {
@@ -3915,7 +3931,33 @@ $('btnFull').addEventListener('click', () => {
 });
 $('btnStart').addEventListener('click', () => { initAudio(); if (CAN_FS && !STANDALONE && matchMedia('(pointer: coarse)').matches) goFull(); renderHeroes(); show('scrHero'); });
 const heroSvg = h => `<svg width="30" height="30" viewBox="0 0 48 48"><path d="M8 7L17 20L24 18L31 20L40 7L39 26Q36 37 24 43Q12 37 9 26Z" fill="#f2fbff" stroke="rgb(${h.rim})" stroke-width="1.5"/><path d="M11 11L16 20L14 22ZM37 11L32 20L34 22Z" fill="${h.cloak[0]}"/><path d="M15 28Q18 26 21 29Q18 30 15 28ZM33 28Q30 26 27 29Q30 30 33 28Z" fill="rgb(${h.rim})"/><path d="M22.5 35L24 37L25.5 35Z" fill="#2a3a55"/></svg>`;
+// Ruh Yemini: optional difficulty vows, unlocked by beating the final guardian once
+const VOWS = [
+  { id: 'fast', n: 'Hızlı Gölgeler', max: 2, d: l => `Düşmanlar %${15 * l || 15} daha hızlı.` },
+  { id: 'bone', n: 'Kalın Kemik', max: 2, d: l => `Düşman canı +%${20 * l || 20}.` },
+  { id: 'crowd', n: 'Kalabalık', max: 2, d: l => `Dalgalar %${20 * l || 20} daha kalabalık.` },
+  { id: 'pain', n: 'Ağır Bedel', max: 2, d: l => `Aldığın hasar +%${20 * l || 20}.` },
+  { id: 'scarce', n: 'Kıt Işık', max: 2, d: l => l >= 2 ? 'Oda sonunda iyileşme yok, Ruh Pınarı yarı yarıya.' : 'Oda sonu iyileşmesi ve Ruh Pınarı %50 az.' },
+  { id: 'wrath', n: 'Öfkeli Muhafızlar', max: 1, d: () => 'Bütün muhafızlar Yükselmiş gelir (+%25 can, ek saldırılar).' },
+  { id: 'elite', n: 'Elit Gecesi', max: 1, d: () => 'Her odada düşmanların %25\'i fazladan elit.' },
+  { id: 'hurry', n: 'Sabırsız Ay', max: 1, d: () => 'Bir oda 45 sn\'den uzun sürerse her 2 sn\'de sana bir ay mermisi gelir.' },
+];
+const vowLv = id => (G && G.vow ? G.vow[id] : 0) || 0;
+const vowScore = v => Object.values(v || {}).reduce((a, b) => a + b, 0);
+const vowOpen = () => (meta.wins || 0) > 0;
+function renderVows() {
+  const v = meta.vow = meta.vow || {}, L = $('vowList'); L.innerHTML = '';
+  for (const it of VOWS) { const lv = v[it.id] || 0, d = document.createElement('div'); d.className = 'shopitem';
+    d.innerHTML = `<div><h3>${it.n}</h3><p>${it.d(lv)}</p><div class="pips">${Array.from({ length: it.max }, (_, i) => `<i class="${i < lv ? 'on' : ''}"></i>`).join('')}</div></div>`;
+    const b = document.createElement('button'); b.textContent = lv >= it.max ? 'Kaldır' : lv ? 'Artır' : 'Ekle';
+    b.addEventListener('click', () => { v[it.id] = lv >= it.max ? 0 : lv + 1; store.set('ym_meta', meta); sfx('pick'); renderVows(); }); d.appendChild(b); L.appendChild(d); }
+  const sc = vowScore(v); $('vowScore').textContent = sc; $('vowMul').textContent = '×' + (1 + sc * .1).toFixed(1);
+}
+function syncVowBtn() { const sc = vowScore(meta.vow); $('btnVow').disabled = !vowOpen(); $('vowLbl').textContent = vowOpen() ? (sc ? 'yemin ' + sc + ' · ×' + (1 + sc * .1).toFixed(1) + ' parça' : 'zorluk ekle') : 'Sönmüş Ay\'ı yenince açılır'; }
+$('btnVow').addEventListener('click', () => { if (!vowOpen()) return; renderVows(); show('scrVow'); });
+$('btnVowBack').addEventListener('click', () => { renderHeroes(); show('scrHero'); });
 function renderHeroes() {
+  syncVowBtn();
   const c = $('heroes'); c.innerHTML = '';
   for (const hr of HEROES) {
     const open = heroOpen(hr), b = document.createElement('button'); b.className = 'card hero' + (hr.id === (meta.hero || 'oath') ? ' sel' : '') + (open ? '' : ' locked'); b.style.setProperty('--rc', `rgb(${hr.rim})`);
@@ -4059,13 +4101,14 @@ function showEvent() {
 function victory() {
   G.phase = 'won'; G.lay = null; G.eshots.length = 0; G.erupts.length = 0; G.rings.length = 0; flashScreen(1); slowmo(2, .2); G.zp = .25; cinematic(6);
   for (let i = 0; i < 4; i++) setTimeout(() => G && twinkleWorld(rand(-300, 300), rand(-300, 300), Math.min(W, H) * .6), i * 400);
+  if (!G.test && vowScore(G.vow) >= 8) unlock('vow8');
   if (!G.test) { meta.wins = (meta.wins || 0) + 1; meta.best = Math.max(meta.best, G.room); store.set('ym_meta', meta); }
   const m = Math.floor(G.time / 60), sec = Math.floor(G.time % 60);
   $('wStats').innerHTML = `<div>Oda<b>${G.room}</b></div><div>Öldürme<b>${G.kills}</b></div><div>Süre<b>${m}:${String(sec).padStart(2, '0')}</b></div><div>Zafer<b>${meta.wins || 1}</b></div>`;
   upChips($('wUps')); setTimeout(() => { if (G && G.phase === 'won') show('scrEnd'); }, 3200);
 }
 $('btnEndless').addEventListener('click', () => { if (!G || G.phase !== 'won') return; G.phase = 'clear'; G.clearT = 0; G.endless = true; show(null); toast('Sonsuz Av: ay ışığında av sürüyor. Her oda daha zor.'); });
-$('btnEndRun').addEventListener('click', () => { if (!G) return; if (!G.test) { meta.shards += G.shards; meta.history = [{ h: G.hero.id, room: G.room, t: Math.floor(G.time), d: !!G.daily, w: 1 }, ...(meta.history || [])].slice(0, 10); store.set('ym_meta', meta); } titleScreen(); });
+$('btnEndRun').addEventListener('click', () => { if (!G) return; if (!G.test) { meta.shards += Math.round(G.shards * (1 + .1 * vowScore(G.vow))); meta.history = [{ h: G.hero.id, room: G.room, t: Math.floor(G.time), d: !!G.daily, w: 1 }, ...(meta.history || [])].slice(0, 10); store.set('ym_meta', meta); } titleScreen(); });
 function showForms() {
   const left = FORMS.filter(f => !G.forms[f.id]); if (!left.length) return showDraft();
   G.phase = 'form'; $('banner').classList.remove('on'); const c = $('formCards'); c.innerHTML = '';
@@ -4078,7 +4121,7 @@ function showForms() {
   show('scrForm');
 }
 function showDraft() {
-  const altar = G.roomType === 'altar'; G.phase = 'draft'; if (!altar) heal(G.s.maxHp * .15); $('banner').classList.remove('on'); G.pending = G.roomType === 'cursed' ? 2 : altar ? G.altarPicks || 1 : 1;
+  const altar = G.roomType === 'altar'; G.phase = 'draft'; if (!altar) heal(G.s.maxHp * .15 * Math.max(0, 1 - .5 * vowLv('scarce'))); $('banner').classList.remove('on'); G.pending = G.roomType === 'cursed' ? 2 : altar ? G.altarPicks || 1 : 1;
   draftOpts = rollDraft(); renderDraft();
   $('dEyebrow').textContent = altar ? 'Kan Sunağı' + (G.pending > 1 ? ' · 1/2' : '') : (G.isBoss ? bossName(G.room) + ' yenildi' : G.roomType === 'chest' ? 'Sandık açıldı' : 'Oda ' + G.room + ' temizlendi') + ' · +15% can' + (G.pending > 1 ? ' · 1/2' : '');
   show('scrDraft');
@@ -4189,19 +4232,19 @@ function chooseDoor(t) {
   if (t === 'altar') { G.room++; G.roomType = 'altar'; G.phase = 'altar'; banner('Kan Sunağı'); updHud(); renderAltar(); show('scrAltar'); return; }
   if (t === 'shop') { G.room++; banner('Ruh Tüccarı'); updHud(); showMerchant(); return; }
   if (t === 'event') { G.room++; banner('Ruh Olayı'); updHud(); showEvent(); return; }
-  if (t === 'rest') { G.room++; heal(G.s.maxHp * .4); G.rerolls++; sfx('rest'); banner('Ruh Pınarı'); updHud(); showPath(); return; }
+  if (t === 'rest') { G.room++; heal(G.s.maxHp * .4 * (1 - .25 * vowLv('scarce'))); G.rerolls++; sfx('rest'); banner('Ruh Pınarı'); updHud(); showPath(); return; }
   show(null); nextRoom(t);
 }
 
 function gameOver() {
   if (!G || G.phase === 'over') return; G.phase = 'over';
   shatter({ x: G.p.x, y: G.p.y, r: 16, type: 'player', stacks: 0 }, true);
-  const reached = G.room; if (!G.test) { meta.shards += G.shards; meta.best = Math.max(meta.best, reached); }
+  const reached = G.room; if (!G.test) { meta.shards += Math.round(G.shards * (1 + .1 * vowScore(G.vow))); meta.best = Math.max(meta.best, reached); }
   if (G.daily) { const prev = meta.daily && meta.daily.key === G.daily.key ? meta.daily.best : 0; meta.daily = { key: G.daily.key, best: Math.max(prev, reached) }; }
   if (!G.test) meta.history = [{ h: G.hero.id, room: reached, t: Math.floor(G.time), d: !!G.daily }, ...(meta.history || [])].slice(0, 10);
   store.set('ym_meta', meta);
   const m = Math.floor(G.time / 60), sec = Math.floor(G.time % 60);
-  $('oStats').innerHTML = `<div>Oda<b>${reached}</b></div><div>Öldürme<b>${G.kills}</b></div><div>Sekme<b>${G.hops}</b></div><div>Süre<b>${m}:${String(sec).padStart(2, '0')}</b></div><div>Ruh parçası<b>+${G.shards}</b></div>`;
+  $('oStats').innerHTML = `<div>Oda<b>${reached}</b></div><div>Öldürme<b>${G.kills}</b></div><div>Sekme<b>${G.hops}</b></div><div>Süre<b>${m}:${String(sec).padStart(2, '0')}</b></div><div>Ruh parçası<b>+${Math.round(G.shards * (1 + .1 * vowScore(G.vow)))}</b></div>` + (vowScore(G.vow) ? `<div>Yemin<b>${vowScore(G.vow)}</b></div>` : '');
   upChips($('oUps'));
   const DL = { yanma: 'Yanma', kor: 'Kor patlaması', isil: 'Isıl Şok', simsek: 'Zincir şimşek', yildirimDus: 'Gök Gürültüsü', tutulma: 'Tutulma Ateşi', kanca: 'Işık Kancası', yildirim: 'Yıldırım Adım', duvar: 'Duvar Sekmesi', yanki: 'Yankı Sekmesi', nova: 'Söküm Novası', spear: 'Mızrak', q: 'Delici Mızrak', rend: 'Söküm', kader: 'Ay Sıçrayışı', sok: 'İniş Şoku', bomba: 'Kemik Bombası', iz: 'Ruh İzi', spirit: 'Ruh Yavrusu', launch: 'Patlama' };
   const rows = Object.entries(G.dmgBy || {}).filter(([, v]) => v >= 1).sort((a, b) => b[1] - a[1]).slice(0, 6), tot = rows.reduce((a, [, v]) => a + v, 0) || 1, mx = rows.length ? rows[0][1] : 1;
