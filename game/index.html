@@ -1509,6 +1509,60 @@ const CANDLES = Array.from({ length: 20 }, (_, i) => { const a = i * TAU / 20; r
 const BRAZ = Array.from({ length: 10 }, (_, i) => { const a = i * TAU / 10 + TAU / 20; return [Math.cos(a) * (ARENA + 22), Math.sin(a) * (ARENA + 22)]; });
 let FLOOR = null;
 const PLANTS = (() => { let s0 = 4711; const R = () => ((s0 = s0 * 16807 % 2147483647) / 2147483647); return Array.from({ length: 34 }, (_, i) => { const a = i * TAU / 34 + R() * .12, d = ARENA - 8 - R() * 34; return [Math.cos(a) * d, Math.sin(a) * d, .8 + R() * .6, R() < .5 ? 1 : 0, R() * TAU]; }); })();
+// Painterly re-render: a baked texture is repainted with oriented brush daubs sampled from itself (big strokes for
+// the base, small ones only where detail is), so stones and rock read as painted, not vector. Strokes run along
+// edges (perpendicular to the luminance gradient) and follow a soft flow field on flat areas. Alpha is preserved.
+// The work runs in small time slices in the background (the plain texture shows meanwhile); when it is done the
+// painted image is copied back into the same canvas and its GPU texture refreshed.
+const PAINTQ = [];
+function paintLater(src, seed, scale, done) {
+  PAINTQ.push({ src, seed, scale, done });
+  if (PAINTQ.length === 1) setTimeout(paintStep, 30);
+}
+function paintStep() {
+  const job = PAINTQ[0]; if (!job) return;
+  const end = performance.now() + (G && !paused ? 4 : 12);
+  if (!job.g) {
+    const src = job.src, W = src.width, H = src.height, id = src.getContext('2d').getImageData(0, 0, W, H).data;
+    const lum = new Float32Array(W * H); for (let i = 0, j = 0; i < lum.length; i++, j += 4) lum[i] = (id[j] * .3 + id[j + 1] * .59 + id[j + 2] * .11) * id[j + 3] / 255;
+    const out = document.createElement('canvas'); out.width = W; out.height = H; const g = out.getContext('2d');
+    g.filter = `blur(${Math.max(1, 3 * job.scale)}px)`; g.drawImage(src, 0, 0); g.filter = 'none';
+    let s0 = job.seed * 7919 + 13;
+    Object.assign(job, { W, H, id, lum, out, g, R: () => ((s0 = s0 * 16807 % 2147483647) / 2147483647), li: 0, k: 0 });
+    if (performance.now() > end) return setTimeout(paintStep, 16);
+  }
+  const { W, H, id, lum, g, R, scale, seed } = job, LAYERS = [[14, 2.6, .5, 0], [8, 3, .7, 0], [4.5, 3.4, .85, 9], [2.4, 3.2, .9, 22]];
+  const at = (x, y) => (Math.min(H - 1, Math.max(0, y | 0)) * W + Math.min(W - 1, Math.max(0, x | 0)));
+  while (job.li < LAYERS.length) {
+    const [r0, len, al, edge] = LAYERS[job.li], r = r0 * scale, n = Math.round(W * H / (r * r * 2.2)), d = Math.max(1, r * .6 | 0);
+    for (; job.k < n; job.k++) {
+      if ((job.k & 63) === 0 && performance.now() > end) return setTimeout(paintStep, 16);
+      const x = R() * W, y = R() * H, i = at(x, y), j = i * 4; if (id[j + 3] < 40) continue;
+      const gx = lum[at(x + d, y)] - lum[at(x - d, y)], gy = lum[at(x, y + d)] - lum[at(x, y - d)], gm = Math.hypot(gx, gy);
+      if (gm < edge) continue;
+      const a = gm > 6 ? Math.atan2(gy, gx) + Math.PI / 2 : Math.sin(x * .004 + y * .0025 + seed) * 2.2 + Math.cos(y * .006) * .8;
+      const v = (R() - .5) * 16, c0 = id[j] + v, c1 = id[j + 1] + v, c2 = id[j + 2] + v * 1.2, aj = a + (R() - .5) * .25, ca = Math.cos(aj), sa = Math.sin(aj);
+      const L = r * len * (.7 + R() * .6), w = r * (.55 + R() * .35);
+      g.setTransform(ca, sa, -sa, ca, x, y);
+      g.globalAlpha = al; g.fillStyle = `rgb(${c0 | 0},${c1 | 0},${c2 | 0})`;
+      g.beginPath(); g.moveTo(-L / 2, 0); g.quadraticCurveTo(-L / 4, -w, L / 2, -w * .3); g.quadraticCurveTo(L / 3, w * .9, -L / 2, 0); g.fill();
+      // bristle streaks: one lighter, one darker along the daub
+      if (r > 3) { g.globalAlpha = al * .35; g.strokeStyle = `rgb(${c0 + 22 | 0},${c1 + 22 | 0},${c2 + 26 | 0})`; g.lineWidth = Math.max(.6, r * .12); g.beginPath(); g.moveTo(-L * .4, -w * .25); g.lineTo(L * .4, -w * .35); g.stroke();
+        g.strokeStyle = `rgb(${c0 * .7 | 0},${c1 * .7 | 0},${c2 * .75 | 0})`; g.beginPath(); g.moveTo(-L * .35, w * .2); g.lineTo(L * .38, w * .05); g.stroke(); }
+    }
+    job.li++; job.k = 0;
+  }
+  g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = .22; g.drawImage(job.src, 0, 0); g.globalAlpha = 1;
+  g.globalCompositeOperation = 'destination-in'; g.drawImage(job.src, 0, 0); g.globalCompositeOperation = 'source-over';
+  PAINTQ.shift(); job.done(job.out);
+  if (PAINTQ.length) setTimeout(paintStep, 30);
+}
+// copy a finished painting into the canvas the game already draws, and re-upload it if the GPU has it
+function swapPainted(c, painted, after) {
+  const g = c.getContext('2d'); g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, c.width, c.height); g.drawImage(painted, 0, 0); g.restore();
+  if (after) after();
+  if (GL && GLTEX.has(c)) { GL.bindTexture(GL.TEXTURE_2D, GLTEX.get(c)); GL.texImage2D(GL.TEXTURE_2D, 0, GL.RGBA, GL.RGBA, GL.UNSIGNED_BYTE, c); }
+}
 function buildFloor(T) {
   const size = Math.round(FH * 2 * FS), c = document.createElement('canvas'); c.width = c.height = size;
   const g = c.getContext('2d'); g.scale(FS, FS); g.translate(FH, FH);
@@ -1524,7 +1578,7 @@ function buildFloor(T) {
       const a0 = off + i * TAU / n + .012, a1 = off + (i + 1) * TAU / n - .012;
       g.beginPath(); g.arc(0, 0, r1 - 3, a0, a1); g.arc(0, 0, r0 + 3, a1, a0, true); g.closePath();
       const S = T.stone; g.fillStyle = `hsl(${S[0] + R() * S[1]},${S[2] + R() * S[3]}%,${S[4] + R() * S[5]}%)`; g.fill();
-      g.strokeStyle = 'rgba(0,0,0,.6)'; g.lineWidth = 3; g.stroke();
+      g.strokeStyle = 'rgba(0,0,0,.42)'; g.lineWidth = 2.6; g.stroke();
       g.strokeStyle = 'rgba(170,240,225,.07)'; g.lineWidth = 2; g.beginPath(); g.arc(0, 0, r1 - 6, a0 + .015, a1 - .015); g.stroke();
     }
   }
@@ -1545,27 +1599,6 @@ function buildFloor(T) {
     g.stroke();
   }
   for (let i = 0; i < 5000; i++) { const a = R() * TAU, d = Math.sqrt(R()) * ARENA; g.fillStyle = R() < .5 ? 'rgba(255,255,255,.035)' : 'rgba(0,0,0,.2)'; g.fillRect(Math.cos(a) * d, Math.sin(a) * d, 1.5, 1.5); }
-  // engraved sigil
-  g.strokeStyle = `rgba(${T.sigil},.24)`; g.lineWidth = 2;
-  for (const rr of [150, 168, 300]) { g.beginPath(); g.arc(0, 0, rr, 0, TAU); g.stroke(); }
-  g.lineWidth = 1.5;
-  for (let i = 0; i < 48; i++) { const a = i * TAU / 48, l = i % 4 ? 6 : 12; g.beginPath(); g.moveTo(Math.cos(a) * 168, Math.sin(a) * 168); g.lineTo(Math.cos(a) * (168 + l), Math.sin(a) * (168 + l)); g.stroke(); }
-  for (let i = 0; i < 24; i++) {
-    const a = i * TAU / 24; g.save(); g.translate(Math.cos(a) * 285, Math.sin(a) * 285); g.rotate(a + Math.PI / 2); g.beginPath();
-    const t = (R() * 4) | 0;
-    if (t === 0) { g.moveTo(-5, -6); g.lineTo(0, 6); g.lineTo(5, -6); }
-    else if (t === 1) { g.moveTo(0, -7); g.lineTo(0, 7); g.moveTo(-5, -2); g.lineTo(5, 2); }
-    else if (t === 2) { g.moveTo(-5, 6); g.lineTo(0, -6); g.lineTo(5, 6); g.moveTo(-3, 1); g.lineTo(3, 1); }
-    else { g.arc(0, 0, 5, 0, TAU); g.moveTo(0, -7); g.lineTo(0, 7); }
-    g.stroke(); g.restore();
-  }
-  g.strokeStyle = `rgba(${T.sigil},.3)`; g.fillStyle = `rgba(${T.sigil},.3)`; g.lineWidth = 3;
-  for (let i = 0; i < 3; i++) {
-    const a = -Math.PI / 2 + i * TAU / 3;
-    g.beginPath(); g.moveTo(Math.cos(a) * 40, Math.sin(a) * 40); g.lineTo(Math.cos(a) * 140, Math.sin(a) * 140); g.stroke();
-    g.beginPath(); g.moveTo(Math.cos(a) * 152, Math.sin(a) * 152); g.lineTo(Math.cos(a - .07) * 128, Math.sin(a - .07) * 128); g.lineTo(Math.cos(a + .07) * 128, Math.sin(a + .07) * 128); g.closePath(); g.fill();
-  }
-  g.lineWidth = 1.5; g.beginPath(); for (let i = 0; i < 3; i++) { const a = Math.PI / 2 + i * TAU / 3; g.lineTo(Math.cos(a) * 150, Math.sin(a) * 150); } g.closePath(); g.stroke();
   // depth shadow under the wall
   gr = g.createRadialGradient(0, 0, ARENA - 100, 0, 0, ARENA); gr.addColorStop(0, 'rgba(0,0,0,0)'); gr.addColorStop(1, 'rgba(0,0,0,.75)');
   g.fillStyle = gr; g.beginPath(); g.arc(0, 0, ARENA, 0, TAU); g.fill();
@@ -1602,11 +1635,47 @@ function buildFloor(T) {
   }
   if (T.id === 'ice') for (let i = 0; i < 2500; i++) { const a = R() * TAU, d = Math.sqrt(R()) * ARENA; g.fillStyle = 'rgba(240,250,255,.12)'; g.fillRect(Math.cos(a) * d, Math.sin(a) * d, 2, 2); }
   if (T.id === 'blood') for (let i = 0; i < 18; i++) { const a = R() * TAU, d = 120 + R() * (ARENA - 200), x = Math.cos(a) * d, y = Math.sin(a) * d, rr = 18 + R() * 30; g.fillStyle = 'rgba(110,6,18,.5)'; g.beginPath(); g.ellipse(x, y, rr, rr * .6, R(), 0, TAU); g.fill(); g.fillStyle = 'rgba(255,90,90,.12)'; g.beginPath(); g.ellipse(x - rr * .3, y - rr * .2, rr * .3, rr * .12, 0, 0, TAU); g.fill(); }
+  // broad colour washes (cool sigil light, warm ember light, shadow) so the floor is not one flat tone
+  for (let i = 0; i < 16; i++) {
+    const a = R() * TAU, d = Math.sqrt(R()) * ARENA * .9, x = Math.cos(a) * d, y = Math.sin(a) * d, rr = 140 + R() * 240, k = i % 3;
+    const col = k === 0 ? `rgba(${T.sigil},.1)` : k === 1 ? `rgba(${T.fireRgb[0]},.08)` : 'rgba(0,0,0,.22)', wg = g.createRadialGradient(x, y, 0, x, y, rr);
+    wg.addColorStop(0, col); wg.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = wg; g.beginPath(); g.arc(0, 0, ARENA + 52, 0, TAU); g.fill();
+  }
+  // everything so far is repainted with brush daubs in the background; the sigil is engraved crisply on top, again
+  // once the painting lands
+  const base = document.createElement('canvas'); base.width = base.height = size; base.getContext('2d').drawImage(c, 0, 0);
+  const sigil = () => { let s1 = 2024; const R = () => ((s1 = s1 * 16807 % 2147483647) / 2147483647);
+  // engraved sigil
+  g.strokeStyle = `rgba(${T.sigil},.24)`; g.lineWidth = 2;
+  for (const rr of [150, 168, 300]) { g.beginPath(); g.arc(0, 0, rr, 0, TAU); g.stroke(); }
+  g.lineWidth = 1.5;
+  for (let i = 0; i < 48; i++) { const a = i * TAU / 48, l = i % 4 ? 6 : 12; g.beginPath(); g.moveTo(Math.cos(a) * 168, Math.sin(a) * 168); g.lineTo(Math.cos(a) * (168 + l), Math.sin(a) * (168 + l)); g.stroke(); }
+  for (let i = 0; i < 24; i++) {
+    const a = i * TAU / 24; g.save(); g.translate(Math.cos(a) * 285, Math.sin(a) * 285); g.rotate(a + Math.PI / 2); g.beginPath();
+    const t = (R() * 4) | 0;
+    if (t === 0) { g.moveTo(-5, -6); g.lineTo(0, 6); g.lineTo(5, -6); }
+    else if (t === 1) { g.moveTo(0, -7); g.lineTo(0, 7); g.moveTo(-5, -2); g.lineTo(5, 2); }
+    else if (t === 2) { g.moveTo(-5, 6); g.lineTo(0, -6); g.lineTo(5, 6); g.moveTo(-3, 1); g.lineTo(3, 1); }
+    else { g.arc(0, 0, 5, 0, TAU); g.moveTo(0, -7); g.lineTo(0, 7); }
+    g.stroke(); g.restore();
+  }
+  g.strokeStyle = `rgba(${T.sigil},.3)`; g.fillStyle = `rgba(${T.sigil},.3)`; g.lineWidth = 3;
+  for (let i = 0; i < 3; i++) {
+    const a = -Math.PI / 2 + i * TAU / 3;
+    g.beginPath(); g.moveTo(Math.cos(a) * 40, Math.sin(a) * 40); g.lineTo(Math.cos(a) * 140, Math.sin(a) * 140); g.stroke();
+    g.beginPath(); g.moveTo(Math.cos(a) * 152, Math.sin(a) * 152); g.lineTo(Math.cos(a - .07) * 128, Math.sin(a - .07) * 128); g.lineTo(Math.cos(a + .07) * 128, Math.sin(a + .07) * 128); g.closePath(); g.fill();
+  }
+  g.lineWidth = 1.5; g.beginPath(); for (let i = 0; i < 3; i++) { const a = Math.PI / 2 + i * TAU / 3; g.lineTo(Math.cos(a) * 150, Math.sin(a) * 150); } g.closePath(); g.stroke();
+  };
+  sigil();
+  paintLater(base, T.id.length * 31 + 5, 1.1, p => swapPainted(c, p, sigil));
   return c;
 }
 const FLOORS = {};
 const floorFor = T => FLOORS[T.id] || (FLOORS[T.id] = buildFloor(T));
 floorFor(THEMES.witch);
+// the other biomes' floors are painted ahead of time while the title screen idles, not mid-run
+setTimeout(() => Object.values(THEMES).forEach(floorFor), 2500);
 const MOTES = Array.from({ length: 46 }, () => ({ x: rand(-ARENA, ARENA), y: rand(-ARENA, ARENA), s: rand(1.5, 3.5), ph: rand(0, TAU), v: rand(6, 16) }));
 const GRAIN = (() => {
   const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d'), d = g.createImageData(128, 128);
@@ -1656,6 +1725,7 @@ function makeIsle(seed) {
   return c;
 }
 const ISLE_SPR = [0, 1, 2, 3, 4, 5].map(makeIsle);
+ISLE_SPR.forEach((c, i) => paintLater(c, 40 + i, .55, p => swapPainted(c, p)));
 const ISLES = Array.from({ length: 10 }, (_, i) => { const a = i * TAU / 10 + .35, d = 1300 + (i % 3) * 380; return { x: Math.cos(a) * d, y: Math.sin(a) * d * .85, f: .62 - (i % 3) * .12, v: i % 6, ph: i * 1.7 }; }).sort((a, b) => a.f - b.f);
 const CLIFF_R = ARENA + 50, CLIFF_S = .6;
 const CLIFF = (() => {
@@ -1675,6 +1745,7 @@ const CLIFF = (() => {
   g.strokeStyle = 'rgba(180,160,255,.35)'; g.lineWidth = 3; g.beginPath(); for (let x = -R0; x <= R0; x += 10) g.lineTo(x, top(x) + 2); g.stroke();
   return c;
 })();
+paintLater(CLIFF, 555, .9, p => swapPainted(CLIFF, p));
 const ROCKS = [0, 1, 2].map(i => { const c = document.createElement('canvas'); c.width = c.height = 48; const g = c.getContext('2d'), R = seeded(31 + i * 9);
   g.beginPath(); for (let k = 0; k < 8; k++) { const a = k * TAU / 8, r = 12 + R() * 10; g.lineTo(24 + Math.cos(a) * r, 24 + Math.sin(a) * r * .8); } g.closePath();
   const gr = g.createLinearGradient(0, 8, 0, 40); gr.addColorStop(0, '#5b5288'); gr.addColorStop(1, '#14101f'); g.fillStyle = gr; g.fill(); g.strokeStyle = 'rgba(190,170,255,.35)'; g.lineWidth = 1.5; g.stroke(); return c; });
@@ -3151,8 +3222,7 @@ function renderHistory() {
 }
 document.querySelectorAll('[data-back]').forEach(b => b.addEventListener('click', () => titleScreen()));
 // Full screen: the Fullscreen API where the browser allows it (Android, desktop); iPhone Safari has none for pages,
-// so there the game is added to the home screen. Inside the claude.ai preview frame the button opens the standalone site.
-const PAGES_URL = 'https://owalkerr.github.io/asdf/';
+// so there the game is added to the home screen. A frame that blocks full screen hides the button.
 const STANDALONE = matchMedia('(display-mode: fullscreen), (display-mode: standalone)').matches || navigator.standalone === true;
 const IN_FRAME = (() => { try { return window.top !== window; } catch (e) { return true; } })();
 const CAN_FS = !!(document.fullscreenEnabled || document.webkitFullscreenEnabled);
@@ -3161,13 +3231,12 @@ function goFull() {
   const el = document.documentElement, f = el.requestFullscreen || el.webkitRequestFullscreen; if (!f || document.fullscreenElement) return;
   try { const r = f.call(el, { navigationUI: 'hide' }); if (r && r.then) r.then(() => { try { screen.orientation.lock('portrait').catch(() => {}); } catch (e) {} }).catch(() => {}); } catch (e) {}
 }
-if (!STANDALONE) {
+if (!STANDALONE && (CAN_FS || !IN_FRAME)) {
   $('btnFull').hidden = false;
-  if (!CAN_FS) $('fullLbl').textContent = IN_FRAME ? 'kendi adresinde aç' : IS_IOS ? 'Paylaş → Ana Ekrana Ekle' : 'ana ekrana ekle';
+  if (!CAN_FS) $('fullLbl').textContent = IS_IOS ? 'Paylaş → Ana Ekrana Ekle' : 'ana ekrana ekle';
 }
 $('btnFull').addEventListener('click', () => {
   if (CAN_FS) return goFull();
-  if (IN_FRAME) { window.open(PAGES_URL, '_blank'); return; }
   toast(IS_IOS ? 'Safari\'de Paylaş düğmesi → "Ana Ekrana Ekle": oyun simgesinden tam ekran açılır.' : 'Tarayıcı menüsünden "Ana ekrana ekle" ile tam ekran oyna.');
 });
 $('btnStart').addEventListener('click', () => { initAudio(); if (CAN_FS && !STANDALONE && matchMedia('(pointer: coarse)').matches) goFull(); renderHeroes(); show('scrHero'); });
