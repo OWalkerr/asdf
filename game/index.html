@@ -181,6 +181,7 @@ h2{font-size:clamp(28px,7.5vw,38px);line-height:1.05;letter-spacing:.06em;text-s
 p{margin:0;line-height:1.45;color:var(--ink)}
 .lead{font-size:17px;color:#cfdcd8;max-width:34ch;text-shadow:0 1px 3px #000}
 .btns{display:flex;flex-direction:column;gap:10px;width:100%}
+.card.locked{opacity:.45;filter:grayscale(.7);cursor:default}
 .opts{display:grid;grid-template-columns:1fr 1fr;gap:8px}.opts .btn{padding-inline:8px;font-size:13px;min-height:44px}
 #hud.bigbtn .abil{transform:scale(1.22);transform-origin:100% 100%}#hud.bigbtn.lefty .abil{transform-origin:0 100%}
 .btn{position:relative;border:1px solid var(--line);background:linear-gradient(180deg,rgba(22,40,44,.95),rgba(10,20,23,.95));color:var(--ink);padding:15px 18px;border-radius:3px;
@@ -382,6 +383,7 @@ p{margin:0;line-height:1.45;color:var(--ink)}
     <div class="opts">
       <button class="btn" id="btnTestUps">Güçler: odaya göre</button>
       <button class="btn" id="btnTestGod">Ölümsüz: kapalı</button>
+      <button class="btn" id="btnTestHero">Tilki: son seçim</button>
     </div>
     <div class="btns"><button class="btn" data-back>Geri</button></div>
   </div>
@@ -820,6 +822,7 @@ const UPS = [
   { id:'loyal', n:'Sadakat', r:'leg', max:1, tag:'Sinerji', req:u => G.hero.id === 'oath' && (u.rend || u.rendcd), d:'Ak Tilki\'ye özel: Söküm hasarı +%20 ve Söküm ile her öldürme Ay Sıçrayışı bekleme süresini 3 sn kısaltır.', a:s => { s.rendMul *= 1.2; s.loyal = true; } },
   { id:'dance', n:'Gölge Dansı', r:'leg', max:1, tag:'Sinerji', req:u => G.hero.id === 'shade' && (u.hop || u.as), d:'Gölge Koşucu\'ya özel: her sekmeden sonra 0.8 sn boyunca saldırı hızı +%45.', a:s => s.dance = true },
   { id:'boneburst', n:'Kemik Patlaması', r:'leg', max:1, tag:'Sinerji', req:u => G.hero.id === 'heavy' && (u.heavy || u.dmg), d:'Kemik Kıran\'a özel: üzerinde 5+ mızrak olan düşman ölünce çevresine 6 mızrak saçar.', a:s => s.boneBurst = true },
+  { id:'grovelord', n:'Koru Bekçisi', r:'leg', max:1, tag:'Sinerji', req:u => G.hero.id === 'grove' && (u.foxfire || u.flow || u.echo), d:'Orman Tilkisi\'ne özel: tilki ateşlerinin mızrakları %100 hasar verir ve düşmana saplanınca 1 sn yavaşlatır.', a:s => s.groveLord = true },
   { id:'chorus', n:'Ruh Korosu', r:'leg', max:1, tag:'Sinerji', req:u => G.hero.id === 'caller' && (u.spirit || u.rcd), d:'Ruh Çağıran\'a özel: ruhlar iki mızrak birden atar ve ruh mızrakları %80 hasar verir.', a:s => s.chorus = true },
   { id:'hp', n:'Sağlam Ruh', r:'common', max:5, tag:'Ruh', d:'Azami can +25 ve 25 can yenile.', a:(s, p) => { s.maxHp += 25; p.hp += 25; } },
   { id:'regen', n:'Yenilenme', r:'common', max:3, tag:'Ruh', d:'Saniyede 1 can yenilenir.', a:s => s.regen += 1 },
@@ -853,6 +856,7 @@ const HEROES = [
   { id: 'shade', n: 'Gölge Tilki', d: 'Sekme mesafesi +%35 ve sekerken hasar almaz. Mızrak hasarı -%15, can -20.', cloak: ['#5a58a0', '#29275a', '#0e0d22'], rim: '200,190,255', a: s => { s.hopDist *= 1.35; s.ghostHop = true; s.dmg *= .85; s.maxHp -= 20; } },
   { id: 'heavy', n: 'Kor Tilki', d: 'Mızrak hasarı +%30, mızraklar %25 şansla 2 saplanır. Saldırı hızı -%10, sekme -%5.', cloak: ['#9a6838', '#4e2e18', '#1e1008'], rim: '255,205,140', a: s => { s.dmg *= 1.3; s.heavy += .25; s.as *= .9; s.hopDist *= .95; } },
   { id: 'caller', n: 'Ruh Çağıran', d: 'Bir Ruh Yavrusu ile başlar, Ay Sıçrayışı bekleme süresi -%30. Mızrak hasarı -%10.', cloak: ['#3c84a8', '#1a3a56', '#081624'], rim: '165,225,255', a: s => { s.spirits += 1; s.rCd *= .7; s.dmg *= .9; } },
+  { id: 'grove', n: 'Orman Tilkisi', lock: 'treant', d: 'Bir Tilki Ateşi ile başlar; tilki ateşleri bir mızrak fazla atar ve inişte de ateş bırakır. Mızrak hasarı -%10.', cloak: ['#8ac860', '#3a6a28', '#10200a'], rim: '210,255,160', a: s => { s.foxfire += 1; s.groveFire = true; s.dmg *= .9; } },
 ];
 function mulberry32(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
 const crand = () => (G && G.rng ? G.rng() : Math.random());
@@ -866,7 +870,7 @@ const DAILY_MODS = [
 function dailyInfo() {
   const d = new Date(), key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   let seed = 0; for (const ch of key) seed = Math.imul(seed ^ ch.charCodeAt(0), 2654435761) >>> 0;
-  return { key, seed, hero: HEROES[seed % HEROES.length], mod: DAILY_MODS[(seed >>> 4) % DAILY_MODS.length] };
+  return { key, seed, hero: HEROES.filter(h => !h.lock)[seed % 4], mod: DAILY_MODS[(seed >>> 4) % DAILY_MODS.length] };
 }
 const ACH = [
   { id: 'lord', n: 'Kemik Yıkan', d: 'Kemik Lordu\'nu yen.', skin: { n: 'Kemik Beyazı', cloak: ['#d9d2c0', '#857d68', '#2a261e'], rim: '255,240,205' } },
@@ -903,13 +907,14 @@ const TRAILS = [
 ];
 const achCount = () => Object.keys(meta.ach || {}).length;
 const trailById = id => { const t = TRAILS.find(x => x.id === id); return t && achCount() >= t.need ? t : TRAILS[0]; };
-const heroById = id => HEROES.find(x => x.id === id) || HEROES[0];
+const heroOpen = h => !h.lock || !!(meta.ach && meta.ach[h.lock]);
+const heroById = id => HEROES.find(x => x.id === id && heroOpen(x)) || HEROES[0];
 function baseStats() {
   return { dmg: 18 * (1 + .06 * meta.dmg), as: 1.1, range: 400, spearSpd: 1250, hopDist: 160 * (1 + .06 * meta.hop), hopTime: .15, walk: 140,
     rendMul: 1, rendCd: 6, qDmg: 70, qCd: 5, crit: .05, multi: 0, pierce: 0, heavy: 0, slow: 0, storm: false, ghostHop: false, trail: 0, shock: 0,
     rhythm: 0, shadow: 0, exec: 0, spread: false, harvest: 0, leech: 0, regen: 0, spirits: 0, maxHp: 100 + 12 * meta.hp,
     rCd: 20, rStun: 1, rR: 150, rendPer: .6, trailMul: 1, shockR: 0, spiritRate: 1, postIframe: 0, rRend: false,
-    bounce: 0, bounceGen: 1, mark: 0, flow: 0, echo: 0, echoR: 0, foxfire: 0, nova: 0, starfall: false, ward: 0, aegis: false };
+    groveFire: false, bounce: 0, bounceGen: 1, mark: 0, flow: 0, echo: 0, echoR: 0, foxfire: 0, nova: 0, starfall: false, ward: 0, aegis: false };
 }
 function recomputeStats() {
   const s = baseStats(), dummy = { hp: 0 }; G.hero.a(s); s.maxHp -= G.maxHpPenalty || 0; if (G.daily && G.daily.mod.s) G.daily.mod.s(s);
@@ -920,9 +925,9 @@ function recomputeStats() {
 // test runs never touch saved progress (best room, shards, history, achievements).
 const TEST_BIOMES = [['Cadı Zindanı', 1], ['Buz Mezarlığı', 11], ['Kan Katedrali', 21], ['Ruh Ormanı', 31]];
 const TEST_BOSSES = [['Kemik Lordu', 5], ['Gölge Atlı', 10], ['Yas Kraliçesi', 15], ['Kan Kardinali', 20], ['Kadim Ağaç', 30]];
-const TESTO = { ups: 'room', god: false }, TESTUPN = { room: 'odaya göre', none: 'yok', many: 'bol' };
+const TESTO = { ups: 'room', god: false, hero: null }, TESTUPN = { room: 'odaya göre', none: 'yok', many: 'bol' };
 function startTest(room) {
-  initAudio(); newRun(); G.test = true; G.god = TESTO.god;
+  initAudio(); newRun(null, HEROES.find(h => h.id === TESTO.hero) || heroById(meta.hero)); G.test = true; G.god = TESTO.god;
   const n = TESTO.ups === 'none' ? 0 : Math.round((room - 1) * (TESTO.ups === 'many' ? 1.6 : .9));
   for (let k = 0; k < n; k++) { const pool = UPS.filter(u => u.r !== 'leg' && (G.ups[u.id] || 0) < u.max && !(u.id === 'ghost' && G.s.ghostHop)); const u = pool[Math.floor(Math.random() * pool.length)]; if (u) G.ups[u.id] = (G.ups[u.id] || 0) + 1; }
   for (const u of UPS) if (u.r === 'leg' && TESTO.ups === 'many' && u.req && u.req(G.ups)) G.ups[u.id] = 1;
@@ -932,9 +937,10 @@ function renderTest() {
   const mk = (box, list) => { box.innerHTML = ''; for (const [n, r] of list) { const b = document.createElement('button'); b.className = 'btn'; b.innerHTML = `${n} <small>oda ${r}</small>`; b.addEventListener('click', () => startTest(r)); box.appendChild(b); } };
   mk($('testBiomes'), TEST_BIOMES); mk($('testBosses'), TEST_BOSSES);
   $('btnTestUps').textContent = 'Güçler: ' + TESTUPN[TESTO.ups]; $('btnTestGod').textContent = 'Ölümsüz: ' + (TESTO.god ? 'açık' : 'kapalı');
+  $('btnTestHero').textContent = 'Tilki: ' + (TESTO.hero ? HEROES.find(h => h.id === TESTO.hero).n : 'son seçim');
 }
-function newRun(daily) {
-  const hero = daily ? daily.hero : heroById(meta.hero), s = baseStats(); hero.a(s); if (daily && daily.mod.s) daily.mod.s(s);
+function newRun(daily, testHero) {
+  const hero = daily ? daily.hero : testHero || heroById(meta.hero), s = baseStats(); hero.a(s); if (daily && daily.mod.s) daily.mod.s(s);
   const skin = meta.skin && meta.ach && meta.ach[meta.skin] ? ACH.find(a => a.id === meta.skin).skin : null;
   document.querySelector('#hud .medal').innerHTML = heroSvg(skin || hero);
   G = { s, hero, skin, trail: trailById(meta.trail), ups: {}, room: 0, kills: 0, time: 0, shards: 0, rerolls: meta.reroll, hops: 0, phase: 'fight',
@@ -1111,13 +1117,14 @@ function startHop(dx, dy) {
     const e = i === 0 ? nearestEnemy(p.x, p.y, s.range + 100) : nearestEnemy(p.x, p.y, s.range + 100, nearestEnemy(p.x, p.y, s.range + 100));
     if (e) fireSpear(Math.atan2(e.y - p.y, e.x - p.x), .7);
   }
-  if (s.foxfire) G.fires.push({ x: p.x, y: p.y, t: .55, n: s.foxfire });
+  if (s.foxfire) G.fires.push({ x: p.x, y: p.y, t: .55, n: s.foxfire + (s.groveFire ? 1 : 0) });
   burst(p.x, p.y, COL.mist, 6, 120, .35, 2); sfx('hop');
 }
 function endHop() {
   const p = G.p, s = G.s; p.state = 'idle'; p.land = .12;
   if (s.postIframe) p.iT = Math.max(p.iT, s.postIframe);
   if (s.flow) p.atkCd *= Math.pow(.7, s.flow);
+  if (s.groveFire) G.fires.push({ x: p.x, y: p.y, t: .4, n: s.foxfire + 1 });
   if (s.echo && G.hops % s.echo === 0) { G.echoes.push({ x: p.x, y: p.y, t: .35, R: 110 + s.echoR }); G.parts.push({ ring: true, x: p.x, y: p.y, r: 30, life: .35, max: .35, c: '#bfe8ff' }); }
   if (s.shock) {
     const R = 80 + 20 * s.shock + s.shockR;
@@ -1285,7 +1292,7 @@ function update(dt) {
     starBoom(u.x, u.y, 46); G.parts.push({ ring: true, x: u.x, y: u.y, r: u.R, life: .3, max: .3, c: '#bfe8ff' }); sfx('shimmer', u.x); G.shake = Math.max(G.shake, 4);
     for (const e of G.enemies) if (!e.dead && hyp(e.x - u.x, e.y - u.y) < u.R + e.r) { e.stacks++; e.stackT = 4; dmgEnemy(e, s.dmg * 1.5, false, 'launch', 'yanki'); } }
   for (let i = G.fires.length - 1; i >= 0; i--) { const f = G.fires[i]; f.t -= dt; if (f.t > 0) continue;
-    const t = nearestEnemy(f.x, f.y, 520); if (t) { fireSpear(Math.atan2(t.y - f.y, t.x - f.x), .55, 'spear', f.x, f.y); sfx('throw'); }
+    const t = nearestEnemy(f.x, f.y, 520); if (t) { fireSpear(Math.atan2(t.y - f.y, t.x - f.x), s.groveLord ? 1 : .55, 'spear', f.x, f.y); if (s.groveLord) G.spears[G.spears.length - 1].chill = true; sfx('throw'); }
     if (--f.n > 0 && t) f.t = .18; else G.fires.splice(i, 1); }
   const inp = inputDir();
 
@@ -1394,6 +1401,7 @@ function update(dt) {
         }
         e.stacks += Math.random() < G.s.heavy ? 2 : 1; e.stackT = 4;
         if (G.s.slow) { e.slowT = 1; e.slowAmt = Math.max(e.slowAmt, G.s.slow); }
+        if (sp.chill) { e.slowT = Math.max(e.slowT, 1); e.slowAmt = Math.max(e.slowAmt, .35); }
         const dm = sp.dmg * (G.s.mark && e.stacks >= 3 ? 1 + G.s.mark : 1);
         dmgEnemy(e, dm, sp.crit, undefined, sp.kind === 'spirit' ? 'spirit' : 'spear');
         // Seken Işık: a light spear glances off toward the nearest other enemy
@@ -1453,7 +1461,7 @@ function updEnemy(e, dt) {
     if (e.boomT <= 0) { e.boomT = .13; starBoom(e.x + rand(-1, 1) * e.r, e.y + rand(-1, 1) * e.r, rand(34, 64)); burst(e.x, e.y, '#ffe9d6', 6, 260, .4); G.shake = Math.max(G.shake, 10); sfx('boom'); }
     if (e.dying <= 0) {
       e.dead = true; shatter(e, true); unlock(e.kind);
-      if (e.kind === 'lord' && !G.test) { meta.heroBoss = meta.heroBoss || {}; meta.heroBoss[G.hero.id] = 1; store.set('ym_meta', meta); if (HEROES.every(x => meta.heroBoss[x.id])) unlock('allheroes'); }
+      if (e.kind === 'lord' && !G.test) { meta.heroBoss = meta.heroBoss || {}; meta.heroBoss[G.hero.id] = 1; store.set('ym_meta', meta); if (HEROES.filter(x => !x.lock).every(x => meta.heroBoss[x.id])) unlock('allheroes'); }
     }
     return;
   }
@@ -3503,9 +3511,10 @@ const heroSvg = h => `<svg width="30" height="30" viewBox="0 0 48 48"><path d="M
 function renderHeroes() {
   const c = $('heroes'); c.innerHTML = '';
   for (const hr of HEROES) {
-    const b = document.createElement('button'); b.className = 'card hero' + (hr.id === (meta.hero || 'oath') ? ' sel' : ''); b.style.setProperty('--rc', `rgb(${hr.rim})`);
-    b.innerHTML = `<span class="ic">${heroSvg(hr)}</span><span class="nm"></span><span class="rr">${hr.id === (meta.hero || 'oath') ? 'Son seçim' : ''}</span><span class="ds"></span>`;
-    b.querySelector('.nm').textContent = hr.n; b.querySelector('.ds').textContent = hr.d;
+    const open = heroOpen(hr), b = document.createElement('button'); b.className = 'card hero' + (hr.id === (meta.hero || 'oath') ? ' sel' : '') + (open ? '' : ' locked'); b.style.setProperty('--rc', `rgb(${hr.rim})`);
+    b.innerHTML = `<span class="ic">${heroSvg(hr)}</span><span class="nm"></span><span class="rr">${!open ? 'Kilitli' : hr.id === (meta.hero || 'oath') ? 'Son seçim' : ''}</span><span class="ds"></span>`;
+    b.querySelector('.nm').textContent = hr.n; b.querySelector('.ds').textContent = open ? hr.d : 'Bir avda Kadim Ağaç\'ı yenince açılır (Ruh Ormanı, 30. oda).';
+    if (!open) { b.disabled = true; c.appendChild(b); continue; }
     b.addEventListener('click', () => { meta.hero = hr.id; store.set('ym_meta', meta); sfx('pick'); newRun(); show(null); }); c.appendChild(b);
   }
 }
@@ -3513,6 +3522,8 @@ $('btnHow').addEventListener('click', () => show('scrHow'));
 $('btnTest').addEventListener('click', () => { renderTest(); show('scrTest'); });
 $('btnTestUps').addEventListener('click', () => { TESTO.ups = { room: 'many', many: 'none', none: 'room' }[TESTO.ups]; renderTest(); });
 $('btnTestGod').addEventListener('click', () => { TESTO.god = !TESTO.god; renderTest(); });
+// every fox can be tried here, locked ones included
+$('btnTestHero').addEventListener('click', () => { const ids = [null, ...HEROES.map(h => h.id)]; TESTO.hero = ids[(ids.indexOf(TESTO.hero) + 1) % ids.length]; renderTest(); });
 $('btnDaily').addEventListener('click', () => { initAudio(); const di = dailyInfo(); newRun(di); show(null); banner('Günün Avı'); setTimeout(() => G && G.daily && banner(di.mod.n), 1500); });
 $('btnShop').addEventListener('click', () => { renderShop(); show('scrShop'); });
 $('btnAch').addEventListener('click', () => { renderAch(); show('scrAch'); });

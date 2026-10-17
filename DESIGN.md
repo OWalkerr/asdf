@@ -35,6 +35,9 @@ Sonuç olarak ritim şu: **fırlat → sek → fırlat → sek**. Yürümek yava
 | Gölge Tilki | Sekme +%35, sekerken hasar almaz | Mızrak hasarı -%15, can -20 |
 | Kor Tilki | Mızrak hasarı +%30, %25 şansla çift saplanma | Saldırı hızı -%15, sekme -%10 |
 | Ruh Çağıran | 1 Ruh Yavrusu ile başlar, Ay Sıçrayışı bekleme -%30 | Mızrak hasarı -%10 |
+| Orman Tilkisi (kilitli: bir avda Kadim Ağaç'ı yen) | 1 Tilki Ateşi ile başlar; ateşler +1 mızrak atar, inişte de ateş bırakır. Özel efsanevi: Koru Bekçisi (ateş mızrakları tam hasar ve yavaşlatır) | Mızrak hasarı -%10 |
+
+Günün Avı ve "Dört Tilki" başarımı ilk dört tilkiyle sınırlıdır. Deneme Odası'nda kilitli tilkiler de seçilebilir.
 
 ### Mızrakçıya özel efsanevi kartlar
 
@@ -185,6 +188,10 @@ Bot artık canı %50'nin altındaysa Ruh Pınarı'nı, değilse Savaş kapısın
 - Dördüncü dalga 14. odadan itibaren
 
 Sonuç: yükseltmesiz bot medyan 7–8. oda; yükseltmeli bot medyan 10–11. oda, 10. odadaki ikinci muhafız yaklaşık %40 geçiliyor, 11–21. odalar 55–100 sn sürüyor.
+
+### Dördüncü ölçüm (yeni güçler ve Ruh Ormanı)
+
+`node tools/balance-sim.js 3 meta`: yükseltmeli bot medyan 9–15. oda (önceki 10–11 ile uyumlu; yeni güçler dengeyi bozmadı). `node tools/balance-sim.js 2 meta 30` (Deneme Odası gibi 30. odadan, o derinliğe uygun güçlerle): Kadim Ağaç iki ölçümde 16 avın ~9'unda geçildi (%56); ölümlerin çoğu 35. odadaki Yükselmiş Yas Kraliçesi'nin çığlık dalgalarından. Orman odalarında alınan hasarın kaynakları: kökler, Gölge Kurt, Diken Sarmaşığı, spor bulutu. Simülasyon artık hasar kaynaklarını da raporlar ve üçüncü argümanla istenen odadan başlar. Değişiklik gerekmedi.
 
 ## 11. Görsel yol haritası: üst düzeye çıkış
 

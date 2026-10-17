@@ -1,22 +1,23 @@
 // Balance simulation: a scripted bot plays N runs per spearman headlessly and reports the room reached
-// plus average time and damage taken per room. Usage: node tools/balance-sim.js [runsPerHero]
+// plus average time and damage taken per room. Usage: node tools/balance-sim.js [runsPerHero] [meta|-] [startRoom]
+// startRoom starts like the Deneme Odası (powers matched to that depth), e.g. 31 measures the Spirit Forest.
 // Needs Playwright with a Chromium build (npm i -D playwright).
 const { chromium } = require('playwright');
-const RUNS = +process.argv[2] || 4, META = process.argv[3] === 'meta';
+const RUNS = +process.argv[2] || 4, META = process.argv[3] === 'meta', START = +process.argv[4] || 0;
 (async () => {
   const b = await chromium.launch(); const pg = await b.newPage({ viewport: { width: 390, height: 844 } });
   const errs = []; pg.on('pageerror', e => errs.push(e.message));
   await pg.goto('file://' + require('path').resolve(__dirname, '../game/index.html'), { waitUntil: 'domcontentloaded' }); await pg.waitForTimeout(300);
-  const out = await pg.evaluate(async ({ RUNS, META }) => {
+  const out = await pg.evaluate(async ({ RUNS, META, START }) => {
     // freeze rendering so only the simulation runs
     window.draw = () => {}; buzz = () => {}; puff = () => {};
     let bot = { x: 0, y: 0, m: 0 };
     inputDir = () => bot;
     const res = [];
     for (const hero of ['oath', 'shade', 'heavy', 'caller']) for (let run = 0; run < RUNS; run++) {
-      meta.hero = hero; if (META) { meta.hp = meta.dmg = 5; meta.hop = meta.reroll = 3; } else meta.hp = meta.dmg = meta.hop = meta.reroll = 0; newRun(); show(null);
-      const roomLog = []; let roomStart = 0, hpStart = G.p.hp, lastRoom = 1, steps = 0;
-      while (G.phase !== 'over' && steps < 60 * 60 * 25 && G.room <= 30) {
+      meta.hero = hero; if (META) { meta.hp = meta.dmg = 5; meta.hop = meta.reroll = 3; } else meta.hp = meta.dmg = meta.hop = meta.reroll = 0; if (START) startTest(START); else { newRun(); show(null); }
+      const roomLog = []; let roomStart = 0, hpStart = G.p.hp, lastRoom = G.room, steps = 0;
+      while (G.phase !== 'over' && steps < 60 * 60 * 25 && G.room <= (START ? START + 12 : 30)) {
         steps++;
         const p = G.p, s = G.s;
         if (G.phase === 'draft') { const PR = ['dmg', 'as', 'multi', 'rend', 'pierce', 'heavy', 'crit', 'hp', 'leech', 'spirit', 'rendcd', 'exec', 'shadow', 'ghost', 'qup']; const sc = u => (u.r === 'leg' ? 100 : u.r === 'epic' ? 60 : 0) + (PR.includes(u.id) ? 40 - PR.indexOf(u.id) * 2 : 0); pick(draftOpts.slice().sort((a, b) => sc(b) - sc(a))[0]); continue; }
@@ -37,16 +38,19 @@ const RUNS = +process.argv[2] || 4, META = process.argv[3] === 'meta';
         update(1 / 60);
         if (G.room !== lastRoom) { roomLog.push({ room: lastRoom, t: +(G.time - roomStart).toFixed(1), dmg: Math.round(hpStart - G.p.hp) }); lastRoom = G.room; roomStart = G.time; hpStart = G.p.hp; }
       }
-      res.push({ hero, room: G.room, time: Math.round(G.time), ups: Object.keys(G.ups).length, rooms: roomLog });
+      res.push({ hero, room: G.room, time: Math.round(G.time), ups: Object.keys(G.ups).length, rooms: roomLog, taken: G.takenBy || {} });
       if (G.phase !== 'over') gameOver();
     }
     return res;
-  }, { RUNS, META });
+  }, { RUNS, META, START });
   const byHero = {};
   for (const r of out) (byHero[r.hero] = byHero[r.hero] || []).push(r.room);
   for (const [h, rs] of Object.entries(byHero)) { rs.sort((a, b) => a - b); console.log(h.padEnd(7), 'rooms', rs.join(','), 'median', rs[rs.length >> 1]); }
   // average time and damage per room index
   const agg = {}; for (const r of out) for (const x of r.rooms) { const a = agg[x.room] = agg[x.room] || { n: 0, t: 0, d: 0 }; a.n++; a.t += x.t; a.d += x.dmg; }
   console.log('room: avgTime(s) avgDmgTaken (n)' + (META ? '  [meta upgrades maxed]' : '')); for (const [k, a] of Object.entries(agg)) console.log(String(k).padStart(2), (a.t / a.n).toFixed(1).padStart(6), (a.d / a.n).toFixed(0).padStart(5), `(${a.n})`);
+  // where the damage came from, over all runs
+  const tk = {}; for (const r of out) for (const [k, v] of Object.entries(r.taken)) tk[k] = (tk[k] || 0) + v;
+  console.log('damage taken by source:', Object.entries(tk).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([k, v]) => `${k} ${Math.round(v)}`).join(' · '));
   console.log('ERR', errs); await b.close();
 })();
